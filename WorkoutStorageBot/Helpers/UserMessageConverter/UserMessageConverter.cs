@@ -24,19 +24,17 @@ namespace WorkoutStorageBot.Helpers.UserMessageConverter
             return this;
         }
 
-        internal UserMessageConverter WithoutServiceSymbol(char ch = '/')
+        internal UserMessageConverter WithoutServiceSymbol(string simbol = "/")
         {
-            var index = sb.ToString().IndexOf(ch);
-            if (index != -1)
-                sb.Remove(index, 1);
+            sb.Replace(simbol, string.Empty);
 
             return this;
         }
 
-        internal UserMessageConverter WithoutServiceSymbols(char[] chars)
+        internal UserMessageConverter WithoutServiceSymbols(string[] simbols)
         {
-            foreach (char c in chars)
-                WithoutServiceSymbol(c);
+            foreach (var simbol in simbols)
+                WithoutServiceSymbol(simbol);
 
             return this;
         }
@@ -44,6 +42,7 @@ namespace WorkoutStorageBot.Helpers.UserMessageConverter
         internal ResultExercise GetResultExercise()
         {
             var stringsResult = sb.ToString().Split(' ', 2);
+
             return new ResultExercise
             {
                 Weight = float.Parse(stringsResult[0]),

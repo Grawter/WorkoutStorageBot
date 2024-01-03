@@ -62,6 +62,10 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
 
             switch (CurrentUserContext.NavigationType)
             {
+                #region Workout area
+
+                #region Set based cycle
+
                 case NavigationType.SetNameCycle:
                     requestConverter.RemoveCompletely().WithoutServiceSymbol();
 
@@ -79,17 +83,19 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
 
                     CurrentUserContext.DataManager.AddExercise(requestConverter.Convert());
 
-                    responseGenerator = new ResponseGenerator("Упражнение зафиксировано", 
+                    responseGenerator = new ResponseGenerator("Упражнение зафиксировано",
                         $"Введите след. упражнение для дня № {CurrentUserContext.DataManager.NumberDay} либо нажмите \"Сохранить\" для сохранения текущего списка фиксаций");
                     botClient.SendTextMessageAsync(update.Message.Chat.Id,
                                                     responseGenerator.Generate(),
                                                     replyMarkup: buttons.GetInlineButtons(ButtonsSet.SetCycle));
                     break;
 
+                #endregion
+
                 case NavigationType.SetResultForExercise:
                     requestConverter.RemoveCompletely(20).WithoutServiceSymbol();
 
-                    responseGenerator = new ResponseGenerator("Подход зафиксирован", 
+                    responseGenerator = new ResponseGenerator("Подход зафиксирован",
                         "Введите вес и кол-во повторений след. подхода либо нажмите \"Сохранить\" для сохранения указанных подходов");
 
                     try
@@ -110,6 +116,10 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                                                     responseGenerator.Generate(),
                                                     replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.SaveResultForExercise, backButtonsSet: ButtonsSet.Main));
                     break;
+
+                #endregion
+
+                #region Start
 
                 case NavigationType.None:
                     var text = requestConverter.RemoveCompletely().Convert();
@@ -136,6 +146,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                             break;
                     }
                     break;
+
+                #endregion
             }
         }
 
@@ -152,6 +164,10 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
 
             switch (CallbackQueryParser.Direction)
             {
+                #region Workout area
+
+                #region Set based cycle
+
                 case "#SetCycle":
                     CurrentUserContext.NavigationType = NavigationType.SetNameCycle;
 
@@ -161,7 +177,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                 case "#SwitchOnNewDay":
                     CurrentUserContext.DataManager.AddDay();
 
-                    responseGenerator = new ResponseGenerator("День зафиксирован", 
+                    responseGenerator = new ResponseGenerator("День зафиксирован",
                         $"Введите след. упражнение для дня № {CurrentUserContext.DataManager.NumberDay} либо нажмите \"Сохранить\" для сохранения текущего списка фиксаций");
 
                     botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
@@ -189,6 +205,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                                                     "Выберите тренировочный день",
                                                     replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.WorkoutDays, backButtonsSet: ButtonsSet.Main));
                     break;
+
+                #endregion
 
                 case "#LastWorkout":
                     var exercises = QueriesStorage.GetExercisesWithDaysIds(CurrentUserContext.Cycle.Days.Select(d => d.Id), db.GetExercisesFromQuery);
@@ -246,6 +264,16 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                                                     replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.WorkoutExercises, backButtonsSet: ButtonsSet.WorkoutDays));
                     break;
 
+                #endregion
+
+                #region Settings area
+
+
+
+                #endregion
+
+                #region BackStep
+
                 case "#Back":
                     var previousStep = StepStorage.GetStep(CallbackQueryParser.Args[1]);
 
@@ -255,6 +283,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                                                     previousStep.Message,
                                                     replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: previousStep.ButtonsSet, backButtonsSet: previousStep.BackButtonsSet));
                     break;
+
+                #endregion
             }
         }
 
