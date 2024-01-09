@@ -1,4 +1,6 @@
-﻿namespace WorkoutStorageBot.Model
+﻿
+
+namespace WorkoutStorageBot.Model
 {
     public class Exercise
     {

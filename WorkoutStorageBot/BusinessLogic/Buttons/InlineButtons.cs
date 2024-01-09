@@ -3,20 +3,24 @@ using System.Text;
 using WorkoutStorageBot.BusinessLogic.SessionContext;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
+using WorkoutStorageBot.Model;
+using WorkoutStorageBot.Helpers.Crypto;
 #endregion
 
 namespace WorkoutStorageBot.BusinessLogic.Buttons
 {
     internal class InlineButtons
     {
-        private UserContext CurrentUserContext { get; }
-
         private List<List<InlineKeyboardButton>> inlineKeyboardButtonsMain;
         private List<InlineKeyboardButton> inlineKeyboardButtons;
+
+        private UserContext CurrentUserContext { get; }
 
         internal InlineButtons(UserContext userNavigator)
         {
             CurrentUserContext = userNavigator;
+
+            CurrentUserContext.CallBackId = Cryptography.CreateRandomCallBackQueryId();
 
             inlineKeyboardButtonsMain = new();
         }
@@ -35,33 +39,133 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
         {
             switch (buttonsSet)
             {
-                case ButtonsSet.StartSetCycle:
-                    AddInlineButton("Установить цикл", "#SetCycle");
-                    break;
-                case ButtonsSet.SetCycle:
-                    AddInlineButton($"Зафиксировать упражнения для дня № {CurrentUserContext.DataManager.NumberDay}", "#SwitchOnNewDay");
-                    AddInlineButton("Cохранить цикл", "#SaveCycle");
-                    break;
                 case ButtonsSet.Main:
-                    AddInlineButton($"Начать тренировку", "#StartWorkout");
-                    AddInlineButton($"Аналитика", "#Analytics");
-                    AddInlineButton($"Настройки", "#Settings");
+                    AddInlineButton($"Начать тренировку", "1|Workout");
+                    AddInlineButton($"Аналитика", "2|Analytics");
+                    AddInlineButton($"Настройки", "3|Settings");
                     break;
-                case ButtonsSet.WorkoutDays:
-                    GetWorkoutDaysInButtons();
+
+                #region Workout area
+                case ButtonsSet.DaysListWithLastWorkout:
+                    AddInlineButton("Последняя тренировка", "1|LastWorkout");
+                    GetDaysInButtons(CurrentUserContext.ActiveCycle.Days);
                     break;
-                case ButtonsSet.WorkoutExercises:
-                    GetWorkoutExercisesInButtons();
+
+                case ButtonsSet.ExercisesListWithLastWorkoutForDay:
+                    AddInlineButton("Последние результаты выбранного дня", $"1|GetLastResultForThisDay|{CurrentUserContext.DataManager.CurrentDay.Id}");
+                    GetExercisesInButtons();
                     break;
+
                 case ButtonsSet.SaveResultForExercise:
-                    AddInlineButton("Сохранить результаты", "#SaveResultForExercise");
+                    AddInlineButton("Сохранить результаты", "1|SaveResultForExercise");
+                    break;
+                #endregion
+
+                #region Analytics area
+                #endregion
+
+                #region Settings area
+                case ButtonsSet.Settings:
+                    AddInlineButton("Настройка тренировочных циклов", "3|SettingCycles");
+                    AddInlineButton("Удалить свой аккаунт", "3|DeleteAccount");
+                    break;
+
+                case ButtonsSet.SettingCycles:
+                    AddInlineButton("Добавить новый цикл", "3|AddCycle");
+                    AddInlineButton("Настройка существующих циклов", "3|SettingExistingCycles");
+                    break;
+
+                case ButtonsSet.CycleList:
+                    GetCyclesInButtons();
+                    break;
+
+                case ButtonsSet.SettingCycle:
+                    AddInlineButton("Сделать активным", "3|ChangeActiveCycle");
+                    AddInlineButton("Сменить название", "3|ChangeNameCycle");
+                    AddInlineButton("Удалить", "3|DeleteCycle");
+                    AddInlineButton("Настройка дней", "3|SettingDays");
+                    AddInlineButton("Вернуться к главному меню", "0|ToMain");
+                    break;
+
+                case ButtonsSet.SettingDays:
+                    AddInlineButton("Добавить новые дни в цикл", "3|AddDays");
+                    AddInlineButton("Настройка существующих дней", "3|SettingExistingDays");
+                    break;
+
+                case ButtonsSet.DaysList:
+                    GetDaysInButtons(CurrentUserContext.DataManager.CurrentCycle.Days);
+                    break;
+
+                case ButtonsSet.SettingDay:
+                    AddInlineButton("Сменить название", "3|ChangeNameDay");
+                    AddInlineButton("Удалить", "3|DeleteDay");
+                    AddInlineButton("Настройка упражнений", "3|SettingExercises");
+                    AddInlineButton("Вернуться к главному меню", "0|ToMain");
+                    break;
+
+                case ButtonsSet.SettingExercises:
+                    AddInlineButton("Добавить новые упражнения в день", "3|AddExercises");
+                    AddInlineButton("Настройка существующих упражнений", "3|SettingExistingExercises");
+                    break;
+
+                case ButtonsSet.ExercisesList:
+                    GetExercisesInButtons();
+                    break;
+
+                case ButtonsSet.SettingExercise:
+                    AddInlineButton("Сменить название", "3|ChangeNameExercise");
+                    AddInlineButton("Удалить", "3|DeleteExercise");
+                    AddInlineButton("Вернуться к главному меню", "0|ToMain");
+                    break;
+
+
+                #region Full adding cycle area
+                case ButtonsSet.AddCycle:
+                    AddInlineButton("Добавить цикл", "3|AddCycle");
+                    break;
+                case ButtonsSet.AddDays:
+                    AddInlineButton($"Добавить дни", "3|AddDays");
+                    break;
+                case ButtonsSet.AddExercises:
+                    AddInlineButton($"Добавить упражнеия", "3|AddExercises");
+                    break;
+                case ButtonsSet.SaveAddedExercise:
+                    AddInlineButton($"Сохранить упражнения", "3|SaveAddedExercise");
+                    break;
+                case ButtonsSet.RedirectAfterSaveExercise:
+                    AddInlineButton($"Добавить новый день", "3|AddDays");
+                    AddInlineButton($"Перейти в главное меню", "0|ToMain");
+                    break;
+                #endregion
+
+
+                #region Confirm delete area
+                case ButtonsSet.ConfirmDeleteExercise:
+                    AddInlineButton("Да, удалить упражнение", "3|ConfirmDeleteExercise");
+                    break;
+
+                case ButtonsSet.ConfirmDeleteDay:
+                    AddInlineButton("Да, удалить день", "3|ConfirmDeleteDay");
+                    break;
+
+                case ButtonsSet.ConfirmDeleteCycle:
+                    AddInlineButton("Да, удалить цикл", "3|ConfirmDeleteCycle");
+                    break;
+
+                case ButtonsSet.ConfirmDeleteAccount:
+                    AddInlineButton("Да, удалить аккаунт", "3|ConfirmDeleteAccount");
+                    break;
+                case ButtonsSet.None:
                     break;
                 default:
-                    break;
+                    throw new NotImplementedException($"Неожиданный buttonsSet: {buttonsSet}");
+                #endregion
+
+                #endregion
             }
 
             if (backButtonsSet != ButtonsSet.None)
-                AddInlineButton("Назад", $"#Back|{backButtonsSet}");
+                AddInlineButton("Назад", $"0|Back|{backButtonsSet}");
 
             return inlineKeyboardButtonsMain;
         }
@@ -88,35 +192,37 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
         private string AddCallBackSetId(string callBackData)
         {
             var sb = new StringBuilder(callBackData)
-                                                    .Append("|")
-                                                    .Append(CurrentUserContext.CallBackSetId);
+                                                .Append("|")
+                                                .Append(CurrentUserContext.CallBackId);
             return sb.ToString();
         }
 
-        private void GetWorkoutDaysInButtons(bool showLastWorkoutButton = true)
+        private void GetCyclesInButtons()
         {
-            if (showLastWorkoutButton)
-                AddInlineButton("Последняя тренировка", "#LastWorkout");
-
-            if (CurrentUserContext.Cycle != null) 
+            foreach (var cycle in CurrentUserContext.UserInformation.Cycles)
             {
-                foreach (var day in CurrentUserContext.Cycle.Days)
+                AddInlineButton(cycle.NameCycle, $"3|SelectedCycle|{cycle.Id}");
+            }
+        }
+
+        private void GetDaysInButtons(IEnumerable<Day>? source)
+        {
+            if (source != null) 
+            {
+                foreach (var day in source)
                 {
-                    AddInlineButton(day.NameDay, $"#SelectedDay|{day.NameDay}|{day.Id}");
+                    AddInlineButton(day.NameDay, $"3|SelectedDay|{day.Id}");
                 }
             }
         }
 
-        private void GetWorkoutExercisesInButtons(bool showLastResultForThisDayButton = true)
+        private void GetExercisesInButtons()
         {
-            if (showLastResultForThisDayButton)
-                AddInlineButton("Последние результаты выбранного дня", $"#GetLastResultForThisDay|{CurrentUserContext.DataManager.CurrentDay.NameDay}|{CurrentUserContext.DataManager.CurrentDay.Id}");
-
-            if (CurrentUserContext.Cycle != null)
+            if (CurrentUserContext.DataManager.CurrentDay.Exercises != null)
             {
-                foreach (var exercise in CurrentUserContext.Cycle.Days.FirstOrDefault(d => d.Id == CurrentUserContext.DataManager.CurrentDay.Id).Exercises)
+                foreach (var exercise in CurrentUserContext.DataManager.CurrentDay.Exercises)
                 {
-                    AddInlineButton(exercise.NameExercise, $"#SetResultForExercise|{exercise.NameExercise}|{exercise.Id}");
+                    AddInlineButton(exercise.NameExercise, $"3|SelectedExercise|{exercise.Id}");
                 }
             }
         }

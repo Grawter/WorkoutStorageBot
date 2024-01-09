@@ -4,11 +4,11 @@ using WorkoutStorageBot.Model;
 
 #endregion
 
-namespace WorkoutStorageBot.Helpers.UserMessageConverter
+namespace WorkoutStorageBot.Helpers.Converters
 {
-    internal class UserMessageConverter
+    public class UserMessageConverter : IStringConverter
     {
-        internal UserMessageConverter(string data, bool withoutTrim = false)
+        public UserMessageConverter(string data, bool withoutTrim = false)
         {
             if (withoutTrim)
                 sb = new StringBuilder(data.Trim());
@@ -16,7 +16,7 @@ namespace WorkoutStorageBot.Helpers.UserMessageConverter
                 sb = new StringBuilder(data);
         }
 
-        internal UserMessageConverter RemoveCompletely(int startIndex = 54)
+        public UserMessageConverter RemoveCompletely(int startIndex = 54)
         {
             if (sb.Length > startIndex && startIndex > 0)
                 sb.Remove(startIndex, sb.Length - startIndex);
@@ -24,14 +24,14 @@ namespace WorkoutStorageBot.Helpers.UserMessageConverter
             return this;
         }
 
-        internal UserMessageConverter WithoutServiceSymbol(string simbol = "/")
+        public UserMessageConverter WithoutServiceSymbol(string simbol = "/")
         {
             sb.Replace(simbol, string.Empty);
 
             return this;
         }
 
-        internal UserMessageConverter WithoutServiceSymbols(string[] simbols)
+        public UserMessageConverter WithoutServiceSymbols(string[] simbols)
         {
             foreach (var simbol in simbols)
                 WithoutServiceSymbol(simbol);
@@ -39,19 +39,20 @@ namespace WorkoutStorageBot.Helpers.UserMessageConverter
             return this;
         }
 
-        internal ResultExercise GetResultExercise()
+        public ResultExercise? GetResultExercise()
         {
             var stringsResult = sb.ToString().Split(' ', 2);
 
-            return new ResultExercise
+            return stringsResult.Length == 2 ? new ResultExercise
             {
                 Weight = float.Parse(stringsResult[0]),
                 Count = float.Parse(stringsResult[1]),
                 DateTime = DateTime.Now.ToShortDateString()
-            };
+            }
+            : null;
         }
 
-        internal string Convert()
+        public string Convert()
         {
             return sb.ToString();
         }

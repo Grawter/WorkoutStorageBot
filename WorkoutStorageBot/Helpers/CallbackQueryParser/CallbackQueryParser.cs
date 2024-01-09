@@ -1,12 +1,13 @@
 ﻿
 
+
 namespace WorkoutStorageBot.Helpers.CallbackQueryParser
 {
-    internal static class CallbackQueryParser
+    internal class CallbackQueryParser
     {
-        internal static bool TryParse(string data)
+        internal bool TryParse(string data)
         {
-            Args = data.Split('|');
+            Args = data.Split(new char[] {'|'});
 
             if (Args.Length == 0)
                 return false;
@@ -14,11 +15,11 @@ namespace WorkoutStorageBot.Helpers.CallbackQueryParser
             return true;
         }
 
-        internal static string Direction { get => Args[0]; }
-        internal static string ObjectName { get => Args[1]; }
-        internal static string ObjectId { get => Args[2]; }
-        internal static string CallBackSetId { get => Args[Args.Length - 1]; }
+        internal int Direction { get => int.Parse(Args[0]); }
+        internal string SubDirection { get => Args[1]; }
+        internal int ObjectId { get => int.Parse(Args[2]); }
+        internal string CallBackId { get => Args[Args.Length - 1]; }
 
-        internal static string[] Args { get; private set; }
+        internal string[] Args { get; private set; }
     }
 }

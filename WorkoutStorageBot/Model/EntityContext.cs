@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WorkoutStorageBot.Model
 {
-    internal class ApplicationContext : DbContext
+    internal class EntityContext : DbContext
     {
         public DbSet<UserInformation> UsersInformation => Set<UserInformation>();
         public DbSet<Cycle> Cycles => Set<Cycle>();
@@ -13,7 +13,7 @@ namespace WorkoutStorageBot.Model
         public DbSet<Exercise> Exercises => Set<Exercise>();
         public DbSet<ResultExercise> ResultsExercises => Set<ResultExercise>();
 
-        public ApplicationContext(DbContextOptions<ApplicationContext> options) : base(options)
+        public EntityContext(DbContextOptions<EntityContext> options) : base(options)
         {
             Database.EnsureCreated();
         }

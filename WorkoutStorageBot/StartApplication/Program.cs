@@ -20,7 +20,7 @@ namespace WorkoutStorageBot.StartApplication
             System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls13;
 
             ILogger logger = new ConsoleLogger();
-
+            
             string pathFileConfig = "appsettings.json";
             if (!System.IO.File.Exists(pathFileConfig))
             {
@@ -28,10 +28,10 @@ namespace WorkoutStorageBot.StartApplication
                 return;
             }
 
-            var builder = new ConfigurationBuilder()
-                                                .AddJsonFile(pathFileConfig, optional: false, reloadOnChange: true)
-                                                .AddUserSecrets<BackingFieldAttribute>();
-            var configuration = builder.Build();
+            var configurationBuilder = new ConfigurationBuilder()
+                                                                .AddJsonFile(pathFileConfig, optional: false, reloadOnChange: true)
+                                                                .AddUserSecrets<Program>();
+            var configuration = configurationBuilder.Build();
 
             var token = configuration["Telegram:Token"];
             if (string.IsNullOrEmpty(token))
@@ -40,7 +40,7 @@ namespace WorkoutStorageBot.StartApplication
                 return;
             }
 
-            var OwnerChatId = configuration["Telegram:OwnerChatId"];
+            var ownerChatId = configuration["Telegram:OwnerChatId"];
             if (string.IsNullOrEmpty(token))
             {
                 logger.WriteLog("Получена пустая строка идентификатора чата владельца", LogType.StartError);
@@ -54,12 +54,12 @@ namespace WorkoutStorageBot.StartApplication
                 return;
             }
 
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationContext>();
+            var optionsBuilder = new DbContextOptionsBuilder<EntityContext>();
             var options = optionsBuilder.UseSqlite("Data Source=" + connectionString).Options;
 
             var botClient = new TelegramBotClient(token);
 
-            var telegramBotHandler = new TelegramBotHandler(botClient, options, logger);
+            var telegramBotHandler = new TelegramBotHandler(botClient, options, logger); 
 
             using CancellationTokenSource cts = new();
 
@@ -142,16 +142,16 @@ namespace WorkoutStorageBot.StartApplication
 
             Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
             {
-                var ErrorMessage = exception switch
+                var errorMessage = exception switch
                 {
                     ApiRequestException apiRequestException
                         => $"Telegram API Error:\n[{apiRequestException.ErrorCode}]\n{apiRequestException.Message}",
                     _ => exception.ToString()
                 };
 
-                logger.WriteLog(ErrorMessage, LogType.CriticalError);
+                logger.WriteLog(errorMessage, LogType.CriticalError);
 
-                botClient.SendTextMessageAsync(OwnerChatId, $"Аварийное завершение приложения.\n {ErrorMessage}");
+                botClient.SendTextMessageAsync(ownerChatId, $"Аварийное завершение приложения.\n {errorMessage}");
 
                 return Task.CompletedTask;
             }

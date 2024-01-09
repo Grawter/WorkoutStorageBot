@@ -4,9 +4,9 @@ using WorkoutStorageBot.Model;
 
 #endregion
 
-namespace WorkoutStorageBot.Helpers.ResponseGenerator
+namespace WorkoutStorageBot.Helpers.Converters
 {
-    internal class ResponseGenerator
+    public class ResponseConverter : IStringConverter
     {
         private StringBuilder sb;
         private string? title;
@@ -14,7 +14,7 @@ namespace WorkoutStorageBot.Helpers.ResponseGenerator
         private string? target;
         private string? separator;
 
-        internal ResponseGenerator(string content, string target)
+        public ResponseConverter(string content, string target)
         {
             sb = new StringBuilder();
 
@@ -25,7 +25,7 @@ namespace WorkoutStorageBot.Helpers.ResponseGenerator
             separator = "======================";
         }
 
-        internal ResponseGenerator(string title, string content, string target, string? separator = null)
+        public ResponseConverter(string title, string content, string target, string? separator = null)
         {
             sb = new StringBuilder();
 
@@ -41,7 +41,22 @@ namespace WorkoutStorageBot.Helpers.ResponseGenerator
                 this.separator = "======================";
         }
 
-        internal string Generate()
+        public void ResetTitle(string title)
+        {
+            this.title = title;
+        }
+
+        public void ResetContent(string content)
+        {
+            this.content = content;
+        }
+
+        public void ResetTarget(string target)
+        {
+            this.target = target;
+        }
+
+        public string Convert()
         {
             if (!string.IsNullOrEmpty(title))
             {
@@ -64,8 +79,11 @@ namespace WorkoutStorageBot.Helpers.ResponseGenerator
             return sb.ToString();
         }
 
-        internal static string GetInformationAboutLastWorkout(List<Exercise> exercises, List<ResultExercise> resultExercises)
+        public static string GetInformationAboutLastWorkout(List<Exercise> exercises, List<ResultExercise> resultExercises)
         {
+            if (!exercises.Any() || !resultExercises.Any())
+                return "Нет информации для данного цикла";
+
             var resultQuery = exercises
                         .Join(resultExercises,
                             e => e.Id,
@@ -73,7 +91,10 @@ namespace WorkoutStorageBot.Helpers.ResponseGenerator
                             (e, rE) => new { e.NameExercise, rE.Count, rE.Weight, rE.DateTime })
                         .GroupBy(rE => rE.NameExercise).ToArray();
 
+
             var sb = new StringBuilder();
+
+            sb.AppendLine($"Дата: {resultExercises.First().DateTime}");
 
             for (int i = 0; i < resultQuery.Count(); i++)
             {
@@ -88,15 +109,18 @@ namespace WorkoutStorageBot.Helpers.ResponseGenerator
             return sb.ToString().Trim();
         }
 
-        internal static string GetInformationAboutLastDay(List<Exercise> exercises, List<ResultExercise> resultExercises)
+        public static string GetInformationAboutLastDay(List<Exercise> exercises, List<ResultExercise> resultExercises)
         {
+            if (!exercises.Any() || !resultExercises.Any())
+                return "Нет информации для данного цикла";
+
             var resultQuery = exercises
                         .Join(resultExercises,
                             e => e.Id,
                             rE => rE.ExerciseId,
                             (e, rE) => new { e.NameExercise, rE.Count, rE.Weight, rE.DateTime })
                         .GroupBy(rE => rE.NameExercise).ToArray();
- 
+
             var sb = new StringBuilder();
 
             for (int i = 0; i < resultQuery.Count(); i++)
@@ -110,6 +134,7 @@ namespace WorkoutStorageBot.Helpers.ResponseGenerator
             }
 
             return sb.ToString().Trim();
-        } 
+        }
+
     }
 }

@@ -6,7 +6,7 @@ namespace WorkoutStorageBot.Helpers.Crypto
 {
     internal class Cryptography
     {
-        public static byte[] CreateRandomByteArray(int size = 5)
+        internal static byte[] CreateRandomByteArray(int size = 5)
         {
             var mas = new byte[size];
             using (var rng = RandomNumberGenerator.Create())
@@ -15,6 +15,11 @@ namespace WorkoutStorageBot.Helpers.Crypto
             }
 
             return mas;
+        }
+
+        internal static string CreateRandomCallBackQueryId(int size = 5)
+        {
+            return Convert.ToBase64String(CreateRandomByteArray(size));
         }
     }
 }
