@@ -497,7 +497,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
 
                     botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
                                                     responseConverter.Convert(),
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ExercisesListWithLastWorkoutForDay, backButtonsSet: ButtonsSet.DaysList));
+                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ExercisesListWithLastWorkoutForDay, backButtonsSet: ButtonsSet.DaysListWithLastWorkout));
                     break;
 
                 default:
@@ -557,6 +557,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                                                     replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ArchiveExercisesList, backButtonsSet: ButtonsSet.ArchiveList));
                     break;
 
+                #region Common area
                 case "UnArchive":
 
                     IDomain domain = callbackQueryParser.ObjectType switch
@@ -567,9 +568,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                             => db.Days.First(d => d.Id == callbackQueryParser.ObjectId),
                         "Exercise"
                             => db.Exercises.First(e => e.Id == callbackQueryParser.ObjectId),
-                         _=> throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectId: {callbackQueryParser.ObjectId}")
+                        _ => throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectId: {callbackQueryParser.ObjectId}")
                     };
-                    
+
                     domain.IsArchive = false;
 
                     db.Update(domain);
@@ -579,6 +580,78 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                                                     $"{domain.Name} разархивирован!",
                                                     replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ArchiveList, backButtonsSet: ButtonsSet.Settings));
                     break;
+
+                case "Replace":
+                    switch (callbackQueryParser.ObjectType)
+                    {
+                        case "Day":
+                            botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
+                                                    $"Выберите цикл, в который хотите перенести день {CurrentUserContext.DataManager.CurrentDay.Name}",
+                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ReplaceToCycle, backButtonsSet: ButtonsSet.SettingDay));
+                            break;
+                        case "Exercise":
+                            botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
+                                                    $"Выберите день, в который хотите перенести упражнение {CurrentUserContext.DataManager.CurrentExercise.Name}",
+                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ReplaceToDay, backButtonsSet: ButtonsSet.SettingExercise));
+                            break;
+                        default:
+                            throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.ObjectType}");
+                    }
+
+                    break;
+
+                case "ReplaceTo":
+                    switch (callbackQueryParser.ObjectType)
+                    {
+                        case "Cycle":
+                            if (CurrentUserContext.DataManager.CurrentDay.CycleId == callbackQueryParser.ObjectId)
+                            {
+                                responseConverter = new ResponseConverter($"Ошибка при переносе дня!", "Нельзя перенести день в тот же самый цикл",
+                                    $"Выберите цикл, в который хотите перенести день {CurrentUserContext.DataManager.CurrentDay.Name}");
+
+
+                                botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
+                                                     responseConverter.Convert(),
+                                                     replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ReplaceToCycle, backButtonsSet: ButtonsSet.SettingDay));
+                                return;
+                            }
+
+                            CurrentUserContext.DataManager.CurrentDay.CycleId = callbackQueryParser.ObjectId;
+                            db.Days.Update(CurrentUserContext.DataManager.CurrentDay);
+
+                            responseConverter = new ResponseConverter($"День {CurrentUserContext.DataManager.CurrentDay.Name}, перенесён в цикл {callbackQueryParser.ObjectName}",
+                                "Выберите интересующий цикл");
+                            break;
+                        case "Day":
+                            if (CurrentUserContext.DataManager.CurrentExercise.DayId == callbackQueryParser.ObjectId)
+                            {
+                                responseConverter = new ResponseConverter($"Ошибка при переносе упражнения!", "Нельзя перенести упражнение в тот же самый день",
+                                    $"Выберите день, в который хотите перенести упражнение {CurrentUserContext.DataManager.CurrentExercise.Name}");
+
+
+                                botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
+                                                     responseConverter.Convert(),
+                                                     replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ReplaceToDay, backButtonsSet: ButtonsSet.SettingExercise));
+                                return;
+                            }
+
+                            CurrentUserContext.DataManager.CurrentExercise.DayId = callbackQueryParser.ObjectId;
+                            db.Exercises.Update(CurrentUserContext.DataManager.CurrentExercise);
+
+                            responseConverter = new ResponseConverter($"Упражнение {CurrentUserContext.DataManager.CurrentExercise.Name}, перенесёно в день {callbackQueryParser.ObjectName}",
+                                "Выберите интересующий цикл");
+                            break;
+                        default:
+                            throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.ObjectType}");
+                    }
+
+                    db.SaveChanges();
+
+                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
+                                                    responseConverter.Convert(),
+                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.CycleList, backButtonsSet: ButtonsSet.SettingCycles));
+                    break;
+                #endregion
 
                 case "DeleteAccount":
                     responseConverter = new ResponseConverter("Вы уверены?", "Удаление аккаунта приведёт к полной и безвозвратной потере информации о ваших тренировках");
