@@ -7,17 +7,17 @@ namespace WorkoutStorageBot.BusinessLogic.SQLiteQueries
 {
     internal static class QueriesStorage
     {
-        internal static List<Exercise>? GetExercisesWithDaysIds(IEnumerable<int> ids, Func<string, List<Exercise>> quertExecuter)
+        internal static List<Exercise>? GetExercisesWithDaysIds(IEnumerable<int> ids, Func<string, List<Exercise>> queryExecuter)
         {
             var args = FromIEnumerableIntToString(ids);
 
-            string query = $@"SELECT Exercises.Id, Exercises.NameExercise, Exercises.DayId FROM Exercises
-							    WHERE Exercises.DayId IN ({args});";
+            string query = $@"SELECT Exercises.Id, Exercises.Name, Exercises.DayId, Exercises.IsArchive FROM Exercises
+							    WHERE Exercises.DayId IN ({args}) AND Exercises.IsArchive = FALSE;";
 
-            return quertExecuter.Invoke(query);
+            return queryExecuter.Invoke(query);
         }
 
-        internal static List<ResultExercise>? GetLastResultsExercisesWithExercisesIds(IEnumerable<int> ids, Func<string, List<ResultExercise>> quertExecuter)
+        internal static List<ResultExercise>? GetLastResultsExercisesWithExercisesIds(IEnumerable<int> ids, Func<string, List<ResultExercise>> queryExecuter)
         {
             var args = FromIEnumerableIntToString(ids);
 
@@ -31,10 +31,10 @@ namespace WorkoutStorageBot.BusinessLogic.SQLiteQueries
                                 SELECT * FROM LastResults
                                 WHERE DateTime = (SELECT MAX(DateTime) FROM LastResults)";
 
-            return quertExecuter.Invoke(query);
+            return queryExecuter.Invoke(query);
         }
 
-        internal static List<ResultExercise>? GetLastResultsForExercisesWithExercisesIds(IEnumerable<int> ids, Func<string, List<ResultExercise>> quertExecuter)
+        internal static List<ResultExercise>? GetLastResultsForExercisesWithExercisesIds(IEnumerable<int> ids, Func<string, List<ResultExercise>> queryExecuter)
         {
             var args = FromIEnumerableIntToString(ids);
 
@@ -53,7 +53,7 @@ namespace WorkoutStorageBot.BusinessLogic.SQLiteQueries
                             WHERE ExerciseId IN (SELECT ExerciseId FROM LastResults) AND
 	                            DateTime IN (SELECT DateTime FROM LastResults)";
 
-            return quertExecuter.Invoke(query);
+            return queryExecuter.Invoke(query);
         }
 
         private static string FromIEnumerableIntToString(IEnumerable<int> arg)

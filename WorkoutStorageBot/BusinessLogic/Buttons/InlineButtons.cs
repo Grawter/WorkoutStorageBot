@@ -53,7 +53,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
 
                 case ButtonsSet.ExercisesListWithLastWorkoutForDay:
                     AddInlineButton("Последние результаты выбранного дня", $"1|GetLastResultForThisDay|{CurrentUserContext.DataManager.CurrentDay.Id}");
-                    GetExercisesInButtons();
+                    GetExercisesInButtons(CurrentUserContext.DataManager.CurrentDay.Exercises);
                     break;
 
                 case ButtonsSet.SaveResultForExercise:
@@ -67,6 +67,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                 #region Settings area
                 case ButtonsSet.Settings:
                     AddInlineButton("Настройка тренировочных циклов", "3|SettingCycles");
+                    AddInlineButton("Настройка архива", "3|SettingArchive");
                     AddInlineButton("Удалить свой аккаунт", "3|DeleteAccount");
                     break;
 
@@ -76,12 +77,13 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                     break;
 
                 case ButtonsSet.CycleList:
-                    GetCyclesInButtons();
+                    GetCyclesInButtons(CurrentUserContext.UserInformation.Cycles);
                     break;
 
                 case ButtonsSet.SettingCycle:
                     AddInlineButton("Сделать активным", "3|ChangeActiveCycle");
                     AddInlineButton("Сменить название", "3|ChangeNameCycle");
+                    AddInlineButton("Добавить в архив", "3|CycleArchiving");
                     AddInlineButton("Удалить", "3|DeleteCycle");
                     AddInlineButton("Настройка дней", "3|SettingDays");
                     AddInlineButton("Вернуться к главному меню", "0|ToMain");
@@ -98,6 +100,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
 
                 case ButtonsSet.SettingDay:
                     AddInlineButton("Сменить название", "3|ChangeNameDay");
+                    AddInlineButton("Добавить в архив", "3|DayArchiving");
                     AddInlineButton("Удалить", "3|DeleteDay");
                     AddInlineButton("Настройка упражнений", "3|SettingExercises");
                     AddInlineButton("Вернуться к главному меню", "0|ToMain");
@@ -109,11 +112,12 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                     break;
 
                 case ButtonsSet.ExercisesList:
-                    GetExercisesInButtons();
+                    GetExercisesInButtons(CurrentUserContext.DataManager.CurrentDay.Exercises);
                     break;
 
                 case ButtonsSet.SettingExercise:
                     AddInlineButton("Сменить название", "3|ChangeNameExercise");
+                    AddInlineButton("Добавить в архив", "3|ExerciseArchiving");
                     AddInlineButton("Удалить", "3|DeleteExercise");
                     AddInlineButton("Вернуться к главному меню", "0|ToMain");
                     break;
@@ -138,6 +142,32 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                     break;
                 #endregion
 
+                #region Archiving area
+                case ButtonsSet.ArchiveList:
+                    AddInlineButton("Архивированные циклы", "3|ArchiveCyclesList");
+                    AddInlineButton("Архивированные дни", "3|ArchiveDaysList");
+                    AddInlineButton("Архивированные упражнения", "3|ArchiveExercisesList");
+                    break;
+                case ButtonsSet.ArchiveCyclesList:
+                    GetCyclesInButtons(CurrentUserContext.UserInformation.Cycles, true);
+                    break;
+                case ButtonsSet.ArchiveDaysList:
+                    foreach(var cycle in CurrentUserContext.UserInformation.Cycles.Where(c => c.IsArchive == false))
+                    {
+                        GetDaysInButtons(cycle.Days, true);
+                    }
+
+                    break;
+                case ButtonsSet.ArchiveExercisesList:
+                    foreach (var cycle in CurrentUserContext.UserInformation.Cycles.Where(c => c.IsArchive == false))
+                    {
+                        foreach (var day in cycle.Days.Where(c => c.IsArchive == false))
+                        {
+                            GetExercisesInButtons(day.Exercises, true);
+                        }
+                    }
+                    break;
+                #endregion
 
                 #region Confirm delete area
                 case ButtonsSet.ConfirmDeleteExercise:
@@ -197,32 +227,60 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
             return sb.ToString();
         }
 
-        private void GetCyclesInButtons()
+        private void GetCyclesInButtons(IEnumerable<Cycle> source, bool getArchive = false)
         {
-            foreach (var cycle in CurrentUserContext.UserInformation.Cycles)
+            if (!getArchive)
             {
-                AddInlineButton(cycle.NameCycle, $"3|SelectedCycle|{cycle.Id}");
-            }
-        }
-
-        private void GetDaysInButtons(IEnumerable<Day>? source)
-        {
-            if (source != null) 
-            {
-                foreach (var day in source)
+                foreach (var cycle in source.Where(c => c.IsArchive == getArchive))
                 {
-                    AddInlineButton(day.NameDay, $"3|SelectedDay|{day.Id}");
+                    AddInlineButton(cycle.Name, $"3|SelectedCycle|{cycle.Id}");
+                }
+            }
+            else
+            {
+                foreach(var cycle in source.Where(c => c.IsArchive == getArchive))
+                {
+                    AddInlineButton(cycle.Name, $"3|UnArchive|{cycle.Id}|Cycle");
                 }
             }
         }
 
-        private void GetExercisesInButtons()
+        private void GetDaysInButtons(IEnumerable<Day> source, bool getArchive = false)
         {
-            if (CurrentUserContext.DataManager.CurrentDay.Exercises != null)
+            if (!getArchive)
             {
-                foreach (var exercise in CurrentUserContext.DataManager.CurrentDay.Exercises)
+                if (source != null)
                 {
-                    AddInlineButton(exercise.NameExercise, $"3|SelectedExercise|{exercise.Id}");
+                    foreach (var day in source.Where(c => c.IsArchive == getArchive))
+                    {
+                        AddInlineButton(day.Name, $"3|SelectedDay|{day.Id}");
+                    }
+                }
+            }
+            else
+            {
+                foreach (var day in source.Where(c => c.IsArchive == getArchive))
+                {
+                    AddInlineButton(day.Name, $"3|UnArchive|{day.Id}|Day");
+                }
+
+            }
+        }
+
+        private void GetExercisesInButtons(IEnumerable<Exercise> source, bool getArchive = false)
+        {
+            if (!getArchive)
+            {
+                foreach (var exercise in source.Where(c => c.IsArchive == getArchive))
+                {
+                    AddInlineButton(exercise.Name, $"3|SelectedExercise|{exercise.Id}");
+                }
+            }
+            else
+            {
+                foreach (var exercise in source.Where(c => c.IsArchive == getArchive))
+                {
+                    AddInlineButton(exercise.Name, $"3|UnArchive|{exercise.Id}|Exercise");
                 }
             }
         }

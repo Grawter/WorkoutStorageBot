@@ -17,7 +17,7 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
         {
             ResetCycle();
 
-            CurrentCycle = new () { NameCycle = nameCycle, IsActive = isActive, UserInformationId = userInformationId };
+            CurrentCycle = new () { Name = nameCycle, IsActive = isActive, UserInformationId = userInformationId };
         }
 
         internal void SetCycle(Cycle cycle)
@@ -29,7 +29,7 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
         {
             ResetDay();
 
-            CurrentDay = new() { NameDay = nameDay, CycleId = CurrentCycle.Id };
+            CurrentDay = new() { Name = nameDay, CycleId = CurrentCycle.Id };
         }
 
         internal void SetDay(Day day)
@@ -46,14 +46,14 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
         {
             if (Exercises == null)
             {
-                Exercises = new () { new Exercise { NameExercise = nameExercise, DayId = CurrentDay.Id } };
+                Exercises = new () { new Exercise { Name = nameExercise, DayId = CurrentDay.Id } };
                 return true;
             }
 
-            if (Exercises.Any(e => e.NameExercise == nameExercise))
+            if (Exercises.Any(e => e.Name == nameExercise))
                 return false;
 
-            Exercises.Add(new Exercise { NameExercise = nameExercise, DayId = CurrentDay.Id });
+            Exercises.Add(new Exercise { Name = nameExercise, DayId = CurrentDay.Id });
             return true;
         }
 

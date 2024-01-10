@@ -130,7 +130,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                 case MessageNavigationTarget.AddCycle:
                     requestConverter.RemoveCompletely().WithoutServiceSymbol();
 
-                    var hasNameCycleExists = CurrentUserContext.UserInformation.Cycles.Any(c => c.NameCycle == requestConverter.Convert());
+                    var hasNameCycleExists = CurrentUserContext.UserInformation.Cycles.Any(c => c.Name == requestConverter.Convert());
                     if (hasNameCycleExists)
                     {
                         responseConverter = new ResponseConverter("Цикл не сохранён!", $"Цикл с названием {requestConverter.Convert()} уже существует",
@@ -156,8 +156,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                             case QueryFrom.Start:
                                 CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.AddDays;
 
-                                responseConverter = new ResponseConverter($"Цикл {CurrentUserContext.DataManager.CurrentCycle.NameCycle} сохранён!",
-                                    $"Введите название тренирочного дня для цикла {CurrentUserContext.DataManager.CurrentCycle.NameCycle}");
+                                responseConverter = new ResponseConverter($"Цикл {CurrentUserContext.DataManager.CurrentCycle.Name} сохранён!",
+                                    $"Введите название тренирочного дня для цикла {CurrentUserContext.DataManager.CurrentCycle.Name}");
 
                                 botClient.SendTextMessageAsync(update.Message.Chat.Id,
                                                                 responseConverter.Convert());
@@ -167,7 +167,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                                 CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.None;
 
                                 botClient.SendTextMessageAsync(update.Message.Chat.Id,
-                                                                $"Цикл {CurrentUserContext.DataManager.CurrentCycle.NameCycle} сохранён!",
+                                                                $"Цикл {CurrentUserContext.DataManager.CurrentCycle.Name} сохранён!",
                                                                 replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.AddDays, backButtonsSet: ButtonsSet.SettingCycles));
                                 break;
                             default:
@@ -179,7 +179,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                 case MessageNavigationTarget.AddDays:
                     requestConverter.RemoveCompletely().WithoutServiceSymbol();
 
-                    var hasNameDayExists = CurrentUserContext.DataManager.CurrentCycle.Days.Any(d => d.NameDay == requestConverter.Convert());
+                    var hasNameDayExists = CurrentUserContext.DataManager.CurrentCycle.Days.Any(d => d.Name == requestConverter.Convert());
                     if (hasNameDayExists)
                     {
                         responseConverter = new ResponseConverter("День не сохранён!", $"День с названием {requestConverter.Convert()} уже существует в этом цикле",
@@ -216,7 +216,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                         case QueryFrom.Start:
                             CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.AddExercises;
 
-                            responseConverter = new ResponseConverter($"День {CurrentUserContext.DataManager.CurrentDay.NameDay} сохранён!",
+                            responseConverter = new ResponseConverter($"День {CurrentUserContext.DataManager.CurrentDay.Name} сохранён!",
                                 "Введите название упражения для этого дня");
                             botClient.SendTextMessageAsync(update.Message.Chat.Id,
                                                             responseConverter.Convert());
@@ -226,7 +226,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                             CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.None;
 
                             botClient.SendTextMessageAsync(update.Message.Chat.Id,
-                                                            $"День {CurrentUserContext.DataManager.CurrentDay.NameDay} сохранён!",
+                                                            $"День {CurrentUserContext.DataManager.CurrentDay.Name} сохранён!",
                                                             replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.AddExercises, backButtonsSet: ButtonsSet.SettingDays));
                             break;
                         default:
@@ -238,11 +238,11 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                 case MessageNavigationTarget.AddExercises:
                     requestConverter.RemoveCompletely().WithoutServiceSymbol();
 
-                    var hasNameExerciseExists = CurrentUserContext.DataManager.CurrentDay.Exercises.Any(e => e.NameExercise == requestConverter.Convert());
+                    var hasNameExerciseExists = CurrentUserContext.DataManager.CurrentDay.Exercises.Any(e => e.Name == requestConverter.Convert());
                     if (hasNameExerciseExists)
                     {
                         responseConverter = new ResponseConverter("Упражнение не зафиксировано!", "В этом дне уже существует упражнение с таким названием",
-                            $"Введите другое название упражнение для дня {CurrentUserContext.DataManager.CurrentDay.NameDay}");
+                            $"Введите другое название упражнение для дня {CurrentUserContext.DataManager.CurrentDay.Name}");
 
                         switch (CurrentUserContext.Navigation.QueryFrom)
                         {
@@ -267,7 +267,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                     if (!CurrentUserContext.DataManager.TryAddExercise(requestConverter.Convert()))
                     {
                         responseConverter = new ResponseConverter("Упражнение не зафиксировано!", "В списке фиксаций уже существует упражнение с таким названием",
-                            $"Введите другое название упражнение для дня {CurrentUserContext.DataManager.CurrentDay.NameDay}");
+                            $"Введите другое название упражнение для дня {CurrentUserContext.DataManager.CurrentDay.Name}");
 
                         switch (CurrentUserContext.Navigation.QueryFrom)
                         {
@@ -290,7 +290,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                     }
 
                     responseConverter = new ResponseConverter("Упражнение зафиксировано!",
-                        $"Введите след. упражнение для дня {CurrentUserContext.DataManager.CurrentDay.NameDay} либо нажмите \"Сохранить\" для сохранения зафиксированных упражнений");
+                        $"Введите след. упражнение для дня {CurrentUserContext.DataManager.CurrentDay.Name} либо нажмите \"Сохранить\" для сохранения зафиксированных упражнений");
 
                     botClient.SendTextMessageAsync(update.Message.Chat.Id,
                                                     responseConverter.Convert(),
@@ -302,7 +302,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                 case MessageNavigationTarget.ChangeNameCycle:
                     requestConverter.RemoveCompletely(25).WithoutServiceSymbol();
 
-                    CurrentUserContext.DataManager.CurrentCycle.NameCycle = requestConverter.Convert();
+                    CurrentUserContext.DataManager.CurrentCycle.Name = requestConverter.Convert();
 
                     db.Cycles.Update(CurrentUserContext.DataManager.CurrentCycle);
                     db.SaveChanges();
@@ -317,7 +317,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                 case MessageNavigationTarget.ChangeNameDay:
                     requestConverter.RemoveCompletely(25).WithoutServiceSymbol();
 
-                    CurrentUserContext.DataManager.CurrentDay.NameDay = requestConverter.Convert();
+                    CurrentUserContext.DataManager.CurrentDay.Name = requestConverter.Convert();
 
                     db.Days.Update(CurrentUserContext.DataManager.CurrentDay);
                     db.SaveChanges();
@@ -332,7 +332,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                 case MessageNavigationTarget.ChangeNameExercise:
                     requestConverter.RemoveCompletely(25).WithoutServiceSymbol();
 
-                    CurrentUserContext.DataManager.CurrentExercise.NameExercise = requestConverter.Convert();
+                    CurrentUserContext.DataManager.CurrentExercise.Name = requestConverter.Convert();
 
                     db.Exercises.Update(CurrentUserContext.DataManager.CurrentExercise);
                     db.SaveChanges();
@@ -412,11 +412,11 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                     var message = previousStep.ButtonsSet switch // optional additional information
                     {
                         ButtonsSet.SettingCycle
-                            => previousStep.Message + " " + CurrentUserContext.DataManager.CurrentCycle.NameCycle,
+                            => previousStep.Message + " " + CurrentUserContext.DataManager.CurrentCycle.Name,
                         ButtonsSet.SettingDay
-                            => previousStep.Message + " " +CurrentUserContext.DataManager.CurrentDay.NameDay,
+                            => previousStep.Message + " " +CurrentUserContext.DataManager.CurrentDay.Name,
                         ButtonsSet.SettingExercise
-                            => previousStep.Message + " " + CurrentUserContext.DataManager.CurrentExercise.NameExercise,
+                            => previousStep.Message + " " + CurrentUserContext.DataManager.CurrentExercise.Name,
                         _ => previousStep.Message
                     };
                     
@@ -462,7 +462,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                     break;
 
                 case "LastWorkout":
-                    var exercises = QueriesStorage.GetExercisesWithDaysIds(CurrentUserContext.ActiveCycle.Days.Select(d => d.Id), db.GetExercisesFromQuery);
+                    var exercises = QueriesStorage.GetExercisesWithDaysIds(CurrentUserContext.ActiveCycle.Days.Where(d => !d.IsArchive).Select(d => d.Id), db.GetExercisesFromQuery);
                     var resultExercisesForLastWorkout = QueriesStorage.GetLastResultsExercisesWithExercisesIds(exercises.Select(e => e.Id), db.GetResultExercisesFromQuery);
 
                     var informationAboutLastWorkout = ResponseConverter.GetInformationAboutLastWorkout(exercises, resultExercisesForLastWorkout);
@@ -475,14 +475,14 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
 
                 case "GetLastResultForThisDay":
                     var day = CurrentUserContext.ActiveCycle.Days.FirstOrDefault(d => d.Id == callbackQueryParser.ObjectId);
-                    var lastResultsForExercises = QueriesStorage.GetLastResultsForExercisesWithExercisesIds(day.Exercises.Select(d => d.Id), db.GetResultExercisesFromQuery);
+                    var lastResultsForExercises = QueriesStorage.GetLastResultsForExercisesWithExercisesIds(day.Exercises.Where(e => !e.IsArchive).Select(d => d.Id), db.GetResultExercisesFromQuery);
 
                     var informationAboutLastDay = ResponseConverter.GetInformationAboutLastDay(day.Exercises, lastResultsForExercises);
                     responseConverter = new ResponseConverter("Последняя результаты упражений из этого дня:", informationAboutLastDay, "Выберите упражнение");
 
                     botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
                                                     responseConverter.Convert(),
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ExercisesListWithLastWorkoutForDay, backButtonsSet: ButtonsSet.DaysList));
+                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ExercisesListWithLastWorkoutForDay, backButtonsSet: ButtonsSet.DaysListWithLastWorkout));
                     break;
 
                 case "SaveResultForExercise":
@@ -533,6 +533,53 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                                                     replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.Settings, backButtonsSet: ButtonsSet.Main));
                     break;
 
+                case "SettingArchive":
+                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
+                                                    "Выберите интересующий архив для разархивирования",
+                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ArchiveList, backButtonsSet: ButtonsSet.Settings));
+                    break;
+
+                case "ArchiveCyclesList":
+                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
+                                                    "Выберите архивный цикл для разархивирования",
+                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ArchiveCyclesList, backButtonsSet: ButtonsSet.ArchiveList));
+                    break;
+
+                case "ArchiveDaysList":
+                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
+                                                    "Выберите архивный день для разархивирования",
+                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ArchiveDaysList, backButtonsSet: ButtonsSet.ArchiveList));
+                    break;
+
+                case "ArchiveExercisesList":
+                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
+                                                    "Выберите архивное упражнение для разархивирования",
+                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ArchiveExercisesList, backButtonsSet: ButtonsSet.ArchiveList));
+                    break;
+
+                case "UnArchive":
+
+                    IDomain domain = callbackQueryParser.ObjectType switch
+                    {
+                        "Cycle"
+                            => CurrentUserContext.UserInformation.Cycles.First(c => c.Id == callbackQueryParser.ObjectId),
+                        "Day"
+                            => db.Days.First(d => d.Id == callbackQueryParser.ObjectId),
+                        "Exercise"
+                            => db.Exercises.First(e => e.Id == callbackQueryParser.ObjectId),
+                         _=> throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectId: {callbackQueryParser.ObjectId}")
+                    };
+                    
+                    domain.IsArchive = false;
+
+                    db.Update(domain);
+                    db.SaveChanges();
+
+                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
+                                                    $"{domain.Name} разархивирован!",
+                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ArchiveList, backButtonsSet: ButtonsSet.Settings));
+                    break;
+
                 case "DeleteAccount":
                     responseConverter = new ResponseConverter("Вы уверены?", "Удаление аккаунта приведёт к полной и безвозвратной потере информации о ваших тренировках");
 
@@ -581,12 +628,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                     {
                         case QueryFrom.Start:
                             botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                            $"Введите название тренирочного дня для цикла {CurrentUserContext.DataManager.CurrentCycle.NameCycle}");
+                                                            $"Введите название тренирочного дня для цикла {CurrentUserContext.DataManager.CurrentCycle.Name}");
                             break;
 
                         case QueryFrom.Settings:
                             botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                            $"Введите название тренирочного дня для цикла {CurrentUserContext.DataManager.CurrentCycle.NameCycle}",
+                                                            $"Введите название тренирочного дня для цикла {CurrentUserContext.DataManager.CurrentCycle.Name}",
                                                             replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.None, backButtonsSet: ButtonsSet.SettingDay));
                             break;
                         default:
@@ -602,12 +649,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                     {
                         case QueryFrom.Start:
                             botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                            $"Введите название упражнение дня для цикла {CurrentUserContext.DataManager.CurrentDay.NameDay}");
+                                                            $"Введите название упражнение дня для цикла {CurrentUserContext.DataManager.CurrentDay.Name}");
                             break;
 
                         case QueryFrom.Settings:
                             botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                            $"Введите название упражнение дня для цикла {CurrentUserContext.DataManager.CurrentDay.NameDay}",
+                                                            $"Введите название упражнение дня для цикла {CurrentUserContext.DataManager.CurrentDay.Name}",
                                                             replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.None, backButtonsSet: ButtonsSet.SettingExercise));
                             break;
                         default:
@@ -665,15 +712,15 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                     CurrentUserContext.DataManager.SetCycle(CurrentUserContext.UserInformation.Cycles.First(c => c.Id == callbackQueryParser.ObjectId));
 
                     botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    $"Выберите интересующую настройку для цикла {CurrentUserContext.DataManager.CurrentCycle.NameCycle}",
+                                                    $"Выберите интересующую настройку для цикла {CurrentUserContext.DataManager.CurrentCycle.Name}",
                                                     replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.SettingCycle, backButtonsSet: ButtonsSet.CycleList));
                     break;
 
                 case "ChangeActiveCycle":
                     if (CurrentUserContext.DataManager.CurrentCycle.IsActive)
                     {
-                        responseConverter = new ResponseConverter($"Выбранный цикл {CurrentUserContext.ActiveCycle.NameCycle} уже являается активным!", 
-                            $"Выберите интересующую настройку для цикла {CurrentUserContext.DataManager.CurrentCycle.NameCycle}");
+                        responseConverter = new ResponseConverter($"Выбранный цикл {CurrentUserContext.ActiveCycle.Name} уже являается активным!", 
+                            $"Выберите интересующую настройку для цикла {CurrentUserContext.DataManager.CurrentCycle.Name}");
 
                         botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
                                                     responseConverter.Convert(),
@@ -687,8 +734,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                     db.Cycles.Update(CurrentUserContext.ActiveCycle);
                     db.SaveChanges();
 
-                    responseConverter = new ResponseConverter($"Активный цикл изменён на {CurrentUserContext.ActiveCycle.NameCycle}",
-                           $"Выберите интересующую настройку для цикла {CurrentUserContext.DataManager.CurrentCycle.NameCycle}");
+                    responseConverter = new ResponseConverter($"Активный цикл изменён на {CurrentUserContext.ActiveCycle.Name}",
+                           $"Выберите интересующую настройку для цикла {CurrentUserContext.DataManager.CurrentCycle.Name}");
 
                     botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
                                                     responseConverter.Convert(),
@@ -699,9 +746,35 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                     CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.ChangeNameCycle;
 
                     botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    $"Введите новоё название для цикла {CurrentUserContext.DataManager.CurrentCycle.NameCycle}",
+                                                    $"Введите новоё название для цикла {CurrentUserContext.DataManager.CurrentCycle.Name}",
                                                     replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.None, backButtonsSet: ButtonsSet.SettingCycle));
                     break;
+
+                case "CycleArchiving":
+                if (CurrentUserContext.DataManager.CurrentCycle.IsActive)
+                {
+                    responseConverter = new ResponseConverter("Ошибка при архивации!", "Нельзя архивировать активный цикл!",
+                        $"Выберите интересующую настройку для цикла {CurrentUserContext.DataManager.CurrentCycle.Name}");
+
+                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
+                                                responseConverter.Convert(),
+                                                replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.SettingCycle, backButtonsSet: ButtonsSet.CycleList));
+                    break;
+                }
+
+                CurrentUserContext.DataManager.CurrentCycle.IsArchive = true;
+                db.Cycles.Update(CurrentUserContext.DataManager.CurrentCycle);
+                db.SaveChanges();
+
+                responseConverter = new ResponseConverter($"Цикл {CurrentUserContext.DataManager.CurrentCycle.Name} был добавлен в архив",
+                    $"Выберите интересующий цикл");
+
+                CurrentUserContext.DataManager.ResetCycle();
+
+                botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
+                                                responseConverter.Convert(),
+                                                replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.CycleList, backButtonsSet: ButtonsSet.SettingCycles));
+                break;
 
                 case "DeleteCycle":
                     responseConverter = new ResponseConverter("Вы уверены?", "Удаление цикла приведёт к полной и безвозвратной потере информации о ваших тренировках в этом цикле");
@@ -715,7 +788,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                     if (CurrentUserContext.DataManager.CurrentCycle.IsActive)
                     {
                         responseConverter = new ResponseConverter("Ошибка при удалении!", "Нельзя удалить активный цикл!", 
-                            $"Выберите интересующую настройку для цикла {CurrentUserContext.DataManager.CurrentCycle.NameCycle}");
+                            $"Выберите интересующую настройку для цикла {CurrentUserContext.DataManager.CurrentCycle.Name}");
 
                         botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
                                                     responseConverter.Convert(),
@@ -723,7 +796,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                         break;
                     }
 
-                    responseConverter = new ResponseConverter($"Цикл {CurrentUserContext.DataManager.CurrentCycle.NameCycle} удалён!", "Выберите интересующий цикл");
+                    responseConverter = new ResponseConverter($"Цикл {CurrentUserContext.DataManager.CurrentCycle.Name} удалён!", "Выберите интересующий цикл");
 
                     db.Cycles.Remove(CurrentUserContext.DataManager.CurrentCycle);
                     db.SaveChanges();
@@ -764,7 +837,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                             CurrentUserContext.DataManager.SetDay(CurrentUserContext.DataManager.CurrentCycle.Days.First(d => d.Id == callbackQueryParser.ObjectId));
 
                             botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                            $"Выберите интересующую настройку для дня {CurrentUserContext.DataManager.CurrentDay.NameDay}",
+                                                            $"Выберите интересующую настройку для дня {CurrentUserContext.DataManager.CurrentDay.Name}",
                                                             replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.SettingDay, backButtonsSet: ButtonsSet.DaysList));
                             break;
                         default:
@@ -777,8 +850,23 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                     CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.ChangeNameDay;
 
                     botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    $"Введите новоё название для дня {CurrentUserContext.DataManager.CurrentDay.NameDay}",
+                                                    $"Введите новоё название для дня {CurrentUserContext.DataManager.CurrentDay.Name}",
                                                     replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.None, backButtonsSet: ButtonsSet.SettingDay));
+                    break;
+
+                case "DayArchiving":
+                    CurrentUserContext.DataManager.CurrentDay.IsArchive = true;
+                    db.Days.Update(CurrentUserContext.DataManager.CurrentDay);
+                    db.SaveChanges();
+
+                    responseConverter = new ResponseConverter($"День {CurrentUserContext.DataManager.CurrentDay.Name} был добавлен в архив",
+                            $"Выберите интересующий день");
+
+                    CurrentUserContext.DataManager.ResetDay();
+
+                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
+                                                    responseConverter.Convert(),
+                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.DaysList, backButtonsSet: ButtonsSet.SettingDays));
                     break;
 
                 case "DeleteDay":
@@ -790,7 +878,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                     break;
 
                 case "ConfirmDeleteDay":
-                    responseConverter = new ResponseConverter($"День {CurrentUserContext.DataManager.CurrentDay.NameDay} удалён!", "Выберите интересующий день");
+                    responseConverter = new ResponseConverter($"День {CurrentUserContext.DataManager.CurrentDay.Name} удалён!", "Выберите интересующий день");
 
                     db.Days.Remove(CurrentUserContext.DataManager.CurrentDay);
                     db.SaveChanges();
@@ -831,7 +919,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
 
                         case QueryFrom.Settings:
                             botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                            $"Выберите интересующую настройку для упражнения {CurrentUserContext.DataManager.CurrentExercise.NameExercise}",
+                                                            $"Выберите интересующую настройку для упражнения {CurrentUserContext.DataManager.CurrentExercise.Name}",
                                                             replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.SettingExercise, backButtonsSet: ButtonsSet.ExercisesList));
                             break;
                         default:
@@ -844,8 +932,23 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                     CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.ChangeNameExercise;
 
                     botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    $"Введите новоё название для упражнения {CurrentUserContext.DataManager.CurrentExercise.NameExercise}",
+                                                    $"Введите новоё название для упражнения {CurrentUserContext.DataManager.CurrentExercise.Name}",
                                                     replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.None, backButtonsSet: ButtonsSet.SettingExercise));
+                    break;
+
+                case "ExerciseArchiving":
+                    CurrentUserContext.DataManager.CurrentExercise.IsArchive = true;
+                    db.Exercises.Update(CurrentUserContext.DataManager.CurrentExercise);
+                    db.SaveChanges();
+
+                    responseConverter = new ResponseConverter($"Упражнение {CurrentUserContext.DataManager.CurrentExercise.Name} было добавлено в архив",
+                            $"Выберите интересующее упражнение");
+
+                    CurrentUserContext.DataManager.ResetExercise();
+
+                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
+                                                    responseConverter.Convert(),
+                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ExercisesList, backButtonsSet: ButtonsSet.SettingExercises));
                     break;
 
                 case "DeleteExercise":
@@ -857,7 +960,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                     break;
 
                 case "ConfirmDeleteExercise":
-                    responseConverter = new ResponseConverter($"Упражнение {CurrentUserContext.DataManager.CurrentExercise.NameExercise} удалёно!", "Выберите интересующее упражнение");
+                    responseConverter = new ResponseConverter($"Упражнение {CurrentUserContext.DataManager.CurrentExercise.Name} удалёно!", "Выберите интересующее упражнение");
 
                     db.Exercises.Remove(CurrentUserContext.DataManager.CurrentExercise);
                     db.SaveChanges();

@@ -88,8 +88,8 @@ namespace WorkoutStorageBot.Helpers.Converters
                         .Join(resultExercises,
                             e => e.Id,
                             rE => rE.ExerciseId,
-                            (e, rE) => new { e.NameExercise, rE.Count, rE.Weight, rE.DateTime })
-                        .GroupBy(rE => rE.NameExercise).ToArray();
+                            (e, rE) => new { e.Name, rE.Count, rE.Weight, rE.DateTime })
+                        .GroupBy(rE => rE.Name).ToArray();
 
 
             var sb = new StringBuilder();
@@ -118,8 +118,8 @@ namespace WorkoutStorageBot.Helpers.Converters
                         .Join(resultExercises,
                             e => e.Id,
                             rE => rE.ExerciseId,
-                            (e, rE) => new { e.NameExercise, rE.Count, rE.Weight, rE.DateTime })
-                        .GroupBy(rE => rE.NameExercise).ToArray();
+                            (e, rE) => new { e.Name, rE.Count, rE.Weight, rE.DateTime })
+                        .GroupBy(rE => rE.Name).ToArray();
 
             var sb = new StringBuilder();
 
