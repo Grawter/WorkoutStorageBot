@@ -8,11 +8,19 @@ namespace WorkoutStorageBot.Helpers.Converters
 {
     public class ResponseConverter : IStringConverter
     {
-        private StringBuilder sb;
+        private StringBuilder? sb;
         private string? title;
         private string? content;
-        private string? target;
+        private string target;
         private string? separator;
+        private bool onlyTarget;
+
+        public ResponseConverter(string target)
+        {
+            this.target = target;
+
+            onlyTarget = true;
+        }
 
         public ResponseConverter(string content, string target)
         {
@@ -58,6 +66,9 @@ namespace WorkoutStorageBot.Helpers.Converters
 
         public string Convert()
         {
+            if (onlyTarget)
+                return target;
+
             if (!string.IsNullOrEmpty(title))
             {
                 sb.AppendLine(title);
@@ -79,7 +90,7 @@ namespace WorkoutStorageBot.Helpers.Converters
             return sb.ToString();
         }
 
-        public static string GetInformationAboutLastWorkout(List<Exercise> exercises, List<ResultExercise> resultExercises)
+        public static string GetInformationAboutLastExercises(IEnumerable<Exercise>? exercises, IEnumerable<ResultExercise>? resultExercises)
         {
             if (!exercises.Any() || !resultExercises.Any())
                 return "Нет информации для данного цикла";
@@ -109,7 +120,7 @@ namespace WorkoutStorageBot.Helpers.Converters
             return sb.ToString().Trim();
         }
 
-        public static string GetInformationAboutLastDay(List<Exercise> exercises, List<ResultExercise> resultExercises)
+        public static string GetInformationAboutLastDay(IEnumerable<Exercise> exercises, IEnumerable<ResultExercise>? resultExercises)
         {
             if (!exercises.Any() || !resultExercises.Any())
                 return "Нет информации для данного цикла";

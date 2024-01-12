@@ -47,17 +47,17 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
 
                 #region Workout area
                 case ButtonsSet.DaysListWithLastWorkout:
-                    AddInlineButton("Последняя тренировка", "1|LastWorkout");
+                    AddInlineButton("Последняя тренировка", "1|LastResultFor|Exercises");
                     GetDaysInButtons(CurrentUserContext.ActiveCycle.Days.Where(d => !d.IsArchive), ActionForList.Select);
                     break;
 
                 case ButtonsSet.ExercisesListWithLastWorkoutForDay:
-                    AddInlineButton("Последние результаты выбранного дня", $"1|GetLastResultForThisDay|{CurrentUserContext.DataManager.CurrentDay.Id}");
+                    AddInlineButton("Последние результаты выбранного дня", $"1|LastResultFor|Day");
                     GetExercisesInButtons(CurrentUserContext.DataManager.CurrentDay.Exercises.Where(e => !e.IsArchive), ActionForList.Select);
                     break;
 
-                case ButtonsSet.SaveResultForExercise:
-                    AddInlineButton("Сохранить результаты", "1|SaveResultForExercise");
+                case ButtonsSet.SaveResultsExercise:
+                    AddInlineButton("Сохранить результаты", "1|SaveResultsExercise");
                     break;
                 #endregion
 
@@ -66,14 +66,14 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
 
                 #region Settings area
                 case ButtonsSet.Settings:
-                    AddInlineButton("Настройка тренировочных циклов", "3|SettingCycles");
-                    AddInlineButton("Настройка архива", "3|SettingArchive");
-                    AddInlineButton("Удалить свой аккаунт", "3|DeleteAccount");
+                    AddInlineButton("Настройка тренировочных циклов", "3|Setting|Cycles");
+                    AddInlineButton("Архив", "3|ArchiveStore");
+                    AddInlineButton("Удалить свой аккаунт", "3|Delete|Account");
                     break;
 
                 case ButtonsSet.SettingCycles:
-                    AddInlineButton("Добавить новый цикл", "3|AddCycle");
-                    AddInlineButton("Настройка существующих циклов", "3|SettingExistingCycles");
+                    AddInlineButton("Добавить новый цикл", "3|Add|Cycle");
+                    AddInlineButton("Настройка существующих циклов", "3|SettingExisting|Cycles");
                     AddInlineButton("Вернуться к главному меню", "0|ToMain");
                     break;
 
@@ -82,17 +82,17 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                     break;
 
                 case ButtonsSet.SettingCycle:
-                    AddInlineButton("Сделать активным", "3|ChangeActiveCycle");
-                    AddInlineButton("Сменить название", "3|ChangeNameCycle");
-                    AddInlineButton("Добавить в архив", "3|CycleArchiving");
-                    AddInlineButton("Удалить", "3|DeleteCycle");
-                    AddInlineButton("Настройка дней", "3|SettingDays");
+                    AddInlineButton("Сделать активным", "3|ChangeActive|Cycle");
+                    AddInlineButton("Сменить название", "3|ChangeName|Cycle");
+                    AddInlineButton("Добавить в архив", "3|Archiving|Cycle");
+                    AddInlineButton("Удалить", "3|Delete|Cycle");
+                    AddInlineButton("Настройка дней", "3|Setting|Days");
                     AddInlineButton("Вернуться к главному меню", "0|ToMain");
                     break;
 
                 case ButtonsSet.SettingDays:
                     AddInlineButton("Добавить новые дни в цикл", "3|AddDays");
-                    AddInlineButton("Настройка существующих дней", "3|SettingExistingDays");
+                    AddInlineButton("Настройка существующих дней", "3|SettingExisting|Days");
                     AddInlineButton("Вернуться к главному меню", "0|ToMain");
                     break;
 
@@ -101,11 +101,11 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                     break;
 
                 case ButtonsSet.SettingDay:
-                    AddInlineButton("Сменить название", "3|ChangeNameDay");
-                    AddInlineButton("Перенести день", "3|Replace||Day");
-                    AddInlineButton("Добавить в архив", "3|DayArchiving");
-                    AddInlineButton("Удалить", "3|DeleteDay");
-                    AddInlineButton("Настройка упражнений", "3|SettingExercises");
+                    AddInlineButton("Сменить название", "3|ChangeName|Day");
+                    AddInlineButton("Перенести день", "3|Replace|Day");
+                    AddInlineButton("Добавить в архив", "3|Archiving|Day");
+                    AddInlineButton("Удалить", "3|Delete|Day");
+                    AddInlineButton("Настройка упражнений", "3|Setting|Exercises");
                     AddInlineButton("Вернуться к главному меню", "0|ToMain");
                     break;
 
@@ -114,8 +114,8 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                     break;
 
                 case ButtonsSet.SettingExercises:
-                    AddInlineButton("Добавить новые упражнения в день", "3|AddExercises");
-                    AddInlineButton("Настройка существующих упражнений", "3|SettingExistingExercises");
+                    AddInlineButton("Добавить новые упражнения в день", "3|Add|Exercises");
+                    AddInlineButton("Настройка существующих упражнений", "3|SettingExisting|Exercises");
                     AddInlineButton("Вернуться к главному меню", "0|ToMain");
                     break;
 
@@ -124,10 +124,10 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                     break;
 
                 case ButtonsSet.SettingExercise:
-                    AddInlineButton("Сменить название", "3|ChangeNameExercise");
-                    AddInlineButton("Перенести упражнение", "3|Replace||Exercise");
-                    AddInlineButton("Добавить в архив", "3|ExerciseArchiving");
-                    AddInlineButton("Удалить", "3|DeleteExercise");
+                    AddInlineButton("Сменить название", "3|ChangeName|Exercise");
+                    AddInlineButton("Перенести упражнение", "3|Replace|Exercise");
+                    AddInlineButton("Добавить в архив", $"3|Archiving|{DomainType.Exercise}");
+                    AddInlineButton("Удалить", "3|Delete|Exercise");
                     AddInlineButton("Вернуться к главному меню", "0|ToMain");
                     break;
 
@@ -148,8 +148,8 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                 case ButtonsSet.AddExercises:
                     AddInlineButton($"Добавить упражнеия", "3|AddExercises");
                     break;
-                case ButtonsSet.SaveAddedExercise:
-                    AddInlineButton($"Сохранить упражнения", "3|SaveAddedExercise");
+                case ButtonsSet.SaveExercises:
+                    AddInlineButton($"Сохранить упражнения", "3|SaveExercises");
                     break;
                 case ButtonsSet.RedirectAfterSaveExercise:
                     AddInlineButton($"Добавить новый день", "3|AddDays");
@@ -159,12 +159,12 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
 
                 #region Archiving area
                 case ButtonsSet.ArchiveList:
-                    AddInlineButton("Архивированные циклы", "3|ArchiveCyclesList");
-                    AddInlineButton("Архивированные дни", "3|ArchiveDaysList");
-                    AddInlineButton("Архивированные упражнения", "3|ArchiveExercisesList");
+                    AddInlineButton("Архивированные циклы", "3|Archive|Cycles");
+                    AddInlineButton("Архивированные дни", "3|Archive|Days");
+                    AddInlineButton("Архивированные упражнения", "3|Archive|Exercises");
                     break;
                 case ButtonsSet.ArchiveCyclesList:
-                    GetCyclesInButtons(CurrentUserContext.UserInformation.Cycles.Where(c => c.IsActive), ActionForList.UnArchive);
+                    GetCyclesInButtons(CurrentUserContext.UserInformation.Cycles.Where(c => c.IsArchive), ActionForList.UnArchive);
                     break;
                 case ButtonsSet.ArchiveDaysList:
                     foreach(var cycle in CurrentUserContext.UserInformation.Cycles.Where(c => !c.IsArchive))
@@ -185,19 +185,19 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
 
                 #region Confirm delete area
                 case ButtonsSet.ConfirmDeleteExercise:
-                    AddInlineButton("Да, удалить упражнение", "3|ConfirmDeleteExercise");
+                    AddInlineButton("Да, удалить упражнение", "3|ConfirmDelete|Exercise");
                     break;
 
                 case ButtonsSet.ConfirmDeleteDay:
-                    AddInlineButton("Да, удалить день", "3|ConfirmDeleteDay");
+                    AddInlineButton("Да, удалить день", "3|ConfirmDelete|Day");
                     break;
 
                 case ButtonsSet.ConfirmDeleteCycle:
-                    AddInlineButton("Да, удалить цикл", "3|ConfirmDeleteCycle");
+                    AddInlineButton("Да, удалить цикл", "3|ConfirmDelete|Cycle");
                     break;
 
                 case ButtonsSet.ConfirmDeleteAccount:
-                    AddInlineButton("Да, удалить аккаунт", "3|ConfirmDeleteAccount");
+                    AddInlineButton("Да, удалить аккаунт", "3|ConfirmDelete|Account");
                     break;
                 case ButtonsSet.None:
                     break;
@@ -248,19 +248,19 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                 case ActionForList.Select:
                     foreach (var cycle in source)
                     {
-                        AddInlineButton(cycle.Name, $"3|SelectedCycle|{cycle.Id}");
+                        AddInlineButton(cycle.Name, $"3|Selected|Cycle|{cycle.Id}");
                     }
                     break;
                 case ActionForList.UnArchive:
                     foreach (var cycle in source)
                     {
-                        AddInlineButton(cycle.Name, $"3|UnArchive|{cycle.Id}|Cycle");
+                        AddInlineButton(cycle.Name, $"3|UnArchive|Cycle|{cycle.Id}");
                     }
                     break;
                 case ActionForList.Move:
                     foreach (var cycle in source)
                     {
-                        AddInlineButton(cycle.Name, $"3|ReplaceTo|{cycle.Id}|Cycle|{cycle.Name}");
+                        AddInlineButton(cycle.Name, $"3|ReplaceTo|Cycle|{cycle.Id}|{cycle.Name}");
                     }
                     break;
                 default:
@@ -276,19 +276,19 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                 case ActionForList.Select:
                     foreach (var day in source)
                     {
-                        AddInlineButton(day.Name, $"3|SelectedDay|{day.Id}");
+                        AddInlineButton(day.Name, $"3|Selected|Day|{day.Id}");
                     }
                     break;
                 case ActionForList.UnArchive:
                     foreach (var day in source)
                     {
-                        AddInlineButton(day.Name, $"3|UnArchive|{day.Id}|Day");
+                        AddInlineButton(day.Name, $"3|UnArchive|Day|{day.Id}");
                     }
                     break;
                 case ActionForList.Move:
                     foreach (var day in source)
                     {
-                        AddInlineButton(day.Name, $"3|ReplaceTo|{day.Id}|Day|{day.Name}");
+                        AddInlineButton(day.Name, $"3|ReplaceTo|Day|{day.Id}|{day.Name}");
                     }
                     break;
                 default:
@@ -305,13 +305,13 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                 case ActionForList.Select:
                     foreach (var exercise in source)
                     {
-                        AddInlineButton(exercise.Name, $"3|SelectedExercise|{exercise.Id}");
+                        AddInlineButton(exercise.Name, $"3|Selected|Exercise|{exercise.Id}");
                     }
                     break;
                 case ActionForList.UnArchive:
                     foreach (var exercise in source)
                     {
-                        AddInlineButton(exercise.Name, $"3|UnArchive|{exercise.Id}|Exercise");
+                        AddInlineButton(exercise.Name, $"3|UnArchive|Exercise|{exercise.Id}");
                     }
                     break;
                 default:

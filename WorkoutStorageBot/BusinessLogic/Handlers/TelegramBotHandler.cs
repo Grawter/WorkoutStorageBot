@@ -118,7 +118,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
 
                     botClient.SendTextMessageAsync(update.Message.Chat.Id,
                                                     responseConverter.Convert(),
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.SaveResultForExercise, backButtonsSet: ButtonsSet.Main));
+                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.SaveResultsExercise, backButtonsSet: ButtonsSet.Main));
                     break;
 
                 #endregion
@@ -294,7 +294,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
 
                     botClient.SendTextMessageAsync(update.Message.Chat.Id,
                                                     responseConverter.Convert(),
-                                                    replyMarkup: buttons.GetInlineButtons(buttonsSet: ButtonsSet.SaveAddedExercise));
+                                                    replyMarkup: buttons.GetInlineButtons(buttonsSet: ButtonsSet.SaveExercises));
                     break;
 
                 #endregion
@@ -366,7 +366,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
             switch((CallBackNavigationTarget)callbackQueryParser.Direction)
             {
                 case CallBackNavigationTarget.None:
-                    ProcessAbstractCallBack(update, callbackQueryParser, buttons);
+                    ProcessCommonCallBack(update, callbackQueryParser, buttons);
                     break;
                 case CallBackNavigationTarget.Workout:
                     ProcessWorkoutCallBack(update, callbackQueryParser, buttons);
@@ -397,7 +397,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
             return true;
         }
 
-        private void ProcessAbstractCallBack(Update update, CallbackQueryParser callbackQueryParser, InlineButtons buttons)
+        private void ProcessCommonCallBack(Update update, CallbackQueryParser callbackQueryParser, InlineButtons buttons)
         {
             switch (callbackQueryParser.SubDirection)
             {
@@ -419,10 +419,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                             => previousStep.Message + " " + CurrentUserContext.DataManager.CurrentExercise.Name,
                         _ => previousStep.Message
                     };
-                    
-                    botClient.SendTextMessageAsync( update.CallbackQuery.Message.Chat.Id,
-                                                    message,
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: previousStep.ButtonsSet, backButtonsSet: previousStep.BackButtonsSet));
+
+                    SendResponse(update.CallbackQuery.Message.Chat.Id, message, (previousStep.ButtonsSet, previousStep.BackButtonsSet));
                     break;
 
                 case "ToMain":
@@ -433,9 +431,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                     CurrentUserContext.Navigation.QueryFrom = mainStep.QueryFrom;
                     CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.None;
 
-                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    mainStep.Message,
-                                                    replyMarkup: buttons.GetInlineButtons(buttonsSet: mainStep.ButtonsSet));
+                    SendResponse(update.CallbackQuery.Message.Chat.Id, mainStep.Message, (mainStep.ButtonsSet, mainStep.BackButtonsSet));
                     break;
 
                 default:
@@ -448,6 +444,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
         private void ProcessWorkoutCallBack(Update update, CallbackQueryParser callbackQueryParser, InlineButtons buttons)
         {
             ResponseConverter responseConverter;
+            (ButtonsSet buttonsSet, ButtonsSet backButtonsSet) ButtonsSets;
 
             switch (callbackQueryParser.SubDirection)
             {
@@ -456,36 +453,37 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                 case "Workout":
                     CurrentUserContext.Navigation.QueryFrom = QueryFrom.NoMatter; // not necessary, but just in case
 
-                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    "Выберите тренировочный день",
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.DaysListWithLastWorkout, backButtonsSet: ButtonsSet.Main));
+                    responseConverter = new ResponseConverter("Выберите тренировочный день");
+                    ButtonsSets = (ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main);
                     break;
 
-                case "LastWorkout":
-                    var exercises = QueriesStorage.GetExercisesWithDaysIds(CurrentUserContext.ActiveCycle.Days.Where(d => !d.IsArchive).Select(d => d.Id), db.GetExercisesFromQuery);
-                    var resultExercisesForLastWorkout = QueriesStorage.GetLastResultsExercisesWithExercisesIds(exercises.Select(e => e.Id), db.GetResultExercisesFromQuery);
+                case "LastResultFor":
+                    IEnumerable<ResultExercise> trainingIndicators;
+                    string information;
 
-                    var informationAboutLastWorkout = ResponseConverter.GetInformationAboutLastWorkout(exercises, resultExercisesForLastWorkout);
-                    responseConverter = new ResponseConverter("Последняя тренировка:", informationAboutLastWorkout, "Выберите тренировочный день");
+                    switch (callbackQueryParser.ObjectType) 
+                    {
+                        case "Exercises":
+                            var exercises = QueriesStorage.GetExercisesWithDaysIds(CurrentUserContext.ActiveCycle.Days.Where(d => !d.IsArchive).Select(d => d.Id), db.GetExercisesFromQuery);
+                            trainingIndicators = QueriesStorage.GetLastResultsExercisesWithExercisesIds(exercises.Select(e => e.Id), db.GetResultExercisesFromQuery);
 
-                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    responseConverter.Convert(),
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.DaysListWithLastWorkout, backButtonsSet: ButtonsSet.Main));
+                            information = ResponseConverter.GetInformationAboutLastExercises(exercises, trainingIndicators);
+                            responseConverter = new ResponseConverter("Последняя тренировка:", information, "Выберите тренировочный день");
+                            ButtonsSets = (ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main);
+                            break;
+                        case "Day":
+                            trainingIndicators = QueriesStorage.GetLastResultsForExercisesWithExercisesIds(CurrentUserContext.DataManager.CurrentDay.Exercises.Where(e => !e.IsArchive).Select(d => d.Id), db.GetResultExercisesFromQuery);
+
+                            information = ResponseConverter.GetInformationAboutLastDay(CurrentUserContext.DataManager.CurrentDay.Exercises, trainingIndicators);
+                            responseConverter = new ResponseConverter("Последняя результаты упражений из этого дня:", information, "Выберите упражнение");
+                            ButtonsSets = (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout);
+                            break;
+                        default:
+                            throw new NotImplementedException($"Неожиданный CallbackQueryParser.SubDirection: {callbackQueryParser.SubDirection}");
+                    }
                     break;
 
-                case "GetLastResultForThisDay":
-                    var day = CurrentUserContext.ActiveCycle.Days.FirstOrDefault(d => d.Id == callbackQueryParser.ObjectId);
-                    var lastResultsForExercises = QueriesStorage.GetLastResultsForExercisesWithExercisesIds(day.Exercises.Where(e => !e.IsArchive).Select(d => d.Id), db.GetResultExercisesFromQuery);
-
-                    var informationAboutLastDay = ResponseConverter.GetInformationAboutLastDay(day.Exercises, lastResultsForExercises);
-                    responseConverter = new ResponseConverter("Последняя результаты упражений из этого дня:", informationAboutLastDay, "Выберите упражнение");
-
-                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    responseConverter.Convert(),
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ExercisesListWithLastWorkoutForDay, backButtonsSet: ButtonsSet.DaysListWithLastWorkout));
-                    break;
-
-                case "SaveResultForExercise":
+                case "SaveResultsExercise":
                     db.ResultsExercises.AddRange(CurrentUserContext.DataManager.ResultExercises);
                     db.SaveChanges();
 
@@ -494,10 +492,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                     CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.None;
 
                     responseConverter = new ResponseConverter("Введённые данные сохранены!", "Выберите упраженение");
-
-                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    responseConverter.Convert(),
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ExercisesListWithLastWorkoutForDay, backButtonsSet: ButtonsSet.DaysListWithLastWorkout));
+                    ButtonsSets = (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout);
                     break;
 
                 default:
@@ -505,6 +500,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
 
                     #endregion
             }
+
+            SendResponse(update.CallbackQuery.Message.Chat.Id, responseConverter.Convert(), ButtonsSets);
         }
 
         private void ProcessAnalyticsCallBack(Update update, CallbackQueryParser callbackQueryParser, InlineButtons buttons)
@@ -520,84 +517,329 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
 
         private void ProcessSettingsCallBack(Update update, CallbackQueryParser callbackQueryParser, InlineButtons buttons)
         {
+            IDomain domain;
+
             ResponseConverter responseConverter;
+            (ButtonsSet, ButtonsSet) buttonsSets;
 
             switch (callbackQueryParser.SubDirection)
             {
-                #region Settings area
-
                 case "Settings":
                     CurrentUserContext.Navigation.QueryFrom = QueryFrom.Settings;
-                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    "Выберите интересующие настройки",
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.Settings, backButtonsSet: ButtonsSet.Main));
+
+                    responseConverter = new ResponseConverter("Выберите интересующие настройки");
+                    buttonsSets = (ButtonsSet.Settings, ButtonsSet.Main);
                     break;
 
-                case "SettingArchive":
-                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    "Выберите интересующий архив для разархивирования",
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ArchiveList, backButtonsSet: ButtonsSet.Settings));
+                case "ArchiveStore":
+                    responseConverter = new ResponseConverter("Выберите интересующий архив для разархивирования");
+                    buttonsSets = (ButtonsSet.ArchiveList, ButtonsSet.Settings);
                     break;
 
-                case "ArchiveCyclesList":
-                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    "Выберите архивный цикл для разархивирования",
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ArchiveCyclesList, backButtonsSet: ButtonsSet.ArchiveList));
+                case "Archive":
+                    switch (callbackQueryParser.ObjectType)
+                    {
+                        case "Cycles":
+                            responseConverter = new ResponseConverter("Выберите архивный цикл для разархивирования");
+                            buttonsSets = (ButtonsSet.ArchiveCyclesList, ButtonsSet.ArchiveList);
+                            break;
+                        case "Days":
+                            responseConverter = new ResponseConverter("Выберите архивный день для разархивирования");
+                            buttonsSets = (ButtonsSet.ArchiveDaysList, ButtonsSet.ArchiveList);
+                            break;
+                        case "Exercises":
+                            responseConverter = new ResponseConverter("Выберите архивное упражнение для разархивирования");
+                            buttonsSets = (ButtonsSet.ArchiveExercisesList, ButtonsSet.ArchiveList);
+                            break;
+                        default:
+                            throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.ObjectType}");
+                    }
                     break;
 
-                case "ArchiveDaysList":
-                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    "Выберите архивный день для разархивирования",
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ArchiveDaysList, backButtonsSet: ButtonsSet.ArchiveList));
-                    break;
-
-                case "ArchiveExercisesList":
-                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    "Выберите архивное упражнение для разархивирования",
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ArchiveExercisesList, backButtonsSet: ButtonsSet.ArchiveList));
-                    break;
-
-                #region Common area
                 case "UnArchive":
 
-                    IDomain domain = callbackQueryParser.ObjectType switch
-                    {
-                        "Cycle"
-                            => CurrentUserContext.UserInformation.Cycles.First(c => c.Id == callbackQueryParser.ObjectId),
-                        "Day"
-                            => db.Days.First(d => d.Id == callbackQueryParser.ObjectId),
-                        "Exercise"
-                            => db.Exercises.First(e => e.Id == callbackQueryParser.ObjectId),
-                        _ => throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectId: {callbackQueryParser.ObjectId}")
-                    };
-
+                    domain = GetDomainWithId(callbackQueryParser.ObjectId, callbackQueryParser.ObjectType);
                     domain.IsArchive = false;
 
                     db.Update(domain);
                     db.SaveChanges();
 
-                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    $"{domain.Name} разархивирован!",
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ArchiveList, backButtonsSet: ButtonsSet.Settings));
+                    responseConverter = new ResponseConverter($"{domain.Name} разархивирован!");
+                    buttonsSets = (ButtonsSet.ArchiveList, ButtonsSet.Settings);
+                    break;
+
+                case "Setting":
+                    switch (callbackQueryParser.ObjectType)
+                    {
+                        case "Cycles":
+                            responseConverter = new ResponseConverter("Выберите интересующие настройки для циклов");
+                            buttonsSets = (ButtonsSet.SettingCycles, ButtonsSet.Settings);
+                            break;
+                        case "Days":
+                            responseConverter = new ResponseConverter("Выберите интересующие настройки для дней");
+                            buttonsSets = (ButtonsSet.SettingDays, ButtonsSet.SettingCycle);
+                            break;
+                        case "Exercises":
+                            responseConverter = new ResponseConverter("Выберите интересующие настройки для упражнений");
+                            buttonsSets = (ButtonsSet.SettingExercises, ButtonsSet.SettingDay);
+                            break;
+                        default:
+                            throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.ObjectType}");
+                    }
+                    break;
+
+                case "Add":
+                    switch (callbackQueryParser.ObjectType)
+                    {
+                        case "Cycle":
+                            CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.AddCycle;
+
+                            responseConverter = new ResponseConverter("Введите название тренировочного цикла");
+
+                            switch (CurrentUserContext.Navigation.QueryFrom)
+                            {
+                                case QueryFrom.Start:
+                                    buttonsSets = (ButtonsSet.None, ButtonsSet.None);
+                                    break;
+
+                                case QueryFrom.Settings:
+                                    buttonsSets = (ButtonsSet.None, ButtonsSet.SettingCycles);
+                                    break;
+                                default:
+                                    throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {CurrentUserContext.Navigation.QueryFrom}");
+                            }
+                            break;
+
+                        case "Days":
+                            CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.AddDays;
+
+                            responseConverter = new ResponseConverter($"Введите название тренирочного дня для цикла {CurrentUserContext.DataManager.CurrentCycle.Name}");
+
+                            switch (CurrentUserContext.Navigation.QueryFrom)
+                            {
+                                case QueryFrom.Start:
+                                    buttonsSets = (ButtonsSet.None, ButtonsSet.None);
+                                    break;
+
+                                case QueryFrom.Settings:
+                                    buttonsSets = (ButtonsSet.None, ButtonsSet.SettingDay);
+                                    break;
+                                default:
+                                    throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {CurrentUserContext.Navigation.QueryFrom}");
+                            }
+                            break;
+
+                        case "Exercises":
+                            CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.AddExercises;
+
+                            responseConverter = new ResponseConverter($"Введите название упражнение дня для цикла {CurrentUserContext.DataManager.CurrentDay.Name}");
+                            switch (CurrentUserContext.Navigation.QueryFrom)
+                            {
+                                case QueryFrom.Start:
+                                    buttonsSets = (ButtonsSet.None, ButtonsSet.None);
+                                    break;
+
+                                case QueryFrom.Settings:
+                                    buttonsSets = (ButtonsSet.None, ButtonsSet.SettingExercise);
+                                    break;
+                                default:
+                                    throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {CurrentUserContext.Navigation.QueryFrom}");
+                            }
+                            break;
+                        default:
+                            throw new NotImplementedException($"Неожиданный CallbackQueryParser.SubDirection: {callbackQueryParser.SubDirection}");
+                    }
+                    break;
+
+                case "SaveExercises":
+                    db.Exercises.AddRange(CurrentUserContext.DataManager.Exercises);
+                    db.SaveChanges();
+
+                    CurrentUserContext.DataManager.ResetExercises();
+
+                    CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.None;
+
+                    switch (CurrentUserContext.Navigation.QueryFrom)
+                    {
+                        case QueryFrom.Start:
+                            responseConverter = new ResponseConverter("Упражнения сохранены!", "Выберите дальнейшее действие");
+                            buttonsSets = (ButtonsSet.RedirectAfterSaveExercise, ButtonsSet.None);
+                            break;
+
+                        case QueryFrom.Settings:
+                            responseConverter = new ResponseConverter("Упражнения сохранены!", "Выберите интересующие настройки для упражнений");
+                            buttonsSets = (ButtonsSet.SettingExercises, ButtonsSet.SettingDays);
+                            break;
+                        default:
+                            throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {CurrentUserContext.Navigation.QueryFrom}");
+                    }
+                    break;
+
+                case "SettingExisting":
+                    switch (callbackQueryParser.ObjectType)
+                    {
+                        case "Cycles":
+                            responseConverter = new ResponseConverter("Выберите интересующий цикл");
+                            buttonsSets = (ButtonsSet.CycleList, ButtonsSet.SettingCycles);
+                            break;
+                        case "Days":
+                            responseConverter = new ResponseConverter("Выберите интересующий день");
+                            buttonsSets = (ButtonsSet.DaysList, ButtonsSet.SettingDays);
+                            break;
+                        case "Exercises":
+                            responseConverter = new ResponseConverter("Выберите интересующее упражнение");
+                            buttonsSets = (ButtonsSet.ExercisesList, ButtonsSet.SettingExercises);
+                            break;
+                        default:
+                            throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.ObjectType}");
+                    }
+                    break;
+
+                case "Selected":
+                    switch (callbackQueryParser.ObjectType)
+                    {
+                        case "Cycle":
+                            CurrentUserContext.DataManager.SetCycle(CurrentUserContext.UserInformation.Cycles.First(c => c.Id == callbackQueryParser.ObjectId));
+
+                            responseConverter = new ResponseConverter($"Выберите интересующую настройку для цикла {CurrentUserContext.DataManager.CurrentCycle.Name}");
+                            buttonsSets = (ButtonsSet.SettingCycle, ButtonsSet.CycleList);
+                            break;
+
+                        case "Day":
+                            switch (CurrentUserContext.Navigation.QueryFrom)
+                            {
+                                case QueryFrom.NoMatter:
+                                    CurrentUserContext.DataManager.SetDay(CurrentUserContext.ActiveCycle.Days.First(d => d.Id == callbackQueryParser.ObjectId));
+
+                                    responseConverter = new ResponseConverter("Выберите упраженение");
+                                    buttonsSets = (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout);
+                                    break;
+
+                                case QueryFrom.Settings:
+                                    CurrentUserContext.DataManager.SetDay(CurrentUserContext.DataManager.CurrentCycle.Days.First(d => d.Id == callbackQueryParser.ObjectId));
+
+                                    responseConverter = new ResponseConverter($"Выберите интересующую настройку для дня {CurrentUserContext.DataManager.CurrentDay.Name}");
+                                    buttonsSets = (ButtonsSet.SettingDay, ButtonsSet.DaysList);
+                                    break;
+                                default:
+                                    throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {CurrentUserContext.Navigation.QueryFrom}");
+                            }
+                            break;
+
+                        case "Exercise":
+                            CurrentUserContext.DataManager.SetExercise(CurrentUserContext.DataManager.CurrentDay.Exercises.First(e => e.Id == callbackQueryParser.ObjectId));
+
+                            switch (CurrentUserContext.Navigation.QueryFrom)
+                            {
+                                case QueryFrom.NoMatter:
+                                    CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.AddResultForExercise;
+
+                                    responseConverter = new ResponseConverter("Введите вес и количество повторений");
+                                    buttonsSets = (ButtonsSet.None, ButtonsSet.ExercisesListWithLastWorkoutForDay);
+                                    break;
+
+                                case QueryFrom.Settings:
+                                    responseConverter = new ResponseConverter($"Выберите интересующую настройку для упражнения {CurrentUserContext.DataManager.CurrentExercise.Name}");
+                                    buttonsSets = (ButtonsSet.SettingExercise, ButtonsSet.ExercisesList);
+                                    break;
+                                default:
+                                    throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {CurrentUserContext.Navigation.QueryFrom}");
+                            }
+                            break;
+                        default:
+                            throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.ObjectType}");
+                    }
+                    break;
+
+                case "ChangeActive":
+                    switch (callbackQueryParser.ObjectType)
+                    {
+                        case "Cycle":
+                            if (CurrentUserContext.DataManager.CurrentCycle.IsActive)
+                            {
+                                responseConverter = new ResponseConverter($"Выбранный цикл {CurrentUserContext.ActiveCycle.Name} уже являается активным!",
+                                    $"Выберите интересующую настройку для цикла {CurrentUserContext.DataManager.CurrentCycle.Name}");
+                                buttonsSets = (ButtonsSet.SettingCycle, ButtonsSet.SettingCycles);
+
+                                SendResponse(update.CallbackQuery.Message.Chat.Id, responseConverter.Convert(), buttonsSets);
+                                return;
+                            }
+
+                            CurrentUserContext.ActiveCycle.IsActive = false;
+                            db.Cycles.Update(CurrentUserContext.ActiveCycle);
+                            CurrentUserContext.UdpateCycleForce(CurrentUserContext.DataManager.CurrentCycle);
+                            db.Cycles.Update(CurrentUserContext.ActiveCycle);
+                            db.SaveChanges();
+
+                            responseConverter = new ResponseConverter($"Активный цикл изменён на {CurrentUserContext.ActiveCycle.Name}",
+                           $"Выберите интересующую настройку для цикла {CurrentUserContext.DataManager.CurrentCycle.Name}");
+                            buttonsSets = (ButtonsSet.SettingCycle, ButtonsSet.SettingCycles);
+                            break;
+                        default:
+                            throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.ObjectType}");
+                    }
+                    break;
+
+                case "Archiving":
+                    switch (callbackQueryParser.ObjectType)
+                    {
+                        case "Cycle":
+                            if (CurrentUserContext.DataManager.CurrentCycle.IsActive)
+                            {
+                                responseConverter = new ResponseConverter("Ошибка при архивации!", "Нельзя архивировать активный цикл!",
+                                    $"Выберите интересующую настройку для цикла {CurrentUserContext.DataManager.CurrentCycle.Name}");
+                                buttonsSets = (ButtonsSet.SettingCycle, ButtonsSet.CycleList);
+
+                                SendResponse(update.CallbackQuery.Message.Chat.Id, responseConverter.Convert(), buttonsSets);
+                                return;
+                            }
+
+                            domain = GetDomainFromDataManager(DomainType.Cycle);
+
+                            responseConverter = new ResponseConverter($"Цикл {domain.Name} был добавлен в архив", $"Выберите интересующий цикл");
+                            buttonsSets = (ButtonsSet.CycleList, ButtonsSet.SettingCycles);
+                            break;
+
+                        case "Day":
+                            domain = GetDomainFromDataManager(DomainType.Day);
+
+                            responseConverter = new ResponseConverter($"День {domain.Name} был добавлен в архив", $"Выберите интересующий день");
+                            buttonsSets = (ButtonsSet.DaysList, ButtonsSet.SettingDays);
+                            break;
+
+                        case "Exercise":
+                            domain = GetDomainFromDataManager(DomainType.Exercise);
+
+                            responseConverter = new ResponseConverter($"Упражнение {domain.Name} было добавлено в архив", $"Выберите интересующее упражнение");
+                            buttonsSets = (ButtonsSet.ExercisesList, ButtonsSet.SettingExercises);
+                            break;
+                        default:
+                            throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.ObjectType}");
+                    }
+
+                    domain.IsArchive = true;
+
+                    db.Update(domain);
+                    db.SaveChanges();
+
+                    CurrentUserContext.DataManager.ResetDomain(domain);
+
                     break;
 
                 case "Replace":
                     switch (callbackQueryParser.ObjectType)
                     {
                         case "Day":
-                            botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    $"Выберите цикл, в который хотите перенести день {CurrentUserContext.DataManager.CurrentDay.Name}",
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ReplaceToCycle, backButtonsSet: ButtonsSet.SettingDay));
+                            responseConverter = new ResponseConverter($"Выберите цикл, в который хотите перенести день {CurrentUserContext.DataManager.CurrentDay.Name}");
+                            buttonsSets = (ButtonsSet.ReplaceToCycle, ButtonsSet.SettingDay);
                             break;
                         case "Exercise":
-                            botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    $"Выберите день, в который хотите перенести упражнение {CurrentUserContext.DataManager.CurrentExercise.Name}",
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ReplaceToDay, backButtonsSet: ButtonsSet.SettingExercise));
+                            responseConverter = new ResponseConverter($"Выберите день, в который хотите перенести упражнение {CurrentUserContext.DataManager.CurrentExercise.Name}");
+                            buttonsSets = (ButtonsSet.ReplaceToDay, ButtonsSet.SettingExercise);
                             break;
                         default:
                             throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.ObjectType}");
                     }
-
                     break;
 
                 case "ReplaceTo":
@@ -608,11 +850,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                             {
                                 responseConverter = new ResponseConverter($"Ошибка при переносе дня!", "Нельзя перенести день в тот же самый цикл",
                                     $"Выберите цикл, в который хотите перенести день {CurrentUserContext.DataManager.CurrentDay.Name}");
-
-
-                                botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                     responseConverter.Convert(),
-                                                     replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ReplaceToCycle, backButtonsSet: ButtonsSet.SettingDay));
+                                buttonsSets = (ButtonsSet.ReplaceToCycle, ButtonsSet.SettingDay);
                                 return;
                             }
 
@@ -621,17 +859,14 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
 
                             responseConverter = new ResponseConverter($"День {CurrentUserContext.DataManager.CurrentDay.Name}, перенесён в цикл {callbackQueryParser.ObjectName}",
                                 "Выберите интересующий цикл");
+                            
                             break;
                         case "Day":
                             if (CurrentUserContext.DataManager.CurrentExercise.DayId == callbackQueryParser.ObjectId)
                             {
                                 responseConverter = new ResponseConverter($"Ошибка при переносе упражнения!", "Нельзя перенести упражнение в тот же самый день",
                                     $"Выберите день, в который хотите перенести упражнение {CurrentUserContext.DataManager.CurrentExercise.Name}");
-
-
-                                botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                     responseConverter.Convert(),
-                                                     replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ReplaceToDay, backButtonsSet: ButtonsSet.SettingExercise));
+                                buttonsSets = (ButtonsSet.ReplaceToDay, ButtonsSet.SettingExercise);
                                 return;
                             }
 
@@ -647,407 +882,174 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
 
                     db.SaveChanges();
 
-                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    responseConverter.Convert(),
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.CycleList, backButtonsSet: ButtonsSet.SettingCycles));
-                    break;
-                #endregion
-
-                case "DeleteAccount":
-                    responseConverter = new ResponseConverter("Вы уверены?", "Удаление аккаунта приведёт к полной и безвозвратной потере информации о ваших тренировках");
-
-                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    responseConverter.Convert(),
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ConfirmDeleteAccount, backButtonsSet: ButtonsSet.Settings));
+                    buttonsSets = (ButtonsSet.CycleList, ButtonsSet.SettingCycles);
                     break;
 
-                case "ConfirmDeleteAccount":
-                    primaryProcessUpdate.DeleteContext(CurrentUserContext.UserInformation.UserId);
-                    db.UsersInformation.Remove(CurrentUserContext.UserInformation);
+                case "ChangeName":
+                    switch (callbackQueryParser.ObjectType)
+                    {
+                        case "Cycle":
+                            CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.ChangeNameCycle;
+
+                            responseConverter = new ResponseConverter($"Введите новоё название для цикла {CurrentUserContext.DataManager.CurrentCycle.Name}");
+                            buttonsSets = (ButtonsSet.None, ButtonsSet.SettingCycle);
+                            break;
+
+                        case "ChangeNameDay":
+                            CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.ChangeNameDay;
+
+                            responseConverter = new ResponseConverter($"Введите новоё название для дня {CurrentUserContext.DataManager.CurrentDay.Name}");
+                            buttonsSets = (ButtonsSet.None, ButtonsSet.SettingDay);
+                            break;
+
+                        case "Exercise":
+                            CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.ChangeNameExercise;
+
+                            responseConverter = new ResponseConverter($"Введите новоё название для упражнения {CurrentUserContext.DataManager.CurrentExercise.Name}");
+                            buttonsSets = (ButtonsSet.None, ButtonsSet.SettingExercise);
+                            break;
+                        default:
+                            throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.ObjectType}");
+                    }
+                    break;
+
+                case "Delete":
+                    switch (callbackQueryParser.ObjectType)
+                    {
+                        case "Account":
+                            responseConverter = new ResponseConverter("Вы уверены?", "Удаление аккаунта приведёт к полной и безвозвратной потере информации о ваших тренировках");
+                            buttonsSets = (ButtonsSet.ConfirmDeleteAccount, ButtonsSet.Settings);
+                            break;
+
+                        case "Cycle":
+                            responseConverter = new ResponseConverter("Вы уверены?", "Удаление цикла приведёт к полной и безвозвратной потере информации о ваших тренировках в этом цикле");
+                            buttonsSets = (ButtonsSet.ConfirmDeleteCycle, ButtonsSet.SettingCycle);
+                            break;
+
+                        case "Day":
+                            responseConverter = new ResponseConverter("Вы уверены?", "Удаление дня приведёт к полной и безвозвратной потере информации о ваших тренировках в этом дне");
+                            buttonsSets = (ButtonsSet.ConfirmDeleteDay, ButtonsSet.SettingDay);
+                            break;
+
+                        case "Exercise":
+                            responseConverter = new ResponseConverter("Вы уверены?", "Удаление упражнения приведёт к полной и безвозвратной потере информации о ваших тренировках с этим упражнением");
+                            buttonsSets = (ButtonsSet.ConfirmDeleteExercise, ButtonsSet.SettingExercise);
+                            break;
+                        default:
+                            throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.ObjectType}");
+                    }
+                    break;
+
+                case "ConfirmDelete":
+                    switch (callbackQueryParser.ObjectType)
+                    {
+                        case "Account":
+                            primaryProcessUpdate.DeleteContext(CurrentUserContext.UserInformation.UserId);
+                            db.UsersInformation.Remove(CurrentUserContext.UserInformation);
+                            db.SaveChanges();
+
+                            responseConverter = new ResponseConverter("Аккаунт успешно удалён");
+                            buttonsSets = (ButtonsSet.None, ButtonsSet.None);
+
+                            SendResponse(update.CallbackQuery.Message.Chat.Id, responseConverter.Convert(), buttonsSets);
+                            return;
+
+                        case "Cycle":
+                            if (CurrentUserContext.DataManager.CurrentCycle.IsActive)
+                            {
+                                responseConverter = new ResponseConverter("Ошибка при удалении!", "Нельзя удалить активный цикл!",
+                                    $"Выберите интересующую настройку для цикла {CurrentUserContext.DataManager.CurrentCycle.Name}");
+                                buttonsSets = (ButtonsSet.SettingCycle, ButtonsSet.CycleList);
+
+                                SendResponse(update.CallbackQuery.Message.Chat.Id, responseConverter.Convert(), buttonsSets);
+                                return;
+                            }
+
+                            domain = GetDomainFromDataManager(DomainType.Cycle);
+
+                            responseConverter = new ResponseConverter($"Цикл {domain.Name} удалён!", "Выберите интересующий цикл");
+                            buttonsSets = (ButtonsSet.CycleList, ButtonsSet.SettingCycles);
+                            break;
+
+                        case "Day":
+                            domain = GetDomainFromDataManager(DomainType.Day);
+
+                            responseConverter = new ResponseConverter($"День {domain.Name} удалён!", "Выберите интересующий день");
+                            buttonsSets = (ButtonsSet.DaysList, ButtonsSet.SettingDays);
+                            break;
+
+                        case "Exercise":
+                            domain = GetDomainFromDataManager(DomainType.Exercise);
+
+                            responseConverter = new ResponseConverter($"Упражнение {domain.Name} удалёно!", "Выберите интересующее упражнение");
+                            buttonsSets = (ButtonsSet.ExercisesList, ButtonsSet.SettingExercises);
+                            break;
+                        default:
+                            throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.ObjectType}");
+                    }
+
+                    db.Remove(domain);
                     db.SaveChanges();
 
-                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    "Аккаунт успешно удалён");
+                    CurrentUserContext.DataManager.ResetDomain(domain);
+
                     break;
                 default:
-                    throw new NotImplementedException($"Неожиданный CallbackQueryParser.SubDirection: {callbackQueryParser.SubDirection}");
-
-                #region Full add cycle area
-
-                case "AddCycle":
-                    CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.AddCycle;
-
-                    switch (CurrentUserContext.Navigation.QueryFrom)
-                    {
-                        case QueryFrom.Start:
-                            botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id, "Введите название тренировочного цикла");
-                            break;
-
-                        case QueryFrom.Settings:
-                            botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                        "Введите название тренировочного цикла",
-                                                        replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.None, backButtonsSet: ButtonsSet.SettingCycles));
-                            break;
-                        default:
-                            throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {CurrentUserContext.Navigation.QueryFrom}");
-                    }
-
-                    break;
-
-                case "AddDays":
-                    CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.AddDays;
-
-                    switch (CurrentUserContext.Navigation.QueryFrom)
-                    {
-                        case QueryFrom.Start:
-                            botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                            $"Введите название тренирочного дня для цикла {CurrentUserContext.DataManager.CurrentCycle.Name}");
-                            break;
-
-                        case QueryFrom.Settings:
-                            botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                            $"Введите название тренирочного дня для цикла {CurrentUserContext.DataManager.CurrentCycle.Name}",
-                                                            replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.None, backButtonsSet: ButtonsSet.SettingDay));
-                            break;
-                        default:
-                            throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {CurrentUserContext.Navigation.QueryFrom}");
-                    }
-
-                    break;
-
-                case "AddExercises":
-                    CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.AddExercises;
-
-                    switch (CurrentUserContext.Navigation.QueryFrom)
-                    {
-                        case QueryFrom.Start:
-                            botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                            $"Введите название упражнение дня для цикла {CurrentUserContext.DataManager.CurrentDay.Name}");
-                            break;
-
-                        case QueryFrom.Settings:
-                            botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                            $"Введите название упражнение дня для цикла {CurrentUserContext.DataManager.CurrentDay.Name}",
-                                                            replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.None, backButtonsSet: ButtonsSet.SettingExercise));
-                            break;
-                        default:
-                            throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {CurrentUserContext.Navigation.QueryFrom}");
-                    }
-
-                    break;
-
-                case "SaveAddedExercise":
-                    CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.None;
-
-                    db.Exercises.AddRange(CurrentUserContext.DataManager.Exercises);
-                    db.SaveChanges();
-
-                    CurrentUserContext.DataManager.ResetExercises();
-
-                    switch (CurrentUserContext.Navigation.QueryFrom)
-                    {
-                        case QueryFrom.Start:
-                            responseConverter = new ResponseConverter("Упражнения сохранены!", "Выберите дальнейшее действие");
-                            botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                            responseConverter.Convert(),
-                                                            replyMarkup: buttons.GetInlineButtons(buttonsSet: ButtonsSet.RedirectAfterSaveExercise));
-                            break;
-
-                        case QueryFrom.Settings:
-                            responseConverter = new ResponseConverter("Упражнения сохранены!", "Выберите интересующие настройки для упражнений");
-                            botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                            responseConverter.Convert(),
-                                                            replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.SettingExercises, backButtonsSet: ButtonsSet.SettingDays));
-                            break;
-                        default:
-                            throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {CurrentUserContext.Navigation.QueryFrom}");
-                    }
-
-
-                    break;
-
-                #endregion
-
-                #region Cycles settings
-                case "SettingCycles":
-                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    "Выберите интересующие настройки для циклов",
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.SettingCycles, backButtonsSet: ButtonsSet.Settings));
-                    break;
-                
-                case "SettingExistingCycles":
-                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    "Выберите интересующий цикл",
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.CycleList, backButtonsSet: ButtonsSet.SettingCycles));
-                    break;
-
-                case "SelectedCycle":
-                    CurrentUserContext.DataManager.SetCycle(CurrentUserContext.UserInformation.Cycles.First(c => c.Id == callbackQueryParser.ObjectId));
-
-                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    $"Выберите интересующую настройку для цикла {CurrentUserContext.DataManager.CurrentCycle.Name}",
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.SettingCycle, backButtonsSet: ButtonsSet.CycleList));
-                    break;
-
-                case "ChangeActiveCycle":
-                    if (CurrentUserContext.DataManager.CurrentCycle.IsActive)
-                    {
-                        responseConverter = new ResponseConverter($"Выбранный цикл {CurrentUserContext.ActiveCycle.Name} уже являается активным!", 
-                            $"Выберите интересующую настройку для цикла {CurrentUserContext.DataManager.CurrentCycle.Name}");
-
-                        botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    responseConverter.Convert(),
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.SettingCycle, backButtonsSet: ButtonsSet.SettingCycles));
-                        break;
-                    }
-
-                    CurrentUserContext.ActiveCycle.IsActive = false;
-                    db.Cycles.Update(CurrentUserContext.ActiveCycle);
-                    CurrentUserContext.UdpateCycleForce(CurrentUserContext.DataManager.CurrentCycle);
-                    db.Cycles.Update(CurrentUserContext.ActiveCycle);
-                    db.SaveChanges();
-
-                    responseConverter = new ResponseConverter($"Активный цикл изменён на {CurrentUserContext.ActiveCycle.Name}",
-                           $"Выберите интересующую настройку для цикла {CurrentUserContext.DataManager.CurrentCycle.Name}");
-
-                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    responseConverter.Convert(),
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.SettingCycle, backButtonsSet: ButtonsSet.SettingCycles));
-                    break;
-
-                case "ChangeNameCycle":
-                    CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.ChangeNameCycle;
-
-                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    $"Введите новоё название для цикла {CurrentUserContext.DataManager.CurrentCycle.Name}",
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.None, backButtonsSet: ButtonsSet.SettingCycle));
-                    break;
-
-                case "CycleArchiving":
-                if (CurrentUserContext.DataManager.CurrentCycle.IsActive)
-                {
-                    responseConverter = new ResponseConverter("Ошибка при архивации!", "Нельзя архивировать активный цикл!",
-                        $"Выберите интересующую настройку для цикла {CurrentUserContext.DataManager.CurrentCycle.Name}");
-
-                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                responseConverter.Convert(),
-                                                replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.SettingCycle, backButtonsSet: ButtonsSet.CycleList));
-                    break;
-                }
-
-                CurrentUserContext.DataManager.CurrentCycle.IsArchive = true;
-                db.Cycles.Update(CurrentUserContext.DataManager.CurrentCycle);
-                db.SaveChanges();
-
-                responseConverter = new ResponseConverter($"Цикл {CurrentUserContext.DataManager.CurrentCycle.Name} был добавлен в архив",
-                    $"Выберите интересующий цикл");
-
-                CurrentUserContext.DataManager.ResetCycle();
-
-                botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                responseConverter.Convert(),
-                                                replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.CycleList, backButtonsSet: ButtonsSet.SettingCycles));
-                break;
-
-                case "DeleteCycle":
-                    responseConverter = new ResponseConverter("Вы уверены?", "Удаление цикла приведёт к полной и безвозвратной потере информации о ваших тренировках в этом цикле");
-
-                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    responseConverter.Convert(),
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ConfirmDeleteCycle, backButtonsSet: ButtonsSet.SettingCycle));
-                    break;
-
-                case "ConfirmDeleteCycle":
-                    if (CurrentUserContext.DataManager.CurrentCycle.IsActive)
-                    {
-                        responseConverter = new ResponseConverter("Ошибка при удалении!", "Нельзя удалить активный цикл!", 
-                            $"Выберите интересующую настройку для цикла {CurrentUserContext.DataManager.CurrentCycle.Name}");
-
-                        botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    responseConverter.Convert(),
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.SettingCycle, backButtonsSet: ButtonsSet.CycleList));
-                        break;
-                    }
-
-                    responseConverter = new ResponseConverter($"Цикл {CurrentUserContext.DataManager.CurrentCycle.Name} удалён!", "Выберите интересующий цикл");
-
-                    db.Cycles.Remove(CurrentUserContext.DataManager.CurrentCycle);
-                    db.SaveChanges();
-
-                    CurrentUserContext.DataManager.ResetCycle();
-
-                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    responseConverter.Convert(),
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.CycleList, backButtonsSet: ButtonsSet.SettingCycles));
-                    break;
-                #endregion
-
-                #region Days settings
-                case "SettingDays":
-                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    "Выберите интересующие настройки для дней",
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.SettingDays, backButtonsSet: ButtonsSet.SettingCycle));
-                    break;
-
-                case "SettingExistingDays":
-                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    "Выберите интересующий день",
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.DaysList, backButtonsSet: ButtonsSet.SettingDays));
-                    break;
-
-                case "SelectedDay":
-                    switch (CurrentUserContext.Navigation.QueryFrom)
-                    {
-                        case QueryFrom.NoMatter:
-                            CurrentUserContext.DataManager.SetDay(CurrentUserContext.ActiveCycle.Days.First(d => d.Id == callbackQueryParser.ObjectId));
-
-                            botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                            "Выберите упраженение",
-                                                            replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ExercisesListWithLastWorkoutForDay, backButtonsSet: ButtonsSet.DaysListWithLastWorkout));
-                            break;
-
-                        case QueryFrom.Settings:
-                            CurrentUserContext.DataManager.SetDay(CurrentUserContext.DataManager.CurrentCycle.Days.First(d => d.Id == callbackQueryParser.ObjectId));
-
-                            botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                            $"Выберите интересующую настройку для дня {CurrentUserContext.DataManager.CurrentDay.Name}",
-                                                            replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.SettingDay, backButtonsSet: ButtonsSet.DaysList));
-                            break;
-                        default:
-                            throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {CurrentUserContext.Navigation.QueryFrom}");
-                    }
-
-                    break;
-
-                case "ChangeNameDay":
-                    CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.ChangeNameDay;
-
-                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    $"Введите новоё название для дня {CurrentUserContext.DataManager.CurrentDay.Name}",
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.None, backButtonsSet: ButtonsSet.SettingDay));
-                    break;
-
-                case "DayArchiving":
-                    CurrentUserContext.DataManager.CurrentDay.IsArchive = true;
-                    db.Days.Update(CurrentUserContext.DataManager.CurrentDay);
-                    db.SaveChanges();
-
-                    responseConverter = new ResponseConverter($"День {CurrentUserContext.DataManager.CurrentDay.Name} был добавлен в архив",
-                            $"Выберите интересующий день");
-
-                    CurrentUserContext.DataManager.ResetDay();
-
-                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    responseConverter.Convert(),
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.DaysList, backButtonsSet: ButtonsSet.SettingDays));
-                    break;
-
-                case "DeleteDay":
-                    responseConverter = new ResponseConverter("Вы уверены?", "Удаление дня приведёт к полной и безвозвратной потере информации о ваших тренировках в этом дне");
-
-                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    responseConverter.Convert(),
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ConfirmDeleteDay, backButtonsSet: ButtonsSet.SettingDay));
-                    break;
-
-                case "ConfirmDeleteDay":
-                    responseConverter = new ResponseConverter($"День {CurrentUserContext.DataManager.CurrentDay.Name} удалён!", "Выберите интересующий день");
-
-                    db.Days.Remove(CurrentUserContext.DataManager.CurrentDay);
-                    db.SaveChanges();
-
-                    CurrentUserContext.DataManager.ResetDay();
-
-                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    responseConverter.Convert(),
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.DaysList, backButtonsSet: ButtonsSet.SettingDays));
-                    break;
-                #endregion
-
-                #region Exercises settings
-                case "SettingExercises":
-                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    "Выберите интересующие настройки для упражнений",
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.SettingExercises, backButtonsSet: ButtonsSet.SettingDay));
-                    break;
-
-                case "SettingExistingExercises":
-                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    "Выберите интересующее упражнение",
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ExercisesList, backButtonsSet: ButtonsSet.SettingExercises));
-                    break;
-
-                case "SelectedExercise":
-                    CurrentUserContext.DataManager.SetExercise(CurrentUserContext.DataManager.CurrentDay.Exercises.First(e => e.Id == callbackQueryParser.ObjectId));
-
-                    switch (CurrentUserContext.Navigation.QueryFrom)
-                    {
-                        case QueryFrom.NoMatter:
-                            CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.AddResultForExercise;
-
-                            botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                            "Введите вес и количество повторений",
-                                                            replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.None, backButtonsSet: ButtonsSet.ExercisesListWithLastWorkoutForDay));
-                            break;
-
-                        case QueryFrom.Settings:
-                            botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                            $"Выберите интересующую настройку для упражнения {CurrentUserContext.DataManager.CurrentExercise.Name}",
-                                                            replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.SettingExercise, backButtonsSet: ButtonsSet.ExercisesList));
-                            break;
-                        default:
-                            throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {CurrentUserContext.Navigation.QueryFrom}");
-                    }
-
-                    break;
-
-                case "ChangeNameExercise":
-                    CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.ChangeNameExercise;
-
-                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    $"Введите новоё название для упражнения {CurrentUserContext.DataManager.CurrentExercise.Name}",
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.None, backButtonsSet: ButtonsSet.SettingExercise));
-                    break;
-
-                case "ExerciseArchiving":
-                    CurrentUserContext.DataManager.CurrentExercise.IsArchive = true;
-                    db.Exercises.Update(CurrentUserContext.DataManager.CurrentExercise);
-                    db.SaveChanges();
-
-                    responseConverter = new ResponseConverter($"Упражнение {CurrentUserContext.DataManager.CurrentExercise.Name} было добавлено в архив",
-                            $"Выберите интересующее упражнение");
-
-                    CurrentUserContext.DataManager.ResetExercise();
-
-                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    responseConverter.Convert(),
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ExercisesList, backButtonsSet: ButtonsSet.SettingExercises));
-                    break;
-
-                case "DeleteExercise":
-                    responseConverter = new ResponseConverter("Вы уверены?", "Удаление упражнения приведёт к полной и безвозвратной потере информации о ваших тренировках с этим упражнением");
-
-                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    responseConverter.Convert(),
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ConfirmDeleteExercise, backButtonsSet: ButtonsSet.SettingExercise));
-                    break;
-
-                case "ConfirmDeleteExercise":
-                    responseConverter = new ResponseConverter($"Упражнение {CurrentUserContext.DataManager.CurrentExercise.Name} удалёно!", "Выберите интересующее упражнение");
-
-                    db.Exercises.Remove(CurrentUserContext.DataManager.CurrentExercise);
-                    db.SaveChanges();
-
-                    CurrentUserContext.DataManager.ResetExercise();
-
-                    botClient.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
-                                                    responseConverter.Convert(),
-                                                    replyMarkup: buttons.GetInlineButtonsWithBack(buttonsSet: ButtonsSet.ExercisesList, backButtonsSet: ButtonsSet.SettingExercises));
-                    break;
-                #endregion
-
-                #endregion
+                    throw new NotImplementedException($"Неожиданный callbackQueryParser.SubDirection: {callbackQueryParser.SubDirection}");
             }
+
+            SendResponse(update.CallbackQuery.Message.Chat.Id, responseConverter.Convert(), buttonsSets);
+        }
+
+        IDomain? GetDomainWithId(int id, string domainType)
+        {
+            return domainType switch
+            {
+                "Cycle"
+                    => GetDomainWithId(id, DomainType.Cycle),
+                "Day"
+                    => GetDomainWithId(id, DomainType.Day),
+               "Exercise"
+                    => GetDomainWithId(id, DomainType.Exercise),
+                _ => throw new NotImplementedException($"Неожиданный domainTyped: {domainType}")
+            };
+        }
+
+        IDomain? GetDomainWithId(int id, DomainType domainType)
+        {
+            return domainType switch
+            {
+                DomainType.Cycle
+                    => CurrentUserContext.UserInformation.Cycles.First(c => c.Id == id),
+                DomainType.Day
+                    => db.Days.First(d => d.Id == id),
+                DomainType.Exercise
+                    => db.Exercises.First(e => e.Id == id),
+                _ => throw new NotImplementedException($"Неожиданный domainTyped: {domainType}")
+            };
+        }
+
+        IDomain? GetDomainFromDataManager(DomainType domainType)
+        {
+            return domainType switch
+            {
+                DomainType.Cycle
+                    => CurrentUserContext.DataManager.CurrentCycle,
+                DomainType.Day
+                    => CurrentUserContext.DataManager.CurrentDay,
+                DomainType.Exercise
+                    => CurrentUserContext.DataManager.CurrentExercise,
+                _ => throw new NotImplementedException($"Неожиданный domainTyped: {domainType}")
+            };
+        }
+
+        async Task SendResponse(long chatId, string message, (ButtonsSet buttonsSet, ButtonsSet backButtonsSet) ButtonsSets)
+        {
+            var buttons = new InlineButtons(CurrentUserContext);
+
+            botClient.SendTextMessageAsync(chatId,
+                                            message,
+                                            replyMarkup: buttons.GetInlineButtonsWithBack(ButtonsSets.buttonsSet, ButtonsSets.backButtonsSet));
         }
     }
 }

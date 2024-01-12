@@ -9,7 +9,7 @@ namespace WorkoutStorageBot.BusinessLogic.Enums
         Main,
             DaysListWithLastWorkout,
             ExercisesListWithLastWorkoutForDay,
-            SaveResultForExercise,
+            SaveResultsExercise,
 
         Settings,
             SettingCycles,
@@ -27,7 +27,7 @@ namespace WorkoutStorageBot.BusinessLogic.Enums
                                     ConfirmDeleteDay,
                                     SettingExercises,
                                         AddExercises,
-                                            SaveAddedExercise,
+                                            SaveExercises,
                                                  RedirectAfterSaveExercise,
                                         ExercisesList,
                                             SettingExercise,

@@ -70,6 +70,22 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
                 ResultExercises.Add(resultExercise);
         }
 
+        internal void ResetDomain(IDomain domain)
+        {
+            switch (domain)
+            {
+                case Cycle:
+                    ResetCycle();
+                    break;
+                case Day:
+                    ResetDay();
+                    break;
+                case Exercise:
+                    ResetExercise();
+                    break;
+            }
+        }
+
         internal void ResetCycle()
         {
             CurrentCycle = null;

@@ -7,7 +7,7 @@ namespace WorkoutStorageBot.BusinessLogic.SQLiteQueries
 {
     internal static class QueriesStorage
     {
-        internal static List<Exercise>? GetExercisesWithDaysIds(IEnumerable<int> ids, Func<string, List<Exercise>> queryExecuter)
+        internal static List<Exercise> GetExercisesWithDaysIds(IEnumerable<int> ids, Func<string, List<Exercise>> queryExecuter)
         {
             var args = FromIEnumerableIntToString(ids);
 
@@ -17,7 +17,7 @@ namespace WorkoutStorageBot.BusinessLogic.SQLiteQueries
             return queryExecuter.Invoke(query);
         }
 
-        internal static List<ResultExercise>? GetLastResultsExercisesWithExercisesIds(IEnumerable<int> ids, Func<string, List<ResultExercise>> queryExecuter)
+        internal static List<ResultExercise> GetLastResultsExercisesWithExercisesIds(IEnumerable<int> ids, Func<string, List<ResultExercise>> queryExecuter)
         {
             var args = FromIEnumerableIntToString(ids);
 
@@ -34,7 +34,7 @@ namespace WorkoutStorageBot.BusinessLogic.SQLiteQueries
             return queryExecuter.Invoke(query);
         }
 
-        internal static List<ResultExercise>? GetLastResultsForExercisesWithExercisesIds(IEnumerable<int> ids, Func<string, List<ResultExercise>> queryExecuter)
+        internal static List<ResultExercise> GetLastResultsForExercisesWithExercisesIds(IEnumerable<int> ids, Func<string, List<ResultExercise>> queryExecuter)
         {
             var args = FromIEnumerableIntToString(ids);
 
