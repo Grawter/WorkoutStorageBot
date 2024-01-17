@@ -1,91 +1,144 @@
 ﻿#region using
 using WorkoutStorageBot.Model;
-
 #endregion
 
 namespace WorkoutStorageBot.BusinessLogic.SessionContext
 {
     internal class DataManager
     {
-        internal DataManager()
-        {
-            CurrentCycle = new();
-            Exercises = new();
-            ResultExercises = new();
+        internal Cycle? CurrentCycle { get; private set; }
+        internal Day? CurrentDay { get; private set; }
+        internal Exercise? CurrentExercise { get; private set; }
 
-            NumberDay = 1;
+        internal List<Exercise>? Exercises { get; private set; }
+        internal List<ResultExercise>? ResultExercises { get; private set; }
+
+        internal Cycle SetCycle(string nameCycle, bool isActive, int userInformationId)
+        {
+            ResetCycle();
+
+            return CurrentCycle = new () { Name = nameCycle, IsActive = isActive, UserInformationId = userInformationId };
         }
 
-        private List<Exercise> Exercises { get; set; }
-        internal List<ResultExercise> ResultExercises { get; private set; }
-
-
-        private Cycle CurrentCycle { get; set; }
-        internal Day CurrentDay { get; private set; }
-        internal Exercise CurrentExercise { get; private set; }
-
-        internal uint NumberDay { get; private set; }
-
-        internal void AddExercise(string nameExercise)
+        private void SetCycle(Cycle cycle)
         {
-            Exercises.Add(new Exercise { NameExercise = nameExercise });
+            CurrentCycle = cycle;
         }
 
-        internal void AddDay()
+        internal Day SetDay(string nameDay)
         {
-            var day = new Day { NameDay = NumberDay.ToString() };
-            day.Exercises.AddRange(Exercises);
+            ResetDay();
 
-            CurrentCycle.Days.Add(day);
-
-            ++NumberDay;
-
-            Exercises.Clear();
+            return CurrentDay = new() { Name = nameDay, CycleId = CurrentCycle.Id };
         }
 
-        internal void AddResultExercise(ResultExercise resultExercise)
+        private void SetDay(Day day)
         {
-            resultExercise.ExerciseId = CurrentExercise.Id;
-            ResultExercises.Add(resultExercise);
+            CurrentDay = day;
         }
 
-        internal void SetCycle(string name, int id)
+        private void SetExercise(Exercise exercise)
         {
-            CurrentCycle.NameCycle = name;
-            CurrentCycle.UserInformationId = id;
+            CurrentExercise = exercise;
         }
 
-        internal void SetDay(string name, string id)
+        internal bool TryAddExercise(string[] nameExercises)
         {
-            CurrentDay = new Day { NameDay = name, Id = int.Parse(id) };
+            if (Exercises == null)
+            {
+                Exercises = new ();
+            }
+
+            foreach (var name in nameExercises)
+            {
+                if (Exercises.Any(e => e.Name == name))
+                    return false;
+
+                Exercises.Add(new Exercise { Name = name, DayId = CurrentDay.Id });
+            }
+
+            return true;
         }
 
-        internal void SetExercise(string name, string id)
+        internal void AddResultsExercise(IEnumerable<ResultExercise> resultsExercise)
         {
-            CurrentExercise = new Exercise { NameExercise = name, Id = int.Parse(id) };
+            if (!resultsExercise.Any())
+                throw new FormatException();
+
+            if (ResultExercises == null)
+               ResultExercises = new();
+
+            foreach (var result in resultsExercise)
+            {
+                result.ExerciseId = CurrentExercise.Id;
+                ResultExercises.Add(result);
+            }
         }
 
-        internal Cycle GetCycleWithUiId(int userInformationId)
+        private void ResetCycle()
         {
-            if (Exercises.Count > 0)
-                Exercises.Clear();
-
-            NumberDay = 1;
-
-            CurrentCycle.UserInformationId = userInformationId;
-            CurrentCycle.IsActive = true;
-
-            return CurrentCycle;
+            CurrentCycle = null;
         }
 
-        internal void ResetCycle()
+        private void ResetDay()
         {
-            CurrentCycle = new();
+            CurrentDay = null;
+        }
+
+        private void ResetExercise()
+        {
+            CurrentExercise = null;
+        }
+
+        internal void ResetExercises()
+        {
+            Exercises = null;
         }
 
         internal void ResetResultExercises()
         {
-            ResultExercises.Clear();
+            ResultExercises = null;
+        }
+
+        internal void ResetAll()
+        {
+            ResetCycle();
+            ResetDay();
+            ResetExercise();
+            ResetExercises();
+            ResetResultExercises();
+        }
+
+        internal void SetDomain(IDomain domain)
+        {
+            switch (domain)
+            {
+                case Cycle cycle:
+                    SetCycle(cycle);
+                    break;
+                case Day day:
+                    SetDay(day);
+                    break;
+                case Exercise exercise:
+                    SetExercise(exercise);
+                    break;
+            }
+        }
+
+        internal void ResetDomain(IDomain domain)
+        {
+            switch (domain)
+            {
+                case Cycle:
+                    ResetCycle();
+                    break;
+                case Day:
+                    ResetDay();
+                    break;
+                case Exercise:
+                    ResetExercise();
+                    break;
+            }
         }
     }
 }

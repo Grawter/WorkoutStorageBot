@@ -4,17 +4,25 @@ using WorkoutStorageBot.Model;
 
 #endregion
 
-namespace WorkoutStorageBot.Helpers.ResponseGenerator
+namespace WorkoutStorageBot.Helpers.Converters
 {
-    internal class ResponseGenerator
+    public class ResponseConverter : IStringConverter
     {
-        private StringBuilder sb;
+        private StringBuilder? sb;
         private string? title;
         private string? content;
-        private string? target;
+        private string target;
         private string? separator;
+        private bool onlyTarget;
 
-        internal ResponseGenerator(string content, string target)
+        public ResponseConverter(string target)
+        {
+            this.target = target;
+
+            onlyTarget = true;
+        }
+
+        public ResponseConverter(string content, string target)
         {
             sb = new StringBuilder();
 
@@ -25,7 +33,7 @@ namespace WorkoutStorageBot.Helpers.ResponseGenerator
             separator = "======================";
         }
 
-        internal ResponseGenerator(string title, string content, string target, string? separator = null)
+        public ResponseConverter(string title, string content, string target, string? separator = null)
         {
             sb = new StringBuilder();
 
@@ -41,8 +49,26 @@ namespace WorkoutStorageBot.Helpers.ResponseGenerator
                 this.separator = "======================";
         }
 
-        internal string Generate()
+        public void ResetTitle(string title)
         {
+            this.title = title;
+        }
+
+        public void ResetContent(string content)
+        {
+            this.content = content;
+        }
+
+        public void ResetTarget(string target)
+        {
+            this.target = target;
+        }
+
+        public string Convert()
+        {
+            if (onlyTarget)
+                return target;
+
             if (!string.IsNullOrEmpty(title))
             {
                 sb.AppendLine(title);
@@ -64,16 +90,22 @@ namespace WorkoutStorageBot.Helpers.ResponseGenerator
             return sb.ToString();
         }
 
-        internal static string GetInformationAboutLastWorkout(List<Exercise> exercises, List<ResultExercise> resultExercises)
+        public static string GetInformationAboutLastExercises(IEnumerable<Exercise>? exercises, IEnumerable<ResultExercise>? resultExercises)
         {
+            if (!exercises.Any() || !resultExercises.Any())
+                return "Нет информации для данного цикла";
+
             var resultQuery = exercises
                         .Join(resultExercises,
                             e => e.Id,
                             rE => rE.ExerciseId,
-                            (e, rE) => new { e.NameExercise, rE.Count, rE.Weight, rE.DateTime })
-                        .GroupBy(rE => rE.NameExercise).ToArray();
+                            (e, rE) => new { e.Name, rE.Count, rE.Weight, rE.DateTime })
+                        .GroupBy(rE => rE.Name).ToArray();
+
 
             var sb = new StringBuilder();
+
+            sb.AppendLine($"Дата: {resultExercises.First().DateTime}");
 
             for (int i = 0; i < resultQuery.Count(); i++)
             {
@@ -88,15 +120,18 @@ namespace WorkoutStorageBot.Helpers.ResponseGenerator
             return sb.ToString().Trim();
         }
 
-        internal static string GetInformationAboutLastDay(List<Exercise> exercises, List<ResultExercise> resultExercises)
+        public static string GetInformationAboutLastDay(IEnumerable<Exercise> exercises, IEnumerable<ResultExercise>? resultExercises)
         {
+            if (!exercises.Any() || !resultExercises.Any())
+                return "Нет информации для данного цикла";
+
             var resultQuery = exercises
                         .Join(resultExercises,
                             e => e.Id,
                             rE => rE.ExerciseId,
-                            (e, rE) => new { e.NameExercise, rE.Count, rE.Weight, rE.DateTime })
-                        .GroupBy(rE => rE.NameExercise).ToArray();
- 
+                            (e, rE) => new { e.Name, rE.Count, rE.Weight, rE.DateTime })
+                        .GroupBy(rE => rE.Name).ToArray();
+
             var sb = new StringBuilder();
 
             for (int i = 0; i < resultQuery.Count(); i++)
@@ -110,6 +145,7 @@ namespace WorkoutStorageBot.Helpers.ResponseGenerator
             }
 
             return sb.ToString().Trim();
-        } 
+        }
+
     }
 }

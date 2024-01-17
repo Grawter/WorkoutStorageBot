@@ -5,11 +5,36 @@ namespace WorkoutStorageBot.BusinessLogic.Enums
     internal enum ButtonsSet
     {
         None,
-        StartSetCycle,
-        SetCycle,
+
         Main,
-        WorkoutDays,
-        WorkoutExercises,
-        SaveResultForExercise
+            DaysListWithLastWorkout,
+            ExercisesListWithLastWorkoutForDay,
+            SaveResultsExercise,
+
+        Settings,
+            SettingCycles,
+                AddCycle,
+                CycleList, 
+                    SettingCycle,
+                        ArchiveCyclesList,
+                        ConfirmDeleteCycle,
+                        SettingDays,
+                            AddDays,
+                            DaysList,
+                                SettingDay,
+                                    ReplaceToCycle,
+                                    ArchiveDaysList,
+                                    ConfirmDeleteDay,
+                                    SettingExercises,
+                                        AddExercises,
+                                            SaveExercises,
+                                                 RedirectAfterSaveExercise,
+                                        ExercisesList,
+                                            SettingExercise,
+                                                ReplaceToDay,
+                                                ArchiveExercisesList,
+                                                ConfirmDeleteExercise,
+            ArchiveList,
+            ConfirmDeleteAccount,
     }
 }

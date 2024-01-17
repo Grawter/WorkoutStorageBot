@@ -8,8 +8,8 @@ using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.StepStore;
 using WorkoutStorageBot.BusinessLogic.SessionContext;
 using WorkoutStorageBot.Helpers.Logger;
-using WorkoutStorageBot.Helpers.ResponseGenerator;
 using WorkoutStorageBot.Model;
+using WorkoutStorageBot.Helpers.Converters;
 #endregion
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers
@@ -18,13 +18,13 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
     {
         private readonly ILogger logger;
         private readonly ITelegramBotClient botClient;
-        private readonly ApplicationContext db;
+        private readonly EntityContext db;
         private readonly Dictionary<long, UserContext> contextStore;
         internal bool WhiteList { get; set; }
         internal bool IsNewContext { get; private set; }
         internal bool HasAccess { get; private set; }
 
-        internal PrimaryUpdateHandler(in ILogger logger, in ITelegramBotClient botClient, in ApplicationContext db)
+        internal PrimaryUpdateHandler(ILogger logger, ITelegramBotClient botClient, EntityContext db)
         {
             this.logger = logger;
             this.botClient = botClient;
@@ -71,12 +71,17 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                         break;
 
                     default:
-                        logger.WriteLog($"Неожиданный тип сообщения: {update.Type}", LogType.Anomany);
+                        logger.WriteLog($"Неожиданный update.type: {update.Type}", LogType.Anomany);
                         break;
                 }
             }
 
             currentUserContext = null;
+        }
+
+        internal void DeleteContext(long id)
+        {
+            contextStore.Remove(id);
         }
 
         private void ProcessUnexpectedUpdateType<T>(User user, T updateType, long chatId) where T : Enum
@@ -108,9 +113,11 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                     ProcessExpectedUpdateType(update.CallbackQuery.From, out currentUserContext);
 
                     if (IsNewContext && HasAccess)
-                        DirectIfIsNewContext(update.CallbackQuery.From.Id, currentUserContext);
+                        DirectIfIsNewContext(update.CallbackQuery.From.Id, in currentUserContext);
 
                     return;
+                default:
+                    throw new NotImplementedException($"Неожиданный update.type: {update.Type}");
             }
 
             currentUserContext = null;
@@ -126,6 +133,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                 case UpdateType.CallbackQuery:
                     logger.WriteLog($"От пользователя: @{user.Username} - {user.Id} CallbackQuery: {message}");
                     break;
+                default:
+                    throw new NotImplementedException($"Неожиданный updateType: {updateType}");
             }
         }
 
@@ -195,14 +204,14 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
             return newUser;
         }
 
-        private void DirectIfIsNewContext(long chatId, UserContext currentUserContext)
+        private void DirectIfIsNewContext(long chatId, in UserContext currentUserContext)
         {
             bool hasCycle;
-            hasCycle = currentUserContext.Cycle == null ? false : true;
+            hasCycle = currentUserContext.ActiveCycle == null ? false : true;
             DirectToStart(chatId, currentUserContext, hasCycle);
         }
 
-        private void DirectToStart(long chatId, UserContext currentUserContext, bool hasCycle)
+        private void DirectToStart(long chatId, in UserContext currentUserContext, bool hasCycle)
         {
             string message;
             var buttons = new InlineButtons(currentUserContext);
@@ -211,13 +220,14 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
             if (hasCycle)
             {
                 var mainStep = StepStorage.GetMainStep();
-                message = new ResponseGenerator("Информация о предыдущей сессии не была найдена", mainStep.Message).Generate();
+                message = new ResponseConverter("Информация о предыдущей сессии не была найдена", mainStep.Message).Convert();
                 buttonsSet = mainStep.ButtonsSet;
             }
             else
             {
+                currentUserContext.Navigation.QueryFrom = QueryFrom.Start;
                 message = "Начнём";
-                buttonsSet = ButtonsSet.StartSetCycle;
+                buttonsSet = ButtonsSet.AddCycle;
             }
 
             botClient.SendTextMessageAsync(chatId,

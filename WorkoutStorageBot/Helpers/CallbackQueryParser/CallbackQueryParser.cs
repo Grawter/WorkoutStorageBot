@@ -2,23 +2,23 @@
 
 namespace WorkoutStorageBot.Helpers.CallbackQueryParser
 {
-    internal static class CallbackQueryParser
+    internal class CallbackQueryParser
     {
-        internal static bool TryParse(string data)
+        internal CallbackQueryParser(string data) 
         {
-            Args = data.Split('|');
+            Args = data.Split(new char[] { '|' });
 
             if (Args.Length == 0)
-                return false;
-
-            return true;
+                throw new FormatException("Получен пустой CallBack");
         }
 
-        internal static string Direction { get => Args[0]; }
-        internal static string ObjectName { get => Args[1]; }
-        internal static string ObjectId { get => Args[2]; }
-        internal static string CallBackSetId { get => Args[Args.Length - 1]; }
+        internal int Direction { get => int.Parse(Args[0]); }
+        internal string SubDirection { get => Args[1]; }
+        internal string ObjectType { get => Args[2]; }
+        internal int ObjectId { get => int.Parse(Args[3]); }
+        internal string ObjectName { get => Args[4]; }
+        internal string CallBackId { get => Args[Args.Length - 1]; }
 
-        internal static string[] Args { get; private set; }
+        internal string[] Args { get; private set; }
     }
 }
