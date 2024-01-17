@@ -20,7 +20,7 @@ namespace WorkoutStorageBot.StartApplication
             System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls13;
 
             ILogger logger = new ConsoleLogger();
-            
+
             string pathFileConfig = "appsettings.json";
             if (!System.IO.File.Exists(pathFileConfig))
             {
@@ -59,7 +59,11 @@ namespace WorkoutStorageBot.StartApplication
 
             var botClient = new TelegramBotClient(token);
 
-            var telegramBotHandler = new TelegramBotHandler(botClient, options, logger); 
+            var db = new EntityContext(options);
+
+            var adminHandler = new AdminHandler(db);
+
+            var telegramBotHandler = new TelegramBotHandler(botClient, db, logger, adminHandler);
 
             using CancellationTokenSource cts = new();
 
@@ -79,50 +83,95 @@ namespace WorkoutStorageBot.StartApplication
 
             logger.WriteLog($"Телеграм бот @{me.Username} запущен", LogType.Information);
 
+            string[] command;
+            UserInformation? user;
+
             while (true)
             {
-                switch (Console.ReadLine().ToLower().Trim())
+                command = Console.ReadLine().ToLower().Trim().Split(' ');
+
+                switch (command[0])
                 {
-                    case "/add wl":
-
-                        break;
-                    case "/rm wl":
-
-                        break;
-
-                    case "/add bl":
-
-                        break;
-                    case "/rm bl":
-
-                        break;
-
-                    case "/rm user":
-
-                        break;
-
-                    case "/switch wl":
-                        if (telegramBotHandler.WhiteList)
+                    case "switchmode":
+                        switch (command[1])
                         {
-                            telegramBotHandler.WhiteList = false;
-                            logger.WriteLog($"Режим белого списка выключён", LogType.Admin);
+                            case "wlpr":
+                                if (telegramBotHandler.WhiteList)
+                                {
+                                    telegramBotHandler.WhiteList = false;
+                                    logger.WriteLog("Режим белого списка выключён", LogType.Admin);
+                                }
+                                else
+                                {
+                                    telegramBotHandler.WhiteList = true;
+                                    logger.WriteLog("Режим белого списка включён", LogType.Admin);
+                                }
+                                break;
+                            default:
+                                logger.WriteLog($"Неизвестная команда после switchmode: {command[1]}", LogType.Admin);
+                                break;
                         }
-                        else
+                        break;
+
+                    case "changestate":
+                        user = adminHandler.GetUserInformation(long.Parse(command[2]));
+                        if (user == null)
                         {
-                            telegramBotHandler.WhiteList = true;
-                            logger.WriteLog($"Режим белого списка включён", LogType.Admin);
+                            logger.WriteLog($"Пользователь с userId {user.UserId} не найден", LogType.Admin);
+                            break;
                         }
 
+                        switch (command[1])
+                        {
+                            case "wl":
+                                adminHandler.ChangeWhiteList(user);
+
+                                logger.WriteLog($"WhiteList для {user.Username} {user.UserId} установлен на {user.WhiteList}", LogType.Admin);
+                                break;
+                            case "bl":
+                                adminHandler.ChangeBlackList(user);
+
+                                logger.WriteLog($"BlackList для {user.Username} {user.UserId} установлен на {user.BlackList}", LogType.Admin);
+                                break;
+                            default:
+                                logger.WriteLog($"Неизвестная команда после changestate: {command[1]}", LogType.Admin);
+                                break;
+                        }
                         break;
-                    case "/stopbot":
+
+                    case "rm":
+                        user = adminHandler.GetUserInformation(long.Parse(command[2]));
+                        if (user == null)
+                        {
+                            logger.WriteLog($"Пользвоатель с userId {user.UserId} не найден", LogType.Admin);
+                            break;
+                        }
+
+                        switch (command[1])
+                        {
+                            case "user":
+                                adminHandler.DeleteAccount(user);
+                                logger.WriteLog($"Пользователь {user.Username} {user.UserId} удалён", LogType.Admin);
+                                break;
+                            default:
+                                logger.WriteLog($"Неизвестная команда после rm: {command[1]}", LogType.Admin);
+                                break;
+                        }
+                        break;
+
+                    case "stopbot":
                         cts.Cancel(); // Send cancellation request to stop bot
                         logger.WriteLog($"Телеграм бот @{me.Username} остановлен из консоли", LogType.Admin);
                         return;
-                    case "/commands":
 
-                        break; ;
+                    case "commands":
+                        logger.WriteLog("\nswitchmode wlpr - переключить режим белого листа\n" +
+                                        "changestate [wl/bl] userId - установить состояние\n" +
+                                        "rm user userId - удалить пользователя\n", 
+                                        LogType.Admin);
+                        break;
                     default:
-                        logger.WriteLog("Неизвестная команда. Введите /commands для просмотра доступных команд");
+                        logger.WriteLog("Неизвестная команда. Введите commands для просмотра доступных команд", LogType.Admin);
                         break;
 
                 }
@@ -132,7 +181,7 @@ namespace WorkoutStorageBot.StartApplication
             {
                 try
                 {
-                    await Task.Run(() => telegramBotHandler.ProcessUpdate(update));
+                    await telegramBotHandler.ProcessUpdate(update);
                 }
                 catch (Exception ex)
                 {
@@ -157,5 +206,4 @@ namespace WorkoutStorageBot.StartApplication
             }
         }
     }
-
 }

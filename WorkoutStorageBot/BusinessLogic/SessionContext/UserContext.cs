@@ -1,5 +1,4 @@
 ﻿#region using
-
 using WorkoutStorageBot.Helpers.Crypto;
 using WorkoutStorageBot.Model;
 

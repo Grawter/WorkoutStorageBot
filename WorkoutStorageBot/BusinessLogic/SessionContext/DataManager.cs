@@ -13,90 +13,79 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
         internal List<Exercise>? Exercises { get; private set; }
         internal List<ResultExercise>? ResultExercises { get; private set; }
 
-        internal void SetCycle(string nameCycle, bool isActive, int userInformationId)
+        internal Cycle SetCycle(string nameCycle, bool isActive, int userInformationId)
         {
             ResetCycle();
 
-            CurrentCycle = new () { Name = nameCycle, IsActive = isActive, UserInformationId = userInformationId };
+            return CurrentCycle = new () { Name = nameCycle, IsActive = isActive, UserInformationId = userInformationId };
         }
 
-        internal void SetCycle(Cycle cycle)
+        private void SetCycle(Cycle cycle)
         {
             CurrentCycle = cycle;
         }
 
-        internal void SetDay(string nameDay)
+        internal Day SetDay(string nameDay)
         {
             ResetDay();
 
-            CurrentDay = new() { Name = nameDay, CycleId = CurrentCycle.Id };
+            return CurrentDay = new() { Name = nameDay, CycleId = CurrentCycle.Id };
         }
 
-        internal void SetDay(Day day)
+        private void SetDay(Day day)
         {
             CurrentDay = day;
         }
 
-        internal void SetExercise(Exercise exercise)
+        private void SetExercise(Exercise exercise)
         {
             CurrentExercise = exercise;
         }
 
-        internal bool TryAddExercise(string nameExercise)
+        internal bool TryAddExercise(string[] nameExercises)
         {
             if (Exercises == null)
             {
-                Exercises = new () { new Exercise { Name = nameExercise, DayId = CurrentDay.Id } };
-                return true;
+                Exercises = new ();
             }
 
-            if (Exercises.Any(e => e.Name == nameExercise))
-                return false;
+            foreach (var name in nameExercises)
+            {
+                if (Exercises.Any(e => e.Name == name))
+                    return false;
 
-            Exercises.Add(new Exercise { Name = nameExercise, DayId = CurrentDay.Id });
+                Exercises.Add(new Exercise { Name = name, DayId = CurrentDay.Id });
+            }
+
             return true;
         }
 
-        internal void AddResultExercise(ResultExercise? resultExercise)
+        internal void AddResultsExercise(IEnumerable<ResultExercise> resultsExercise)
         {
-            if (resultExercise == null)
+            if (!resultsExercise.Any())
                 throw new FormatException();
 
-            resultExercise.ExerciseId = CurrentExercise.Id;
-
             if (ResultExercises == null)
-               ResultExercises = new() { resultExercise };
-            else
-                ResultExercises.Add(resultExercise);
-        }
+               ResultExercises = new();
 
-        internal void ResetDomain(IDomain domain)
-        {
-            switch (domain)
+            foreach (var result in resultsExercise)
             {
-                case Cycle:
-                    ResetCycle();
-                    break;
-                case Day:
-                    ResetDay();
-                    break;
-                case Exercise:
-                    ResetExercise();
-                    break;
+                result.ExerciseId = CurrentExercise.Id;
+                ResultExercises.Add(result);
             }
         }
 
-        internal void ResetCycle()
+        private void ResetCycle()
         {
             CurrentCycle = null;
         }
 
-        internal void ResetDay()
+        private void ResetDay()
         {
             CurrentDay = null;
         }
 
-        internal void ResetExercise()
+        private void ResetExercise()
         {
             CurrentExercise = null;
         }
@@ -118,6 +107,38 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
             ResetExercise();
             ResetExercises();
             ResetResultExercises();
+        }
+
+        internal void SetDomain(IDomain domain)
+        {
+            switch (domain)
+            {
+                case Cycle cycle:
+                    SetCycle(cycle);
+                    break;
+                case Day day:
+                    SetDay(day);
+                    break;
+                case Exercise exercise:
+                    SetExercise(exercise);
+                    break;
+            }
+        }
+
+        internal void ResetDomain(IDomain domain)
+        {
+            switch (domain)
+            {
+                case Cycle:
+                    ResetCycle();
+                    break;
+                case Day:
+                    ResetDay();
+                    break;
+                case Exercise:
+                    ResetExercise();
+                    break;
+            }
         }
     }
 }

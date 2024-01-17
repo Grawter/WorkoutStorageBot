@@ -4,14 +4,12 @@ namespace WorkoutStorageBot.Helpers.CallbackQueryParser
 {
     internal class CallbackQueryParser
     {
-        internal bool TryParse(string data)
+        internal CallbackQueryParser(string data) 
         {
-            Args = data.Split(new char[] {'|'});
+            Args = data.Split(new char[] { '|' });
 
             if (Args.Length == 0)
-                return false;
-
-            return true;
+                throw new FormatException("Получен пустой CallBack");
         }
 
         internal int Direction { get => int.Parse(Args[0]); }

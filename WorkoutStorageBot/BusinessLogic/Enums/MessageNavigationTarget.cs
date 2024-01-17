@@ -4,7 +4,7 @@ namespace WorkoutStorageBot.BusinessLogic.Enums
 {
     internal enum MessageNavigationTarget
     {
-        None,
+        Default,
 
         AddCycle,
         AddDays,

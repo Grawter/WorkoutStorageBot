@@ -25,17 +25,12 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
             inlineKeyboardButtonsMain = new();
         }
 
-        internal IReplyMarkup GetInlineButtons(ButtonsSet buttonsSet)
-        {
-            return new InlineKeyboardMarkup(GetButtons(buttonsSet));
-        }
-
-        internal IReplyMarkup GetInlineButtonsWithBack(ButtonsSet buttonsSet, ButtonsSet backButtonsSet)
+        internal IReplyMarkup GetInlineButtons(ButtonsSet buttonsSet, ButtonsSet backButtonsSet = ButtonsSet.None)
         {
             return new InlineKeyboardMarkup(GetButtons(buttonsSet, backButtonsSet));
         }
 
-        private IEnumerable<IEnumerable<InlineKeyboardButton>> GetButtons(ButtonsSet buttonsSet, ButtonsSet backButtonsSet = ButtonsSet.None)
+        private IEnumerable<IEnumerable<InlineKeyboardButton>> GetButtons(ButtonsSet buttonsSet, ButtonsSet backButtonsSet)
         {
             switch (buttonsSet)
             {
@@ -47,12 +42,12 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
 
                 #region Workout area
                 case ButtonsSet.DaysListWithLastWorkout:
-                    AddInlineButton("Последняя тренировка", "1|LastResultFor|Exercises");
+                    AddInlineButton("Последняя тренировка", "1|LastResult|Exercises");
                     GetDaysInButtons(CurrentUserContext.ActiveCycle.Days.Where(d => !d.IsArchive), ActionForList.Select);
                     break;
 
                 case ButtonsSet.ExercisesListWithLastWorkoutForDay:
-                    AddInlineButton("Последние результаты выбранного дня", $"1|LastResultFor|Day");
+                    AddInlineButton("Последние результаты выбранного дня", $"1|LastResult|Day");
                     GetExercisesInButtons(CurrentUserContext.DataManager.CurrentDay.Exercises.Where(e => !e.IsArchive), ActionForList.Select);
                     break;
 
@@ -91,7 +86,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                     break;
 
                 case ButtonsSet.SettingDays:
-                    AddInlineButton("Добавить новые дни в цикл", "3|AddDays");
+                    AddInlineButton("Добавить новые дни в цикл", "3|Add|Day");
                     AddInlineButton("Настройка существующих дней", "3|SettingExisting|Days");
                     AddInlineButton("Вернуться к главному меню", "0|ToMain");
                     break;
@@ -114,7 +109,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                     break;
 
                 case ButtonsSet.SettingExercises:
-                    AddInlineButton("Добавить новые упражнения в день", "3|Add|Exercises");
+                    AddInlineButton("Добавить новые упражнения в день", "3|Add|Exercise");
                     AddInlineButton("Настройка существующих упражнений", "3|SettingExisting|Exercises");
                     AddInlineButton("Вернуться к главному меню", "0|ToMain");
                     break;
@@ -126,7 +121,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                 case ButtonsSet.SettingExercise:
                     AddInlineButton("Сменить название", "3|ChangeName|Exercise");
                     AddInlineButton("Перенести упражнение", "3|Replace|Exercise");
-                    AddInlineButton("Добавить в архив", $"3|Archiving|{DomainType.Exercise}");
+                    AddInlineButton("Добавить в архив", $"3|Archiving|Exercise");
                     AddInlineButton("Удалить", "3|Delete|Exercise");
                     AddInlineButton("Вернуться к главному меню", "0|ToMain");
                     break;
@@ -140,19 +135,19 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
 
                 #region Full adding cycle area
                 case ButtonsSet.AddCycle:
-                    AddInlineButton("Добавить цикл", "3|AddCycle");
+                    AddInlineButton("Добавить цикл", "3|Add|Cycle");
                     break;
                 case ButtonsSet.AddDays:
-                    AddInlineButton($"Добавить дни", "3|AddDays");
+                    AddInlineButton($"Добавить дни", "3|Add|Day");
                     break;
                 case ButtonsSet.AddExercises:
-                    AddInlineButton($"Добавить упражнеия", "3|AddExercises");
+                    AddInlineButton($"Добавить упражнеия", "3|Add|Exercise");
                     break;
                 case ButtonsSet.SaveExercises:
                     AddInlineButton($"Сохранить упражнения", "3|SaveExercises");
                     break;
                 case ButtonsSet.RedirectAfterSaveExercise:
-                    AddInlineButton($"Добавить новый день", "3|AddDays");
+                    AddInlineButton($"Добавить новый день", "3|Add|Day");
                     AddInlineButton($"Перейти в главное меню", "0|ToMain");
                     break;
                 #endregion
@@ -197,7 +192,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                     break;
 
                 case ButtonsSet.ConfirmDeleteAccount:
-                    AddInlineButton("Да, удалить аккаунт", "3|ConfirmDelete|Account");
+                    AddInlineButton("Да, удалить аккаунт", "3|ConfirmDeleteAccount");
                     break;
                 case ButtonsSet.None:
                     break;
@@ -265,7 +260,6 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                     break;
                 default:
                     throw new NotImplementedException($"Неожиданный actionForList: {actionForList}");
-
             }
         }
 
@@ -293,9 +287,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                     break;
                 default:
                     throw new NotImplementedException($"Неожиданный actionForList: {actionForList}");
-
             }    
-
         }
 
         private void GetExercisesInButtons(IEnumerable<Exercise> source, ActionForList actionForList)
@@ -316,7 +308,6 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                     break;
                 default:
                     throw new NotImplementedException($"Неожиданный actionForList: {actionForList}");
-
             }
         }
     }
