@@ -1,6 +1,4 @@
-﻿
-
-namespace WorkoutStorageBot.Model
+﻿namespace WorkoutStorageBot.Model
 {
     public class Cycle : IDomain
     {

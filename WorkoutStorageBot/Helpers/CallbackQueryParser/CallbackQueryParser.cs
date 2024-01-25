@@ -1,10 +1,8 @@
-﻿
-
-namespace WorkoutStorageBot.Helpers.CallbackQueryParser
+﻿namespace WorkoutStorageBot.Helpers.CallbackQueryParser
 {
     internal class CallbackQueryParser
     {
-        internal CallbackQueryParser(string data) 
+        internal CallbackQueryParser(string data)
         {
             Args = data.Split(new char[] { '|' });
 

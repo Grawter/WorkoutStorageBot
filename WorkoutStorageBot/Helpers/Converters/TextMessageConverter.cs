@@ -1,6 +1,8 @@
 ﻿#region using
+
 using System.Text;
 using WorkoutStorageBot.Model;
+
 #endregion
 
 namespace WorkoutStorageBot.Helpers.Converters
@@ -47,7 +49,7 @@ namespace WorkoutStorageBot.Helpers.Converters
             if (text.Contains(';'))
                 return text.Split(';');
             else
-                return [text]; 
+                return [text];
         }
 
         public IEnumerable<ResultExercise> GetResultsExercise()
@@ -62,7 +64,7 @@ namespace WorkoutStorageBot.Helpers.Converters
 
                 foreach (var str in stringsResult)
                 {
-                    results.Add(GetResultExercise(str));
+                    results.Add(GetResultExercise(str.Trim()));
                 }
             }
             else

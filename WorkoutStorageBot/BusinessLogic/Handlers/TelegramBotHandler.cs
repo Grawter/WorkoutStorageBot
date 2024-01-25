@@ -2,16 +2,16 @@
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using WorkoutStorageBot.Helpers.Logger;
-using WorkoutStorageBot.Helpers.CallbackQueryParser;
-using WorkoutStorageBot.BusinessLogic.SessionContext;
 using WorkoutStorageBot.BusinessLogic.Buttons;
 using WorkoutStorageBot.BusinessLogic.Enums;
-using WorkoutStorageBot.Model;
-using WorkoutStorageBot.Helpers.Converters;
-using WorkoutStorageBot.Helpers.InformationSetForSend;
 using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackCommandHandler;
 using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.MessageCommandHandler;
+using WorkoutStorageBot.BusinessLogic.SessionContext;
+using WorkoutStorageBot.Helpers.CallbackQueryParser;
+using WorkoutStorageBot.Helpers.Converters;
+using WorkoutStorageBot.Helpers.InformationSetForSend;
+using WorkoutStorageBot.Helpers.Logger;
+using WorkoutStorageBot.Model;
 #endregion
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers
@@ -24,7 +24,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
         private readonly AdminHandler adminHandler;
         private UserContext? currentUserContext;
         private UserContext? CurrentUserContext { get => currentUserContext; set => currentUserContext = value; }
-        internal bool WhiteList { get => primaryProcessUpdate.WhiteList;  set => primaryProcessUpdate.WhiteList = value;  }
+        internal bool WhiteList { get => primaryProcessUpdate.WhiteList; set => primaryProcessUpdate.WhiteList = value; }
 
         internal TelegramBotHandler(ITelegramBotClient botClient, EntityContext db, ILogger logger, AdminHandler adminHandler)
         {
@@ -117,7 +117,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                     throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.MessageNavigationTarget: {CurrentUserContext.Navigation.MessageNavigationTarget}!");
             }
 
-           await SendResponse(update.Message.Chat.Id, messageInformationSet.Message, messageInformationSet.ButtonsSets);
+            await SendResponse(update.Message.Chat.Id, messageInformationSet.Message, messageInformationSet.ButtonsSets);
         }
 
         private async Task ProcessCallbackQuery(Update update)
@@ -174,7 +174,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                     messageInformationSet = commandHandler
                                                         .BackCommand()
                                                         .GetData();
-                break;
+                    break;
 
                 case "ToMain":
                     messageInformationSet = commandHandler
@@ -216,10 +216,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
 
                 default:
                     throw new NotImplementedException($"Неожиданный CallbackQueryParser.SubDirection: {callbackQueryParser.SubDirection}");
-
             }
 
-           await SendResponse(update.CallbackQuery.Message.Chat.Id, messageInformationSet.Message, messageInformationSet.ButtonsSets);
+            await SendResponse(update.CallbackQuery.Message.Chat.Id, messageInformationSet.Message, messageInformationSet.ButtonsSets);
         }
 
         private void ProcessAnalyticsCallBack(Update update, CallbackQueryParser callbackQueryParser)
@@ -336,16 +335,17 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                                                                                                             .ConfirmDeleteCommand()
                                                                                                             .GetData();
                     break;
+
                 case "ConfirmDeleteAccount":
                     DeleteAccount();
 
-                    messageInformationSet = new MessageInformationSet("Аккаунт успешно удалён", (ButtonsSet.None, ButtonsSet.None)); 
+                    messageInformationSet = new MessageInformationSet("Аккаунт успешно удалён", (ButtonsSet.None, ButtonsSet.None));
                     break;
                 default:
                     throw new NotImplementedException($"Неожиданный callbackQueryParser.SubDirection: {callbackQueryParser.SubDirection}");
             }
 
-           await SendResponse(update.CallbackQuery.Message.Chat.Id, messageInformationSet.Message, messageInformationSet.ButtonsSets);
+            await SendResponse(update.CallbackQuery.Message.Chat.Id, messageInformationSet.Message, messageInformationSet.ButtonsSets);
         }
 
         private void DeleteAccount()
@@ -354,7 +354,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
             adminHandler.DeleteAccount(CurrentUserContext.UserInformation);
         }
 
-        async Task SendResponse(long chatId, string message, (ButtonsSet buttonsSet, ButtonsSet backButtonsSet) ButtonsSets)
+        private async Task SendResponse(long chatId, string message, (ButtonsSet buttonsSet, ButtonsSet backButtonsSet) ButtonsSets)
         {
             var buttons = new InlineButtons(CurrentUserContext);
 

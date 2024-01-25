@@ -1,15 +1,17 @@
 ﻿#region using
+
 using Microsoft.EntityFrameworkCore;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using WorkoutStorageBot.BusinessLogic.Buttons;
 using WorkoutStorageBot.BusinessLogic.Enums;
-using WorkoutStorageBot.BusinessLogic.StepStore;
 using WorkoutStorageBot.BusinessLogic.SessionContext;
+using WorkoutStorageBot.BusinessLogic.StepStore;
+using WorkoutStorageBot.Helpers.Converters;
 using WorkoutStorageBot.Helpers.Logger;
 using WorkoutStorageBot.Model;
-using WorkoutStorageBot.Helpers.Converters;
+
 #endregion
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers
@@ -108,6 +110,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                         DirectIfIsNewContext(update.Message.From.Id, currentUserContext);
 
                     return;
+
                 case UpdateType.CallbackQuery:
                     LoggingExpectedUpdateType(update.CallbackQuery.From, update.CallbackQuery.Data, update.Type);
                     ProcessExpectedUpdateType(update.CallbackQuery.From, out currentUserContext);
@@ -130,6 +133,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                 case UpdateType.Message:
                     logger.WriteLog($"От пользователя: @{user.Username} - {user.Id} Текст: {message}");
                     break;
+
                 case UpdateType.CallbackQuery:
                     logger.WriteLog($"От пользователя: @{user.Username} - {user.Id} CallbackQuery: {message}");
                     break;

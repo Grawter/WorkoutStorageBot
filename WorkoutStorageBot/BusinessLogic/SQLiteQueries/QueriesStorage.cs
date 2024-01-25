@@ -1,4 +1,6 @@
 ﻿#region using
+
+using System.Text;
 using WorkoutStorageBot.Model;
 
 #endregion
@@ -11,8 +13,9 @@ namespace WorkoutStorageBot.BusinessLogic.SQLiteQueries
         {
             var args = FromIEnumerableIntToString(ids);
 
-            string query = $@"SELECT Exercises.Id, Exercises.Name, Exercises.DayId, Exercises.IsArchive FROM Exercises
-							    WHERE Exercises.DayId IN ({args}) AND Exercises.IsArchive = FALSE;";
+            string query = $@"
+SELECT Exercises.Id, Exercises.Name, Exercises.DayId, Exercises.IsArchive FROM Exercises
+WHERE Exercises.DayId IN ({args}) AND Exercises.IsArchive = FALSE;";
 
             return queryExecuter.Invoke(query);
         }
@@ -21,39 +24,51 @@ namespace WorkoutStorageBot.BusinessLogic.SQLiteQueries
         {
             var args = FromIEnumerableIntToString(ids);
 
-            string query = $@"WITH LastResults (Id, Count, Weight, DateTime, ExerciseId)
-                                AS
-                                (
-                                    SELECT * FROM ResultsExercises
-                                    WHERE ResultsExercises.ExerciseId IN ({args})
-                                )
+            string query = $@"
+WITH LastResults (Id, Count, Weight, DateTime, ExerciseId)
+AS
+(
+    SELECT * FROM ResultsExercises
+    WHERE ResultsExercises.ExerciseId IN ({args})
+)
 
-                                SELECT * FROM LastResults
-                                WHERE DateTime = (SELECT MAX(DateTime) FROM LastResults)";
+SELECT * FROM LastResults
+WHERE DateTime = (SELECT MAX(DateTime) FROM LastResults)";
 
             return queryExecuter.Invoke(query);
         }
 
-        internal static List<ResultExercise> GetLastResultsForExercisesWithExercisesIds(IEnumerable<int> ids, Func<string, List<ResultExercise>> queryExecuter)
+        internal static List<ResultExercise> GetLastDateForExercises(IEnumerable<int> ids, Func<string, List<ResultExercise>> queryExecuter)
         {
             var args = FromIEnumerableIntToString(ids);
 
-            string query = $@"WITH LastResults (DateTime, ExerciseId)
-                                AS
-                                ( 	SELECT * FROM 
-		                                (
-		                                SELECT DateTime, ExerciseId FROM ResultsExercises
-		                                WHERE ExerciseId IN ({args})
-		                                ORDER BY ExerciseId ASC, DateTime DESC
-		                                )
-	                                GROUP BY ExerciseId
-                                )
-			
-                            SELECT * FROM ResultsExercises
-                            WHERE ExerciseId IN (SELECT ExerciseId FROM LastResults) AND
-	                            DateTime IN (SELECT DateTime FROM LastResults)";
+            string query = $@"
+SELECT * FROM
+    (
+        SELECT ID, DateTime, ExerciseId, 0 AS Weight, 0 AS Count FROM ResultsExercises
+        WHERE ExerciseId IN ({args})
+        ORDER BY ExerciseId ASC, DateTime DESC
+    )
+GROUP BY ExerciseId;";
 
             return queryExecuter.Invoke(query);
+        }
+
+        internal static List<ResultExercise> GetLastResultsForExercisesAndDate(List<ResultExercise> s, Func<string, List<ResultExercise>> queryExecuter)
+        {
+            var sb = new StringBuilder();
+
+            for (int i = 0; i < s.Count; i++)
+            {
+                sb.AppendLine(@$"
+SELECT * FROM ResultsExercises
+WHERE ExerciseId = {s[i].ExerciseId} AND DateTime = ""{s[i].DateTime}""");
+
+                if (i != s.Count - 1)
+                    sb.AppendLine("UNION");
+            }
+
+            return queryExecuter.Invoke(sb.ToString());
         }
 
         private static string FromIEnumerableIntToString(IEnumerable<int> arg)

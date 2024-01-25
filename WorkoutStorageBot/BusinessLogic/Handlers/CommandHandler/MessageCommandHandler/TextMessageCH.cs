@@ -44,7 +44,6 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.MessageCommand
                     default:
                         throw new NotImplementedException($"Неожиданный handlerAction: {handlerAction}");
                 }
-
             }
 
             return new MessageInformationSet(responseConverter.Convert(), buttonsSets);
@@ -84,7 +83,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.MessageCommand
         {
             requestConverter.RemoveCompletely().WithoutServiceSymbol();
 
-            if(!TryCheckingCycleName(requestConverter.Convert()))
+            if (!TryCheckingCycleName(requestConverter.Convert()))
                 return this;
 
             var hasActiveCycle = currentUserContext.ActiveCycle == null ? false : true;
@@ -141,7 +140,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.MessageCommand
 
                     responseConverter = new ResponseConverter($"День {currentUserContext.DataManager.CurrentDay.Name} сохранён!");
                     buttonsSets = (ButtonsSet.AddExercises, ButtonsSet.SettingDays);
-                                                   
+
                     break;
                 default:
                     throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {currentUserContext.Navigation.QueryFrom}");
@@ -189,13 +188,13 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.MessageCommand
 
         internal TextMessageCH AddResultForExerciseCommand()
         {
-            requestConverter.RemoveCompletely(20).WithoutServiceSymbol();
+            requestConverter.RemoveCompletely(30).WithoutServiceSymbol();
 
             try
             {
                 currentUserContext.DataManager.AddResultsExercise(requestConverter.GetResultsExercise());
             }
-            catch (FormatException)
+            catch (Exception)
             {
                 responseConverter = new ResponseConverter("Неожиданный формат результата",
                     "Введите результат заново. Пример ожидаемого ввода: 50 10 или 50 10;50 10;50 10... для множественного ввода");
@@ -245,7 +244,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.MessageCommand
                     buttonsSets = (ButtonsSet.SettingExercise, ButtonsSet.ExercisesList);
                     break;
             }
-                
+
             domain.Name = requestConverter.Convert();
 
             currentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.Default;
@@ -274,7 +273,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.MessageCommand
             if (currentUserContext.DataManager.CurrentCycle.Days.Any(d => d.Name == name))
             {
                 responseConverter = new ResponseConverter("Ошибка при сохранении!", "В этом цикле уже существует день с таким названием",
-                    $"Ввведите другое название дня для цикла {currentUserContext.DataManager.CurrentCycle.Name}");;
+                    $"Ввведите другое название дня для цикла {currentUserContext.DataManager.CurrentCycle.Name}"); 
 
                 switch (currentUserContext.Navigation.QueryFrom)
                 {
@@ -287,7 +286,6 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.MessageCommand
                         break;
                     default:
                         throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {currentUserContext.Navigation.QueryFrom}");
-
                 }
 
                 ClearHandlerAction();
@@ -300,7 +298,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.MessageCommand
 
         private bool TryCheckingExercisesNames(params string[] names)
         {
-            foreach (string name in names) 
+            foreach (string name in names)
             {
                 if (currentUserContext.DataManager.CurrentDay.Exercises.Any(e => e.Name == name))
                 {

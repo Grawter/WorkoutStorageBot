@@ -1,4 +1,5 @@
 ﻿#region using
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Telegram.Bot;
@@ -6,16 +7,17 @@ using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using WorkoutStorageBot.Helpers.Logger;
 using WorkoutStorageBot.BusinessLogic.Handlers;
+using WorkoutStorageBot.Helpers.Logger;
 using WorkoutStorageBot.Model;
+
 #endregion
 
 namespace WorkoutStorageBot.StartApplication
 {
     internal class Program
     {
-        static async Task Main(string[] args)
+        private static async Task Main(string[] args)
         {
             System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls13;
 
@@ -107,6 +109,7 @@ namespace WorkoutStorageBot.StartApplication
                                     logger.WriteLog("Режим белого списка включён", LogType.Admin);
                                 }
                                 break;
+
                             default:
                                 logger.WriteLog($"Неизвестная команда после switchmode: {command[1]}", LogType.Admin);
                                 break;
@@ -128,11 +131,13 @@ namespace WorkoutStorageBot.StartApplication
 
                                 logger.WriteLog($"WhiteList для {user.Username} {user.UserId} установлен на {user.WhiteList}", LogType.Admin);
                                 break;
+
                             case "bl":
                                 adminHandler.ChangeBlackList(user);
 
                                 logger.WriteLog($"BlackList для {user.Username} {user.UserId} установлен на {user.BlackList}", LogType.Admin);
                                 break;
+
                             default:
                                 logger.WriteLog($"Неизвестная команда после changestate: {command[1]}", LogType.Admin);
                                 break;
@@ -153,6 +158,7 @@ namespace WorkoutStorageBot.StartApplication
                                 adminHandler.DeleteAccount(user);
                                 logger.WriteLog($"Пользователь {user.Username} {user.UserId} удалён", LogType.Admin);
                                 break;
+
                             default:
                                 logger.WriteLog($"Неизвестная команда после rm: {command[1]}", LogType.Admin);
                                 break;
@@ -167,13 +173,13 @@ namespace WorkoutStorageBot.StartApplication
                     case "commands":
                         logger.WriteLog("\nswitchmode wlpr - переключить режим белого листа\n" +
                                         "changestate [wl/bl] userId - установить состояние\n" +
-                                        "rm user userId - удалить пользователя\n", 
+                                        "rm user userId - удалить пользователя\n",
                                         LogType.Admin);
                         break;
+
                     default:
                         logger.WriteLog("Неизвестная команда. Введите commands для просмотра доступных команд", LogType.Admin);
                         break;
-
                 }
             }
 

@@ -1,5 +1,7 @@
 ﻿#region using
+
 using WorkoutStorageBot.Model;
+
 #endregion
 
 namespace WorkoutStorageBot.BusinessLogic.SessionContext
@@ -17,7 +19,7 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
         {
             ResetCycle();
 
-            return CurrentCycle = new () { Name = nameCycle, IsActive = isActive, UserInformationId = userInformationId };
+            return CurrentCycle = new() { Name = nameCycle, IsActive = isActive, UserInformationId = userInformationId };
         }
 
         private void SetCycle(Cycle cycle)
@@ -46,7 +48,7 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
         {
             if (Exercises == null)
             {
-                Exercises = new ();
+                Exercises = new();
             }
 
             foreach (var name in nameExercises)
@@ -66,7 +68,7 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
                 throw new FormatException();
 
             if (ResultExercises == null)
-               ResultExercises = new();
+                ResultExercises = new();
 
             foreach (var result in resultsExercise)
             {
@@ -116,9 +118,11 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
                 case Cycle cycle:
                     SetCycle(cycle);
                     break;
+
                 case Day day:
                     SetDay(day);
                     break;
+
                 case Exercise exercise:
                     SetExercise(exercise);
                     break;
@@ -132,9 +136,11 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
                 case Cycle:
                     ResetCycle();
                     break;
+
                 case Day:
                     ResetDay();
                     break;
+
                 case Exercise:
                     ResetExercise();
                     break;
