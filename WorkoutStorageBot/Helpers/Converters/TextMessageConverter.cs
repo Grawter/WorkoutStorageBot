@@ -1,5 +1,6 @@
 ﻿#region using
 
+using System.Globalization;
 using System.Text;
 using WorkoutStorageBot.Model;
 
@@ -7,9 +8,9 @@ using WorkoutStorageBot.Model;
 
 namespace WorkoutStorageBot.Helpers.Converters
 {
-    public class TextMessageConverter : IStringConverter
+    internal class TextMessageConverter : IStringConverter
     {
-        public TextMessageConverter(string data, bool withoutTrim = false)
+        internal TextMessageConverter(string data, bool withoutTrim = false)
         {
             if (withoutTrim)
                 sb = new StringBuilder(data.Trim());
@@ -17,7 +18,7 @@ namespace WorkoutStorageBot.Helpers.Converters
                 sb = new StringBuilder(data);
         }
 
-        public TextMessageConverter RemoveCompletely(int startIndex = 54)
+        internal TextMessageConverter RemoveCompletely(int startIndex = 54)
         {
             if (sb.Length > startIndex && startIndex > 0)
                 sb.Remove(startIndex, sb.Length - startIndex);
@@ -25,14 +26,14 @@ namespace WorkoutStorageBot.Helpers.Converters
             return this;
         }
 
-        public TextMessageConverter WithoutServiceSymbol(string simbol = "/")
+        internal TextMessageConverter WithoutServiceSymbol(string simbol = "/")
         {
             sb.Replace(simbol, string.Empty);
 
             return this;
         }
 
-        public TextMessageConverter WithoutServiceSymbols(string[] simbols)
+        internal TextMessageConverter WithoutServiceSymbols(string[] simbols)
         {
             foreach (var simbol in simbols)
                 WithoutServiceSymbol(simbol);
@@ -40,7 +41,7 @@ namespace WorkoutStorageBot.Helpers.Converters
             return this;
         }
 
-        public string[] GetExercises()
+        internal string[] GetExercises()
         {
             List<Exercise> results = new();
 
@@ -52,7 +53,7 @@ namespace WorkoutStorageBot.Helpers.Converters
                 return [text];
         }
 
-        public IEnumerable<ResultExercise> GetResultsExercise()
+        internal IEnumerable<ResultExercise> GetResultsExercise()
         {
             List<ResultExercise> results = new();
 
@@ -89,7 +90,7 @@ namespace WorkoutStorageBot.Helpers.Converters
             {
                 Weight = float.Parse(stringsResult[0]),
                 Count = float.Parse(stringsResult[1]),
-                DateTime = DateTime.Now.ToShortDateString()
+                DateTime = DateTime.Now.ToString("yyyy/MM/dd", new CultureInfo("en-US"))
             };
         }
     }

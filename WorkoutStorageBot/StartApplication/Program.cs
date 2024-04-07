@@ -97,17 +97,13 @@ namespace WorkoutStorageBot.StartApplication
                     case "switchmode":
                         switch (command[1])
                         {
-                            case "wlpr":
+                            case "wl":
                                 if (telegramBotHandler.WhiteList)
-                                {
-                                    telegramBotHandler.WhiteList = false;
                                     logger.WriteLog("Режим белого списка выключён", LogType.Admin);
-                                }
                                 else
-                                {
-                                    telegramBotHandler.WhiteList = true;
-                                    logger.WriteLog("Режим белого списка включён", LogType.Admin);
-                                }
+                                    logger.WriteLog("Режим белого списка включён", LogType.Admin); 
+
+                                telegramBotHandler.WhiteList = !telegramBotHandler.WhiteList;
                                 break;
 
                             default:
@@ -117,7 +113,11 @@ namespace WorkoutStorageBot.StartApplication
                         break;
 
                     case "changestate":
-                        user = adminHandler.GetUserInformation(long.Parse(command[2]));
+                        if (command[2][0] == '@')
+                            user = adminHandler.GetUserInformation(command[2]);
+                        else
+                            user = adminHandler.GetUserInformation(long.Parse(command[2]));
+
                         if (user == null)
                         {
                             logger.WriteLog($"Пользователь с userId {user.UserId} не найден", LogType.Admin);
@@ -171,8 +171,8 @@ namespace WorkoutStorageBot.StartApplication
                         return;
 
                     case "commands":
-                        logger.WriteLog("\nswitchmode wlpr - переключить режим белого листа\n" +
-                                        "changestate [wl/bl] userId - установить состояние\n" +
+                        logger.WriteLog("\nswitchmode wl - переключить режим белого листа\n" +
+                                        "changestate [wl/bl] [userId/@Username] - установить состояние\n" +
                                         "rm user userId - удалить пользователя\n",
                                         LogType.Admin);
                         break;

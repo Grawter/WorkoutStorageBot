@@ -8,16 +8,18 @@ namespace WorkoutStorageBot.Helpers.InformationSetForSend
     {
         internal MessageInformationSet(string message)
         {
-            Message = message;
+             Message = message;
         }
 
-        internal MessageInformationSet(string message, (ButtonsSet buttonsSet, ButtonsSet backButtonsSet) buttonsSets)
+        internal MessageInformationSet(string message, (ButtonsSet buttonsSet, ButtonsSet backButtonsSet) buttonsSets, params string[] additionalParameters)
         {
             Message = message;
             ButtonsSets = buttonsSets;
+            AdditionalParameters = additionalParameters;
         }
 
-        internal string Message { get; set; }
-        internal (ButtonsSet buttonsSet, ButtonsSet backButtonsSet) ButtonsSets { get; set; }
+        public string Message { get; }
+        public (ButtonsSet buttonsSet, ButtonsSet backButtonsSet) ButtonsSets { get; }
+        public string[] AdditionalParameters { get; }
     }
 }

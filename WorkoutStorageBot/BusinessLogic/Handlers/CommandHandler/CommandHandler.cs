@@ -5,6 +5,7 @@ using WorkoutStorageBot.Helpers.Converters;
 using WorkoutStorageBot.Helpers;
 using WorkoutStorageBot.Model;
 using WorkoutStorageBot.Helpers.InformationSetForSend;
+using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackCommandHandler.Context;
 #endregion
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler
@@ -17,8 +18,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler
         protected IEnumerable<HandlerAction> handlerActions;
 
         protected IDomain? domain;
-        protected ResponseConverter responseConverter;
-        protected (ButtonsSet, ButtonsSet) buttonsSets;
+
+        protected IInformationSet informationSet;
 
         internal CommandHandler(EntityContext db, UserContext userContext)
         {

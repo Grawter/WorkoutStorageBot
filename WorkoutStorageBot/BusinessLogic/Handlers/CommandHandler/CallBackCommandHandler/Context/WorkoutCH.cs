@@ -8,11 +8,12 @@ using WorkoutStorageBot.Helpers.InformationSetForSend;
 using WorkoutStorageBot.Model;
 #endregion
 
-namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackCommandHandler
+namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackCommandHandler.Context
 {
     internal class WorkoutCH : CallBackCH
     {
-        internal WorkoutCH(EntityContext db, UserContext userContext, CallbackQueryParser callbackQueryParser) : base(db, userContext, callbackQueryParser)
+        internal WorkoutCH(EntityContext db, UserContext userContext, CallbackQueryParser callbackQueryParser) 
+            : base(db, userContext, callbackQueryParser)
         { }
 
         internal override WorkoutCH Expectation(params HandlerAction[] handlerActions)
@@ -22,49 +23,24 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
             return this;
         }
 
-        internal override MessageInformationSet GetData()
-        {
-            foreach (var handlerAction in handlerActions)
-            {
-                switch (handlerAction)
-                {
-                    case HandlerAction.None:
-                        break;
-                    case HandlerAction.Update:
-                        db.Update(domain);
-                        break;
-                    case HandlerAction.Add:
-                        db.Add(domain);
-                        break;
-                    case HandlerAction.Remove:
-                        db.Remove(domain);
-                        break;
-                    case HandlerAction.Save:
-                        db.SaveChanges();
-                        break;
-                    default:
-                        throw new NotImplementedException($"Неожиданный handlerAction: {handlerAction}");
-                }
-
-            }
-
-            return new MessageInformationSet(responseConverter.Convert(), buttonsSets);
-        }
-
         internal WorkoutCH WorkoutCommand()
         {
             currentUserContext.Navigation.QueryFrom = QueryFrom.NoMatter; // not necessary, but just in case
+            
+            ResponseConverter responseConverter = new ResponseConverter("Выберите тренировочный день");
+            (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main);
 
-            responseConverter = new ResponseConverter("Выберите тренировочный день");
-            buttonsSets = (ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main);
+            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
             return this;
         }
 
         internal WorkoutCH LastResultCommand()
         {
+            ResponseConverter responseConverter;
             IEnumerable<ResultExercise> trainingIndicators;
             string information;
+            (ButtonsSet, ButtonsSet) buttonsSets;
 
             switch (callbackQueryParser.ObjectType)
             {
@@ -88,6 +64,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
                     throw new NotImplementedException($"Неожиданный CallbackQueryParser.SubDirection: {callbackQueryParser.SubDirection}");
             }
 
+            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+
             return this;
         }
 
@@ -99,8 +77,10 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
 
             currentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.Default;
 
-            responseConverter = new ResponseConverter("Введённые данные сохранены!", "Выберите упраженение");
-            buttonsSets = (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout);
+            ResponseConverter responseConverter = new ResponseConverter("Введённые данные сохранены!", "Выберите упраженение");
+            (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout);
+
+            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
             return this;
         }

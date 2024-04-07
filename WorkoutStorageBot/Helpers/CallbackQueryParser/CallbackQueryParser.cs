@@ -4,7 +4,7 @@
     {
         internal CallbackQueryParser(string data)
         {
-            Args = data.Split(new char[] { '|' });
+            Args = data.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
 
             if (Args.Length == 0)
                 throw new FormatException("Получен пустой CallBack");
@@ -15,6 +15,7 @@
         internal string ObjectType { get => Args[2]; }
         internal int ObjectId { get => int.Parse(Args[3]); }
         internal string ObjectName { get => Args[4]; }
+        internal string AdditionalParameter { get => Args[Args.Length - 2]; }
         internal string CallBackId { get => Args[Args.Length - 1]; }
 
         internal string[] Args { get; private set; }

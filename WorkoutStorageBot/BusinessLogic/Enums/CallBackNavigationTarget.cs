@@ -6,7 +6,6 @@ namespace WorkoutStorageBot.BusinessLogic.Enums
     {
         None = 0,
         Workout = 1,
-        Analytics = 2,
         Settings = 3,
     }
 }

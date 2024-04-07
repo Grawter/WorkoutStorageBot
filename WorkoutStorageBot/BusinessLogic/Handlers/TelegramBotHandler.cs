@@ -1,11 +1,13 @@
 ﻿#region using
+using OfficeOpenXml;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using WorkoutStorageBot.BusinessLogic.Buttons;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackCommandHandler;
-using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.MessageCommandHandler;
+using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackCommandHandler.Context;
+using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.MessageCommandHandler.Context;
 using WorkoutStorageBot.BusinessLogic.SessionContext;
 using WorkoutStorageBot.Helpers.CallbackQueryParser;
 using WorkoutStorageBot.Helpers.Converters;
@@ -42,310 +44,301 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
             if (!primaryProcessUpdate.HasAccess || primaryProcessUpdate.IsNewContext)
                 return;
 
+            IInformationSet informationSet;
+
             switch (update.Type)
             {
                 case UpdateType.Message:
-                    await ProcessMessage(update);
+                    informationSet = ProcessMessage(update);
                     break;
                 case UpdateType.CallbackQuery:
-                    await ProcessCallbackQuery(update);
+                    informationSet = ProcessCallbackQuery(update);
                     break;
                 default:
                     throw new NotImplementedException($"Неожиданный update.type: {update.Type}");
             }
+
+            await SendResponse(update.Message.Chat.Id, informationSet);
         }
 
-        private async Task ProcessMessage(Update update)
+        private IInformationSet ProcessMessage(Update update)
         {
             var requestConverter = new TextMessageConverter(update.Message.Text);
 
             var commandHandler = new TextMessageCH(db, CurrentUserContext, requestConverter);
 
-            MessageInformationSet messageInformationSet;
+            IInformationSet informationSet;
 
             switch (CurrentUserContext.Navigation.MessageNavigationTarget)
             {
                 case MessageNavigationTarget.Default:
-                    messageInformationSet = commandHandler.Expectation()
-                                                                    .DefaultCommand()
-                                                                    .GetData();
+                    informationSet = commandHandler.Expectation()
+                                                                .DefaultCommand()
+                                                                .GetData();
                     break;
 
                 case MessageNavigationTarget.AddCycle:
-                    messageInformationSet = commandHandler.Expectation(HandlerAction.Add, HandlerAction.Save)
-                                                                                                        .AddCycleCommand()
-                                                                                                        .GetData();
+                    informationSet = commandHandler.Expectation(HandlerAction.Add, HandlerAction.Save)
+                                                                                                    .AddCycleCommand()
+                                                                                                    .GetData();
                     break;
 
                 case MessageNavigationTarget.AddDays:
-                    messageInformationSet = commandHandler.Expectation(HandlerAction.Add, HandlerAction.Save)
-                                                                                                        .AddDaysCommand()
-                                                                                                        .GetData();
+                    informationSet = commandHandler.Expectation(HandlerAction.Add, HandlerAction.Save)
+                                                                                                    .AddDaysCommand()
+                                                                                                    .GetData();
                     break;
 
                 case MessageNavigationTarget.AddExercises:
-                    messageInformationSet = commandHandler.Expectation()
-                                                                    .AddExercisesCommand()
-                                                                    .GetData();
+                    informationSet = commandHandler.Expectation()
+                                                                .AddExercisesCommand()
+                                                                .GetData();
                     break;
 
                 case MessageNavigationTarget.AddResultForExercise:
-                    messageInformationSet = commandHandler.Expectation()
-                                                                    .AddResultForExerciseCommand()
-                                                                    .GetData();
+                    informationSet = commandHandler.Expectation()
+                                                                .AddResultForExerciseCommand()
+                                                                .GetData();
                     break;
 
                 case MessageNavigationTarget.ChangeNameCycle:
-                    messageInformationSet = commandHandler.Expectation(HandlerAction.Update, HandlerAction.Save)
-                                                                                                            .ChangeNameCommand("Cycle")
-                                                                                                            .GetData();
+                    informationSet = commandHandler.Expectation(HandlerAction.Update, HandlerAction.Save)
+                                                                                                        .ChangeNameCommand("Cycle")
+                                                                                                        .GetData();
                     break;
 
                 case MessageNavigationTarget.ChangeNameDay:
-                    messageInformationSet = commandHandler.Expectation(HandlerAction.Update, HandlerAction.Save)
-                                                                                                            .ChangeNameCommand("Day")
-                                                                                                            .GetData();
+                    informationSet = commandHandler.Expectation(HandlerAction.Update, HandlerAction.Save)
+                                                                                                        .ChangeNameCommand("Day")
+                                                                                                        .GetData();
                     break;
 
                 case MessageNavigationTarget.ChangeNameExercise:
-                    messageInformationSet = commandHandler.Expectation(HandlerAction.Update, HandlerAction.Save)
-                                                                                                            .ChangeNameCommand("Exercise")
-                                                                                                            .GetData();
+                    informationSet = commandHandler.Expectation(HandlerAction.Update, HandlerAction.Save)
+                                                                                                        .ChangeNameCommand("Exercise")
+                                                                                                        .GetData();
                     break;
 
                 default:
                     throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.MessageNavigationTarget: {CurrentUserContext.Navigation.MessageNavigationTarget}!");
             }
 
-            await SendResponse(update.Message.Chat.Id, messageInformationSet.Message, messageInformationSet.ButtonsSets);
+            return informationSet;
         }
 
-        private async Task ProcessCallbackQuery(Update update)
+        private IInformationSet ProcessCallbackQuery(Update update)
         {
             var callbackQueryParser = new CallbackQueryParser(update.CallbackQuery.Data);
 
-            if (!await CheckingComplianceCallBackId(callbackQueryParser.CallBackId))
-                return;
-
-            switch((CallBackNavigationTarget)callbackQueryParser.Direction)
+            if (CheckingComplianceCallBackId(callbackQueryParser.CallBackId, out IInformationSet informationSet))
             {
-                case CallBackNavigationTarget.None:
-                    await ProcessCommonCallBack(update, callbackQueryParser);
-                    break;
-                case CallBackNavigationTarget.Workout:
-                    await ProcessWorkoutCallBack(update, callbackQueryParser);
-                    break;
-                case CallBackNavigationTarget.Analytics:
-                    ProcessAnalyticsCallBack(update, callbackQueryParser);
-                    break;
-                case CallBackNavigationTarget.Settings:
-                    await ProcessSettingsCallBack(update, callbackQueryParser);
-                    break;
-                default:
-                    throw new NotImplementedException($"Неожиданный CallBackNavigationTarget: {(CallBackNavigationTarget)callbackQueryParser.Direction}");
-            }
-        }
-
-        private async Task<bool> CheckingComplianceCallBackId(string currentCallBackId)
-        {
-            if (CurrentUserContext.CallBackId != currentCallBackId)
-            {
-                var responseConverter = new ResponseConverter("Действие не может быть выполнено, т.к. информация устарела",
-                        "Для продолжения работы используйте последний диалог или введите команду /Start");
-                var buttonsSet = (ButtonsSet.None, ButtonsSet.None);
-
-                await SendResponse(CurrentUserContext.UserInformation.UserId, responseConverter.Convert(), buttonsSet);
-
-                return false;
+                switch ((CallBackNavigationTarget)callbackQueryParser.Direction)
+                {
+                    case CallBackNavigationTarget.None:
+                        informationSet = ProcessCommonCallBack(update, callbackQueryParser);
+                        break;
+                    case CallBackNavigationTarget.Workout:
+                        informationSet = ProcessWorkoutCallBack(update, callbackQueryParser);
+                        break;
+                    case CallBackNavigationTarget.Settings:
+                        informationSet = ProcessSettingsCallBack(update, callbackQueryParser);
+                        break;
+                    default:
+                        throw new NotImplementedException($"Неожиданный CallBackNavigationTarget: {(CallBackNavigationTarget)callbackQueryParser.Direction}");
+                }
             }
 
-            return true;
+            return informationSet;
         }
 
-        private async Task ProcessCommonCallBack(Update update, CallbackQueryParser callbackQueryParser)
+        private IInformationSet ProcessCommonCallBack(Update update, CallbackQueryParser callbackQueryParser)
         {
             var commandHandler = new CommonCH(db, CurrentUserContext, callbackQueryParser);
 
-            MessageInformationSet messageInformationSet;
+            IInformationSet informationSet;
 
             switch (callbackQueryParser.SubDirection)
             {
                 case "Back":
-                    messageInformationSet = commandHandler
-                                                        .BackCommand()
-                                                        .GetData();
+                    informationSet = commandHandler
+                                                .BackCommand()
+                                                .GetData();
                     break;
 
                 case "ToMain":
-                    messageInformationSet = commandHandler
-                                                        .ToMainCommand()
-                                                        .GetData();
+                    informationSet = commandHandler
+                                                .ToMainCommand()
+                                                .GetData();
                     break;
                 default:
                     throw new NotImplementedException($"Неожиданный CallbackQueryParser.SubDirection: {callbackQueryParser.SubDirection}");
             }
 
-            await SendResponse(update.CallbackQuery.Message.Chat.Id, messageInformationSet.Message, messageInformationSet.ButtonsSets);
+            return informationSet;
         }
 
-        private async Task ProcessWorkoutCallBack(Update update, CallbackQueryParser callbackQueryParser)
+        private IInformationSet ProcessWorkoutCallBack(Update update, CallbackQueryParser callbackQueryParser)
         {
             var commandHandler = new WorkoutCH(db, CurrentUserContext, callbackQueryParser);
 
-            MessageInformationSet messageInformationSet;
+            IInformationSet informationSet;
 
             switch (callbackQueryParser.SubDirection)
             {
                 case "Workout":
-                    messageInformationSet = commandHandler
-                                                        .WorkoutCommand()
-                                                        .GetData();
+                    informationSet = commandHandler
+                                                .WorkoutCommand()
+                                                .GetData();
                     break;
 
                 case "LastResult":
-                    messageInformationSet = commandHandler
-                                                        .LastResultCommand()
-                                                        .GetData();
-                    break;
+                    informationSet = commandHandler
+                                                .LastResultCommand()
+                                                .GetData();
+            break;
 
                 case "SaveResultsExercise":
-                    messageInformationSet = commandHandler.Expectation(HandlerAction.Save)
-                                                                                        .SaveResultsExerciseCommand()
-                                                                                        .GetData();
+                    informationSet = commandHandler.Expectation(HandlerAction.Save)
+                                                                                .SaveResultsExerciseCommand()
+                                                                                .GetData();
                     break;
 
                 default:
                     throw new NotImplementedException($"Неожиданный CallbackQueryParser.SubDirection: {callbackQueryParser.SubDirection}");
             }
 
-            await SendResponse(update.CallbackQuery.Message.Chat.Id, messageInformationSet.Message, messageInformationSet.ButtonsSets);
+            return informationSet;
         }
 
-        private void ProcessAnalyticsCallBack(Update update, CallbackQueryParser callbackQueryParser)
-        {
-            ResponseConverter responseConverter;
-
-            switch (callbackQueryParser.SubDirection)
-            {
-                default:
-                    throw new NotImplementedException($"Неожиданный CallbackQueryParser.SubDirection: {callbackQueryParser.SubDirection}");
-            }
-        }
-
-        private async Task ProcessSettingsCallBack(Update update, CallbackQueryParser callbackQueryParser)
+        private IInformationSet ProcessSettingsCallBack(Update update, CallbackQueryParser callbackQueryParser)
         {
             var commandHandler = new SettingsCH(db, CurrentUserContext, callbackQueryParser);
 
-            MessageInformationSet messageInformationSet;
+            IInformationSet informationSet;
 
             switch (callbackQueryParser.SubDirection)
             {
                 case "Settings":
-                    messageInformationSet = commandHandler
-                                                        .SettingsCommand()
-                                                        .GetData();
+                    informationSet = commandHandler
+                                                .SettingsCommand()
+                                                .GetData();
                     break;
 
                 case "ArchiveStore":
-                    messageInformationSet = commandHandler
-                                                        .ArchiveStoreCommand()
-                                                        .GetData();
+                    informationSet = commandHandler
+                                                .ArchiveStoreCommand()
+                                                .GetData();
                     break;
 
                 case "Archive":
-                    messageInformationSet = commandHandler
-                                                        .ArchiveCommand()
-                                                        .GetData();
+                    informationSet = commandHandler
+                                                .ArchiveCommand()
+                                                .GetData();
+
+                    break;
+
+                case "ExportTo":
+                    informationSet = commandHandler
+                                                .ExportToCommand()
+                                                .GetData();
+
                     break;
 
                 case "UnArchive":
-                    messageInformationSet = commandHandler.Expectation(HandlerAction.Update, HandlerAction.Save)
-                                                                                                            .UnArchiveCommand()
-                                                                                                            .GetData();
+                    informationSet = commandHandler.Expectation(HandlerAction.Update, HandlerAction.Save)
+                                                                                                        .UnArchiveCommand()
+                                                                                                        .GetData();
                     break;
 
                 case "Setting":
-                    messageInformationSet = commandHandler
-                                                        .SettingCommand()
-                                                        .GetData();
+                    informationSet = commandHandler
+                                                .SettingCommand()
+                                                .GetData();
                     break;
 
                 case "Add":
-                    messageInformationSet = commandHandler
-                                                        .AddCommand()
-                                                        .GetData();
+                    informationSet = commandHandler
+                                                .AddCommand()
+                                                .GetData();
                     break;
 
                 case "SaveExercises":
-                    messageInformationSet = commandHandler.Expectation(HandlerAction.Save)
-                                                                                        .SaveExercisesCommand()
-                                                                                        .GetData();
+                    informationSet = commandHandler.Expectation(HandlerAction.Save)
+                                                                                .SaveExercisesCommand()
+                                                                                .GetData();
                     break;
 
                 case "SettingExisting":
-                    messageInformationSet = commandHandler
-                                                        .SettingExistingCommand()
-                                                        .GetData();
+                    informationSet = commandHandler
+                                                .SettingExistingCommand()
+                                                .GetData();
                     break;
 
                 case "Selected":
-                    messageInformationSet = commandHandler
-                                                        .SelectedCommand()
-                                                        .GetData();
+                    informationSet = commandHandler
+                                                .SelectedCommand()
+                                                .GetData();
                     break;
 
                 case "ChangeActive":
-                    messageInformationSet = commandHandler.Expectation(HandlerAction.Save)
-                                                                                        .ChangeActiveCommand()
-                                                                                        .GetData();
+                    informationSet = commandHandler.Expectation(HandlerAction.Save)
+                                                                                .ChangeActiveCommand()
+                                                                                .GetData();
                     break;
 
                 case "Archiving":
-                    messageInformationSet = commandHandler.Expectation(HandlerAction.Update, HandlerAction.Save)
-                                                                                                            .ArchivingCommand()
-                                                                                                            .GetData();
+                    informationSet = commandHandler.Expectation(HandlerAction.Update, HandlerAction.Save)
+                                                                                                        .ArchivingCommand()
+                                                                                                        .GetData();
                     break;
 
                 case "Replace":
-                    messageInformationSet = commandHandler
+                    informationSet = commandHandler
                                                         .ReplaceCommand()
                                                         .GetData();
                     break;
 
                 case "ReplaceTo":
-                    messageInformationSet = commandHandler.Expectation(HandlerAction.Save)
-                                                                                        .ReplaceCommand()
-                                                                                        .GetData();
+                    informationSet = commandHandler.Expectation(HandlerAction.Save)
+                                                                                .ReplaceCommand()
+                                                                                .GetData();
                     break;
 
                 case "ChangeName":
-                    messageInformationSet = commandHandler
-                                                        .ChangeNameCommand()
-                                                        .GetData();
+                    informationSet = commandHandler
+                                                .ChangeNameCommand()
+                                                .GetData();
+                    break;
+
+                case "Period":
+                    informationSet = commandHandler
+                                                .Period()
+                                                .GetData();
+
                     break;
 
                 case "Delete":
-                    messageInformationSet = commandHandler
-                                                        .DeleteCommand()
-                                                        .GetData();
+                    informationSet = commandHandler
+                                                .DeleteCommand()
+                                                .GetData();
                     break;
 
                 case "ConfirmDelete":
-                    messageInformationSet = commandHandler.Expectation(HandlerAction.Remove, HandlerAction.Save)
-                                                                                                            .ConfirmDeleteCommand()
-                                                                                                            .GetData();
+                    informationSet = commandHandler.Expectation(HandlerAction.Remove, HandlerAction.Save)
+                                                                                                        .ConfirmDeleteCommand()
+                                                                                                        .GetData();
                     break;
 
                 case "ConfirmDeleteAccount":
                     DeleteAccount();
 
-                    messageInformationSet = new MessageInformationSet("Аккаунт успешно удалён", (ButtonsSet.None, ButtonsSet.None));
+                    informationSet = new MessageInformationSet("Аккаунт успешно удалён", (ButtonsSet.None, ButtonsSet.None));
                     break;
                 default:
                     throw new NotImplementedException($"Неожиданный callbackQueryParser.SubDirection: {callbackQueryParser.SubDirection}");
             }
 
-            await SendResponse(update.CallbackQuery.Message.Chat.Id, messageInformationSet.Message, messageInformationSet.ButtonsSets);
+            return informationSet;
         }
 
         private void DeleteAccount()
@@ -354,13 +347,48 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
             adminHandler.DeleteAccount(CurrentUserContext.UserInformation);
         }
 
-        private async Task SendResponse(long chatId, string message, (ButtonsSet buttonsSet, ButtonsSet backButtonsSet) ButtonsSets)
+        private async Task SendResponse(long chatId, IInformationSet messageInformationSetting)
         {
             var buttons = new InlineButtons(CurrentUserContext);
 
-            await botClient.SendTextMessageAsync(chatId,
-                                            message,
-                                            replyMarkup: buttons.GetInlineButtons(ButtonsSets.buttonsSet, ButtonsSets.backButtonsSet));
+            switch (messageInformationSetting)
+            {
+                case MessageInformationSet MISet:
+                    await botClient.SendTextMessageAsync(chatId,
+                                            messageInformationSetting.Message,
+                                            replyMarkup: buttons.GetInlineButtons(messageInformationSetting.ButtonsSets, messageInformationSetting.AdditionalParameters));
+                    break;
+
+                case FileInformationSet FISet:
+                    await botClient.SendDocumentAsync(chatId,
+                                                    document: InputFile.FromStream(stream: FISet.Stream, fileName: FISet.FileName),
+                                                    caption: FISet.Message,
+                                                    replyMarkup: buttons.GetInlineButtons(messageInformationSetting.ButtonsSets, messageInformationSetting.AdditionalParameters));
+
+                    FISet.Stream.Dispose();
+                    break;
+
+                default:
+                    throw new NotImplementedException($"Неожиданный messageInformationSetting: {messageInformationSetting.GetType()}");
+            }
+        }
+
+        private bool CheckingComplianceCallBackId(string currentCallBackId, out IInformationSet informationSet)
+        {
+            if (CurrentUserContext.CallBackId != currentCallBackId)
+            {
+                var responseConverter = new ResponseConverter("Действие не может быть выполнено, т.к. информация устарела",
+                        "Для продолжения работы используйте последний диалог или введите команду /Start");
+                var buttonsSet = (ButtonsSet.None, ButtonsSet.None);
+
+                informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSet);
+
+                return false;
+            }
+
+            informationSet = null;
+
+            return true;
         }
     }
 }

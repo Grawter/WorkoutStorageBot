@@ -36,5 +36,7 @@ namespace WorkoutStorageBot.BusinessLogic.Enums
                                                 ConfirmDeleteExercise,
             ArchiveList,
             ConfirmDeleteAccount,
+
+        Period,
     }
 }

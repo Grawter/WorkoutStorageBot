@@ -25,18 +25,22 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
             inlineKeyboardButtonsMain = new();
         }
 
-        internal IReplyMarkup GetInlineButtons(ButtonsSet buttonsSet, ButtonsSet backButtonsSet = ButtonsSet.None)
+        internal IReplyMarkup GetInlineButtons(ButtonsSet buttonsSet, params string[] additionalParameters)
         {
-            return new InlineKeyboardMarkup(GetButtons(buttonsSet, backButtonsSet));
+            return new InlineKeyboardMarkup(GetButtons(buttonsSet, ButtonsSet.None, additionalParameters));
         }
 
-        private IEnumerable<IEnumerable<InlineKeyboardButton>> GetButtons(ButtonsSet buttonsSet, ButtonsSet backButtonsSet)
+        internal IReplyMarkup GetInlineButtons((ButtonsSet buttonsSet, ButtonsSet backButtonsSet) buttonsSets, params string[] additionalParameters)
+        {
+            return new InlineKeyboardMarkup(GetButtons(buttonsSets.buttonsSet, buttonsSets.backButtonsSet, additionalParameters));
+        }
+
+        private IEnumerable<IEnumerable<InlineKeyboardButton>> GetButtons(ButtonsSet buttonsSet, ButtonsSet backButtonsSet, params string[] additionalParameters)
         {
             switch (buttonsSet)
             {
                 case ButtonsSet.Main:
                     AddInlineButton($"Начать тренировку", "1|Workout");
-                    AddInlineButton($"Аналитика", "2|Analytics");
                     AddInlineButton($"Настройки", "3|Settings");
                     break;
 
@@ -56,13 +60,11 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                     break;
                 #endregion
 
-                #region Analytics area
-                #endregion
-
                 #region Settings area
                 case ButtonsSet.Settings:
                     AddInlineButton("Настройка тренировочных циклов", "3|Setting|Cycles");
                     AddInlineButton("Архив", "3|ArchiveStore");
+                    AddInlineButton("Экспортировать тренировки в Excel", "3|ExportTo|Excel");
                     AddInlineButton("Удалить свой аккаунт", "3|Delete|Account");
                     break;
 
@@ -178,6 +180,18 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                     break;
                 #endregion
 
+                #region Period area
+                case ButtonsSet.Period:
+                    string additionalParameter = additionalParameters.First();
+
+                    AddInlineButton("Месяц", $"3|Period|Month", additionalParameter);
+                    AddInlineButton("Квартал", $"3|Period|Quarter", additionalParameter);
+                    AddInlineButton("Полгода", $"3|Period|SixMonths", additionalParameter);
+                    AddInlineButton("Год", $"3|Period|Year", additionalParameter);
+                    AddInlineButton("За всё время", "3|Period|FullTime", additionalParameter);
+                    break;
+                #endregion
+
                 #region Confirm delete area
                 case ButtonsSet.ConfirmDeleteExercise:
                     AddInlineButton("Да, удалить упражнение", "3|ConfirmDelete|Exercise");
@@ -209,9 +223,9 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
             return inlineKeyboardButtonsMain;
         }
 
-        private void AddInlineButton(string titleButton, string callBackDataWithoutSetId, bool onNewLine = true)
+        private void AddInlineButton(string titleButton, string callBackDataWithoutSetId, string? additionalParameter = null,  bool onNewLine = true)
         {
-            var callBackData = AddCallBackSetId(callBackDataWithoutSetId);
+            var callBackData = AddAdditionalParameterAndCallBackSetId(additionalParameter, callBackDataWithoutSetId);
 
             if (onNewLine)
             {
@@ -228,11 +242,17 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
             }
         }
 
-        private string AddCallBackSetId(string callBackData)
+        private string AddAdditionalParameterAndCallBackSetId(string additionalParameter, string callBackData)
         {
             var sb = new StringBuilder(callBackData)
-                                                .Append("|")
-                                                .Append(CurrentUserContext.CallBackId);
+                                                .Append("|");
+
+            if (!string.IsNullOrEmpty(additionalParameter))
+                sb.Append(additionalParameter);
+
+            sb.Append("|");
+            sb.Append(CurrentUserContext.CallBackId);
+
             return sb.ToString();
         }
 

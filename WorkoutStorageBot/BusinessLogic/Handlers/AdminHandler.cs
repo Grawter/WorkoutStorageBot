@@ -40,5 +40,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
             return db.UsersInformation.FirstOrDefault(u => u.UserId == userId);
         }
 
+        internal UserInformation? GetUserInformation(string userName)
+        {
+            return db.UsersInformation.FirstOrDefault(u => u.Username == userName);
+        }
     }
 }

@@ -116,7 +116,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                     ProcessExpectedUpdateType(update.CallbackQuery.From, out currentUserContext);
 
                     if (IsNewContext && HasAccess)
-                        DirectIfIsNewContext(update.CallbackQuery.From.Id, in currentUserContext);
+                        DirectIfIsNewContext(update.CallbackQuery.From.Id, currentUserContext);
 
                     return;
                 default:
@@ -208,14 +208,14 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
             return newUser;
         }
 
-        private void DirectIfIsNewContext(long chatId, in UserContext currentUserContext)
+        private void DirectIfIsNewContext(long chatId, UserContext currentUserContext)
         {
             bool hasCycle;
             hasCycle = currentUserContext.ActiveCycle == null ? false : true;
             DirectToStart(chatId, currentUserContext, hasCycle);
         }
 
-        private void DirectToStart(long chatId, in UserContext currentUserContext, bool hasCycle)
+        private async Task DirectToStart(long chatId, UserContext currentUserContext, bool hasCycle)
         {
             string message;
             var buttons = new InlineButtons(currentUserContext);
@@ -234,7 +234,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                 buttonsSet = ButtonsSet.AddCycle;
             }
 
-            botClient.SendTextMessageAsync(chatId,
+            await botClient.SendTextMessageAsync(chatId,
                                                message,
                                                replyMarkup: buttons.GetInlineButtons(buttonsSet));
         }

@@ -11,11 +11,12 @@ namespace WorkoutStorageBot.BusinessLogic.StepStore
         static StepStorage()
         {
             stepsInfrormation = new() {
+                // workout area
                 new StepInformation(QueryFrom.NoMatter, "Выберите интересующий раздел", ButtonsSet.Main, ButtonsSet.None),
                 new StepInformation(QueryFrom.NoMatter, "Выберите тренировочный день", ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main),
                 new StepInformation(QueryFrom.NoMatter, "Выберите упраженение", ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout),
 
-
+                // settings area
                 new StepInformation(QueryFrom.Settings, "Выберите интересующие настройки", ButtonsSet.Settings, ButtonsSet.Main),
 
                 new StepInformation(QueryFrom.Settings, "Выберите интересующие настройки для циклов", ButtonsSet.SettingCycles, ButtonsSet.Settings),

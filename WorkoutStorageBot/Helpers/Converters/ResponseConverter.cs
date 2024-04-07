@@ -6,7 +6,7 @@ using WorkoutStorageBot.Model;
 
 namespace WorkoutStorageBot.Helpers.Converters
 {
-    public class ResponseConverter : IStringConverter
+    internal class ResponseConverter : IStringConverter
     {
         private StringBuilder? sb;
         private string? title;
@@ -15,14 +15,14 @@ namespace WorkoutStorageBot.Helpers.Converters
         private string? separator;
         private bool onlyTarget;
 
-        public ResponseConverter(string target)
+        internal ResponseConverter(string target)
         {
             this.target = target;
 
             onlyTarget = true;
         }
 
-        public ResponseConverter(string content, string target)
+        internal ResponseConverter(string content, string target)
         {
             sb = new StringBuilder();
 
@@ -33,7 +33,7 @@ namespace WorkoutStorageBot.Helpers.Converters
             separator = "======================";
         }
 
-        public ResponseConverter(string title, string content, string target, string? separator = null)
+        internal ResponseConverter(string title, string content, string target, string? separator = null)
         {
             sb = new StringBuilder();
 
@@ -49,17 +49,17 @@ namespace WorkoutStorageBot.Helpers.Converters
                 this.separator = "======================";
         }
 
-        public void ResetTitle(string title)
+        internal void ResetTitle(string title)
         {
             this.title = title;
         }
 
-        public void ResetContent(string content)
+        internal void ResetContent(string content)
         {
             this.content = content;
         }
 
-        public void ResetTarget(string target)
+        internal void ResetTarget(string target)
         {
             this.target = target;
         }
@@ -90,7 +90,7 @@ namespace WorkoutStorageBot.Helpers.Converters
             return sb.ToString();
         }
 
-        public static string GetInformationAboutLastExercises(IEnumerable<Exercise>? exercises, IEnumerable<ResultExercise>? resultExercises)
+        internal static string GetInformationAboutLastExercises(IEnumerable<Exercise>? exercises, IEnumerable<ResultExercise>? resultExercises)
         {
             if (!exercises.Any() || !resultExercises.Any())
                 return "Нет информации для данного цикла";
@@ -120,7 +120,7 @@ namespace WorkoutStorageBot.Helpers.Converters
             return sb.ToString().Trim();
         }
 
-        public static string GetInformationAboutLastDay(IEnumerable<Exercise> exercises, IEnumerable<ResultExercise>? resultExercises)
+        internal static string GetInformationAboutLastDay(IEnumerable<Exercise> exercises, IEnumerable<ResultExercise>? resultExercises)
         {
             if (!exercises.Any() || !resultExercises.Any())
                 return "Нет информации для данного цикла";
