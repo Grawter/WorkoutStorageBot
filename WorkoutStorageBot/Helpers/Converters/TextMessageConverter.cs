@@ -90,7 +90,7 @@ namespace WorkoutStorageBot.Helpers.Converters
             {
                 Weight = float.Parse(stringsResult[0]),
                 Count = float.Parse(stringsResult[1]),
-                DateTime = DateTime.Now.ToString("yyyy/MM/dd", new CultureInfo("en-US"))
+                DateTime = DateTime.Now,
             };
         }
     }

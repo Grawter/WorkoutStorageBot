@@ -54,17 +54,17 @@ GROUP BY ExerciseId;";
             return queryExecuter.Invoke(query);
         }
 
-        internal static List<ResultExercise> GetLastResultsForExercisesAndDate(List<ResultExercise> s, Func<string, List<ResultExercise>> queryExecuter)
+        internal static List<ResultExercise> GetLastResultsForExercisesAndDate(List<ResultExercise> lastDateForExercises, Func<string, List<ResultExercise>> queryExecuter)
         {
             var sb = new StringBuilder();
 
-            for (int i = 0; i < s.Count; i++)
+            for (int i = 0; i < lastDateForExercises.Count; i++)
             {
                 sb.AppendLine(@$"
 SELECT * FROM ResultsExercises
-WHERE ExerciseId = {s[i].ExerciseId} AND DateTime = ""{s[i].DateTime}""");
+WHERE ExerciseId = {lastDateForExercises[i].ExerciseId} AND DateTime LIKE ""{lastDateForExercises[i].DateTime.ToString("yyyy-MM-dd")}%""");
 
-                if (i != s.Count - 1)
+                if (i != lastDateForExercises.Count - 1)
                     sb.AppendLine("UNION");
             }
 

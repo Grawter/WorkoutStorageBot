@@ -18,8 +18,11 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.MessageCommand
 
         internal override IInformationSet GetData()
         {
-            foreach (var handlerAction in handlerActions)
+            foreach (HandlerAction handlerAction in handlerActions)
             {
+                if (domain == null && (handlerAction != HandlerAction.None && handlerAction != HandlerAction.Save))
+                    throw new NullReferenceException($"{nameof(domain)} is null!");
+
                 switch (handlerAction)
                 {
                     case HandlerAction.None:

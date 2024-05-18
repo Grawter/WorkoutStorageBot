@@ -105,7 +105,7 @@ namespace WorkoutStorageBot.Helpers.Converters
 
             var sb = new StringBuilder();
 
-            sb.AppendLine($"Дата: {resultExercises.First().DateTime}");
+            sb.AppendLine($"Дата: {resultExercises.First().DateTime.ToShortDateString()}");
 
             for (int i = 0; i < resultQuery.Count(); i++)
             {
@@ -140,7 +140,7 @@ namespace WorkoutStorageBot.Helpers.Converters
 
                 foreach (var item2 in resultQuery[i])
                 {
-                    sb.AppendLine($"({item2.Count}) => ({item2.Weight}) | Дата: {item2.DateTime}");
+                    sb.AppendLine($"({item2.Count}) => ({item2.Weight}) | Дата: {item2.DateTime.ToShortDateString()}");
                 }
             }
 

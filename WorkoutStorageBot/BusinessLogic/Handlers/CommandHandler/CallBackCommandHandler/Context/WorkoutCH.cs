@@ -57,7 +57,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
                     trainingIndicators = QueriesStorage.GetLastResultsForExercisesAndDate(lastDateForExercises, db.GetResultExercisesFromQuery);
 
                     information = ResponseConverter.GetInformationAboutLastDay(currentUserContext.DataManager.CurrentDay.Exercises, trainingIndicators);
-                    responseConverter = new ResponseConverter("Последняя результаты упражений из этого дня:", information, "Выберите упражнение");
+                    responseConverter = new ResponseConverter("Последняя результаты упражнений из этого дня:", information, "Выберите упражнение");
                     buttonsSets = (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout);
                     break;
                 default:
