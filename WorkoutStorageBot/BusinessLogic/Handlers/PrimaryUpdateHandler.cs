@@ -163,10 +163,11 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
         private void AddNewContext(User user, out UserContext? currentUserContext)
         {
             var currentUser = db.UsersInformation
+                .Where(u => u.UserId == user.Id)
                     .Include(u => u.Cycles)
                         .ThenInclude(c => c.Days)
                             .ThenInclude(d => d.Exercises)
-                    .FirstOrDefault(u => u.UserId == user.Id);
+                .FirstOrDefault();
 
             if (currentUser != null && !UserHaveAccess(currentUser))
             {

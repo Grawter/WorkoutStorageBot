@@ -212,8 +212,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.MessageCommand
 
         internal TextMessageCH ChangeNameCommand(string domainType)
         {
-            domainProvider = new DomainProvider(db, currentUserContext);
-            domain = domainProvider.GetDomainFromDataManager(domainType);
+            domain = currentUserContext.GetCurrentDomainFromDataManager(domainType);
 
             requestConverter.RemoveCompletely(25).WithoutServiceSymbol();
 

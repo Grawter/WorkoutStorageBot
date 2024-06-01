@@ -50,15 +50,15 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
             {
                 case UpdateType.Message:
                     informationSet = ProcessMessage(update);
+                    await SendResponse(update.Message.Chat.Id, informationSet);
                     break;
                 case UpdateType.CallbackQuery:
                     informationSet = ProcessCallbackQuery(update);
+                    await SendResponse(update.CallbackQuery.Message.Chat.Id, informationSet);
                     break;
                 default:
                     throw new NotImplementedException($"Неожиданный update.type: {update.Type}");
-            }
-
-            await SendResponse(update.Message.Chat.Id, informationSet);
+            }         
         }
 
         private IInformationSet ProcessMessage(Update update)

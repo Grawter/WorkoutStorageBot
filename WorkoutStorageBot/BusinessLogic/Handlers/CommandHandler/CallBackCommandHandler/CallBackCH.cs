@@ -20,8 +20,11 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
 
         internal override IInformationSet GetData()
         {
-            foreach (var handlerAction in handlerActions)
+            foreach (HandlerAction handlerAction in handlerActions)
             {
+                if (domain == null && (handlerAction != HandlerAction.None && handlerAction != HandlerAction.Save))
+                    throw new NullReferenceException($"{nameof(domain)} is null!");
+                
                 switch (handlerAction)
                 {
                     case HandlerAction.None:
@@ -39,7 +42,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
                         db.SaveChanges();
                         break;
                     default:
-                        throw new NotImplementedException($"Неожиданный handlerAction: {handlerAction}");
+                        throw new NotImplementedException($"Неожиданный {nameof(handlerAction)}: {handlerAction}");
                 }
 
             }

@@ -1,11 +1,8 @@
 ﻿#region using
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.SessionContext;
-using WorkoutStorageBot.Helpers.Converters;
-using WorkoutStorageBot.Helpers;
 using WorkoutStorageBot.Model;
 using WorkoutStorageBot.Helpers.InformationSetForSend;
-using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackCommandHandler.Context;
 #endregion
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler
@@ -14,7 +11,6 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler
     {
         protected readonly EntityContext db;
         protected readonly UserContext currentUserContext;
-        protected DomainProvider? domainProvider;
         protected IEnumerable<HandlerAction> handlerActions;
 
         protected IDomain? domain;

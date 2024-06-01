@@ -105,15 +105,15 @@ namespace WorkoutStorageBot.Helpers.Converters
 
             var sb = new StringBuilder();
 
-            sb.AppendLine($"Дата: {resultExercises.First().DateTime}");
+            sb.AppendLine($"Дата: {resultExercises.First().DateTime.ToShortDateString()}");
 
             for (int i = 0; i < resultQuery.Count(); i++)
             {
                 sb.AppendLine($"Упражнение: {resultQuery[i].Key}");
 
-                foreach (var item2 in resultQuery[i])
+                foreach (var result in resultQuery[i])
                 {
-                    sb.AppendLine($"({item2.Count}) => ({item2.Weight})");
+                    sb.AppendLine($"({result.Count}) => ({result.Weight})");
                 }
             }
 
@@ -136,11 +136,11 @@ namespace WorkoutStorageBot.Helpers.Converters
 
             for (int i = 0; i < resultQuery.Count(); i++)
             {
-                sb.AppendLine($"Упражнение: {resultQuery[i].Key}");
+                sb.AppendLine($"Упражнение: {resultQuery[i].Key} | Дата: {resultQuery[i].First().DateTime.ToShortDateString()}");
 
-                foreach (var item2 in resultQuery[i])
+                foreach (var result in resultQuery[i])
                 {
-                    sb.AppendLine($"({item2.Count}) => ({item2.Weight}) | Дата: {item2.DateTime}");
+                    sb.AppendLine($"({result.Count}) => ({result.Weight})");
                 }
             }
 

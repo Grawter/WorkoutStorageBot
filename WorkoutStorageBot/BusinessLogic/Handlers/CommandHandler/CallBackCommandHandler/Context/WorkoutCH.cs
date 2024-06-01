@@ -1,7 +1,6 @@
 ﻿#region using
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.SessionContext;
-using WorkoutStorageBot.BusinessLogic.SQLiteQueries;
 using WorkoutStorageBot.Helpers.CallbackQueryParser;
 using WorkoutStorageBot.Helpers.Converters;
 using WorkoutStorageBot.Helpers.InformationSetForSend;
@@ -38,26 +37,55 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
         internal WorkoutCH LastResultCommand()
         {
             ResponseConverter responseConverter;
-            IEnumerable<ResultExercise> trainingIndicators;
             string information;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
             switch (callbackQueryParser.ObjectType)
             {
                 case "Exercises":
-                    var exercises = QueriesStorage.GetExercisesWithDaysIds(currentUserContext.ActiveCycle.Days.Where(d => !d.IsArchive).Select(d => d.Id), db.GetExercisesFromQuery);
-                    trainingIndicators = QueriesStorage.GetLastResultsExercisesWithExercisesIds(exercises.Select(e => e.Id), db.GetResultExercisesFromQuery);
+                    IEnumerable<int> dayIDs = currentUserContext.ActiveCycle.Days.Where(d => !d.IsArchive).Select(d => d.Id);
 
-                    information = ResponseConverter.GetInformationAboutLastExercises(exercises, trainingIndicators);
+                    IQueryable<Exercise> exercises = db.Exercises.Where(e => !e.IsArchive && dayIDs.Contains(e.DayId));
+
+                    IGrouping<DateTime, ResultExercise> resultLastTraining = db.ResultsExercises
+                                                                .Where(re => exercises.Select(e => e.Id).Contains(re.ExerciseId))
+                                                                .OrderByDescending(re => re.DateTime)
+                                                                .GroupBy(re => re.DateTime)
+                                                                .AsEnumerable()
+                                                                .LastOrDefault();
+
+                    information = ResponseConverter.GetInformationAboutLastExercises(exercises, resultLastTraining);
                     responseConverter = new ResponseConverter("Последняя тренировка:", information, "Выберите тренировочный день");
                     buttonsSets = (ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main);
                     break;
                 case "Day":
-                    var lastDateForExercises = QueriesStorage.GetLastDateForExercises(currentUserContext.DataManager.CurrentDay.Exercises.Where(e => !e.IsArchive).Select(d => d.Id), db.GetResultExercisesFromQuery);
-                    trainingIndicators = QueriesStorage.GetLastResultsForExercisesAndDate(lastDateForExercises, db.GetResultExercisesFromQuery);
+                    var exIDs = currentUserContext.DataManager.CurrentDay.Exercises.Where(e => !e.IsArchive)
+                                                                                   .Select(d => d.Id);
 
-                    information = ResponseConverter.GetInformationAboutLastDay(currentUserContext.DataManager.CurrentDay.Exercises, trainingIndicators);
-                    responseConverter = new ResponseConverter("Последняя результаты упражений из этого дня:", information, "Выберите упражнение");
+                    IQueryable<ResultExercise> lastDateForExercises = db.ResultsExercises.Where(re => exIDs.Contains(re.ExerciseId))
+                                                .OrderBy(re => re.ExerciseId)
+                                                .ThenByDescending(re => re.DateTime)
+                                                .GroupBy(re => re.ExerciseId)
+                                                //order Data in group and get first (older) element for get lastDate
+                                                .Select(reGROUP => reGROUP.OrderByDescending(re => re.DateTime).First());
+
+                    IQueryable<ResultExercise> lastResultsExercisesInCurrentDay = default;
+                    bool isFirstQuery = true;
+                    foreach (ResultExercise resultExercise in lastDateForExercises)
+                    {
+                        if (isFirstQuery)
+                        {
+                            lastResultsExercisesInCurrentDay = db.ResultsExercises.Where(re => re.ExerciseId == resultExercise.ExerciseId && 
+                                                                                         re.DateTime.Date == resultExercise.DateTime.Date);
+                            isFirstQuery = false;
+                        }
+                        else
+                            lastResultsExercisesInCurrentDay = lastResultsExercisesInCurrentDay.Union(db.ResultsExercises.Where(re => re.ExerciseId == resultExercise.ExerciseId && 
+                                                                                                                                re.DateTime.Date == resultExercise.DateTime.Date));
+                    }
+
+                    information = ResponseConverter.GetInformationAboutLastDay(currentUserContext.DataManager.CurrentDay.Exercises, lastResultsExercisesInCurrentDay);
+                    responseConverter = new ResponseConverter("Последняя результаты упражнений из этого дня:", information, "Выберите упражнение");
                     buttonsSets = (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout);
                     break;
                 default:
