@@ -162,7 +162,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
 
         private void AddNewContext(User user, out UserContext? currentUserContext)
         {
-            var currentUser = db.UsersInformation
+            UserInformation? currentUser = db.UsersInformation
                 .Where(u => u.UserId == user.Id)
                     .Include(u => u.Cycles)
                         .ThenInclude(c => c.Days)
@@ -202,7 +202,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
 
         private UserInformation CreateNewUser(User user)
         {
-            var newUser = new UserInformation { UserId = user.Id, Firstname = user.FirstName, Username = "@" + user.Username, WhiteList = false, BlackList = false };
+            UserInformation newUser = new UserInformation { UserId = user.Id, Firstname = user.FirstName, Username = "@" + user.Username, WhiteList = false, BlackList = false };
             db.UsersInformation.Add(newUser);
             db.SaveChanges();
 
@@ -219,12 +219,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
         private async Task DirectToStart(long chatId, UserContext currentUserContext, bool hasCycle)
         {
             string message;
-            var buttons = new InlineButtons(currentUserContext);
+            InlineButtons buttons = new InlineButtons(currentUserContext);
             ButtonsSet buttonsSet;
 
             if (hasCycle)
             {
-                var mainStep = StepStorage.GetMainStep();
+                StepInformation mainStep = StepStorage.GetMainStep();
                 message = new ResponseConverter("Информация о предыдущей сессии не была найдена", mainStep.Message).Convert();
                 buttonsSet = mainStep.ButtonsSet;
             }

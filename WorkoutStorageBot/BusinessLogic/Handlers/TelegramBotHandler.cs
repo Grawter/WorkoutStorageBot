@@ -63,9 +63,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
 
         private IInformationSet ProcessMessage(Update update)
         {
-            var requestConverter = new TextMessageConverter(update.Message.Text);
+            TextMessageConverter requestConverter = new TextMessageConverter(update.Message.Text);
 
-            var commandHandler = new TextMessageCH(db, CurrentUserContext, requestConverter);
+            TextMessageCH commandHandler = new TextMessageCH(db, CurrentUserContext, requestConverter);
 
             IInformationSet informationSet;
 
@@ -128,7 +128,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
 
         private IInformationSet ProcessCallbackQuery(Update update)
         {
-            var callbackQueryParser = new CallbackQueryParser(update.CallbackQuery.Data);
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser(update.CallbackQuery.Data);
 
             if (CheckingComplianceCallBackId(callbackQueryParser.CallBackId, out IInformationSet informationSet))
             {
@@ -153,7 +153,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
 
         private IInformationSet ProcessCommonCallBack(Update update, CallbackQueryParser callbackQueryParser)
         {
-            var commandHandler = new CommonCH(db, CurrentUserContext, callbackQueryParser);
+            CommonCH commandHandler = new CommonCH(db, CurrentUserContext, callbackQueryParser);
 
             IInformationSet informationSet;
 
@@ -179,7 +179,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
 
         private IInformationSet ProcessWorkoutCallBack(Update update, CallbackQueryParser callbackQueryParser)
         {
-            var commandHandler = new WorkoutCH(db, CurrentUserContext, callbackQueryParser);
+            WorkoutCH commandHandler = new WorkoutCH(db, CurrentUserContext, callbackQueryParser);
 
             IInformationSet informationSet;
 
@@ -212,7 +212,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
 
         private IInformationSet ProcessSettingsCallBack(Update update, CallbackQueryParser callbackQueryParser)
         {
-            var commandHandler = new SettingsCH(db, CurrentUserContext, callbackQueryParser);
+            SettingsCH commandHandler = new SettingsCH(db, CurrentUserContext, callbackQueryParser);
 
             IInformationSet informationSet;
 
@@ -349,7 +349,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
 
         private async Task SendResponse(long chatId, IInformationSet messageInformationSetting)
         {
-            var buttons = new InlineButtons(CurrentUserContext);
+            InlineButtons buttons = new InlineButtons(CurrentUserContext);
 
             switch (messageInformationSetting)
             {
@@ -377,9 +377,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
         {
             if (CurrentUserContext.CallBackId != currentCallBackId)
             {
-                var responseConverter = new ResponseConverter("Действие не может быть выполнено, т.к. информация устарела",
+                ResponseConverter responseConverter = new ResponseConverter("Действие не может быть выполнено, т.к. информация устарела",
                         "Для продолжения работы используйте последний диалог или введите команду /Start");
-                var buttonsSet = (ButtonsSet.None, ButtonsSet.None);
+                (ButtonsSet, ButtonsSet) buttonsSet = (ButtonsSet.None, ButtonsSet.None);
 
                 informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSet);
 

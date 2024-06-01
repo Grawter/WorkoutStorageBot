@@ -35,7 +35,7 @@ namespace WorkoutStorageBot.Helpers.Converters
 
         internal TextMessageConverter WithoutServiceSymbols(string[] simbols)
         {
-            foreach (var simbol in simbols)
+            foreach (string simbol in simbols)
                 WithoutServiceSymbol(simbol);
 
             return this;
@@ -45,7 +45,7 @@ namespace WorkoutStorageBot.Helpers.Converters
         {
             List<Exercise> results = new();
 
-            var text = sb.ToString();
+            string text = sb.ToString();
 
             if (text.Contains(';'))
                 return text.Split(';');
@@ -57,13 +57,13 @@ namespace WorkoutStorageBot.Helpers.Converters
         {
             List<ResultExercise> results = new();
 
-            var text = sb.ToString();
+            string text = sb.ToString();
 
             if (text.Contains(';'))
             {
                 string[] stringsResult = text.Split(';');
 
-                foreach (var str in stringsResult)
+                foreach (string str in stringsResult)
                 {
                     results.Add(GetResultExercise(str.Trim()));
                 }
@@ -85,7 +85,7 @@ namespace WorkoutStorageBot.Helpers.Converters
 
         private ResultExercise GetResultExercise(string s)
         {
-            var stringsResult = s.Split(' ', 2);
+            string[] stringsResult = s.Split(' ', 2);
             return new ResultExercise
             {
                 Weight = float.Parse(stringsResult[0]),

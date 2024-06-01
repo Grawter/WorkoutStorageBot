@@ -61,7 +61,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.MessageCommand
             if (!TryCheckingCycleName(requestConverter.Convert()))
                 return this;
 
-            var hasActiveCycle = currentUserContext.ActiveCycle == null ? false : true;
+            bool hasActiveCycle = currentUserContext.ActiveCycle == null ? false : true;
             domain = currentUserContext.DataManager.SetCycle(requestConverter.Convert(), !hasActiveCycle, currentUserContext.UserInformation.Id);
 
             if (!hasActiveCycle)
@@ -138,7 +138,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.MessageCommand
         {
             requestConverter.RemoveCompletely().WithoutServiceSymbol();
 
-            var exercisesNames = requestConverter.GetExercises();
+            string[] exercisesNames = requestConverter.GetExercises();
 
             if (!TryCheckingExercisesNames(exercisesNames))
                 return this;

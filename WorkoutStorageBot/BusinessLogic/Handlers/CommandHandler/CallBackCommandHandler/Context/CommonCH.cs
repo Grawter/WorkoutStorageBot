@@ -25,7 +25,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
 
         internal CommonCH BackCommand()
         {
-            var previousStep = StepStorage.GetStep(callbackQueryParser.Args[2]);
+            StepInformation previousStep = StepStorage.GetStep(callbackQueryParser.Args[2]);
 
             currentUserContext.Navigation.QueryFrom = previousStep.QueryFrom;
             currentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.Default;
@@ -52,7 +52,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
         {
             currentUserContext.DataManager.ResetAll();
 
-            var mainStep = StepStorage.GetMainStep();
+            StepInformation mainStep = StepStorage.GetMainStep();
 
             currentUserContext.Navigation.QueryFrom = mainStep.QueryFrom;
             currentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.Default;

@@ -59,10 +59,10 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
                     buttonsSets = (ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main);
                     break;
                 case "Day":
-                    var exIDs = currentUserContext.DataManager.CurrentDay.Exercises.Where(e => !e.IsArchive)
+                    IEnumerable<int> exercisesIDs = currentUserContext.DataManager.CurrentDay.Exercises.Where(e => !e.IsArchive)
                                                                                    .Select(d => d.Id);
 
-                    IQueryable<ResultExercise> lastDateForExercises = db.ResultsExercises.Where(re => exIDs.Contains(re.ExerciseId))
+                    IQueryable<ResultExercise> lastDateForExercises = db.ResultsExercises.Where(re => exercisesIDs.Contains(re.ExerciseId))
                                                 .OrderBy(re => re.ExerciseId)
                                                 .ThenByDescending(re => re.DateTime)
                                                 .GroupBy(re => re.ExerciseId)

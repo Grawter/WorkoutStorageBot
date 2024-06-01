@@ -8,8 +8,8 @@ namespace WorkoutStorageBot.Helpers.Crypto
     {
         internal static byte[] CreateRandomByteArray(int size = 5)
         {
-            var mas = new byte[size];
-            using (var rng = RandomNumberGenerator.Create())
+            byte[] mas = new byte[size];
+            using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
             {
                 rng.GetBytes(mas);
             }

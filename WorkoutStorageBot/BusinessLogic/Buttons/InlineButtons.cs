@@ -129,7 +129,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                     break;
 
                 case ButtonsSet.ReplaceToDay:
-                    foreach (var cycle in CurrentUserContext.UserInformation.Cycles.Where(c => !c.IsArchive))
+                    foreach (Cycle cycle in CurrentUserContext.UserInformation.Cycles.Where(c => !c.IsArchive))
                     {
                         GetDaysInButtons(cycle.Days.Where(c => !c.IsArchive), ActionForList.Move);
                     }
@@ -164,15 +164,15 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                     GetCyclesInButtons(CurrentUserContext.UserInformation.Cycles.Where(c => c.IsArchive), ActionForList.UnArchive);
                     break;
                 case ButtonsSet.ArchiveDaysList:
-                    foreach(var cycle in CurrentUserContext.UserInformation.Cycles.Where(c => !c.IsArchive))
+                    foreach(Cycle cycle in CurrentUserContext.UserInformation.Cycles.Where(c => !c.IsArchive))
                     {
                         GetDaysInButtons(cycle.Days.Where(d => d.IsArchive), ActionForList.UnArchive);
                     }
                     break;
                 case ButtonsSet.ArchiveExercisesList:
-                    foreach (var cycle in CurrentUserContext.UserInformation.Cycles.Where(c => !c.IsArchive))
+                    foreach (Cycle cycle in CurrentUserContext.UserInformation.Cycles.Where(c => !c.IsArchive))
                     {
-                        foreach (var day in cycle.Days.Where(c => !c.IsArchive))
+                        foreach (Day day in cycle.Days.Where(c => !c.IsArchive))
                         {
                             GetExercisesInButtons(day.Exercises.Where(e => e.IsArchive), ActionForList.UnArchive);
                         }
@@ -225,7 +225,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
 
         private void AddInlineButton(string titleButton, string callBackDataWithoutSetId, string? additionalParameter = null,  bool onNewLine = true)
         {
-            var callBackData = AddAdditionalParameterAndCallBackSetId(additionalParameter, callBackDataWithoutSetId);
+            string callBackData = AddAdditionalParameterAndCallBackSetId(additionalParameter, callBackDataWithoutSetId);
 
             if (onNewLine)
             {
@@ -244,7 +244,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
 
         private string AddAdditionalParameterAndCallBackSetId(string additionalParameter, string callBackData)
         {
-            var sb = new StringBuilder(callBackData)
+            StringBuilder sb = new StringBuilder(callBackData)
                                                 .Append("|");
 
             if (!string.IsNullOrEmpty(additionalParameter))
@@ -261,19 +261,19 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
             switch (actionForList)
             {
                 case ActionForList.Select:
-                    foreach (var cycle in source)
+                    foreach (Cycle cycle in source)
                     {
                         AddInlineButton(cycle.Name, $"3|Selected|Cycle|{cycle.Id}");
                     }
                     break;
                 case ActionForList.UnArchive:
-                    foreach (var cycle in source)
+                    foreach (Cycle cycle in source)   
                     {
                         AddInlineButton(cycle.Name, $"3|UnArchive|Cycle|{cycle.Id}");
                     }
                     break;
                 case ActionForList.Move:
-                    foreach (var cycle in source)
+                    foreach (Cycle cycle in source)
                     {
                         AddInlineButton(cycle.Name, $"3|ReplaceTo|Cycle|{cycle.Id}|{cycle.Name}");
                     }
@@ -288,19 +288,19 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
             switch (actionForList)
             {
                 case ActionForList.Select:
-                    foreach (var day in source)
+                    foreach (Day day in source)
                     {
                         AddInlineButton(day.Name, $"3|Selected|Day|{day.Id}");
                     }
                     break;
                 case ActionForList.UnArchive:
-                    foreach (var day in source)
+                    foreach (Day day in source)
                     {
                         AddInlineButton(day.Name, $"3|UnArchive|Day|{day.Id}");
                     }
                     break;
                 case ActionForList.Move:
-                    foreach (var day in source)
+                    foreach (Day day in source)
                     {
                         AddInlineButton(day.Name, $"3|ReplaceTo|Day|{day.Id}|{day.Name}");
                     }
@@ -315,13 +315,13 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
             switch (actionForList)
             {
                 case ActionForList.Select:
-                    foreach (var exercise in source)
+                    foreach (Exercise exercise in source)
                     {
                         AddInlineButton(exercise.Name, $"3|Selected|Exercise|{exercise.Id}");
                     }
                     break;
                 case ActionForList.UnArchive:
-                    foreach (var exercise in source)
+                    foreach (Exercise exercise in source)
                     {
                         AddInlineButton(exercise.Name, $"3|UnArchive|Exercise|{exercise.Id}");
                     }

@@ -17,15 +17,5 @@ namespace WorkoutStorageBot.Model
         {
             Database.EnsureCreated();
         }
-
-        public List<Exercise> GetExercisesFromQuery(string query)
-        {
-            return Exercises.FromSqlRaw(query).ToList();
-        }
-
-        public List<ResultExercise> GetResultExercisesFromQuery(string query)
-        {
-            return ResultsExercises.FromSqlRaw(query).ToList();
-        }
     }
 }

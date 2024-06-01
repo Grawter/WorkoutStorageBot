@@ -30,46 +30,46 @@ namespace WorkoutStorageBot.StartApplication
                 return;
             }
 
-            var configurationBuilder = new ConfigurationBuilder()
+            IConfigurationBuilder configurationBuilder = new ConfigurationBuilder()
                                                                 .AddJsonFile(pathFileConfig, optional: false, reloadOnChange: true)
                                                                 .AddUserSecrets<Program>();
-            var configuration = configurationBuilder.Build();
+            IConfigurationRoot configuration = configurationBuilder.Build();
 
-            var token = configuration["Telegram:Token"];
+            string token = configuration["Telegram:Token"];
             if (string.IsNullOrEmpty(token))
             {
                 logger.WriteLog("Получен пустой токен", LogType.StartError);
                 return;
             }
 
-            var ownerChatId = configuration["Telegram:OwnerChatId"];
+            string ownerChatId = configuration["Telegram:OwnerChatId"];
             if (string.IsNullOrEmpty(token))
             {
                 logger.WriteLog("Получена пустая строка идентификатора чата владельца", LogType.StartError);
                 return;
             }
 
-            var connectionString = configuration["DB:Database"];
+            string connectionString = configuration["DB:Database"];
             if (string.IsNullOrEmpty(token))
             {
                 logger.WriteLog("Получена пустая строка подключения к БД", LogType.StartError);
                 return;
             }
 
-            var optionsBuilder = new DbContextOptionsBuilder<EntityContext>();
-            var options = optionsBuilder.UseSqlite("Data Source=" + connectionString).Options;
+            DbContextOptionsBuilder<EntityContext> optionsBuilder = new DbContextOptionsBuilder<EntityContext>();
+            DbContextOptions<EntityContext> options = optionsBuilder.UseSqlite("Data Source=" + connectionString).Options;
 
-            var botClient = new TelegramBotClient(token);
+            TelegramBotClient botClient = new TelegramBotClient(token);
 
-            var db = new EntityContext(options);
+            EntityContext db = new EntityContext(options);
 
-            var adminHandler = new AdminHandler(db);
+            AdminHandler adminHandler = new AdminHandler(db);
 
-            var telegramBotHandler = new TelegramBotHandler(botClient, db, logger, adminHandler);
+            TelegramBotHandler telegramBotHandler = new TelegramBotHandler(botClient, db, logger, adminHandler);
 
             using CancellationTokenSource cts = new();
 
-            var receiverOptions = new ReceiverOptions()
+            ReceiverOptions receiverOptions = new ReceiverOptions()
             {
                 AllowedUpdates = Array.Empty<UpdateType>(), // receive all update types except ChatMember related updates
                 ThrowPendingUpdates = true
@@ -81,7 +81,7 @@ namespace WorkoutStorageBot.StartApplication
                                     cancellationToken: cts.Token
                                     );
 
-            var me = await botClient.GetMeAsync();
+            User me = await botClient.GetMeAsync();
 
             logger.WriteLog($"Телеграм бот @{me.Username} запущен", LogType.Information);
 
@@ -197,7 +197,7 @@ namespace WorkoutStorageBot.StartApplication
 
             Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
             {
-                var errorMessage = exception switch
+                string errorMessage = exception switch
                 {
                     ApiRequestException apiRequestException
                         => $"Telegram API Error:\n[{apiRequestException.ErrorCode}]\n{apiRequestException.Message}",

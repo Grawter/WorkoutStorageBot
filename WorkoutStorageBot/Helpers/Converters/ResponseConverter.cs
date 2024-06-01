@@ -103,7 +103,7 @@ namespace WorkoutStorageBot.Helpers.Converters
                         .GroupBy(rE => rE.Name).ToArray();
 
 
-            var sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder();
 
             sb.AppendLine($"Дата: {resultExercises.First().DateTime.ToShortDateString()}");
 
@@ -132,7 +132,7 @@ namespace WorkoutStorageBot.Helpers.Converters
                             (e, rE) => new { e.Name, rE.Count, rE.Weight, rE.DateTime })
                         .GroupBy(rE => rE.Name).ToArray();
 
-            var sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder();
 
             for (int i = 0; i < resultQuery.Count(); i++)
             {

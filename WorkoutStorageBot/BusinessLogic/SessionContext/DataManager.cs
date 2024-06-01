@@ -51,7 +51,7 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
                 Exercises = new();
             }
 
-            foreach (var name in nameExercises)
+            foreach (string name in nameExercises)
             {
                 if (Exercises.Any(e => e.Name == name))
                     return false;
@@ -70,7 +70,7 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
             if (ResultExercises == null)
                 ResultExercises = new();
 
-            foreach (var result in resultsExercise)
+            foreach (ResultExercise result in resultsExercise)
             {
                 result.ExerciseId = CurrentExercise.Id;
                 ResultExercises.Add(result);
