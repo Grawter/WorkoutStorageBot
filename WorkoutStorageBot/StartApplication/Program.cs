@@ -43,14 +43,14 @@ namespace WorkoutStorageBot.StartApplication
             }
 
             string ownerChatId = configuration["Telegram:OwnerChatId"];
-            if (string.IsNullOrEmpty(token))
+            if (string.IsNullOrEmpty(ownerChatId))
             {
                 logger.WriteLog("Получена пустая строка идентификатора чата владельца", LogType.StartError);
                 return;
             }
 
             string connectionString = configuration["DB:Database"];
-            if (string.IsNullOrEmpty(token))
+            if (string.IsNullOrEmpty(connectionString))
             {
                 logger.WriteLog("Получена пустая строка подключения к БД", LogType.StartError);
                 return;

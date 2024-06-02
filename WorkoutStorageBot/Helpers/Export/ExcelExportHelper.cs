@@ -18,7 +18,7 @@ namespace WorkoutStorageBot.Helpers.Export
                 ExcelWorksheet mainSheet = package.Workbook.Worksheets.Add("Workout");
 
                 Point informationAboutSelectedPeriodPoint = new Point(2, 1);
-
+                
                 Point cyclePoint = new Point(4, 1);
                 Point dayPoint = new Point(cyclePoint.X + 1, 1);
                 Point exercisePoint = new Point(dayPoint.X + 1, 1);
@@ -27,22 +27,14 @@ namespace WorkoutStorageBot.Helpers.Export
 
                 int rowNumber = 0;
 
-                DateTime filterDateTime = default;
+                DateTime filterDateTime = CommonExportHelper.GetFilterDateTime(monthFilterPeriod, resultsExercises);
+                CommonExportHelper.LoadDBDataToDBContextForFilterDate(resultsExercises, filterDateTime);
 
-                string informationAboutSelectedPeriod;
+                string informationAboutSelectedPeriod = filterDateTime > DateTime.MinValue
+                                ? $"Временной промежуток формирования данных {filterDateTime.ToShortDateString()} - {filterDateTime.AddMonths(monthFilterPeriod).ToShortDateString()}"
+                                : "Тренировки, зафиксированные за всё время";            
 
-                if (monthFilterPeriod > 0)
-                {
-                    filterDateTime = resultsExercises
-                                                .Select(r => r.DateTime)
-                                                .Max()
-                                                .AddMonths(-monthFilterPeriod);
-
-                    informationAboutSelectedPeriod = $"Временной промежуток формирования данных {filterDateTime.ToShortDateString()} - {DateTime.Now.ToShortDateString()}";
-                }
-                else
-                    informationAboutSelectedPeriod = "Тренировки, зафиксированные за всё время";
-
+                // informationAboutSelectedPeriod
                 SetStyle(mainSheet.Cells[informationAboutSelectedPeriodPoint.X, informationAboutSelectedPeriodPoint.Y, 
                                          informationAboutSelectedPeriodPoint.X, informationAboutSelectedPeriodPoint.Y + 7],
                                          true, true, ExcelHorizontalAlignment.Center, Color.Azure);
@@ -65,13 +57,7 @@ namespace WorkoutStorageBot.Helpers.Export
                             SetStyle(mainSheet.Cells[resultTitlePoint.X, resultTitlePoint.Y + 2], false, true, ExcelHorizontalAlignment.Center, Color.SkyBlue);
                             mainSheet.Cells[resultTitlePoint.X, resultTitlePoint.Y + 2].Value = "Кол-во";
 
-                            foreach (ResultExercise resultExercise in resultsExercises.Where(re => re.ExerciseId == exercise.Id &&
-                                                                                             (monthFilterPeriod > 0 
-                                                                                                   ? re.DateTime >= resultsExercises
-                                                                                                                                .Select(r => r.DateTime)
-                                                                                                                                .Max()
-                                                                                                                                .AddMonths(-monthFilterPeriod)
-                                                                                                   : true)))
+                            foreach (ResultExercise resultExercise in exercise.ResultExercises)
                             {
                                 Color backgroundCellColor = GetColorForRow(++rowNumber);
 
@@ -109,7 +95,7 @@ namespace WorkoutStorageBot.Helpers.Export
                     SetStyle(mainSheet.Cells[cyclePoint.X, cyclePoint.Y, cyclePoint.X, exercisePoint.Y - 1], true, true, ExcelHorizontalAlignment.Center, Color.PaleGreen);
                     mainSheet.Cells[cyclePoint.X, cyclePoint.Y].Value = cycle.Name;
 
-                    //// shift to next cycle
+                    // shift to next cycle
                     cyclePoint = new Point(resultExercisePoint.X + 3, 1);
                     dayPoint = new Point(cyclePoint.X + 1, 1);
                     exercisePoint = new Point(dayPoint.X + 1, 1);

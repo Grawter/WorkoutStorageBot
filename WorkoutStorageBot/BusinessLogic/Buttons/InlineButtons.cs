@@ -64,7 +64,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                 case ButtonsSet.Settings:
                     AddInlineButton("Настройка тренировочных циклов", "3|Setting|Cycles");
                     AddInlineButton("Архив", "3|ArchiveStore");
-                    AddInlineButton("Экспортировать тренировки в Excel", "3|ExportTo|Excel");
+                    AddInlineButton("Экспорт тренировок", "3|Export");
                     AddInlineButton("Удалить свой аккаунт", "3|Delete|Account");
                     break;
 
@@ -181,6 +181,11 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                 #endregion
 
                 #region Period area
+                case ButtonsSet.Export:
+                    AddInlineButton("Экспортировать тренировки в Excel", "3|ExportTo|Excel");
+                    AddInlineButton("Экспортировать тренировки в JSON", "3|ExportTo|JSON");
+                    break;
+
                 case ButtonsSet.Period:
                     string additionalParameter = additionalParameters.First();
 

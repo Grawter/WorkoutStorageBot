@@ -1,4 +1,7 @@
 ﻿#region using
+using System.IO;
+using System.Text;
+using Telegram.Bot.Types;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.SessionContext;
 using WorkoutStorageBot.Extenions;
@@ -87,6 +90,16 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
             return this;
         }
 
+        internal SettingsCH ExportCommand()
+        {
+            ResponseConverter responseConverter = new ResponseConverter("Выберите формат в котором экспортировать данные о ваших  тренировках");
+            (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.Export, ButtonsSet.Settings);
+ 
+            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+
+            return this;
+        }
+
         internal SettingsCH ExportToCommand()
         {
             ResponseConverter responseConverter;
@@ -98,7 +111,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
                 case "Excel":
                     responseConverter = new ResponseConverter("Выберите временной промежуток формирования данных от последней тренировки");
                     buttonsSets = (ButtonsSet.Period, ButtonsSet.Settings);
-                    additionalParameters = ["Export"];
+                    additionalParameters = ["Export/Excel"];
+                    break;
+                case "JSON":
+                    responseConverter = new ResponseConverter("Выберите временной промежуток формирования данных от последней тренировки");
+                    buttonsSets = (ButtonsSet.Period, ButtonsSet.Settings);
+                    additionalParameters = ["Export/JSON"];
                     break;
                 default:
                     throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.ObjectType}");
@@ -539,48 +557,57 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
             ResponseConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
-            if (!string.IsNullOrEmpty(callbackQueryParser.ObjectType) && callbackQueryParser.AdditionalParameter == "Export")
+            IQueryable<ResultExercise> resultsExercises = default;
+
+            if (!string.IsNullOrEmpty(callbackQueryParser.ObjectType) && callbackQueryParser.AdditionalParameter.Contains("Export"))
             {
-                IQueryable<ResultExercise> resultsExercises = db.ResultsExercises
+                resultsExercises = db.ResultsExercises
                                                                         .Where(re => currentUserContext.GetUserExercisesIds().Contains(re.ExerciseId));
             }
+
+            int monthFilterPeriod = 0;
 
             switch (callbackQueryParser.ObjectType)
             {
                 case "Month":
+                    monthFilterPeriod = 1;
 
                     switch (callbackQueryParser.AdditionalParameter)
                     {
-                        case "Export":
-
-                            int monthFilterPeriod = 1;
+                        case "Export/Excel":
 
                             // TODO: перевести period в свойство callbackQueryParser; убрать метод Period в целом
-                            IQueryable<ResultExercise> resultsExercises = db.ResultsExercises
-                                                                        .Where(re => currentUserContext.GetUserExercisesIds().Contains(re.ExerciseId));
 
                             byte[] excelFile = ExcelExportHelper.GetExcelFile(currentUserContext.UserInformation.Cycles, resultsExercises, monthFilterPeriod);
 
-                            MemoryStream stream = new MemoryStream(excelFile);
+                            MemoryStream memoryStream = new MemoryStream(excelFile);
                             // вынести в одно место после рефакторинга выше
-                            informationSet = new FileInformationSet(stream, "Workout.xlsx", $"Тренировки за последний месяц", (ButtonsSet.Main, ButtonsSet.None));
+                            informationSet = new FileInformationSet(memoryStream, "Workout.xlsx", $"Тренировки за последний месяц", (ButtonsSet.Main, ButtonsSet.None));
+                            break;
+                        case "Export/JSON":
+
+                            // TODO: перевести period в свойство callbackQueryParser; убрать метод Period в целом
+                            string json = JsonExportHelper.GetJSONFile(currentUserContext.UserInformation.Cycles, resultsExercises, monthFilterPeriod);
+                            byte[] byteJson = new UTF8Encoding(true).GetBytes(json);
+
+                            MemoryStream memoryStream2 = new MemoryStream(byteJson);
+
+
+                            informationSet = new FileInformationSet(memoryStream2, "Workout.json", $"Тренировки за последний месяц", (ButtonsSet.Main, ButtonsSet.None));
+
                             break;
                     }
 
                     break;
 
                 case "Quarter":
+                    monthFilterPeriod = 3;
 
                     switch (callbackQueryParser.AdditionalParameter)
                     {
-                        case "Export":
-
-                            int monthFilterPeriod = 3;
+                        case "Export/Excel":
 
                             // TODO: перевести period в свойство callbackQueryParser; убрать метод Period в целом
-                            IQueryable<ResultExercise> resultsExercises = db.ResultsExercises
-                                                                        .Where(re => currentUserContext.GetUserExercisesIds().Contains(re.ExerciseId));
-
                             byte[] excelFile = ExcelExportHelper.GetExcelFile(currentUserContext.UserInformation.Cycles, resultsExercises, monthFilterPeriod);
 
                             MemoryStream stream = new MemoryStream(excelFile);
@@ -592,17 +619,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
                     break;
 
                 case "SixMonths":
+                    monthFilterPeriod = 6;
 
                     switch (callbackQueryParser.AdditionalParameter)
                     {
-                        case "Export":
-
-                            int monthFilterPeriod = 6;
-
+                        case "Export/Excel":
                             // TODO: перевести period в свойство callbackQueryParser; убрать метод Period в целом
-                            IQueryable<ResultExercise> resultsExercises = db.ResultsExercises
-                                                                        .Where(re => currentUserContext.GetUserExercisesIds().Contains(re.ExerciseId));
-
                             byte[] excelFile = ExcelExportHelper.GetExcelFile(currentUserContext.UserInformation.Cycles, resultsExercises, monthFilterPeriod);
 
                             MemoryStream stream = new MemoryStream(excelFile);
@@ -614,17 +636,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
                     break;
 
                 case "Year":
+                    monthFilterPeriod = 12;
 
                     switch (callbackQueryParser.AdditionalParameter)
                     {
-                        case "Export":
-
-                            int monthFilterPeriod = 12;
-
+                        case "Export/Excel":
                             // TODO: перевести period в свойство callbackQueryParser; убрать метод Period в целом
-                            IQueryable<ResultExercise> resultsExercises = db.ResultsExercises
-                                                                        .Where(re => currentUserContext.GetUserExercisesIds().Contains(re.ExerciseId));
-
                             byte[] excelFile = ExcelExportHelper.GetExcelFile(currentUserContext.UserInformation.Cycles, resultsExercises, monthFilterPeriod);
 
                             MemoryStream stream = new MemoryStream(excelFile);
@@ -636,22 +653,29 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
                     break;
 
                 case "FullTime":
+                    monthFilterPeriod = 0;
 
                     switch (callbackQueryParser.AdditionalParameter)
                     {
-                        case "Export":
-
-                            int monthFilterPeriod = 0;
-
+                        case "Export/Excel":
                             // TODO: перевести period в свойство callbackQueryParser; убрать метод Period в целом
-                            IQueryable<ResultExercise> resultsExercises = db.ResultsExercises
-                                                                        .Where(re => currentUserContext.GetUserExercisesIds().Contains(re.ExerciseId));
-
                             byte[] excelFile = ExcelExportHelper.GetExcelFile(currentUserContext.UserInformation.Cycles, resultsExercises, monthFilterPeriod);
 
                             MemoryStream stream = new MemoryStream(excelFile);
                             // вынести в одно место после рефакторинга выше
                             informationSet = new FileInformationSet(stream, "Workout.xlsx", $"Тренировки за всё время", (ButtonsSet.Main, ButtonsSet.None));
+                            break;
+
+                        case "Export/JSON":
+
+                            // TODO: перевести period в свойство callbackQueryParser; убрать метод Period в целом
+                            string json = JsonExportHelper.GetJSONFile(currentUserContext.UserInformation.Cycles, resultsExercises, monthFilterPeriod);
+                            byte[] byteJson = new UTF8Encoding(true).GetBytes(json);
+
+                            MemoryStream memoryStream2 = new MemoryStream(byteJson);
+
+
+                            informationSet = new FileInformationSet(memoryStream2, "Workout.json", $"Тренировки за последний месяц", (ButtonsSet.Main, ButtonsSet.None));
                             break;
                     }
 

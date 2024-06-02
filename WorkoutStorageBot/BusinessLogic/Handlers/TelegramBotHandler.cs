@@ -1,5 +1,6 @@
 ﻿#region using
 using OfficeOpenXml;
+using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -236,6 +237,11 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                                                 .GetData();
 
                     break;
+                case "Export":
+                    informationSet = commandHandler
+                                                .ExportCommand()
+                                                .GetData();
+                    break;
 
                 case "ExportTo":
                     informationSet = commandHandler
@@ -294,8 +300,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
 
                 case "Replace":
                     informationSet = commandHandler
-                                                        .ReplaceCommand()
-                                                        .GetData();
+                                                .ReplaceCommand()
+                                                .GetData();
                     break;
 
                 case "ReplaceTo":
@@ -314,7 +320,6 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers
                     informationSet = commandHandler
                                                 .Period()
                                                 .GetData();
-
                     break;
 
                 case "Delete":
