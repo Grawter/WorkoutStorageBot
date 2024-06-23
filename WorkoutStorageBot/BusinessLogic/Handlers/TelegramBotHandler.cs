@@ -9,11 +9,11 @@ using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackCommandHandler;
 using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackCommandHandler.Context;
 using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.MessageCommandHandler.Context;
+using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.BusinessLogic.SessionContext;
 using WorkoutStorageBot.Helpers.CallbackQueryParser;
 using WorkoutStorageBot.Helpers.Converters;
-using WorkoutStorageBot.Helpers.InformationSetForSend;
-using WorkoutStorageBot.Helpers.Logger;
+using WorkoutStorageBot.Logger;
 using WorkoutStorageBot.Model;
 #endregion
 

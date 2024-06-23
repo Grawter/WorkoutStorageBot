@@ -9,7 +9,7 @@ using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.SessionContext;
 using WorkoutStorageBot.BusinessLogic.StepStore;
 using WorkoutStorageBot.Helpers.Converters;
-using WorkoutStorageBot.Helpers.Logger;
+using WorkoutStorageBot.Logger;
 using WorkoutStorageBot.Model;
 
 #endregion

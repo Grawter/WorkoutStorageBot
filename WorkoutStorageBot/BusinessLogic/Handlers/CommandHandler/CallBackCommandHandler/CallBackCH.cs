@@ -3,8 +3,7 @@ using WorkoutStorageBot.BusinessLogic.SessionContext;
 using WorkoutStorageBot.Model;
 using WorkoutStorageBot.Helpers.CallbackQueryParser;
 using WorkoutStorageBot.BusinessLogic.Enums;
-using WorkoutStorageBot.Helpers.InformationSetForSend;
-using Telegram.Bot.Types;
+using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 #endregion
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackCommandHandler

@@ -1,5 +1,7 @@
-﻿using Newtonsoft.Json;
+﻿#region using
+using Newtonsoft.Json;
 using WorkoutStorageBot.Model;
+#endregion
 
 namespace WorkoutStorageBot.Helpers.Export
 {
@@ -10,11 +12,16 @@ namespace WorkoutStorageBot.Helpers.Export
             DateTime filterDateTime = CommonExportHelper.GetFilterDateTime(monthFilterPeriod, resultsExercises);
             CommonExportHelper.LoadDBDataToDBContextForFilterDate(resultsExercises, filterDateTime);
 
-            return JsonConvert.SerializeObject(cycles, Formatting.None,
+            return RemoveAdminInfo(JsonConvert.SerializeObject(cycles, Formatting.None,
                         new JsonSerializerSettings()
                         {
                             ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-                        });
+                        }));
+        }
+
+        private static string RemoveAdminInfo(string json)
+        {
+            return json.Remove(json.IndexOf(",\"UserInformationId\""));
         }
     }
 }

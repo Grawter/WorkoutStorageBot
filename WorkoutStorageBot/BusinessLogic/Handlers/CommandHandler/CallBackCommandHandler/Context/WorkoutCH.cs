@@ -1,9 +1,9 @@
 ﻿#region using
 using WorkoutStorageBot.BusinessLogic.Enums;
+using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.BusinessLogic.SessionContext;
 using WorkoutStorageBot.Helpers.CallbackQueryParser;
 using WorkoutStorageBot.Helpers.Converters;
-using WorkoutStorageBot.Helpers.InformationSetForSend;
 using WorkoutStorageBot.Model;
 #endregion
 
@@ -40,7 +40,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
             string information;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
-            switch (callbackQueryParser.ObjectType)
+            switch (callbackQueryParser.DomainType)
             {
                 case "Exercises":
                     IEnumerable<int> dayIDs = currentUserContext.ActiveCycle.Days.Where(d => !d.IsArchive).Select(d => d.Id);

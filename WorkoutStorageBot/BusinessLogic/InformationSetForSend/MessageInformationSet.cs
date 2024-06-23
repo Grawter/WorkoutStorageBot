@@ -2,16 +2,16 @@
 using WorkoutStorageBot.BusinessLogic.Enums;
 #endregion
 
-namespace WorkoutStorageBot.Helpers.InformationSetForSend
+namespace WorkoutStorageBot.BusinessLogic.InformationSetForSend
 {
     internal class MessageInformationSet : IInformationSet
     {
         internal MessageInformationSet(string message)
         {
-             Message = message;
+            Message = message;
         }
 
-        internal MessageInformationSet(string message, (ButtonsSet buttonsSet, ButtonsSet backButtonsSet) buttonsSets, params string[] additionalParameters)
+        internal MessageInformationSet(string message, (ButtonsSet buttonsSet, ButtonsSet backButtonsSet) buttonsSets, Dictionary<string, string> additionalParameters = default)
         {
             Message = message;
             ButtonsSets = buttonsSets;
@@ -20,6 +20,6 @@ namespace WorkoutStorageBot.Helpers.InformationSetForSend
 
         public string Message { get; }
         public (ButtonsSet buttonsSet, ButtonsSet backButtonsSet) ButtonsSets { get; }
-        public string[] AdditionalParameters { get; }
+        public Dictionary<string, string> AdditionalParameters { get; }
     }
 }

@@ -1,9 +1,8 @@
 ﻿#region using
 using WorkoutStorageBot.BusinessLogic.Enums;
+using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.BusinessLogic.SessionContext;
-using WorkoutStorageBot.Helpers;
 using WorkoutStorageBot.Helpers.Converters;
-using WorkoutStorageBot.Helpers.InformationSetForSend;
 using WorkoutStorageBot.Model;
 #endregion
 

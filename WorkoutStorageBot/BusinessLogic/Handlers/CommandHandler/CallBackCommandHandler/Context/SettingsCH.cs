@@ -1,14 +1,12 @@
 ﻿#region using
-using System.IO;
 using System.Text;
-using Telegram.Bot.Types;
 using WorkoutStorageBot.BusinessLogic.Enums;
+using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.BusinessLogic.SessionContext;
 using WorkoutStorageBot.Extenions;
 using WorkoutStorageBot.Helpers.CallbackQueryParser;
 using WorkoutStorageBot.Helpers.Converters;
 using WorkoutStorageBot.Helpers.Export;
-using WorkoutStorageBot.Helpers.InformationSetForSend;
 using WorkoutStorageBot.Model;
 #endregion
 
@@ -54,7 +52,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
             ResponseConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
-            switch (callbackQueryParser.ObjectType)
+            switch (callbackQueryParser.DomainType)
             {
                 case "Cycles":
                     responseConverter = new ResponseConverter("Выберите архивный цикл для разархивирования");
@@ -69,7 +67,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
                     buttonsSets = (ButtonsSet.ArchiveExercisesList, ButtonsSet.ArchiveList);
                     break;
                 default:
-                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.ObjectType}");
+                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
             }
 
             informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
@@ -79,7 +77,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
 
         internal SettingsCH UnArchiveCommand()
         {
-            domain = db.GetDomainWithId(callbackQueryParser.ObjectId, callbackQueryParser.ObjectType);
+            domain = db.GetDomainWithId(callbackQueryParser.DomainId, callbackQueryParser.DomainType);
             domain.IsArchive = false;
 
             ResponseConverter responseConverter = new ResponseConverter($"{domain.Name} разархивирован!");
@@ -104,22 +102,22 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
         {
             ResponseConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
-            string[] additionalParameters;
+            Dictionary<string, string> additionalParameters;
 
-            switch (callbackQueryParser.ObjectType)
+            switch (callbackQueryParser.DomainType)
             {
                 case "Excel":
                     responseConverter = new ResponseConverter("Выберите временной промежуток формирования данных от последней тренировки");
                     buttonsSets = (ButtonsSet.Period, ButtonsSet.Settings);
-                    additionalParameters = ["Export/Excel"];
+                    additionalParameters = new() { { "Act", "Export/Excel" } };
                     break;
                 case "JSON":
                     responseConverter = new ResponseConverter("Выберите временной промежуток формирования данных от последней тренировки");
                     buttonsSets = (ButtonsSet.Period, ButtonsSet.Settings);
-                    additionalParameters = ["Export/JSON"];
+                    additionalParameters = new() { { "Act", "Export/JSON" } };
                     break;
                 default:
-                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.ObjectType}");
+                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
             }
 
             informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets, additionalParameters);
@@ -132,7 +130,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
             ResponseConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
-            switch (callbackQueryParser.ObjectType)
+            switch (callbackQueryParser.DomainType)
             {
                 case "Cycles":
                     responseConverter = new ResponseConverter("Выберите интересующие настройки для циклов");
@@ -147,7 +145,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
                     buttonsSets = (ButtonsSet.SettingExercises, ButtonsSet.SettingDay);
                     break;
                 default:
-                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.ObjectType}");
+                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
             }
 
             informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
@@ -160,7 +158,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
             ResponseConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
-            switch (callbackQueryParser.ObjectType)
+            switch (callbackQueryParser.DomainType)
             {
                 case "Cycle":
                     currentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.AddCycle;
@@ -263,7 +261,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
             ResponseConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
-            switch (callbackQueryParser.ObjectType)
+            switch (callbackQueryParser.DomainType)
             {
                 case "Cycles":
                     responseConverter = new ResponseConverter("Выберите интересующий цикл");
@@ -278,7 +276,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
                     buttonsSets = (ButtonsSet.ExercisesList, ButtonsSet.SettingExercises);
                     break;
                 default:
-                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.ObjectType}");
+                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
             }
 
             informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
@@ -291,10 +289,10 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
             ResponseConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
-            switch (callbackQueryParser.ObjectType)
+            switch (callbackQueryParser.DomainType)
             {
                 case "Cycle":
-                    currentUserContext.DataManager.SetDomain(currentUserContext.UserInformation.Cycles.First(c => c.Id == callbackQueryParser.ObjectId));
+                    currentUserContext.DataManager.SetDomain(currentUserContext.UserInformation.Cycles.First(c => c.Id == callbackQueryParser.DomainId));
 
                     responseConverter = new ResponseConverter($"Выберите интересующую настройку для цикла {currentUserContext.DataManager.CurrentCycle.Name}");
                     buttonsSets = (ButtonsSet.SettingCycle, ButtonsSet.CycleList);
@@ -304,14 +302,14 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
                     switch (currentUserContext.Navigation.QueryFrom)
                     {
                         case QueryFrom.NoMatter:
-                            currentUserContext.DataManager.SetDomain(currentUserContext.ActiveCycle.Days.First(d => d.Id == callbackQueryParser.ObjectId));
+                            currentUserContext.DataManager.SetDomain(currentUserContext.ActiveCycle.Days.First(d => d.Id == callbackQueryParser.DomainId));
 
                             responseConverter = new ResponseConverter("Выберите упраженение");
                             buttonsSets = (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout);
                             break;
 
                         case QueryFrom.Settings:
-                            currentUserContext.DataManager.SetDomain(currentUserContext.DataManager.CurrentCycle.Days.First(d => d.Id == callbackQueryParser.ObjectId));
+                            currentUserContext.DataManager.SetDomain(currentUserContext.DataManager.CurrentCycle.Days.First(d => d.Id == callbackQueryParser.DomainId));
 
                             responseConverter = new ResponseConverter($"Выберите интересующую настройку для дня {currentUserContext.DataManager.CurrentDay.Name}");
                             buttonsSets = (ButtonsSet.SettingDay, ButtonsSet.DaysList);
@@ -322,7 +320,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
                     break;
 
                 case "Exercise":
-                    currentUserContext.DataManager.SetDomain(currentUserContext.DataManager.CurrentDay.Exercises.First(e => e.Id == callbackQueryParser.ObjectId));
+                    currentUserContext.DataManager.SetDomain(currentUserContext.DataManager.CurrentDay.Exercises.First(e => e.Id == callbackQueryParser.DomainId));
 
                     switch (currentUserContext.Navigation.QueryFrom)
                     {
@@ -343,7 +341,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
                     }
                     break;
                 default:
-                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.ObjectType}");
+                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
             }
 
             informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
@@ -356,7 +354,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
             ResponseConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
-            switch (callbackQueryParser.ObjectType)
+            switch (callbackQueryParser.DomainType)
             {
                 case "Cycle":
                     if (currentUserContext.DataManager.CurrentCycle.IsActive)
@@ -382,7 +380,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
                     buttonsSets = (ButtonsSet.SettingCycle, ButtonsSet.SettingCycles);
                     break;
                 default:
-                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.ObjectType}");
+                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
             }
 
             informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
@@ -392,12 +390,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
 
         internal SettingsCH ArchivingCommand()
         {
-            domain = currentUserContext.GetCurrentDomainFromDataManager(callbackQueryParser.ObjectType);
+            domain = currentUserContext.GetCurrentDomainFromDataManager(callbackQueryParser.DomainType);
 
             ResponseConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
-            switch (callbackQueryParser.ObjectType)
+            switch (callbackQueryParser.DomainType)
             {
                 case "Cycle":
                     if (currentUserContext.DataManager.CurrentCycle.IsActive)
@@ -425,7 +423,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
                     buttonsSets = (ButtonsSet.ExercisesList, ButtonsSet.SettingExercises);
                     break;
                 default:
-                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.ObjectType}");
+                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
             }
 
             domain.IsArchive = true;
@@ -442,7 +440,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
             ResponseConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
-            switch (callbackQueryParser.ObjectType)
+            switch (callbackQueryParser.DomainType)
             {
                 case "Day":
                     responseConverter = new ResponseConverter($"Выберите цикл, в который хотите перенести день {currentUserContext.DataManager.CurrentDay.Name}");
@@ -453,7 +451,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
                     buttonsSets = (ButtonsSet.ReplaceToDay, ButtonsSet.SettingExercise);
                     break;
                 default:
-                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.ObjectType}");
+                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
             }
 
             informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
@@ -466,10 +464,10 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
             ResponseConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
-            switch (callbackQueryParser.ObjectType)
+            switch (callbackQueryParser.DomainType)
             {
                 case "Cycle":
-                    if (currentUserContext.DataManager.CurrentDay.CycleId == callbackQueryParser.ObjectId)
+                    if (currentUserContext.DataManager.CurrentDay.CycleId == callbackQueryParser.DomainId)
                     {
                         responseConverter = new ResponseConverter($"Ошибка при переносе дня!", "Нельзя перенести день в тот же самый цикл",
                             $"Выберите цикл, в который хотите перенести день {currentUserContext.DataManager.CurrentDay.Name}");
@@ -480,15 +478,15 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
                         return this;
                     }
 
-                    currentUserContext.DataManager.CurrentDay.CycleId = callbackQueryParser.ObjectId;
+                    currentUserContext.DataManager.CurrentDay.CycleId = callbackQueryParser.DomainId;
                     db.Days.Update(currentUserContext.DataManager.CurrentDay);
 
-                    responseConverter = new ResponseConverter($"День {currentUserContext.DataManager.CurrentDay.Name}, перенесён в цикл {callbackQueryParser.ObjectName}",
+                    responseConverter = new ResponseConverter($"День {currentUserContext.DataManager.CurrentDay.Name}, перенесён в цикл {callbackQueryParser.DomainName}",
                         "Выберите интересующий цикл");
                     break;
 
                 case "Day":
-                    if (currentUserContext.DataManager.CurrentExercise.DayId == callbackQueryParser.ObjectId)
+                    if (currentUserContext.DataManager.CurrentExercise.DayId == callbackQueryParser.DomainId)
                     {
                         responseConverter = new ResponseConverter($"Ошибка при переносе упражнения!", "Нельзя перенести упражнение в тот же самый день",
                             $"Выберите день, в который хотите перенести упражнение {currentUserContext.DataManager.CurrentExercise.Name}");
@@ -499,14 +497,14 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
                         return this;
                     }
 
-                    currentUserContext.DataManager.CurrentExercise.DayId = callbackQueryParser.ObjectId;
+                    currentUserContext.DataManager.CurrentExercise.DayId = callbackQueryParser.DomainId;
                     db.Exercises.Update(currentUserContext.DataManager.CurrentExercise);
 
-                    responseConverter = new ResponseConverter($"Упражнение {currentUserContext.DataManager.CurrentExercise.Name}, перенесёно в день {callbackQueryParser.ObjectName}",
+                    responseConverter = new ResponseConverter($"Упражнение {currentUserContext.DataManager.CurrentExercise.Name}, перенесёно в день {callbackQueryParser.DomainName}",
                         "Выберите интересующий цикл");
                     break;
                 default:
-                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.ObjectType}");
+                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
             }
 
             buttonsSets = (ButtonsSet.CycleList, ButtonsSet.SettingCycles);
@@ -521,7 +519,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
             ResponseConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
-            switch (callbackQueryParser.ObjectType)
+            switch (callbackQueryParser.DomainType)
             {
                 case "Cycle":
                     currentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.ChangeNameCycle;
@@ -544,7 +542,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
                     buttonsSets = (ButtonsSet.None, ButtonsSet.SettingExercise);
                     break;
                 default:
-                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.ObjectType}");
+                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
             }
 
             informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
@@ -557,133 +555,29 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
             ResponseConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
-            IQueryable<ResultExercise> resultsExercises = default;
+            IQueryable<ResultExercise> resultsExercises = callbackQueryParser.AdditionalParameters.Any(a => a.Contains("Export"))
+                                                            ? db.ResultsExercises
+                                                                            .Where(re => currentUserContext.GetUserExercisesIds().Contains(re.ExerciseId))
+                                                            : default;
+         
+            string operation = callbackQueryParser.AdditionalParameters.First();
+            int monthFilterPeriod = int.Parse(callbackQueryParser.AdditionalParameters.Skip(1).First());
 
-            if (!string.IsNullOrEmpty(callbackQueryParser.ObjectType) && callbackQueryParser.AdditionalParameter.Contains("Export"))
+            switch (operation)
             {
-                resultsExercises = db.ResultsExercises
-                                                                        .Where(re => currentUserContext.GetUserExercisesIds().Contains(re.ExerciseId));
-            }
+                case "Export/Excel":
+                    byte[] excelFile = ExcelExportHelper.GetExcelFile(currentUserContext.UserInformation.Cycles, resultsExercises, monthFilterPeriod);
 
-            int monthFilterPeriod = 0;
-
-            switch (callbackQueryParser.ObjectType)
-            {
-                case "Month":
-                    monthFilterPeriod = 1;
-
-                    switch (callbackQueryParser.AdditionalParameter)
-                    {
-                        case "Export/Excel":
-
-                            // TODO: перевести period в свойство callbackQueryParser; убрать метод Period в целом
-
-                            byte[] excelFile = ExcelExportHelper.GetExcelFile(currentUserContext.UserInformation.Cycles, resultsExercises, monthFilterPeriod);
-
-                            MemoryStream memoryStream = new MemoryStream(excelFile);
-                            // вынести в одно место после рефакторинга выше
-                            informationSet = new FileInformationSet(memoryStream, "Workout.xlsx", $"Тренировки за последний месяц", (ButtonsSet.Main, ButtonsSet.None));
-                            break;
-                        case "Export/JSON":
-
-                            // TODO: перевести period в свойство callbackQueryParser; убрать метод Period в целом
-                            string json = JsonExportHelper.GetJSONFile(currentUserContext.UserInformation.Cycles, resultsExercises, monthFilterPeriod);
-                            byte[] byteJson = new UTF8Encoding(true).GetBytes(json);
-
-                            MemoryStream memoryStream2 = new MemoryStream(byteJson);
-
-
-                            informationSet = new FileInformationSet(memoryStream2, "Workout.json", $"Тренировки за последний месяц", (ButtonsSet.Main, ButtonsSet.None));
-
-                            break;
-                    }
-
+                    informationSet = new FileInformationSet(new MemoryStream(excelFile), "Workout.xlsx", $"Тренировки успешно экспортированы!", (ButtonsSet.Main, ButtonsSet.None));
                     break;
+                case "Export/JSON":
+                    string json = JsonExportHelper.GetJSONFile(currentUserContext.UserInformation.Cycles, resultsExercises, monthFilterPeriod);
+                    byte[] byteJson = new UTF8Encoding(true).GetBytes(json);
 
-                case "Quarter":
-                    monthFilterPeriod = 3;
-
-                    switch (callbackQueryParser.AdditionalParameter)
-                    {
-                        case "Export/Excel":
-
-                            // TODO: перевести period в свойство callbackQueryParser; убрать метод Period в целом
-                            byte[] excelFile = ExcelExportHelper.GetExcelFile(currentUserContext.UserInformation.Cycles, resultsExercises, monthFilterPeriod);
-
-                            MemoryStream stream = new MemoryStream(excelFile);
-                            // вынести в одно место после рефакторинга выше
-                            informationSet = new FileInformationSet(stream, "Workout.xlsx", $"Тренировки за последний квартал", (ButtonsSet.Main, ButtonsSet.None));
-                            break;
-                    }
-
+                    informationSet = new FileInformationSet(new MemoryStream(byteJson), "Workout.json", $"Тренировки успешно экспортированы!", (ButtonsSet.Main, ButtonsSet.None));
                     break;
-
-                case "SixMonths":
-                    monthFilterPeriod = 6;
-
-                    switch (callbackQueryParser.AdditionalParameter)
-                    {
-                        case "Export/Excel":
-                            // TODO: перевести period в свойство callbackQueryParser; убрать метод Period в целом
-                            byte[] excelFile = ExcelExportHelper.GetExcelFile(currentUserContext.UserInformation.Cycles, resultsExercises, monthFilterPeriod);
-
-                            MemoryStream stream = new MemoryStream(excelFile);
-                            // вынести в одно место после рефакторинга выше
-                            informationSet = new FileInformationSet(stream, "Workout.xlsx", $"Тренировки за последние полгода", (ButtonsSet.Main, ButtonsSet.None));
-                            break;
-                    }
-
-                    break;
-
-                case "Year":
-                    monthFilterPeriod = 12;
-
-                    switch (callbackQueryParser.AdditionalParameter)
-                    {
-                        case "Export/Excel":
-                            // TODO: перевести period в свойство callbackQueryParser; убрать метод Period в целом
-                            byte[] excelFile = ExcelExportHelper.GetExcelFile(currentUserContext.UserInformation.Cycles, resultsExercises, monthFilterPeriod);
-
-                            MemoryStream stream = new MemoryStream(excelFile);
-                            //вынести в одно место после рефакторинга выше
-                            informationSet = new FileInformationSet(stream, "Workout.xlsx", $"Тренировки за последний год", (ButtonsSet.Main, ButtonsSet.None));
-                            break;
-                    }
-
-                    break;
-
-                case "FullTime":
-                    monthFilterPeriod = 0;
-
-                    switch (callbackQueryParser.AdditionalParameter)
-                    {
-                        case "Export/Excel":
-                            // TODO: перевести period в свойство callbackQueryParser; убрать метод Period в целом
-                            byte[] excelFile = ExcelExportHelper.GetExcelFile(currentUserContext.UserInformation.Cycles, resultsExercises, monthFilterPeriod);
-
-                            MemoryStream stream = new MemoryStream(excelFile);
-                            // вынести в одно место после рефакторинга выше
-                            informationSet = new FileInformationSet(stream, "Workout.xlsx", $"Тренировки за всё время", (ButtonsSet.Main, ButtonsSet.None));
-                            break;
-
-                        case "Export/JSON":
-
-                            // TODO: перевести period в свойство callbackQueryParser; убрать метод Period в целом
-                            string json = JsonExportHelper.GetJSONFile(currentUserContext.UserInformation.Cycles, resultsExercises, monthFilterPeriod);
-                            byte[] byteJson = new UTF8Encoding(true).GetBytes(json);
-
-                            MemoryStream memoryStream2 = new MemoryStream(byteJson);
-
-
-                            informationSet = new FileInformationSet(memoryStream2, "Workout.json", $"Тренировки за последний месяц", (ButtonsSet.Main, ButtonsSet.None));
-                            break;
-                    }
-
-                    break;
-
                 default:
-                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.ObjectType}");
-
+                    throw new NotImplementedException($"Неожиданный {nameof(operation)}: {operation}");
             }
 
             return this;
@@ -694,7 +588,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
             ResponseConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
-            switch (callbackQueryParser.ObjectType)
+            switch (callbackQueryParser.DomainType)
             {
                 case "Account":
                     responseConverter = new ResponseConverter("Вы уверены?", "Удаление аккаунта приведёт к полной и безвозвратной потере информации о ваших тренировках");
@@ -716,7 +610,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
                     buttonsSets = (ButtonsSet.ConfirmDeleteExercise, ButtonsSet.SettingExercise);
                     break;
                 default:
-                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.ObjectType}");
+                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
             }
 
             informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
@@ -726,12 +620,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
 
         internal SettingsCH ConfirmDeleteCommand()
         {
-            domain = currentUserContext.GetCurrentDomainFromDataManager(callbackQueryParser.ObjectType);
+            domain = currentUserContext.GetCurrentDomainFromDataManager(callbackQueryParser.DomainType);
 
             ResponseConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
-            switch (callbackQueryParser.ObjectType)
+            switch (callbackQueryParser.DomainType)
             {
                 case "Cycle":
                     if (currentUserContext.DataManager.CurrentCycle.IsActive)
@@ -759,7 +653,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandler.CallBackComman
                     buttonsSets = (ButtonsSet.ExercisesList, ButtonsSet.SettingExercises);
                     break;
                 default:
-                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.ObjectType}");
+                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
             }
 
             currentUserContext.DataManager.ResetDomain(domain);

@@ -1,7 +1,6 @@
 ﻿#region using
-
+using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.Model;
-
 #endregion
 
 namespace WorkoutStorageBot.BusinessLogic.SessionContext
@@ -145,6 +144,52 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
                     ResetExercise();
                     break;
             }
+        }
+
+        internal string GetEnumDomainType (IDomain domain)
+        {
+            string domainType = string.Empty;
+
+            switch (domain)
+            {
+                case Cycle:
+                    domainType = "Cycle";
+                    break;
+                case Day:
+                    domainType = "Day";
+                    break;
+
+                case Exercise:
+                    domainType = "Exercise";
+                    break;
+                default:
+                    throw new NotImplementedException($"Неожиданный domain: {domain}");
+            }
+            
+            return domainType;
+        }
+
+        internal DomainType GetStringDomainType(IDomain domain)
+        {
+            DomainType domainType;
+
+            switch (domain)
+            {
+                case Cycle:
+                    domainType = DomainType.Cycle;
+                    break;
+                case Day:
+                    domainType = DomainType.Day;
+                    break;
+
+                case Exercise:
+                    domainType = DomainType.Exercise;
+                    break;
+                default:
+                    throw new NotImplementedException($"Неожиданный domain: {domain}");
+            }
+
+            return domainType;
         }
     }
 }

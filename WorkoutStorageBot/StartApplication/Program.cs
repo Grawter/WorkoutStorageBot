@@ -8,7 +8,7 @@ using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using WorkoutStorageBot.BusinessLogic.Handlers;
-using WorkoutStorageBot.Helpers.Logger;
+using WorkoutStorageBot.Logger;
 using WorkoutStorageBot.Model;
 
 #endregion

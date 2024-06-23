@@ -25,17 +25,17 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
             inlineKeyboardButtonsMain = new();
         }
 
-        internal IReplyMarkup GetInlineButtons(ButtonsSet buttonsSet, params string[] additionalParameters)
+        internal IReplyMarkup GetInlineButtons(ButtonsSet buttonsSet, Dictionary<string, string> additionalParameters = null)
         {
             return new InlineKeyboardMarkup(GetButtons(buttonsSet, ButtonsSet.None, additionalParameters));
         }
 
-        internal IReplyMarkup GetInlineButtons((ButtonsSet buttonsSet, ButtonsSet backButtonsSet) buttonsSets, params string[] additionalParameters)
+        internal IReplyMarkup GetInlineButtons((ButtonsSet buttonsSet, ButtonsSet backButtonsSet) buttonsSets, Dictionary<string, string> additionalParameters = null)
         {
             return new InlineKeyboardMarkup(GetButtons(buttonsSets.buttonsSet, buttonsSets.backButtonsSet, additionalParameters));
         }
 
-        private IEnumerable<IEnumerable<InlineKeyboardButton>> GetButtons(ButtonsSet buttonsSet, ButtonsSet backButtonsSet, params string[] additionalParameters)
+        private IEnumerable<IEnumerable<InlineKeyboardButton>> GetButtons(ButtonsSet buttonsSet, ButtonsSet backButtonsSet, Dictionary<string, string> additionalParameters)
         {
             switch (buttonsSet)
             {
@@ -47,12 +47,12 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                 #region Workout area
                 case ButtonsSet.DaysListWithLastWorkout:
                     AddInlineButton("Последняя тренировка", "1|LastResult|Exercises");
-                    GetDaysInButtons(CurrentUserContext.ActiveCycle.Days.Where(d => !d.IsArchive), ActionForList.Select);
+                    GetDomainsInButtons(CurrentUserContext.ActiveCycle.Days.Where(d => !d.IsArchive), "Selected");
                     break;
 
                 case ButtonsSet.ExercisesListWithLastWorkoutForDay:
                     AddInlineButton("Последние результаты выбранного дня", $"1|LastResult|Day");
-                    GetExercisesInButtons(CurrentUserContext.DataManager.CurrentDay.Exercises.Where(e => !e.IsArchive), ActionForList.Select);
+                    GetDomainsInButtons(CurrentUserContext.DataManager.CurrentDay.Exercises.Where(e => !e.IsArchive), "Selected");
                     break;
 
                 case ButtonsSet.SaveResultsExercise:
@@ -75,7 +75,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                     break;
 
                 case ButtonsSet.CycleList:
-                    GetCyclesInButtons(CurrentUserContext.UserInformation.Cycles.Where(c => !c.IsArchive), ActionForList.Select);
+                    GetDomainsInButtons(CurrentUserContext.UserInformation.Cycles.Where(c => !c.IsArchive), "Selected");
                     break;
 
                 case ButtonsSet.SettingCycle:
@@ -94,7 +94,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                     break;
 
                 case ButtonsSet.DaysList:
-                    GetDaysInButtons(CurrentUserContext.DataManager.CurrentCycle.Days.Where(d => !d.IsArchive), ActionForList.Select);
+                    GetDomainsInButtons(CurrentUserContext.DataManager.CurrentCycle.Days.Where(d => !d.IsArchive), "Selected");
                     break;
 
                 case ButtonsSet.SettingDay:
@@ -107,7 +107,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                     break;
 
                 case ButtonsSet.ReplaceToCycle:
-                    GetCyclesInButtons(CurrentUserContext.UserInformation.Cycles.Where(c => !c.IsArchive), ActionForList.Move);
+                    GetDomainsInButtons(CurrentUserContext.UserInformation.Cycles.Where(c => !c.IsArchive), "ReplaceTo");
                     break;
 
                 case ButtonsSet.SettingExercises:
@@ -117,7 +117,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                     break;
 
                 case ButtonsSet.ExercisesList:
-                    GetExercisesInButtons(CurrentUserContext.DataManager.CurrentDay.Exercises.Where(e => !e.IsArchive), ActionForList.Select);
+                    GetDomainsInButtons(CurrentUserContext.DataManager.CurrentDay.Exercises.Where(e => !e.IsArchive), "Selected");
                     break;
 
                 case ButtonsSet.SettingExercise:
@@ -131,7 +131,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                 case ButtonsSet.ReplaceToDay:
                     foreach (Cycle cycle in CurrentUserContext.UserInformation.Cycles.Where(c => !c.IsArchive))
                     {
-                        GetDaysInButtons(cycle.Days.Where(c => !c.IsArchive), ActionForList.Move);
+                        GetDomainsInButtons(cycle.Days.Where(c => !c.IsArchive), "ReplaceTo");
                     }
                     break;
 
@@ -161,12 +161,12 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                     AddInlineButton("Архивированные упражнения", "3|Archive|Exercises");
                     break;
                 case ButtonsSet.ArchiveCyclesList:
-                    GetCyclesInButtons(CurrentUserContext.UserInformation.Cycles.Where(c => c.IsArchive), ActionForList.UnArchive);
+                    GetDomainsInButtons(CurrentUserContext.UserInformation.Cycles.Where(c => c.IsArchive), "UnArchive");
                     break;
                 case ButtonsSet.ArchiveDaysList:
                     foreach(Cycle cycle in CurrentUserContext.UserInformation.Cycles.Where(c => !c.IsArchive))
                     {
-                        GetDaysInButtons(cycle.Days.Where(d => d.IsArchive), ActionForList.UnArchive);
+                        GetDomainsInButtons(cycle.Days.Where(d => d.IsArchive), "UnArchive");
                     }
                     break;
                 case ButtonsSet.ArchiveExercisesList:
@@ -174,7 +174,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                     {
                         foreach (Day day in cycle.Days.Where(c => !c.IsArchive))
                         {
-                            GetExercisesInButtons(day.Exercises.Where(e => e.IsArchive), ActionForList.UnArchive);
+                            GetDomainsInButtons(day.Exercises.Where(e => e.IsArchive), "UnArchive");
                         }
                     }
                     break;
@@ -187,13 +187,11 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                     break;
 
                 case ButtonsSet.Period:
-                    string additionalParameter = additionalParameters.First();
-
-                    AddInlineButton("Месяц", $"3|Period|Month", additionalParameter);
-                    AddInlineButton("Квартал", $"3|Period|Quarter", additionalParameter);
-                    AddInlineButton("Полгода", $"3|Period|SixMonths", additionalParameter);
-                    AddInlineButton("Год", $"3|Period|Year", additionalParameter);
-                    AddInlineButton("За всё время", "3|Period|FullTime", additionalParameter);
+                    AddInlineButton("Месяц", $"3|Period||||{additionalParameters["Act"]}|1");
+                    AddInlineButton("Квартал", $"3|Period||||{additionalParameters["Act"]}|3");
+                    AddInlineButton("Полгода", $"3|Period||||{additionalParameters["Act"]}|6");
+                    AddInlineButton("Год", $"3|Period||||{additionalParameters["Act"]}|12");
+                    AddInlineButton("За всё время", $"3|Period||||{additionalParameters["Act"]}|0");
                     break;
                 #endregion
 
@@ -228,9 +226,9 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
             return inlineKeyboardButtonsMain;
         }
 
-        private void AddInlineButton(string titleButton, string callBackDataWithoutSetId, string? additionalParameter = null,  bool onNewLine = true)
+        private void AddInlineButton(string titleButton, string callBackDataWithoutSetId, bool onNewLine = true)
         {
-            string callBackData = AddAdditionalParameterAndCallBackSetId(additionalParameter, callBackDataWithoutSetId);
+            string callBackData = AddCallBackSetId(callBackDataWithoutSetId);
 
             if (onNewLine)
             {
@@ -247,13 +245,9 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
             }
         }
 
-        private string AddAdditionalParameterAndCallBackSetId(string additionalParameter, string callBackData)
+        private string AddCallBackSetId(string callBackData)
         {
-            StringBuilder sb = new StringBuilder(callBackData)
-                                                .Append("|");
-
-            if (!string.IsNullOrEmpty(additionalParameter))
-                sb.Append(additionalParameter);
+            StringBuilder sb = new StringBuilder(callBackData);
 
             sb.Append("|");
             sb.Append(CurrentUserContext.CallBackId);
@@ -261,78 +255,13 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
             return sb.ToString();
         }
 
-        private void GetCyclesInButtons(IEnumerable<Cycle> source, ActionForList actionForList)
+        private void GetDomainsInButtons(IEnumerable<IDomain> source, string subDirection)
         {
-            switch (actionForList)
-            {
-                case ActionForList.Select:
-                    foreach (Cycle cycle in source)
-                    {
-                        AddInlineButton(cycle.Name, $"3|Selected|Cycle|{cycle.Id}");
-                    }
-                    break;
-                case ActionForList.UnArchive:
-                    foreach (Cycle cycle in source)   
-                    {
-                        AddInlineButton(cycle.Name, $"3|UnArchive|Cycle|{cycle.Id}");
-                    }
-                    break;
-                case ActionForList.Move:
-                    foreach (Cycle cycle in source)
-                    {
-                        AddInlineButton(cycle.Name, $"3|ReplaceTo|Cycle|{cycle.Id}|{cycle.Name}");
-                    }
-                    break;
-                default:
-                    throw new NotImplementedException($"Неожиданный actionForList: {actionForList}");
-            }
-        }
+            string domainType = CurrentUserContext.DataManager.GetDomainType(source.First());
 
-        private void GetDaysInButtons(IEnumerable<Day> source, ActionForList actionForList)
-        {
-            switch (actionForList)
+            foreach (IDomain domain in source)
             {
-                case ActionForList.Select:
-                    foreach (Day day in source)
-                    {
-                        AddInlineButton(day.Name, $"3|Selected|Day|{day.Id}");
-                    }
-                    break;
-                case ActionForList.UnArchive:
-                    foreach (Day day in source)
-                    {
-                        AddInlineButton(day.Name, $"3|UnArchive|Day|{day.Id}");
-                    }
-                    break;
-                case ActionForList.Move:
-                    foreach (Day day in source)
-                    {
-                        AddInlineButton(day.Name, $"3|ReplaceTo|Day|{day.Id}|{day.Name}");
-                    }
-                    break;
-                default:
-                    throw new NotImplementedException($"Неожиданный actionForList: {actionForList}");
-            }    
-        }
-
-        private void GetExercisesInButtons(IEnumerable<Exercise> source, ActionForList actionForList)
-        {
-            switch (actionForList)
-            {
-                case ActionForList.Select:
-                    foreach (Exercise exercise in source)
-                    {
-                        AddInlineButton(exercise.Name, $"3|Selected|Exercise|{exercise.Id}");
-                    }
-                    break;
-                case ActionForList.UnArchive:
-                    foreach (Exercise exercise in source)
-                    {
-                        AddInlineButton(exercise.Name, $"3|UnArchive|Exercise|{exercise.Id}");
-                    }
-                    break;
-                default:
-                    throw new NotImplementedException($"Неожиданный actionForList: {actionForList}");
+                AddInlineButton(domain.Name, $"3|{subDirection}|{domainType}|{domain.Id}");
             }
         }
     }

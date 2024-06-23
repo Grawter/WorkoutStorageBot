@@ -1,6 +1,4 @@
-﻿
-
-namespace WorkoutStorageBot.Helpers.Logger
+﻿namespace WorkoutStorageBot.Logger
 {
     public class ConsoleLogger : ILogger
     {
