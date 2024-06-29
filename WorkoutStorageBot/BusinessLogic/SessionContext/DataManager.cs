@@ -146,50 +146,18 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
             }
         }
 
-        internal string GetEnumDomainType (IDomain domain)
+        internal DomainType GetDomainType (IDomain domain)
         {
-            string domainType = string.Empty;
-
-            switch (domain)
+            return domain switch
             {
-                case Cycle:
-                    domainType = "Cycle";
-                    break;
-                case Day:
-                    domainType = "Day";
-                    break;
-
-                case Exercise:
-                    domainType = "Exercise";
-                    break;
-                default:
-                    throw new NotImplementedException($"Неожиданный domain: {domain}");
-            }
-            
-            return domainType;
-        }
-
-        internal DomainType GetStringDomainType(IDomain domain)
-        {
-            DomainType domainType;
-
-            switch (domain)
-            {
-                case Cycle:
-                    domainType = DomainType.Cycle;
-                    break;
-                case Day:
-                    domainType = DomainType.Day;
-                    break;
-
-                case Exercise:
-                    domainType = DomainType.Exercise;
-                    break;
-                default:
-                    throw new NotImplementedException($"Неожиданный domain: {domain}");
-            }
-
-            return domainType;
+                Cycle
+                    => DomainType.Cycle,
+                Day
+                    => DomainType.Day,
+                Exercise
+                     => DomainType.Exercise,
+                _ => throw new NotImplementedException($"Неожиданный domain: {domain.GetType().FullName}")
+            };
         }
     }
 }

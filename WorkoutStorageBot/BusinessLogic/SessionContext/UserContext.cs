@@ -1,5 +1,8 @@
 ﻿#region using
 
+using System;
+using System.Diagnostics;
+using Telegram.Bot.Exceptions;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.Helpers.Crypto;
 using WorkoutStorageBot.Model;

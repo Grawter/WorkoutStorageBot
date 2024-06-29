@@ -180,11 +180,15 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                     break;
                 #endregion
 
-                #region Period area
+                #region Export area
                 case ButtonsSet.Export:
                     AddInlineButton("Экспортировать тренировки в Excel", "3|ExportTo|Excel");
                     AddInlineButton("Экспортировать тренировки в JSON", "3|ExportTo|JSON");
                     break;
+
+                #endregion
+
+                #region Period area
 
                 case ButtonsSet.Period:
                     AddInlineButton("Месяц", $"3|Period||||{additionalParameters["Act"]}|1");
@@ -257,7 +261,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
 
         private void GetDomainsInButtons(IEnumerable<IDomain> source, string subDirection)
         {
-            string domainType = CurrentUserContext.DataManager.GetDomainType(source.First());
+            string domainType = CurrentUserContext.DataManager.GetDomainType(source.First()).ToString();
 
             foreach (IDomain domain in source)
             {

@@ -1,5 +1,6 @@
 ﻿#region using
 using Newtonsoft.Json;
+using System.Text;
 using WorkoutStorageBot.Model;
 #endregion
 
@@ -21,7 +22,13 @@ namespace WorkoutStorageBot.Helpers.Export
 
         private static string RemoveAdminInfo(string json)
         {
-            return json.Remove(json.IndexOf(",\"UserInformationId\""));
+            int startIndexDelete = json.IndexOf(",\"UserInformationId\"");
+            int lengthToDelete = json.Length - startIndexDelete - 2;
+
+            var sb = new StringBuilder(json);
+
+            sb.Remove(startIndexDelete, lengthToDelete);
+            return sb.ToString();
         }
     }
 }
