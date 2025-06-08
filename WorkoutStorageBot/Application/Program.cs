@@ -9,7 +9,6 @@ using WorkoutStorageBot.Application.BotTools.Listener;
 using WorkoutStorageBot.Application.BotTools.Logging;
 using WorkoutStorageBot.Application.BotTools.Sender;
 using WorkoutStorageBot.Application.Configuration;
-using WorkoutStorageBot.Application.ConsoleControl;
 using WorkoutStorageBot.BusinessLogic.CoreRepositories;
 using WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers;
 using WorkoutStorageBot.Core.Abstraction;
@@ -52,8 +51,6 @@ namespace WorkoutStorageBot.Application
                     serviceCollection.AddSingleton<CoreManager>(sp => new CoreManager(handlers, repositories, configurationData, sp.GetRequiredService<IBotResponseSender>(), loggerFactory, cancellationToken));
 
                     serviceCollection.AddSingleton<BotListener>();
-
-                    serviceCollection.AddSingleton<ConsoleExecutor>();
                 })
                 .Build();
 

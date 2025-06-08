@@ -419,22 +419,22 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers
             return informationSet;
         }
 
-        private bool CheckingComplianceCallBackId(string currentCallBackId, out IInformationSet informationSet)
+        private bool CheckingComplianceCallBackId(string currentCallBackId, out IInformationSet? informationSet)
         {
-            if (CurrentUserContext.CallBackId != currentCallBackId)
+            if (CurrentUserContext.CallBackId == currentCallBackId)
             {
-                ResponseTextConverter responseConverter = new ResponseTextConverter("Действие не может быть выполнено, т.к. информация устарела",
-                        "Для продолжения работы используйте последний диалог или введите команду /Start");
-                (ButtonsSet, ButtonsSet) buttonsSet = (ButtonsSet.None, ButtonsSet.None);
+                informationSet = null;
 
-                informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSet);
-
-                return false;
+                return true;
             }
 
-            informationSet = null;
+            ResponseTextConverter responseConverter = new ResponseTextConverter("Действие не может быть выполнено, т.к. информация устарела",
+                    "Для продолжения работы используйте действия, предложенные ниже");
+            (ButtonsSet, ButtonsSet) buttonsSet = (ButtonsSet.Main, ButtonsSet.None);
 
-            return true;
+            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSet);
+
+            return false;
         }
     }
 }
