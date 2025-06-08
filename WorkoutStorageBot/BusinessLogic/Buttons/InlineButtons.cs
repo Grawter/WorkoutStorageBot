@@ -1,10 +1,11 @@
 ﻿#region using
-using System.Text;
+
 using WorkoutStorageBot.BusinessLogic.SessionContext;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
-using WorkoutStorageBot.Model;
 using WorkoutStorageBot.Helpers.Crypto;
+using WorkoutStorageBot.Model.Domain;
+
 #endregion
 
 namespace WorkoutStorageBot.BusinessLogic.Buttons
@@ -16,21 +17,21 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
 
         private UserContext CurrentUserContext { get; }
 
-        internal InlineButtons(UserContext userNavigator)
+        internal InlineButtons(UserContext userContext)
         {
-            CurrentUserContext = userNavigator;
+            CurrentUserContext = userContext;
 
-            CurrentUserContext.CallBackId = Cryptography.CreateRandomCallBackQueryId();
+            CurrentUserContext.CallBackId = CryptographyHelper.CreateRandomCallBackQueryId();
 
             inlineKeyboardButtonsMain = new();
         }
 
-        internal IReplyMarkup GetInlineButtons(ButtonsSet buttonsSet, Dictionary<string, string> additionalParameters = null)
+        internal ReplyMarkup GetInlineButtons(ButtonsSet buttonsSet, Dictionary<string, string> additionalParameters = null)
         {
             return new InlineKeyboardMarkup(GetButtons(buttonsSet, ButtonsSet.None, additionalParameters));
         }
 
-        internal IReplyMarkup GetInlineButtons((ButtonsSet buttonsSet, ButtonsSet backButtonsSet) buttonsSets, Dictionary<string, string> additionalParameters = null)
+        internal ReplyMarkup GetInlineButtons((ButtonsSet buttonsSet, ButtonsSet backButtonsSet) buttonsSets, Dictionary<string, string> additionalParameters = null)
         {
             return new InlineKeyboardMarkup(GetButtons(buttonsSets.buttonsSet, buttonsSets.backButtonsSet, additionalParameters));
         }
@@ -42,6 +43,10 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                 case ButtonsSet.Main:
                     AddInlineButton($"Начать тренировку", "1|Workout");
                     AddInlineButton($"Настройки", "3|Settings");
+
+                    if (CurrentUserContext.Roles == Roles.Admin)
+                        AddInlineButton("Админка", "4|Admin");
+
                     break;
 
                 #region Workout area
@@ -200,26 +205,45 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                 #endregion
 
                 #region Confirm delete area
-                case ButtonsSet.ConfirmDeleteExercise:
-                    AddInlineButton("Да, удалить упражнение", "3|ConfirmDelete|Exercise");
-                    break;
-
-                case ButtonsSet.ConfirmDeleteDay:
-                    AddInlineButton("Да, удалить день", "3|ConfirmDelete|Day");
-                    break;
-
-                case ButtonsSet.ConfirmDeleteCycle:
-                    AddInlineButton("Да, удалить цикл", "3|ConfirmDelete|Cycle");
-                    break;
-
-                case ButtonsSet.ConfirmDeleteAccount:
-                    AddInlineButton("Да, удалить аккаунт", "3|ConfirmDeleteAccount");
+                case ButtonsSet.ConfirmDelete:
+                    AddInlineButton($"Да, удалить {additionalParameters["Name"]}", $"3|ConfirmDelete|{additionalParameters["DomainType"]}");
                     break;
                 case ButtonsSet.None:
                     break;
                 default:
                     throw new NotImplementedException($"Неожиданный buttonsSet: {buttonsSet}");
                 #endregion
+
+                #endregion
+
+                #region Admin area
+
+                case ButtonsSet.Admin:
+
+                    if (CurrentUserContext.Roles == Roles.Admin)
+                    {
+                        AddInlineButton("Логи", "4|Logs");
+                        AddInlineButton("Показать стартовую настройку", "4|ShowStartConfiguration");
+                        AddInlineButton("Сменить режим использования лимитов", "4|ChangeLimitsMods");
+                        AddInlineButton("Сменить режим белого списка", "4|ChangeWhiteListMode");
+                        AddInlineButton("Сменить white/black list у пользователя", "4|ChangeUserState");
+                        AddInlineButton("Удалить пользователя", "4|RemoveUser");
+                        AddInlineButton("Выключить бота", "4|DisableBot");
+                    }
+                        
+                    break;
+
+                case ButtonsSet.AdminLogs:
+                    
+                    if (CurrentUserContext.Roles == Roles.Admin)
+                    {
+                        AddInlineButton("Показать последний лог", "4|ShowLastLog");
+                        AddInlineButton("Показать последние логи ошибок", "4|ShowLastExceptionLogs");
+                        AddInlineButton("Найти лог по ID", "4|FindLogByID");
+                        AddInlineButton("Найти лог по eventID", "4|FindLogByEventID");
+                    }
+                        
+                    break;
 
                 #endregion
             }
@@ -230,9 +254,9 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
             return inlineKeyboardButtonsMain;
         }
 
-        private void AddInlineButton(string titleButton, string callBackDataWithoutSetId, bool onNewLine = true)
+        private void AddInlineButton(string titleButton, string callBackDataWithoutId, bool onNewLine = true)
         {
-            string callBackData = AddCallBackSetId(callBackDataWithoutSetId);
+            string callBackData = AddCallBackId(callBackDataWithoutId);
 
             if (onNewLine)
             {
@@ -249,14 +273,11 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
             }
         }
 
-        private string AddCallBackSetId(string callBackData)
+        private string AddCallBackId(string callBackDataWithoutId)
         {
-            StringBuilder sb = new StringBuilder(callBackData);
+            callBackDataWithoutId += $"|{CurrentUserContext.CallBackId}";
 
-            sb.Append("|");
-            sb.Append(CurrentUserContext.CallBackId);
-
-            return sb.ToString();
+            return callBackDataWithoutId;
         }
 
         private void GetDomainsInButtons(IEnumerable<IDomain> source, string subDirection)

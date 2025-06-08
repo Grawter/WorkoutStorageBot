@@ -14,5 +14,10 @@ namespace WorkoutStorageBot.BusinessLogic.Enums
         ChangeNameCycle,
         ChangeNameDay,
         ChangeNameExercise,
+
+        FindLogByID,
+        FindLogByEventID,
+        ChangeUserState,
+        DeleteUser,
     }
 }

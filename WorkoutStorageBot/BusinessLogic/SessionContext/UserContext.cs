@@ -1,11 +1,9 @@
 ﻿#region using
 
-using System;
-using System.Diagnostics;
-using Telegram.Bot.Exceptions;
 using WorkoutStorageBot.BusinessLogic.Enums;
+using WorkoutStorageBot.Helpers.Common;
 using WorkoutStorageBot.Helpers.Crypto;
-using WorkoutStorageBot.Model;
+using WorkoutStorageBot.Model.Domain;
 
 #endregion
 
@@ -14,24 +12,34 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
     internal class UserContext
     {
         internal UserInformation UserInformation { get; }
+        
+        internal Roles Roles { get; }
+        
         internal Cycle? ActiveCycle { get; private set; }
 
-        internal DataManager DataManager { get; private set; }
+        internal DataManager DataManager { get; }
 
-        internal Navigation Navigation { get; private set; }
+        internal Navigation Navigation { get; }
+
+        internal LimitsManager LimitsManager { get; }
 
         internal string CallBackId { get; set; }
 
-        internal UserContext(UserInformation userInformation)
+        internal UserContext(UserInformation userInformation, Roles currentRoles = Roles.User, bool isEnableLimit = true)
         {
-            UserInformation = userInformation;
+            UserInformation = CommonHelper.GetIfNotNull(userInformation);
+
+            Roles = currentRoles;
+
             ActiveCycle = UserInformation.Cycles.FirstOrDefault(c => c.IsActive);
 
             DataManager = new();
 
             Navigation = new();
 
-            CallBackId = Cryptography.CreateRandomCallBackQueryId();
+            LimitsManager = new(isEnableLimit);
+
+            CallBackId = CryptographyHelper.CreateRandomCallBackQueryId();
         }
 
         internal void UdpateCycleForce(Cycle cycle)
@@ -54,10 +62,10 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
             }
         }
 
-        internal IDomain? GetCurrentDomainFromDataManager(DomainType domainType)
+        internal IDomain? GetCurrentDomainFromDataManager(DomainType domainType, bool throwEx = true)
             => GetCurrentDomainFromDataManager(domainType.ToString());
 
-        internal IDomain? GetCurrentDomainFromDataManager(string domainType)
+        internal IDomain? GetCurrentDomainFromDataManager(string domainType, bool throwEx = true)
         {
             return domainType switch
             {
@@ -67,7 +75,7 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
                     => DataManager.CurrentDay,
                 "Exercise"
                      => DataManager.CurrentExercise,
-                _ => throw new NotImplementedException($"Неожиданный domainTyped: {domainType}")
+                _ => throwEx ? throw new NotImplementedException($"Неожиданный domainTyped: {domainType}") : null,
             };
         }
     }

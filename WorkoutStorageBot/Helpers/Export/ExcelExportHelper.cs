@@ -1,7 +1,11 @@
-﻿using OfficeOpenXml.Style;
+﻿#region using
+
+using OfficeOpenXml.Style;
 using OfficeOpenXml;
 using System.Drawing;
-using WorkoutStorageBot.Model;
+using WorkoutStorageBot.Model.Domain;
+
+#endregion
 
 namespace WorkoutStorageBot.Helpers.Export
 {
@@ -9,7 +13,7 @@ namespace WorkoutStorageBot.Helpers.Export
     {
         internal static byte[] GetExcelFile(List<Cycle> cycles, IQueryable<ResultExercise> resultsExercises, int monthFilterPeriod)
         {
-            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+            SetLicense();
 
             byte[] packageInfo;
 
@@ -109,6 +113,19 @@ namespace WorkoutStorageBot.Helpers.Export
 
                 return package.GetAsByteArray();
             }
+        }
+
+        private static void SetLicense()
+        {
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+            /*
+             * Для версий EPPlus 8 и выше. 
+             * Ставит текст в теги и комментарии к документу, что сделано при помощи EPPlus по некоммерческой лицензии
+             * для такого то проекта (указывается строка в аргументе).
+             * В целом, совсем не мешает, но пускай остаётся старая версия "без" этих доп. надписей.
+            */ 
+            //ExcelPackage.License.SetNonCommercialPersonal("WorkoutStorageBot");
         }
 
         private static void SetStyle(ExcelRange excelRange, bool needMerge, bool needBorder, ExcelHorizontalAlignment horizontalAlignment, Color backgroundCellColor)

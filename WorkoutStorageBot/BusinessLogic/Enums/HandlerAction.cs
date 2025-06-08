@@ -8,7 +8,7 @@ namespace WorkoutStorageBot.BusinessLogic.Enums
         Save,
         Update,
         Add,
-        Remove
-        
+        Remove,
+
     }
 }

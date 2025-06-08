@@ -1,4 +1,4 @@
-﻿using WorkoutStorageBot.Model;
+﻿using WorkoutStorageBot.Model.Domain;
 
 namespace WorkoutStorageBot.Helpers.Export
 {

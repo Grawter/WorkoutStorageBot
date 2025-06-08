@@ -17,14 +17,12 @@ namespace WorkoutStorageBot.BusinessLogic.Enums
                 CycleList, 
                     SettingCycle,
                         ArchiveCyclesList,
-                        ConfirmDeleteCycle,
                         SettingDays,
                             AddDays,
                             DaysList,
                                 SettingDay,
                                     ReplaceToCycle,
                                     ArchiveDaysList,
-                                    ConfirmDeleteDay,
                                     SettingExercises,
                                         AddExercises,
                                             SaveExercises,
@@ -33,11 +31,14 @@ namespace WorkoutStorageBot.BusinessLogic.Enums
                                             SettingExercise,
                                                 ReplaceToDay,
                                                 ArchiveExercisesList,
-                                                ConfirmDeleteExercise,
+                                                
             ArchiveList,
             Export,
-            ConfirmDeleteAccount,
+            ConfirmDelete,
 
         Period,
+        
+        Admin,
+            AdminLogs,
     }
 }

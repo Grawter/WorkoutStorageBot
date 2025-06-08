@@ -2,7 +2,7 @@
 
 using System.Globalization;
 using System.Text;
-using WorkoutStorageBot.Model;
+using WorkoutStorageBot.Model.Domain;
 
 #endregion
 
@@ -26,16 +26,16 @@ namespace WorkoutStorageBot.Helpers.Converters
             return this;
         }
 
-        internal TextMessageConverter WithoutServiceSymbol(string simbol = "/")
+        internal TextMessageConverter WithoutServiceSymbol(string symbol = "/")
         {
-            sb.Replace(simbol, string.Empty);
+            sb.Replace(symbol, string.Empty);
 
             return this;
         }
 
-        internal TextMessageConverter WithoutServiceSymbols(string[] simbols)
+        internal TextMessageConverter WithoutServiceSymbols(string[] symbols)
         {
-            foreach (string simbol in simbols)
+            foreach (string simbol in symbols)
                 WithoutServiceSymbol(simbol);
 
             return this;

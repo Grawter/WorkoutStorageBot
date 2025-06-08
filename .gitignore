@@ -1,3 +1,4 @@
 /.vs
-/WorkoutStorageBot/bin/Debug/net8.0
+/WorkoutStorageBot/bin/Debug/net9.0
 /WorkoutStorageBot/obj
+/WorkoutStorageBot/Application/StartConfiguration/appsettings.json

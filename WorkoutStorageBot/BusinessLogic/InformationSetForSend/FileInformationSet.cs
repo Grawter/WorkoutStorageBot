@@ -1,4 +1,7 @@
-﻿using WorkoutStorageBot.BusinessLogic.Enums;
+﻿#region using
+using WorkoutStorageBot.BusinessLogic.Enums;
+using WorkoutStorageBot.Helpers.Common;
+#endregion
 
 namespace WorkoutStorageBot.BusinessLogic.InformationSetForSend
 {
@@ -6,26 +9,29 @@ namespace WorkoutStorageBot.BusinessLogic.InformationSetForSend
     {
         internal FileInformationSet(Stream stream, string fileName)
         {
-            Stream = stream;
-            FileName = fileName;
+            Stream = CommonHelper.GetIfNotNull(stream);
+            FileName = CommonHelper.GetIfNotNullOrEmpty(fileName);
+        }
+
+        internal FileInformationSet(Stream stream, string fileName, string message, (ButtonsSet buttonsSet, ButtonsSet backButtonsSet) buttonsSets) 
+            : this(stream, fileName)
+        {
+            Message = message;
+            ButtonsSets = buttonsSets;
         }
 
         internal FileInformationSet(Stream stream,
                                     string fileName,
                                     string message,
                                     (ButtonsSet buttonsSet, ButtonsSet backButtonsSet) buttonsSets,
-                                    Dictionary<string, string> additionalParameters = default)
+                                    Dictionary<string, string> additionalParameters) : this(stream, fileName, message, buttonsSets)
         {
-            Stream = stream;
-            FileName = fileName;
-            Message = message;
-            ButtonsSets = buttonsSets;
-            AdditionalParameters = additionalParameters;
+            AdditionalParameters = CommonHelper.GetIfNotNull(additionalParameters);
         }
 
         public string Message { get; }
         public (ButtonsSet buttonsSet, ButtonsSet backButtonsSet) ButtonsSets { get; }
-        public Dictionary<string, string> AdditionalParameters { get; }
+        public Dictionary<string, string> AdditionalParameters { get; } = new Dictionary<string, string>();
 
         internal string FileName { get; }
         internal Stream Stream { get; }

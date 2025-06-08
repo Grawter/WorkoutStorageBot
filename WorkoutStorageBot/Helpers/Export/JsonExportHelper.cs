@@ -1,34 +1,77 @@
 ﻿#region using
-using Newtonsoft.Json;
+
 using System.Text;
-using WorkoutStorageBot.Model;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
+using System.Text.Unicode;
+using WorkoutStorageBot.Model.Domain;
+
 #endregion
 
 namespace WorkoutStorageBot.Helpers.Export
 {
     internal static class JsonExportHelper
     {
-        internal static string GetJSONFile(List<Cycle> cycles, IQueryable<ResultExercise> resultsExercises, int monthFilterPeriod)
+        internal static byte[] GetJSONFileByte(List<Cycle> cycles, IQueryable<ResultExercise> resultsExercises, int monthFilterPeriod)
         {
+            string json = GetJSONFileStrl(cycles, resultsExercises, monthFilterPeriod);
+
+            byte[] byteJson = new UTF8Encoding(true).GetBytes(json);
+
+            return byteJson;
+        }
+
+        internal static string GetJSONFileStrl(List<Cycle> cycles, IQueryable<ResultExercise> resultsExercises, int monthFilterPeriod)
+        {
+            ArgumentNullException.ThrowIfNull(cycles);
+            ArgumentNullException.ThrowIfNull(resultsExercises);
+
             DateTime filterDateTime = CommonExportHelper.GetFilterDateTime(monthFilterPeriod, resultsExercises);
             CommonExportHelper.LoadDBDataToDBContextForFilterDate(resultsExercises, filterDateTime);
 
-            return RemoveAdminInfo(JsonConvert.SerializeObject(cycles, Formatting.None,
-                        new JsonSerializerSettings()
-                        {
-                            ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-                        }));
+            JsonSerializerOptions starterJsonSerializerOptions = new JsonSerializerOptions()
+            {
+                ReferenceHandler = ReferenceHandler.IgnoreCycles,
+            };
+
+            JsonNode rootNode = JsonNode.Parse(JsonSerializer.Serialize(cycles, starterJsonSerializerOptions))
+                ?? throw new InvalidOperationException("Не удалось получить json rootNode");
+
+            RemoveAdminInfo(rootNode);
+
+            // Нельзя изменять уже используемую настройку (starterJsonSerializerOptions)
+            JsonSerializerOptions finalJsonSerializerOptions = new JsonSerializerOptions(starterJsonSerializerOptions) 
+            {
+                WriteIndented = true,
+                Encoder = JavaScriptEncoder.Create(UnicodeRanges.All), // Чтобы кириллические (или возможные другие) символы не экранировались
+            };
+
+            return rootNode.ToJsonString(finalJsonSerializerOptions);
         }
 
-        private static string RemoveAdminInfo(string json)
+        private static void RemoveAdminInfo(JsonNode rootNode)
         {
-            int startIndexDelete = json.IndexOf(",\"UserInformationId\"");
-            int lengthToDelete = json.Length - startIndexDelete - 2;
+            if (rootNode is JsonArray array)
+            {
+                foreach (JsonNode subRootNode in array)
+                {
+                    if (subRootNode is JsonObject obj)
+                    {
+                        obj.Remove("UserInformationId");
+                        obj.Remove("UserInformation");
+                        obj.Remove("IsActive");
+                        obj.Remove("IsArchive");
+                    }
+                    else
+                        throw new InvalidOperationException("Не удалось корректно обработать json (Ожидался JsonObject).");
+                }
+            }
+            else
+                throw new InvalidOperationException("Не удалось корректно обработать json (Ожидался JsonArray).");
 
-            var sb = new StringBuilder(json);
-
-            sb.Remove(startIndexDelete, lengthToDelete);
-            return sb.ToString();
+            return;
         }
     }
 }

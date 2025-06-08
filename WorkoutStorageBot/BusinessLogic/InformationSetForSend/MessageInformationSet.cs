@@ -1,5 +1,6 @@
 ﻿#region using
 using WorkoutStorageBot.BusinessLogic.Enums;
+using WorkoutStorageBot.Helpers.Common;
 #endregion
 
 namespace WorkoutStorageBot.BusinessLogic.InformationSetForSend
@@ -11,15 +12,20 @@ namespace WorkoutStorageBot.BusinessLogic.InformationSetForSend
             Message = message;
         }
 
-        internal MessageInformationSet(string message, (ButtonsSet buttonsSet, ButtonsSet backButtonsSet) buttonsSets, Dictionary<string, string> additionalParameters = default)
+        internal MessageInformationSet(string message, (ButtonsSet buttonsSet, ButtonsSet backButtonsSet) buttonsSets) : this(message)
         {
-            Message = message;
             ButtonsSets = buttonsSets;
-            AdditionalParameters = additionalParameters;
+        }
+
+        internal MessageInformationSet(string message,
+                                      (ButtonsSet buttonsSet, ButtonsSet backButtonsSet) buttonsSets,
+                                      Dictionary<string, string> additionalParameters) : this(message, buttonsSets)
+        {
+            AdditionalParameters = CommonHelper.GetIfNotNull(additionalParameters);
         }
 
         public string Message { get; }
         public (ButtonsSet buttonsSet, ButtonsSet backButtonsSet) ButtonsSets { get; }
-        public Dictionary<string, string> AdditionalParameters { get; }
+        public Dictionary<string, string> AdditionalParameters { get; } = new Dictionary<string, string>();
     }
 }

@@ -1,5 +1,7 @@
 ﻿#region using
+
 using WorkoutStorageBot.BusinessLogic.Enums;
+
 #endregion
 
 namespace WorkoutStorageBot.BusinessLogic.StepStore
@@ -11,12 +13,17 @@ namespace WorkoutStorageBot.BusinessLogic.StepStore
         static StepStorage()
         {
             stepsInfrormation = new() {
-                // workout area
+
+                #region workout area
+
                 new StepInformation(QueryFrom.NoMatter, "Выберите интересующий раздел", ButtonsSet.Main, ButtonsSet.None),
                 new StepInformation(QueryFrom.NoMatter, "Выберите тренировочный день", ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main),
                 new StepInformation(QueryFrom.NoMatter, "Выберите упраженение", ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout),
 
-                // settings area
+                #endregion
+
+                #region settings area
+                
                 new StepInformation(QueryFrom.Settings, "Выберите интересующие настройки", ButtonsSet.Settings, ButtonsSet.Main),
 
                 new StepInformation(QueryFrom.Settings, "Выберите интересующие настройки для циклов", ButtonsSet.SettingCycles, ButtonsSet.Settings),
@@ -32,6 +39,15 @@ namespace WorkoutStorageBot.BusinessLogic.StepStore
                 new StepInformation(QueryFrom.Settings, "Выберите интересующие настройки для упражнений", ButtonsSet.SettingExercises, ButtonsSet.SettingDay),
                 new StepInformation(QueryFrom.Settings, "Выберите интересующее упражнение", ButtonsSet.ExercisesList, ButtonsSet.SettingExercises),
                 new StepInformation(QueryFrom.Settings, "Выберите интересующую настройку для указанного упражнения", ButtonsSet.SettingExercise, ButtonsSet.ExercisesList),
+
+                #endregion
+
+                #region admin area
+
+                new StepInformation(QueryFrom.NoMatter, "Выберите интересующее действие", ButtonsSet.Admin, ButtonsSet.Main),
+                new StepInformation(QueryFrom.NoMatter, "Выберите интересующее действие", ButtonsSet.AdminLogs, ButtonsSet.Admin),
+
+                #endregion         
             };
         }
 

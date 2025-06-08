@@ -1,0 +1,78 @@
+{
+  // Настроить считывания настроек под свои нужды можно в ConfigurationData -> GetConfiguration.
+
+  /*
+  Настройки подключения к БД.
+  По-умолчанию, используется SQLite, в случае необходимости поменять DBProvider: Program -> GetEntityContext.
+  В случае необходимости можно написать свою реализацию строки подключения: ConfigurationData -> DbSettings -> ConnectionString.
+
+  Server - Сервер DB [Необязательно]
+  Database - Название DB [Обязательно]
+  UserName - УЗ для подключения к DB [Необязательно]
+  Password - для от УЗ для подключения к DB [Необязательно]
+  
+  После инициализации всех зависимостей UserName и Password будет затёрт из переменных. Подробнее: ConfigurationManager -> SetCensorToDBSettings.
+  */
+  "DB": {
+    "Server": "",
+    "Database": "test.db",
+    "UserName": "",
+    "Password": ""
+  },
+
+  /*
+  Настройки функциональности бота.
+
+  Token - Токен для управления ботом [Обязательно]
+  WhiteListIsEnable - Нужно ли включать режим белого списка [Обязательно]
+  OwnersChatIDs - Телеграм ID админов бота (для доступка к админке) [Обязательно]
+  IsNeedCacheContext - Нужно ли включать кэш для глобального контекста [Обязательно]
+  При включённом режиме по-умолчанию, он держится 6 часов, если к определённому контексте не было запросов.
+  IsNeedLimits - Нужно ли включать режим лимитов. [Необязательно] [По-умолчанию - False]
+  */
+  "Bot": {
+    "Token": "",
+    "WhiteListIsEnable": "False",
+    "OwnersChatIDs": [],
+    "IsNeedCacheContext": "True",
+    "IsNeedLimits": "True"
+  },
+
+  /*
+  Настройки уведомлений об операциях.
+
+  NotifyOwnersAboutCriticalErrors - Отсылать уведомления об критической ошибке в боте админам [Обязательно]
+  NotifyOwnersAboutCriticalErrors - Отсылать уведомления об критической ошибке в боте админам [Обязательно]
+  */
+  "Notifications": {
+    "NotifyOwnersAboutCriticalErrors": "True",
+    "NotifyOwnersAboutRuntimeErrors": "True"
+  },
+
+  /*
+  Настройки логгирования приложения.
+
+  Доступные уровни логгирования: Trace, Debug, Information, Warning, Error, Critical, None, All.
+
+  MainRuleLog - Основное правило логгирование. По-умолчанию для логгирования из всех классов.
+  DBLogLevels - Логи с этим уровнем будут записаны в БД [Необязательно]
+  ConsoleLogLevels - Логи с этим уровнем будут выведены в консоль [Необязательно]
+  
+  CustomRulesLog - Кастомное правило логгирования строго для какого-то класса [Необязательно]
+  FullClassName - Полное название класса [Обязательно, если указывается кастомное правило]
+  */
+  "LogInfo": {
+    "MainRuleLog": {
+      "DBLogLevels": [ "Error", "Critical" ],
+      "ConsoleLogLevels": [ "All" ]
+    },
+
+    "CustomRulesLog": [
+      {
+        "FullClassName": "",
+        "DBLogLevels": [],
+        "ConsoleLogLevels": []
+      }
+    ]
+  }
+}

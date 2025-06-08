@@ -7,5 +7,6 @@ namespace WorkoutStorageBot.BusinessLogic.Enums
         None = 0,
         Workout = 1,
         Settings = 3,
+        Admin = 4,
     }
 }

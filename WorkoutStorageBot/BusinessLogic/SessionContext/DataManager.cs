@@ -1,6 +1,6 @@
 ﻿#region using
 using WorkoutStorageBot.BusinessLogic.Enums;
-using WorkoutStorageBot.Model;
+using WorkoutStorageBot.Model.Domain;
 #endregion
 
 namespace WorkoutStorageBot.BusinessLogic.SessionContext
