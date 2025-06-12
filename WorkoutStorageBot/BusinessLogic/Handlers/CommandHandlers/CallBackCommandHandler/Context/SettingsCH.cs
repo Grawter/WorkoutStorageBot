@@ -2,6 +2,7 @@
 
 using System;
 using System.Text;
+using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.CoreRepositories.Repositories;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers;
@@ -205,8 +206,16 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                 case "Exercise":
                     this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.AddExercises;
 
-                    responseConverter = new ResponseTextConverter($"Введите название(я) упражнение(я) для дня {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name}",
-                        "Формат для множественного ввода название;название;название...");
+                    responseConverter = new ResponseTextConverter($"Введите название(я) и тип(ы) упражнения(й) для дня {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBold()
+                                                                                                                                                                                               .AddQuotes()}",
+                        @$"Доступные типы упражений:
+{"0".AddBold()} - только кол-во повторений (например, подтягивания)
+{"1".AddBold()} - вес и кол-во повторений (например, жим лёжа)
+{"2".AddBold()} - свободный формат результата (например, отработка на груше)
+
+(Тип упражнения всегда можно поменять в настройках)",
+                        CommonConsts.Exercise.InputFormatExercise);
+
                     switch (this.CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom)
                     {
                         case QueryFrom.Start:
@@ -327,21 +336,33 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     break;
 
                 case "Exercise":
-                    this.CommandHandlerTools.CurrentUserContext.DataManager.SetDomain(this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Exercises
-                                                                                                                                .First(e => e.Id == callbackQueryParser.DomainId));
+                    Exercise currentExercise = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Exercises.First(e => e.Id == callbackQueryParser.DomainId);
+
+                    this.CommandHandlerTools.CurrentUserContext.DataManager.SetDomain(currentExercise);
+
+                    string currentExerciseName = currentExercise.Name.AddBold().AddQuotes();
+
+                    string inputFormatExerciseResult = currentExercise.Mode switch
+                    {
+                        ExercisesMods.Count => CommonConsts.ResultExercise.InputFormatExerciseResultCount,
+                        ExercisesMods.WeightCount => CommonConsts.ResultExercise.InputFormatExerciseResultWeightCount,
+                        ExercisesMods.FreeResult => CommonConsts.ResultExercise.InputFormatExerciseResultFreeResult,
+                        _ => throw new NotImplementedException($"Неожиданный тип упражнения: {currentExercise.Mode.ToString().AddBold().AddQuotes()}")
+                    };
 
                     switch (this.CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom)
                     {
                         case QueryFrom.NoMatter:
                             this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.AddResultForExercise;
 
-                            responseConverter = new ResponseTextConverter($"Введите вес и количество повторений для упражения {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name} " +
-                                $"в формате 50 10 или 50 10;50 10;50 10... для множественного добавления");
+                            responseConverter = new ResponseTextConverter($"Фиксирование результатов упражнения {currentExerciseName}",
+                                inputFormatExerciseResult,
+                                $"Введите результат(ы) подхода(ов)");
                             buttonsSets = (ButtonsSet.None, ButtonsSet.ExercisesListWithLastWorkoutForDay);
                             break;
 
                         case QueryFrom.Settings:
-                            responseConverter = new ResponseTextConverter($"Выберите интересующую настройку для упражнения {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name}");
+                            responseConverter = new ResponseTextConverter($"Выберите интересующую настройку для упражнения {currentExerciseName}");
                             buttonsSets = (ButtonsSet.SettingExercise, ButtonsSet.ExercisesList);
                             break;
                         default:
@@ -536,7 +557,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     buttonsSets = (ButtonsSet.None, ButtonsSet.SettingCycle);
                     break;
 
-                case "ChangeNameDay":
+                case "Day":
                     this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.ChangeNameDay;
 
                     responseConverter = new ResponseTextConverter($"Введите новоё название для дня {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name}");
@@ -548,6 +569,60 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
                     responseConverter = new ResponseTextConverter($"Введите новоё название для упражнения {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name}");
                     buttonsSets = (ButtonsSet.None, ButtonsSet.SettingExercise);
+                    break;
+                default:
+                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
+            }
+
+            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+
+            return this;
+        }
+
+        internal SettingsCH ChangeModeCommand()
+        {
+            ResponseTextConverter responseConverter;
+            (ButtonsSet, ButtonsSet) buttonsSets;
+
+            switch (callbackQueryParser.DomainType)
+            {
+                case "Exercise":
+
+                    responseConverter = new ResponseTextConverter($"Выберите новый тип для упражнения {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBold().AddQuotes()}");
+                    buttonsSets = (ButtonsSet.ChangeType, ButtonsSet.SettingExercise);
+                    break;
+                default:
+                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
+            }
+
+            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+
+            return this;
+        }
+
+        internal SettingsCH ChangedModeCommand()
+        {
+            this.Domain = this.CommandHandlerTools.CurrentUserContext.GetCurrentDomainFromDataManager(callbackQueryParser.DomainType);
+
+            ResponseTextConverter responseConverter;
+            (ButtonsSet, ButtonsSet) buttonsSets;
+
+            switch (callbackQueryParser.DomainType)
+            {
+                case "Exercise":
+
+                    string modeStr = this.callbackQueryParser.AdditionalParameters.FirstOrDefault();
+
+                    if (string.IsNullOrWhiteSpace(modeStr))
+                        throw new InvalidOperationException($"Не удалось получить новый режим упражнения");
+
+                    ExercisesMods newMode = (ExercisesMods)int.Parse(modeStr);
+
+                    ((Exercise)this.Domain).Mode = newMode;
+
+                    responseConverter = new ResponseTextConverter($"Режим для упражнения {Domain.Name.AddBold().AddQuotes()} изменён на {newMode.ToString().AddBold().AddQuotes()}",
+                        $"Выберите интересующую настройку для упражнения {Domain.Name.AddBold().AddQuotes()}");
+                    buttonsSets = (ButtonsSet.SettingExercise, ButtonsSet.ExercisesList);
                     break;
                 default:
                     throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
@@ -723,7 +798,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                         file = JsonExportHelper.GetJSONFileByte(this.CommandHandlerTools.CurrentUserContext.UserInformation.Cycles, resultsExercisesForExcel, monthFilterPeriod);
                     break;
                     default:
-                        throw new NotSupportedException("Не поддерживаемый формат экспорта");
+                        throw new NotSupportedException("Неподдерживаемый формат экспорта");
                 }
 
                 string fileName = $"Workout{fileExtenstion}";

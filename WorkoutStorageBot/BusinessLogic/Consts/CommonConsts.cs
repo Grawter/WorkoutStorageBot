@@ -24,5 +24,27 @@
 
             internal const string DateTimeFormatHoursFirst = "HH:mm:ss dd.MM.yyyy";
         }
+
+        public class Exercise
+        {
+            internal const string InputFormatExercise = @"Формат общего ввода: [название]-[тип]. 
+Пример единичного ввода: Жим лёжа-0
+Пример множественного ввода: Жим лёжа-0;Становая тяга-0;Прыжки на скакалке-2;...";
+
+        }
+
+        public class ResultExercise
+        {
+            internal const string InputFormatExerciseResultCount = @"Формат общего ввода: [кол-во повторений].
+Пример единичного ввода: 25
+Пример множественного ввода: 25 10 5";
+
+            internal const string InputFormatExerciseResultWeightCount = @"Формат общего ввода: [вес] [кол-во повторений].
+Пример единичного ввода: 25 10
+Пример множественного ввода: 25 10;35 10;45 10";
+
+            internal const string InputFormatExerciseResultFreeResult = @"Формат общего ввода: [Свободная запись до 80 символов].
+Пример ввода: Пробежка 10 км/1.25 ч.";
+        }
     }
 }

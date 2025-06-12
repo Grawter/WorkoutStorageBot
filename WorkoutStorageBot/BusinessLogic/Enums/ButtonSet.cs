@@ -29,6 +29,7 @@ namespace WorkoutStorageBot.BusinessLogic.Enums
                                                  RedirectAfterSaveExercise,
                                         ExercisesList,
                                             SettingExercise,
+                                                ChangeType,
                                                 ReplaceToDay,
                                                 ArchiveExercisesList,
                                                 

@@ -8,5 +8,13 @@
         internal static bool HasItemsInCollection<T>(this ICollection<T>? collection)
             => collection != null && collection.Count > 0;
 
+        internal static bool HasItemsInCollection<T>(this IEnumerable<T>? collection)
+            => collection != null && collection.Count() > 0;
+
+        internal static string AddBold(this string text)
+            => $"<b>{text}</b>";
+
+        internal static string AddQuotes(this string text)
+            => $"\"{text}\"";
     }
 }

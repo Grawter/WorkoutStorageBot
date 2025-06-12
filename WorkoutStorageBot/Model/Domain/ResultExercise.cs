@@ -3,8 +3,9 @@
     public class ResultExercise
     {
         public int Id { get; set; }
-        public float Weight { get; set; }
-        public float Count { get; set; }
+        public int? Count { get; set; }
+        public float? Weight { get; set; }
+        public string? FreeResult { get; set; }
         public DateTime DateTime { get; set; }
 
         public int ExerciseId { get; set; }

@@ -43,7 +43,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers
                     updateHandlerResult.InformationSet = ProcessCallbackQuery(updateHandlerResult.ShortUpdateInfo);
                     break;
                 default:
-                    throw new NotSupportedException($"Неожиданный update.type: {updateHandlerResult.ShortUpdateInfo.UpdateType}");
+                    throw new NotImplementedException($"Неожиданный update.type: {updateHandlerResult.ShortUpdateInfo.UpdateType}");
             }
 
             return updateHandlerResult;
@@ -320,7 +320,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers
 
                 case "Archiving":
                     CHResult = commandHandler.Expectation(HandlerAction.Update, HandlerAction.Save)
-                                              .ArchivingCommand();
+                                             .ArchivingCommand();
                     break;
 
                 case "Replace":
@@ -334,6 +334,15 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers
 
                 case "ChangeName":
                     CHResult = commandHandler.ChangeNameCommand();
+                    break;
+
+                case "ChangeMode":
+                    CHResult = commandHandler.ChangeModeCommand();
+                    break;
+
+                case "ChangedMode":
+                    CHResult = commandHandler.Expectation(HandlerAction.Update, HandlerAction.Save)
+                                             .ChangedModeCommand();
                     break;
 
                 case "Period":

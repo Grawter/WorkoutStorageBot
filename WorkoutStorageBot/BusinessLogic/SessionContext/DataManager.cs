@@ -1,5 +1,6 @@
 ﻿#region using
 using WorkoutStorageBot.BusinessLogic.Enums;
+using WorkoutStorageBot.Extenions;
 using WorkoutStorageBot.Model.Domain;
 #endregion
 
@@ -16,9 +17,9 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
 
         internal Cycle SetCycle(string nameCycle, bool isActive, int userInformationId)
         {
-            ResetCycle();
+            CurrentCycle = new() { Name = nameCycle, IsActive = isActive, UserInformationId = userInformationId };
 
-            return CurrentCycle = new() { Name = nameCycle, IsActive = isActive, UserInformationId = userInformationId };
+            return CurrentCycle;
         }
 
         private void SetCycle(Cycle cycle)
@@ -28,9 +29,9 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
 
         internal Day SetDay(string nameDay)
         {
-            ResetDay();
+            CurrentDay = new() { Name = nameDay, CycleId = CurrentCycle.Id };
 
-            return CurrentDay = new() { Name = nameDay, CycleId = CurrentCycle.Id };
+            return CurrentDay;
         }
 
         private void SetDay(Day day)
@@ -43,28 +44,37 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
             CurrentExercise = exercise;
         }
 
-        internal bool TryAddExercise(string[] nameExercises)
+        internal bool TryAddExercise(List<Exercise> exercises, out string existingExerciseName)
         {
+            if (!exercises.HasItemsInCollection())
+                throw new InvalidOperationException($"Получена пустая коллеция {nameof(exercises)}");
+
             if (Exercises == null)
-            {
                 Exercises = new();
-            }
 
-            foreach (string name in nameExercises)
+            existingExerciseName = string.Empty;    
+
+            foreach (Exercise exercise in exercises)
             {
-                if (Exercises.Any(e => e.Name == name))
-                    return false;
+                if (Exercises.Any(e => e.Name == exercise.Name))
+                {
+                    existingExerciseName = exercise.Name;
 
-                Exercises.Add(new Exercise { Name = name, DayId = CurrentDay.Id });
+                    return false;
+                }
+
+                exercise.DayId = CurrentDay.Id;
+
+                Exercises.Add(exercise);
             }
 
             return true;
         }
 
-        internal void AddResultsExercise(IEnumerable<ResultExercise> resultsExercise)
+        internal void AddResultsExercise(List<ResultExercise> resultsExercise)
         {
-            if (!resultsExercise.Any())
-                throw new FormatException();
+            if (!resultsExercise.HasItemsInCollection())
+                throw new InvalidOperationException($"Получена пустая коллеция {nameof(resultsExercise)}");
 
             if (ResultExercises == null)
                 ResultExercises = new();
@@ -158,6 +168,21 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
                      => DomainType.Exercise,
                 _ => throw new NotImplementedException($"Неожиданный domain: {domain.GetType().FullName}")
             };
+        }
+
+        internal string ConvertResultExerciseToString(ResultExercise resultExercise)
+        {
+            if (!string.IsNullOrWhiteSpace(resultExercise.FreeResult))
+                return $"=> {resultExercise.FreeResult}";
+            else if (resultExercise.Count.HasValue)
+            {
+                if (resultExercise.Weight.HasValue)
+                    return $"Повторения: ({resultExercise.Count}) => Вес: ({resultExercise.Weight})";
+                else
+                    return $"Повторения: ({resultExercise.Count})";
+            }
+            else
+                throw new InvalidOperationException($"Не удалось отобразить данные для результата упражнения с ID: {resultExercise.Id}, ID упражнения: {resultExercise.ExerciseId}, тип упражнения: {resultExercise.Exercise.Mode.ToString().AddQuotes()}");
         }
     }
 }

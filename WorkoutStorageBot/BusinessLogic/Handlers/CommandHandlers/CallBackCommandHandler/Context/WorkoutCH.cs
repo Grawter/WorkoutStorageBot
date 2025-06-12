@@ -2,6 +2,7 @@
 using System.Text;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
+using WorkoutStorageBot.Extenions;
 using WorkoutStorageBot.Helpers.CallbackQueryParser;
 using WorkoutStorageBot.Helpers.Converters;
 using WorkoutStorageBot.Model.Domain;
@@ -43,24 +44,28 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             switch (callbackQueryParser.DomainType)
             {
                 case "Exercises":
-                    IEnumerable<int> dayIDs = CommandHandlerTools.CurrentUserContext.ActiveCycle.Days.Where(d => !d.IsArchive).Select(d => d.Id);
+                    IEnumerable<int> activeDayIDs = CommandHandlerTools.CurrentUserContext.ActiveCycle.Days.Where(d => !d.IsArchive)
+                                                                                                           .Select(d => d.Id);
 
-                    IQueryable<Exercise> exercises = CommandHandlerTools.Db.Exercises.Where(e => !e.IsArchive && dayIDs.Contains(e.DayId));
+                    IQueryable<Exercise> activeExercisesInActiveDays = CommandHandlerTools.Db.Exercises.Where(e => !e.IsArchive && activeDayIDs.Contains(e.DayId));
+
+                    IQueryable<int> activeExercisesIDsInActiveDays = activeExercisesInActiveDays.Select(e => e.Id);
 
                     IGrouping<DateTime, ResultExercise> resultLastTraining = CommandHandlerTools.Db.ResultsExercises
-                                                                .Where(re => exercises.Select(e => e.Id).Contains(re.ExerciseId))
+                                                                .Where(re => activeExercisesIDsInActiveDays.Contains(re.ExerciseId))
                                                                 .OrderByDescending(re => re.DateTime)
-                                                                .GroupBy(re => re.DateTime)
+                                                                .GroupBy(re => re.DateTime.Date)
                                                                 .AsEnumerable()
                                                                 .LastOrDefault();
 
-                    information = GetInformationAboutLastExercises(exercises, resultLastTraining);
+                    information = GetInformationAboutLastExercises(resultLastTraining);
                     responseConverter = new ResponseTextConverter("Последняя тренировка:", information, "Выберите тренировочный день");
                     buttonsSets = (ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main);
                     break;
+
                 case "Day":
                     IEnumerable<int> exercisesIDs = CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Exercises.Where(e => !e.IsArchive)
-                                                                                   .Select(d => d.Id);
+                                                                                                                           .Select(d => d.Id);
 
                     IQueryable<ResultExercise> lastDateForExercises = CommandHandlerTools.Db.ResultsExercises.Where(re => exercisesIDs.Contains(re.ExerciseId))
                                                 .OrderBy(re => re.ExerciseId)
@@ -70,7 +75,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                                                 .Select(reGROUP => reGROUP.OrderByDescending(re => re.DateTime).First());
 
                     IQueryable<ResultExercise> lastResultsExercisesInCurrentDay = default;
+                    
                     bool isFirstQuery = true;
+                    
                     foreach (ResultExercise resultExercise in lastDateForExercises)
                     {
                         if (isFirstQuery)
@@ -84,8 +91,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                                                                                                                                 re.DateTime.Date == resultExercise.DateTime.Date));
                     }
 
-                    information = GetInformationAboutLastDay(CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Exercises, lastResultsExercisesInCurrentDay);
-                    responseConverter = new ResponseTextConverter("Последняя результаты упражнений из этого дня:", information, "Выберите упражнение");
+                    information = GetInformationAboutLastDay(lastResultsExercisesInCurrentDay);
+                    responseConverter = new ResponseTextConverter("Последние результаты упражнений из этого дня:", information, "Выберите упражнение");
                     buttonsSets = (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout);
                     break;
                 default:
@@ -113,57 +120,56 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             return this;
         }
 
-        private static string GetInformationAboutLastExercises(IEnumerable<Exercise>? exercises, IEnumerable<ResultExercise>? resultExercises)
+        private string GetInformationAboutLastExercises(IEnumerable<ResultExercise>? resultExercises)
         {
-            if (!exercises.Any() || !resultExercises.Any())
+            if (!resultExercises.Any())
                 return "Нет информации для данного цикла";
-
-            var resultQuery = exercises
-                        .Join(resultExercises,
-                            e => e.Id,
-                            rE => rE.ExerciseId,
-                            (e, rE) => new { e.Name, rE.Count, rE.Weight, rE.DateTime })
-                        .GroupBy(rE => rE.Name).ToArray();
-
 
             StringBuilder sb = new StringBuilder();
 
-            sb.AppendLine($"Дата: {resultExercises.First().DateTime.ToShortDateString()}");
+            ResultExercise firstResultExercise = resultExercises.First();
 
-            for (int i = 0; i < resultQuery.Count(); i++)
+            IEnumerable<IGrouping<int, ResultExercise>> groupsResultsExercise = resultExercises.GroupBy(x => x.ExerciseId);
+
+            sb.AppendLine($"Дата: {firstResultExercise.DateTime.ToShortDateString()}");
+
+            foreach (IGrouping<int, ResultExercise> groupResultExercise in groupsResultsExercise)
             {
-                sb.AppendLine($"Упражнение: {resultQuery[i].Key}");
+                ResultExercise firstGroupResultExercise = groupResultExercise.First();
 
-                foreach (var result in resultQuery[i])
+                sb.AppendLine($"Упражнение: {firstGroupResultExercise.Exercise.Name.AddBold().AddQuotes()}");
+
+                foreach (ResultExercise resultExercise in groupResultExercise)
                 {
-                    sb.AppendLine($"({result.Count}) => ({result.Weight})");
+                    string resultExerciseStr = CommandHandlerTools.CurrentUserContext.DataManager.ConvertResultExerciseToString(resultExercise);
+
+                    sb.AppendLine(resultExerciseStr);
                 }
             }
 
             return sb.ToString().Trim();
         }
 
-        private static string GetInformationAboutLastDay(IEnumerable<Exercise> exercises, IEnumerable<ResultExercise>? resultExercises)
+        private string GetInformationAboutLastDay(IEnumerable<ResultExercise>? resultExercises)
         {
-            if (!exercises.Any() || !resultExercises.Any())
-                return "Нет информации для данного цикла";
-
-            var resultQuery = exercises
-                        .Join(resultExercises,
-                            e => e.Id,
-                            rE => rE.ExerciseId,
-                            (e, rE) => new { e.Name, rE.Count, rE.Weight, rE.DateTime })
-                        .GroupBy(rE => rE.Name).ToArray();
+            if (!resultExercises.HasItemsInCollection())
+                return "Нет информации для данного дня";
 
             StringBuilder sb = new StringBuilder();
 
-            for (int i = 0; i < resultQuery.Count(); i++)
-            {
-                sb.AppendLine($"Упражнение: {resultQuery[i].Key} | Дата: {resultQuery[i].First().DateTime.ToShortDateString()}");
+            IEnumerable<IGrouping<int, ResultExercise>> groupsResultsExercise = resultExercises.GroupBy(x => x.ExerciseId);
 
-                foreach (var result in resultQuery[i])
+            foreach (IGrouping<int, ResultExercise> groupResultExercise in groupsResultsExercise)
+            {
+                ResultExercise firstResultExercise = groupResultExercise.First();
+
+                sb.AppendLine($"Упражнение: {firstResultExercise.Exercise.Name.AddBold().AddQuotes()} | Дата: {firstResultExercise.DateTime.ToShortDateString().AddBold().AddQuotes()}");
+
+                foreach (ResultExercise resultExercise in groupResultExercise)
                 {
-                    sb.AppendLine($"({result.Count}) => ({result.Weight})");
+                    string resultExerciseStr = CommandHandlerTools.CurrentUserContext.DataManager.ConvertResultExerciseToString(resultExercise);
+
+                    sb.AppendLine(resultExerciseStr);
                 }
             }
 

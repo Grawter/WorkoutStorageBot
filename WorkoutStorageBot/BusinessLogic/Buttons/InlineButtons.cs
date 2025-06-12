@@ -127,10 +127,17 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
 
                 case ButtonsSet.SettingExercise:
                     AddInlineButton("Сменить название", "3|ChangeName|Exercise");
+                    AddInlineButton("Сменить тип", "3|ChangeMode|Exercise");
                     AddInlineButton("Перенести упражнение", "3|Replace|Exercise");
                     AddInlineButton("Добавить в архив", $"3|Archiving|Exercise");
                     AddInlineButton("Удалить", "3|Delete|Exercise");
                     AddInlineButton("Вернуться к главному меню", "0|ToMain");
+                    break;
+
+                case ButtonsSet.ChangeType:
+                    AddInlineButton("Режим только повторения", "3|ChangedMode|Exercise|||0");
+                    AddInlineButton("Режим повторения и вес", "3|ChangedMode|Exercise|||1");
+                    AddInlineButton("Режим свободного формата результата", "3|ChangedMode|Exercise|||2");
                     break;
 
                 case ButtonsSet.ReplaceToDay:

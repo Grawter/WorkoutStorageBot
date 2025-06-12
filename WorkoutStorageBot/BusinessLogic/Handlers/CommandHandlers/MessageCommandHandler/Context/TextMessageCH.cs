@@ -1,10 +1,12 @@
 ﻿#region using
 using Microsoft.Extensions.Logging;
+using System.Xml.Linq;
 using Telegram.Bot.Types;
 using WorkoutStorageBot.Application.Configuration;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.CoreRepositories.Repositories;
 using WorkoutStorageBot.BusinessLogic.Enums;
+using WorkoutStorageBot.BusinessLogic.Exceptions;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.Extenions;
 using WorkoutStorageBot.Helpers.Common;
@@ -65,17 +67,29 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
         {
             requestConverter.RemoveCompletely().WithoutServiceSymbol();
 
-            if (!TryCheckingCycleName(requestConverter.Convert()))
+            string domainName = requestConverter.Convert();
+
+            ResponseTextConverter responseConverter;
+            (ButtonsSet, ButtonsSet) buttonsSets;
+
+            if (AlreadyExistDomainWithName(domainName, DomainType.Cycle))
+            {
+                responseConverter = new ResponseTextConverter("Ошибка при добавлении названия!", $"Цикл с названием {domainName.AddQuotes()} уже существует",
+                    "Ввведите другое название тренировочного цикла");
+                buttonsSets = (ButtonsSet.None, ButtonsSet.SettingCycles);
+
+                ClearHandlerAction();
+
+                this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+
                 return this;
+            }
 
             bool hasActiveCycle = CommandHandlerTools.CurrentUserContext.ActiveCycle == null ? false : true;
             this.Domain = CommandHandlerTools.CurrentUserContext.DataManager.SetCycle(requestConverter.Convert(), !hasActiveCycle, CommandHandlerTools.CurrentUserContext.UserInformation.Id);
 
             if (!hasActiveCycle)
                 CommandHandlerTools.CurrentUserContext.UdpateCycleForce((Cycle)this.Domain);
-
-            ResponseTextConverter responseConverter;
-            (ButtonsSet, ButtonsSet) buttonsSets;
 
             switch (CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom)
             {
@@ -107,13 +121,26 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
         {
             requestConverter.RemoveCompletely().WithoutServiceSymbol();
 
-            if (!TryCheckingDayName(requestConverter.Convert()))
-                return this;
-
-            this.Domain = CommandHandlerTools.CurrentUserContext.DataManager.SetDay(requestConverter.Convert());
+            string domainName = requestConverter.Convert();
 
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
+
+            if (AlreadyExistDomainWithName(domainName, DomainType.Day))
+            {
+                responseConverter = new ResponseTextConverter("Ошибка при сохранении!", $"В этом цикле уже существует день с названием {domainName.AddQuotes()}",
+            $"Ввведите другое название дня для цикла {CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBold().AddQuotes()}");
+
+                buttonsSets = GetButtonsSetIfFailedSaveNewDomainValue(ButtonsSet.SettingDays);
+
+                ClearHandlerAction();
+
+                this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+
+                return this;
+            }
+
+            this.Domain = CommandHandlerTools.CurrentUserContext.DataManager.SetDay(domainName);
 
             switch (CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom)
             {
@@ -143,42 +170,53 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
         internal TextMessageCH AddExercisesCommand()
         {
-            requestConverter.RemoveCompletely().WithoutServiceSymbol();
-
-            string[] exercisesNames = requestConverter.GetExercises();
-
-            if (!TryCheckingExercisesNames(exercisesNames))
-                return this;
-
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
-            if (!CommandHandlerTools.CurrentUserContext.DataManager.TryAddExercise(exercisesNames))
+            requestConverter.RemoveCompletely().WithoutServiceSymbol();
+
+            List<Exercise> exercises = new List<Exercise>();
+
+            string exceptionMessage = string.Empty;
+
+            try
             {
-                responseConverter = new ResponseTextConverter("Упражнение(я) не зафиксировано(ы)!", "В списке фиксаций уже существует(ют) упражнение(я) с таким(и) названием(ями)",
-                    $"Введите другое(ие) название(я) упражнение(й) для дня {CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name}");
-
-                switch (CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom)
-                {
-                    case QueryFrom.Start:
-                        buttonsSets = (ButtonsSet.None, ButtonsSet.None);
-                        break;
-
-                    case QueryFrom.Settings:
-                        buttonsSets = (ButtonsSet.None, ButtonsSet.SettingExercises);
-                        break;
-                    default:
-                        throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom}");
-                }
-
-                this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
-
-                return this;
+                exercises = requestConverter.GetExercises();
+            }
+            catch (CreateExerciseException ex)
+            {
+                exceptionMessage = ex.Message;
             }
 
-            responseConverter = new ResponseTextConverter("Упражнение(я) зафиксировано(ы)!",
-                $"Введите след. упражнение(я) для дня {CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name} либо нажмите \"Сохранить\" для сохранения зафиксированных упражнений");
-            buttonsSets = (ButtonsSet.SaveExercises, ButtonsSet.None);
+            // Сначала нужно, чтобы было общая проверка, есть ли в текущем дне добавляемое упражнение упражнение
+            foreach (Exercise exercise in exercises)
+            {
+                if (AlreadyExistDomainWithName(exercise.Name, DomainType.Exercise))
+                    exceptionMessage = $"В этом дне уже существует упражнение с названием {exercise.Name.AddQuotes()}";
+            }
+
+            if (string.IsNullOrWhiteSpace(exceptionMessage))
+            {
+                if (!CommandHandlerTools.CurrentUserContext.DataManager.TryAddExercise(exercises, out string existingExerciseName))
+                    exceptionMessage = $"В списке фиксаций уже существует упражнение с названием {existingExerciseName.AddQuotes()}";
+            }
+
+            if (string.IsNullOrWhiteSpace(exceptionMessage))
+            {
+                responseConverter = new ResponseTextConverter("Упражнение(я) зафиксировано(ы)!",
+                    $"Введите след. упражнение(я) для дня {CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name} либо нажмите \"Сохранить\" для сохранения зафиксированных упражнений");
+                buttonsSets = (ButtonsSet.SaveExercises, ButtonsSet.None);
+            }
+            else
+            {
+                responseConverter = new ResponseTextConverter("Упражнение(я) не зафиксировано(ы)!",
+                    exceptionMessage,
+                    @$"Введите другое(ие) упражнение(й) для дня {CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBold().AddQuotes()}
+
+{CommonConsts.Exercise.InputFormatExercise}");
+
+                buttonsSets = GetButtonsSetIfFailedSaveNewDomainValue(ButtonsSet.SettingExercises);
+            }
 
             this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
@@ -187,30 +225,40 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
         internal TextMessageCH AddResultForExerciseCommand()
         {
-            requestConverter.RemoveCompletely(45).WithoutServiceSymbol();
+            requestConverter.RemoveCompletely(80).WithoutServiceSymbol();
+
+            Exercise currentExercise = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise;
 
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
             try
             {
-                CommandHandlerTools.CurrentUserContext.DataManager.AddResultsExercise(requestConverter.GetResultsExercise());
-            }
-            catch (Exception)
-            {
-                responseConverter = new ResponseTextConverter("Неожиданный формат результата",
-                    $"Введите результат заново для упражения {CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name}. Пример ожидаемого ввода: 50 10 или 50 10;50 10;50 10... для множественного ввода");
-                buttonsSets = (ButtonsSet.None, ButtonsSet.ExercisesListWithLastWorkoutForDay);
+                List<ResultExercise> resultExercises = requestConverter.GetResultsExercise(currentExercise.Mode);
 
-                this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+                CommandHandlerTools.CurrentUserContext.DataManager.AddResultsExercise(resultExercises);
 
-                return this;
-            }
-
-            responseConverter = new ResponseTextConverter("Подход(ы) зафиксирован(ы)",
+                responseConverter = new ResponseTextConverter("Подход(ы) зафиксирован(ы)",
                 $"Введите вес и кол-во повторений след. подхода для упражения {CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name} " +
-                $"либо нажмите \"Сохранить\" для сохранения указанных подходов");
-            buttonsSets = (ButtonsSet.SaveResultsExercise, ButtonsSet.Main);
+                $"либо нажмите {"".AddQuotes()} \"Сохранить\" для сохранения указанных подходов");
+
+                buttonsSets = (ButtonsSet.SaveResultsExercise, ButtonsSet.Main);
+            }
+            catch (CreateResultExerciseException ex)
+            {
+                string inputFormatExerciseResult = currentExercise.Mode switch
+                {
+                    ExercisesMods.Count => CommonConsts.ResultExercise.InputFormatExerciseResultCount,
+                    ExercisesMods.WeightCount => CommonConsts.ResultExercise.InputFormatExerciseResultWeightCount,
+                    ExercisesMods.FreeResult => CommonConsts.ResultExercise.InputFormatExerciseResultFreeResult,
+                    _ => throw new NotImplementedException($"Неожиданный тип упражнения: {currentExercise.Mode.ToString().AddBold().AddQuotes()}")
+                };
+
+                responseConverter = new ResponseTextConverter(ex.Message,
+                    inputFormatExerciseResult,
+                    $"Введите результат заново для упражения {CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBold().AddQuotes()}");
+                buttonsSets = (ButtonsSet.None, ButtonsSet.ExercisesListWithLastWorkoutForDay);
+            }
 
             this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
@@ -226,28 +274,62 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
+            string domainName = requestConverter.Convert();
+
             switch (domainType)
             {
                 case "Cycle":
-                    if (!TryCheckingCycleName(requestConverter.Convert()))
+                    if (AlreadyExistDomainWithName(domainName, DomainType.Cycle))
+                    {
+                        responseConverter = new ResponseTextConverter("Ошибка при добавлении названия!", $"Цикл с названием {domainName.AddQuotes()} уже существует",
+                            "Ввведите другое название тренировочного цикла");
+                        buttonsSets = (ButtonsSet.None, ButtonsSet.SettingCycles);
+
+                        ClearHandlerAction();
+
+                        this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+
                         return this;
+                    }
 
                     responseConverter = new ResponseTextConverter("Название цикла сохранено!");
                     buttonsSets = (ButtonsSet.SettingCycle, ButtonsSet.CycleList);
                     break;
 
                 case "Day":
-                    if (!TryCheckingDayName(requestConverter.Convert()))
-                        return this;
+                    if (AlreadyExistDomainWithName(domainName, DomainType.Day))
+                    {
+                        responseConverter = new ResponseTextConverter("Ошибка при сохранении!", $"В этом цикле уже существует день с названием {domainName.AddQuotes()}",
+                    $"Ввведите другое название дня для цикла {CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBold().AddQuotes()}");
 
-                    responseConverter = new ResponseTextConverter("Название дня сохранено!");
+                        buttonsSets = GetButtonsSetIfFailedSaveNewDomainValue(ButtonsSet.SettingDays);
+
+                        ClearHandlerAction();
+
+                        this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+
+                        return this;
+                    }
+
+                    responseConverter = new ResponseTextConverter("Название дня сохранено!", "Выберите интересующую настройку для указанного дня");
                     buttonsSets = (ButtonsSet.SettingDay, ButtonsSet.DaysList);
                     break;
 
                 case "Exercise":
 
-                    if (!TryCheckingExercisesNames(requestConverter.Convert()))
+                    if (AlreadyExistDomainWithName(domainName, DomainType.Exercise))
+                    {
+                        responseConverter = new ResponseTextConverter("Ошибка при сохранении!", $"В этом дне уже существует упражнение с названием {domainName.AddQuotes()}",
+                        $"Введите другое(ие) название(я) упражнение(ий) для дня {CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name}");
+
+                        buttonsSets = GetButtonsSetIfFailedSaveNewDomainValue(ButtonsSet.SettingExercises);
+
+                        ClearHandlerAction();
+
+                        this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+
                         return this;
+                    }
 
                     responseConverter = new ResponseTextConverter("Название сохранено!", "Выберите интересующую настройку для указанного упражнения");
                     buttonsSets = (ButtonsSet.SettingExercise, ButtonsSet.ExercisesList);
@@ -256,7 +338,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                     throw new InvalidOperationException($"Неожиданный {nameof(domainType)} : {domainType}");
             }
 
-            this.Domain.Name = requestConverter.Convert();
+            this.Domain.Name = domainName;
 
             this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.Default;
 
@@ -265,90 +347,37 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             return this;
         }
 
-        private bool TryCheckingCycleName(string name)
+        private bool AlreadyExistDomainWithName(string name, DomainType domainType)
         {
-            if (CommandHandlerTools.CurrentUserContext.UserInformation.Cycles.Any(c => c.Name == name))
+            switch (domainType)
             {
-                ResponseTextConverter responseConverter = new ResponseTextConverter("Ошибка при добавлении названия!", $"Цикл с названием {requestConverter.Convert()} уже существует",
-                    "Ввведите другое название тренировочного цикла");
-                (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.None, ButtonsSet.SettingCycles);
+                case DomainType.Cycle:
+                    return CommandHandlerTools.CurrentUserContext.UserInformation.Cycles.Any(c => c.Name == name);
+                
+                case DomainType.Day:
+                    return CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Days.Any(d => d.Name == name);
 
-                ClearHandlerAction();
+                case DomainType.Exercise:
+                    return CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Exercises.Any(e => e.Name == name);
 
-                this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
-
-                return false;
+                default:
+                    throw new NotSupportedException($"Неподдерживаемый тип домена: {domainType.ToString()}");
             }
-
-            return true;
         }
 
-        private bool TryCheckingDayName(string name)
+        private (ButtonsSet, ButtonsSet) GetButtonsSetIfFailedSaveNewDomainValue(ButtonsSet backButtonForSetting)
         {
-            ResponseTextConverter responseConverter;
-            (ButtonsSet, ButtonsSet) buttonsSets;
-
-            if (CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Days.Any(d => d.Name == name))
+            switch (CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom)
             {
-                responseConverter = new ResponseTextConverter("Ошибка при сохранении!", "В этом цикле уже существует день с таким названием",
-                    $"Ввведите другое название дня для цикла {CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name}");
+                case QueryFrom.Start:
+                    return (ButtonsSet.None, ButtonsSet.None);
 
-                switch (CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom)
-                {
-                    case QueryFrom.Start:
-                        buttonsSets = (ButtonsSet.None, ButtonsSet.None);
-                        break;
+                case QueryFrom.Settings:
+                    return (ButtonsSet.None, backButtonForSetting);
 
-                    case QueryFrom.Settings:
-                        buttonsSets = (ButtonsSet.None, ButtonsSet.SettingDays);
-                        break;
-                    default:
-                        throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom}");
-                }
-
-                ClearHandlerAction();
-
-                this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
-
-                return false;
+                default:
+                    throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom}");
             }
-
-            return true;
-        }
-
-        private bool TryCheckingExercisesNames(params string[] names)
-        {
-            ResponseTextConverter responseConverter;
-            (ButtonsSet, ButtonsSet) buttonsSets;
-
-            foreach (string name in names)
-            {
-                if (CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Exercises.Any(e => e.Name == name))
-                {
-                    responseConverter = new ResponseTextConverter("Ошибка при сохранении!", "В этом дне уже существует упражнение(я) с таким(и) названием(ями)",
-                        $"Введите другое(ие) название(я) упражнение(ий) для дня {CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name}");
-
-                    switch (CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom)
-                    {
-                        case QueryFrom.Start:
-                            buttonsSets = (ButtonsSet.None, ButtonsSet.None);
-                            break;
-
-                        case QueryFrom.Settings:
-                            buttonsSets = (ButtonsSet.None, ButtonsSet.SettingExercises);
-                            break;
-                        default:
-                            throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom}");
-                    }
-
-                    ClearHandlerAction();
-
-                    this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
-
-                    return false;
-                }
-            }
-            return true;
         }
 
         internal TextMessageCH FindLogByIDCommand(bool isEventID)
