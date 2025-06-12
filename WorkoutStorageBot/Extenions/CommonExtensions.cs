@@ -16,5 +16,8 @@
 
         internal static string AddQuotes(this string text)
             => $"\"{text}\"";
+
+        internal static string AddBoldQuotes(this string text)
+            => text.AddBoldQuotes();
     }
 }

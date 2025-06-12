@@ -129,7 +129,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             if (AlreadyExistDomainWithName(domainName, DomainType.Day))
             {
                 responseConverter = new ResponseTextConverter("Ошибка при сохранении!", $"В этом цикле уже существует день с названием {domainName.AddQuotes()}",
-            $"Ввведите другое название дня для цикла {CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBold().AddQuotes()}");
+            $"Ввведите другое название дня для цикла {CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldQuotes()}");
 
                 buttonsSets = GetButtonsSetIfFailedSaveNewDomainValue(ButtonsSet.SettingDays);
 
@@ -211,7 +211,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             {
                 responseConverter = new ResponseTextConverter("Упражнение(я) не зафиксировано(ы)!",
                     exceptionMessage,
-                    @$"Введите другое(ие) упражнение(й) для дня {CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBold().AddQuotes()}
+                    @$"Введите другое(ие) упражнение(й) для дня {CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldQuotes()}
 
 {CommonConsts.Exercise.InputFormatExercise}");
 
@@ -251,12 +251,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                     ExercisesMods.Count => CommonConsts.ResultExercise.InputFormatExerciseResultCount,
                     ExercisesMods.WeightCount => CommonConsts.ResultExercise.InputFormatExerciseResultWeightCount,
                     ExercisesMods.FreeResult => CommonConsts.ResultExercise.InputFormatExerciseResultFreeResult,
-                    _ => throw new NotImplementedException($"Неожиданный тип упражнения: {currentExercise.Mode.ToString().AddBold().AddQuotes()}")
+                    _ => throw new NotImplementedException($"Неожиданный тип упражнения: {currentExercise.Mode.ToString().AddBoldQuotes()}")
                 };
 
                 responseConverter = new ResponseTextConverter(ex.Message,
                     inputFormatExerciseResult,
-                    $"Введите результат заново для упражения {CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBold().AddQuotes()}");
+                    $"Введите результат заново для упражения {CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldQuotes()}");
                 buttonsSets = (ButtonsSet.None, ButtonsSet.ExercisesListWithLastWorkoutForDay);
             }
 
@@ -300,7 +300,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                     if (AlreadyExistDomainWithName(domainName, DomainType.Day))
                     {
                         responseConverter = new ResponseTextConverter("Ошибка при сохранении!", $"В этом цикле уже существует день с названием {domainName.AddQuotes()}",
-                    $"Ввведите другое название дня для цикла {CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBold().AddQuotes()}");
+                    $"Ввведите другое название дня для цикла {CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldQuotes()}");
 
                         buttonsSets = GetButtonsSetIfFailedSaveNewDomainValue(ButtonsSet.SettingDays);
 

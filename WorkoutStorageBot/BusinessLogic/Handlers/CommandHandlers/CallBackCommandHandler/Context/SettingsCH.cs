@@ -340,14 +340,14 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
                     this.CommandHandlerTools.CurrentUserContext.DataManager.SetDomain(currentExercise);
 
-                    string currentExerciseName = currentExercise.Name.AddBold().AddQuotes();
+                    string currentExerciseName = currentExercise.Name.AddBoldQuotes();
 
                     string inputFormatExerciseResult = currentExercise.Mode switch
                     {
                         ExercisesMods.Count => CommonConsts.ResultExercise.InputFormatExerciseResultCount,
                         ExercisesMods.WeightCount => CommonConsts.ResultExercise.InputFormatExerciseResultWeightCount,
                         ExercisesMods.FreeResult => CommonConsts.ResultExercise.InputFormatExerciseResultFreeResult,
-                        _ => throw new NotImplementedException($"Неожиданный тип упражнения: {currentExercise.Mode.ToString().AddBold().AddQuotes()}")
+                        _ => throw new NotImplementedException($"Неожиданный тип упражнения: {currentExercise.Mode.ToString().AddBoldQuotes()}")
                     };
 
                     switch (this.CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom)
@@ -588,7 +588,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             {
                 case "Exercise":
 
-                    responseConverter = new ResponseTextConverter($"Выберите новый тип для упражнения {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBold().AddQuotes()}");
+                    responseConverter = new ResponseTextConverter($"Выберите новый тип для упражнения {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldQuotes()}");
                     buttonsSets = (ButtonsSet.ChangeType, ButtonsSet.SettingExercise);
                     break;
                 default:
@@ -620,8 +620,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
                     ((Exercise)this.Domain).Mode = newMode;
 
-                    responseConverter = new ResponseTextConverter($"Режим для упражнения {Domain.Name.AddBold().AddQuotes()} изменён на {newMode.ToString().AddBold().AddQuotes()}",
-                        $"Выберите интересующую настройку для упражнения {Domain.Name.AddBold().AddQuotes()}");
+                    responseConverter = new ResponseTextConverter($"Режим для упражнения {Domain.Name.AddBoldQuotes()} изменён на {newMode.ToString().AddBoldQuotes()}",
+                        $"Выберите интересующую настройку для упражнения {Domain.Name.AddBoldQuotes()}");
                     buttonsSets = (ButtonsSet.SettingExercise, ButtonsSet.ExercisesList);
                     break;
                 default:
