@@ -41,7 +41,7 @@ namespace WorkoutStorageBot.Helpers.Export
                 // informationAboutSelectedPeriod
                 SetStyle(mainSheet.Cells[informationAboutSelectedPeriodPoint.X, informationAboutSelectedPeriodPoint.Y, 
                                          informationAboutSelectedPeriodPoint.X, informationAboutSelectedPeriodPoint.Y + 7],
-                                         true, true, ExcelHorizontalAlignment.Center, Color.Azure);
+                                         true, true, false, Color.Azure);
                 mainSheet.Cells[informationAboutSelectedPeriodPoint.X, informationAboutSelectedPeriodPoint.Y].Value = informationAboutSelectedPeriod;
 
                 foreach (Cycle cycle in cycles)
@@ -50,27 +50,32 @@ namespace WorkoutStorageBot.Helpers.Export
                     {
                         foreach (Exercise exercise in day.Exercises)
                         {
-                            SetStyle(mainSheet.Cells[exercisePoint.X, exercisePoint.Y, exercisePoint.X, exercisePoint.Y + 2], true, true, ExcelHorizontalAlignment.Center, Color.NavajoWhite);
+                            // style for ExerciseName
+                            SetStyle(mainSheet.Cells[exercisePoint.X, exercisePoint.Y, exercisePoint.X, exercisePoint.Y + 3], true, true, false, Color.NavajoWhite);
                             mainSheet.Cells[exercisePoint.X, exercisePoint.Y].Value = exercise.Name;
 
-                            // ResultTitle: Date, Weight, Count
-                            SetStyle(mainSheet.Cells[resultTitlePoint.X, resultTitlePoint.Y], false, true, ExcelHorizontalAlignment.Center, Color.Salmon);
+                            // ResultTitle: Date, Count, Weight, FreeResult 
+                            SetStyle(mainSheet.Cells[resultTitlePoint.X, resultTitlePoint.Y], false, true, false, Color.Salmon);
                             mainSheet.Cells[resultTitlePoint.X, resultTitlePoint.Y].Value = "Дата";
-                            SetStyle(mainSheet.Cells[resultTitlePoint.X, resultTitlePoint.Y + 1], false, true, ExcelHorizontalAlignment.Center, Color.DarkSeaGreen);
-                            mainSheet.Cells[resultTitlePoint.X, resultTitlePoint.Y + 1].Value = "Вес";
-                            SetStyle(mainSheet.Cells[resultTitlePoint.X, resultTitlePoint.Y + 2], false, true, ExcelHorizontalAlignment.Center, Color.SkyBlue);
-                            mainSheet.Cells[resultTitlePoint.X, resultTitlePoint.Y + 2].Value = "Кол-во";
+                            SetStyle(mainSheet.Cells[resultTitlePoint.X, resultTitlePoint.Y + 1], false, true, false, Color.SkyBlue);
+                            mainSheet.Cells[resultTitlePoint.X, resultTitlePoint.Y + 1].Value = "Кол-во";
+                            SetStyle(mainSheet.Cells[resultTitlePoint.X, resultTitlePoint.Y + 2], false, true, false, Color.DarkSeaGreen);
+                            mainSheet.Cells[resultTitlePoint.X, resultTitlePoint.Y + 2].Value = "Вес";
+                            SetStyle(mainSheet.Cells[resultTitlePoint.X, resultTitlePoint.Y + 3], false, true, false, Color.LightCyan);
+                            mainSheet.Cells[resultTitlePoint.X, resultTitlePoint.Y + 3].Value = "Свободный рез.";
 
                             foreach (ResultExercise resultExercise in exercise.ResultExercises)
                             {
                                 Color backgroundCellColor = GetColorForRow(++rowNumber);
 
-                                SetStyle(mainSheet.Cells[resultExercisePoint.X, resultExercisePoint.Y], false, true, ExcelHorizontalAlignment.Center, Color.Yellow);
+                                SetStyle(mainSheet.Cells[resultExercisePoint.X, resultExercisePoint.Y], false, true, false, Color.Yellow);
                                 mainSheet.Cells[resultExercisePoint.X, resultExercisePoint.Y].Value = resultExercise.DateTime.ToShortDateString();
-                                SetStyle(mainSheet.Cells[resultExercisePoint.X, resultExercisePoint.Y + 1], false, true, ExcelHorizontalAlignment.Center, backgroundCellColor);
-                                mainSheet.Cells[resultExercisePoint.X, resultExercisePoint.Y + 1].Value = resultExercise.Weight;
-                                SetStyle(mainSheet.Cells[resultExercisePoint.X, resultExercisePoint.Y + 2], false, true, ExcelHorizontalAlignment.Center, backgroundCellColor);
-                                mainSheet.Cells[resultExercisePoint.X, resultExercisePoint.Y + 2].Value = resultExercise.Count;
+                                SetStyle(mainSheet.Cells[resultExercisePoint.X, resultExercisePoint.Y + 1], false, true, false, backgroundCellColor);
+                                mainSheet.Cells[resultExercisePoint.X, resultExercisePoint.Y + 1].Value = resultExercise.Count;
+                                SetStyle(mainSheet.Cells[resultExercisePoint.X, resultExercisePoint.Y + 2], false, true, false, backgroundCellColor);
+                                mainSheet.Cells[resultExercisePoint.X, resultExercisePoint.Y + 2].Value = resultExercise.Weight;
+                                SetStyle(mainSheet.Cells[resultExercisePoint.X, resultExercisePoint.Y + 3], false, true, true, backgroundCellColor);
+                                mainSheet.Cells[resultExercisePoint.X, resultExercisePoint.Y + 3].Value = resultExercise.FreeResult;
 
                                 // // shift to next resultExercisePoint
                                 resultExercisePoint.X += 1;
@@ -79,7 +84,7 @@ namespace WorkoutStorageBot.Helpers.Export
                             // // shift to next exercisePoint, resultTitlePoint and resultExercisePoint
                             rowNumber = 0;
 
-                            exercisePoint.Y += 3;
+                            exercisePoint.Y += 4;
 
                             resultTitlePoint.X = exercisePoint.X + 1;
                             resultTitlePoint.Y = exercisePoint.Y;
@@ -89,14 +94,16 @@ namespace WorkoutStorageBot.Helpers.Export
 
                         }
 
-                        SetStyle(mainSheet.Cells[dayPoint.X, dayPoint.Y, dayPoint.X, exercisePoint.Y - 1], true, true, ExcelHorizontalAlignment.Center, Color.Gold);
+                        // style for DayName
+                        SetStyle(mainSheet.Cells[dayPoint.X, dayPoint.Y, dayPoint.X, exercisePoint.Y - 1], true, true, false, Color.Gold);
                         mainSheet.Cells[dayPoint.X, dayPoint.Y].Value = day.Name;
 
                         // shift to next day
                         dayPoint.Y = exercisePoint.Y;
                     }
 
-                    SetStyle(mainSheet.Cells[cyclePoint.X, cyclePoint.Y, cyclePoint.X, exercisePoint.Y - 1], true, true, ExcelHorizontalAlignment.Center, Color.PaleGreen);
+                    // style for CycleName
+                    SetStyle(mainSheet.Cells[cyclePoint.X, cyclePoint.Y, cyclePoint.X, exercisePoint.Y - 1], true, true, false, Color.PaleGreen);
                     mainSheet.Cells[cyclePoint.X, cyclePoint.Y].Value = cycle.Name;
 
                     // shift to next cycle
@@ -128,16 +135,22 @@ namespace WorkoutStorageBot.Helpers.Export
             //ExcelPackage.License.SetNonCommercialPersonal("WorkoutStorageBot");
         }
 
-        private static void SetStyle(ExcelRange excelRange, bool needMerge, bool needBorder, ExcelHorizontalAlignment horizontalAlignment, Color backgroundCellColor)
+        private static void SetStyle(ExcelRange excelRange, 
+            bool needMerge, bool needBorder, bool wrapText, 
+            Color backgroundCellColor, 
+            ExcelHorizontalAlignment horizontalAlignment = ExcelHorizontalAlignment.Center, 
+            ExcelVerticalAlignment verticalAlignment = ExcelVerticalAlignment.Center)
         {
             excelRange.Merge = needMerge;              
            
             if (needBorder)
                 excelRange.Style.Border.BorderAround(ExcelBorderStyle.Thin);
 
+            excelRange.Style.VerticalAlignment = verticalAlignment;
             excelRange.Style.HorizontalAlignment = horizontalAlignment;
             excelRange.Style.Fill.PatternType = ExcelFillStyle.Solid;
             excelRange.Style.Fill.BackgroundColor.SetColor(backgroundCellColor);
+            excelRange.Style.WrapText = wrapText;
         }
 
         private static Color GetColorForRow(int rowNumber)

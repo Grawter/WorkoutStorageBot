@@ -33,6 +33,7 @@ namespace WorkoutStorageBot.Helpers.Export
 
             JsonSerializerOptions starterJsonSerializerOptions = new JsonSerializerOptions()
             {
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                 ReferenceHandler = ReferenceHandler.IgnoreCycles,
             };
 
