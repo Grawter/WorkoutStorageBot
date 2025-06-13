@@ -18,6 +18,6 @@
             => $"\"{text}\"";
 
         internal static string AddBoldQuotes(this string text)
-            => text.AddBoldQuotes();
+            => text.AddBold().AddQuotes();
     }
 }
