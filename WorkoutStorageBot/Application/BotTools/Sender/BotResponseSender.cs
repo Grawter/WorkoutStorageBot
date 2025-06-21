@@ -26,7 +26,7 @@ namespace WorkoutStorageBot.Application.BotTools.Sender
             ArgumentNullException.ThrowIfNull(messageInformationSetting);
             ArgumentNullException.ThrowIfNull(currentUserContext);
 
-            InlineButtons buttons = new InlineButtons(currentUserContext);
+            InlineButtonsHelper buttons = new InlineButtonsHelper(currentUserContext);
 
             // Не обязательно. Чтобы не было анимации "зависание кнопки" в ТГ боте
             if (messageInformationSetting.AdditionalParameters.TryGetValue("BotCallBackID", out string callbackQueryID))

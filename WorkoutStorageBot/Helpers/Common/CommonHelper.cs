@@ -21,7 +21,7 @@
 
         internal static string GetCensorValue(string text, int countShowLastSymbols)
         {
-            if (string.IsNullOrEmpty(text) || text.Length <= countShowLastSymbols)
+            if (string.IsNullOrWhiteSpace(text) || text.Length <= countShowLastSymbols)
                 return "******";
 
             // Берём только последние 3 символа

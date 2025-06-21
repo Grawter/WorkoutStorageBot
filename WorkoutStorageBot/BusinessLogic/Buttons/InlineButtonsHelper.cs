@@ -10,14 +10,14 @@ using WorkoutStorageBot.Model.Domain;
 
 namespace WorkoutStorageBot.BusinessLogic.Buttons
 {
-    internal class InlineButtons
+    internal class InlineButtonsHelper
     {
         private List<List<InlineKeyboardButton>> inlineKeyboardButtonsMain;
         private List<InlineKeyboardButton> inlineKeyboardButtons;
 
         private UserContext CurrentUserContext { get; }
 
-        internal InlineButtons(UserContext userContext)
+        internal InlineButtonsHelper(UserContext userContext)
         {
             CurrentUserContext = userContext;
 

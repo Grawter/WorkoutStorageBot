@@ -43,7 +43,7 @@ namespace WorkoutStorageBot.Helpers.Converters
 
             this.target = target;
 
-            if (!string.IsNullOrEmpty(separator))
+            if (!string.IsNullOrWhiteSpace(separator))
                 this.separator = separator;
             else
                 this.separator = "======================";
@@ -69,19 +69,19 @@ namespace WorkoutStorageBot.Helpers.Converters
             if (onlyTarget)
                 return target;
 
-            if (!string.IsNullOrEmpty(title))
+            if (!string.IsNullOrWhiteSpace(title))
             {
                 sb.AppendLine(title);
                 sb.AppendLine(separator);
             }
 
-            if (!string.IsNullOrEmpty(content))
+            if (!string.IsNullOrWhiteSpace(content))
             {
                 sb.AppendLine(content);
                 sb.AppendLine(separator);
             }
 
-            if (!string.IsNullOrEmpty(target))
+            if (!string.IsNullOrWhiteSpace(target))
             {
                 sb.AppendLine();
                 sb.AppendLine(target);

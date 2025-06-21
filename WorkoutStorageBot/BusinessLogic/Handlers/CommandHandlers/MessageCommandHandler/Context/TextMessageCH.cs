@@ -442,7 +442,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             bool parametersIsValid = false;
 
-            if (parameters.Length != 2 || string.IsNullOrEmpty(parameters[0]) || string.IsNullOrEmpty(parameters[1]))
+            if (parameters.Length != 2 || string.IsNullOrWhiteSpace(parameters[0]) || string.IsNullOrWhiteSpace(parameters[1]))
                 responseConverter = new ResponseTextConverter("Некорректные параметры для изменения состояния пользователя", "Выберите интересующее действие");
             else
                 parametersIsValid = true;
@@ -497,7 +497,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             string userIdentity = requestConverter.RemoveCompletely(35).WithoutServiceSymbol().Convert();
 
-            if (string.IsNullOrEmpty(userIdentity))
+            if (string.IsNullOrWhiteSpace(userIdentity))
                 throw new NotImplementedException("Некорректные параметры для изменения состояния пользователя");
 
             UserInformation? user = adminRepository.GetUserInformation(userIdentity);

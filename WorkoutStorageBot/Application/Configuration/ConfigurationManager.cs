@@ -88,7 +88,7 @@ namespace WorkoutStorageBot.Application.Configuration
                 {
                     CustomRuleLog customRuleLog = new CustomRuleLog()
                     {
-                        FullClassName = GetRequiredValue(customRuleSection["FullClassName"], "Не указано название класс для кастомного правило логгирования"),
+                        FullClassName = GetRequiredValue(customRuleSection["FullClassName"], "Не указано название класса для кастомного правила логгирования"),
                         DBLogLevels = GetChildrenArray(customRuleSection, "DBLogLevels", false),
                         ConsoleLogLevels = GetChildrenArray(customRuleSection, "ConsoleLogLevels", false),
                     };
