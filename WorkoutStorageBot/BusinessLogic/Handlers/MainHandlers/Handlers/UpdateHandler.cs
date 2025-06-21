@@ -88,8 +88,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers
             switch (CurrentUserContext.Navigation.MessageNavigationTarget)
             {
                 case MessageNavigationTarget.Default:
-                    CHResult = commandHandler.Expectation()
-                                             .DefaultCommand();
+                    CHResult = commandHandler.DefaultCommand();
 
                     break;
 
@@ -106,14 +105,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers
                     break;
 
                 case MessageNavigationTarget.AddExercises:
-                    CHResult = commandHandler.Expectation()
-                                             .AddExercisesCommand();
+                    CHResult = commandHandler.AddExercisesCommand();
 
                     break;
 
                 case MessageNavigationTarget.AddResultForExercise:
-                    CHResult = commandHandler.Expectation()
-                                             .AddResultForExerciseCommand();
+                    CHResult = commandHandler.AddResultForExerciseCommand();
 
                     break;
 
@@ -136,26 +133,22 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers
                     break;
 
                 case MessageNavigationTarget.FindLogByID:
-                    CHResult = commandHandler.Expectation()
-                                             .FindLogByIDCommand(isEventID: false);
+                    CHResult = commandHandler.FindLogByIDCommand(isEventID: false);
 
                     break;
 
                 case MessageNavigationTarget.FindLogByEventID:
-                    CHResult = commandHandler.Expectation()
-                                             .FindLogByIDCommand(isEventID: true);
+                    CHResult = commandHandler.FindLogByIDCommand(isEventID: true);
 
                     break;
 
                 case MessageNavigationTarget.ChangeUserState:
-                    CHResult = commandHandler.Expectation()
-                                             .ChangeUserStateCommand();
+                    CHResult = commandHandler.ChangeUserStateCommand();
 
                     break;
 
                 case MessageNavigationTarget.DeleteUser:
-                    CHResult = commandHandler.Expectation()
-                                             .DeleteUserCommand();
+                    CHResult = commandHandler.DeleteUserCommand();
 
                     break;
 

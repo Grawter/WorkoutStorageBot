@@ -1,11 +1,10 @@
 ﻿#region using
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
-using WorkoutStorageBot.BusinessLogic.SessionContext;
 using WorkoutStorageBot.BusinessLogic.StepStore;
+using WorkoutStorageBot.Extenions;
 using WorkoutStorageBot.Helpers.CallbackQueryParser;
 using WorkoutStorageBot.Helpers.Converters;
-using WorkoutStorageBot.Model.AppContext;
 using WorkoutStorageBot.Model.HandlerData;
 #endregion
 
@@ -33,11 +32,11 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             ResponseTextConverter responseConverter = new ResponseTextConverter(previousStep.ButtonsSet switch // optional additional information
             {
                 ButtonsSet.SettingCycle
-                    => previousStep.Message + " " + CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name,
+                    => $"{previousStep.Message} {CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldQuotes()}",
                 ButtonsSet.SettingDay
-                    => previousStep.Message + " " + CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name,
+                    => $"{previousStep.Message} {CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldQuotes()}",
                 ButtonsSet.SettingExercise
-                    => previousStep.Message + " " + CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name,
+                    => $"{previousStep.Message} {CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldQuotes()}",
                 _ => previousStep.Message
             });
 
