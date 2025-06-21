@@ -813,8 +813,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
         {
             IEnumerable<int> userExercisesIds = this.CommandHandlerTools.CurrentUserContext.GetUserExercisesIds();
 
-            IQueryable<ResultExercise> resultsExercises = this.CommandHandlerTools.Db.ResultsExercises
-                                                                            .Where(x => userExercisesIds.Contains(x.ExerciseId));
+            IQueryable<ResultExercise> resultsExercises = this.CommandHandlerTools.Db.ResultsExercises.Where(x => userExercisesIds.Contains(x.ExerciseId));
                                                             
             return resultsExercises;
         }

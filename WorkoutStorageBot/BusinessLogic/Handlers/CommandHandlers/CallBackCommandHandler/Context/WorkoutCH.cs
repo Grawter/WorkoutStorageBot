@@ -51,14 +51,19 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
                     IQueryable<int> activeExercisesIDsInActiveDays = activeExercisesInActiveDays.Select(e => e.Id);
 
-                    IGrouping<DateTime, ResultExercise> resultLastTraining = CommandHandlerTools.Db.ResultsExercises
+                    var resultlasttraining = CommandHandlerTools.Db.ResultsExercises
                                                                 .Where(re => activeExercisesIDsInActiveDays.Contains(re.ExerciseId))
-                                                                .OrderByDescending(re => re.DateTime)
                                                                 .GroupBy(re => re.DateTime.Date)
-                                                                .AsEnumerable()
-                                                                .LastOrDefault();
+                                                                .Select(g => new
+                                                                {
+                                                                    Date = g.Key,
+                                                                    Data = g.Select(x => x),
+                                                                })
+                                                                .OrderByDescending(x => x.Date)
+                                                                .FirstOrDefault();
 
-                    information = GetInformationAboutLastExercises(resultLastTraining);
+
+                    information = GetInformationAboutLastExercises(resultlasttraining.Data);
                     responseConverter = new ResponseTextConverter("Последняя тренировка:", information, "Выберите тренировочный день");
                     buttonsSets = (ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main);
                     break;
@@ -67,28 +72,22 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     IEnumerable<int> exercisesIDs = CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Exercises.Where(e => !e.IsArchive)
                                                                                                                            .Select(d => d.Id);
 
-                    IQueryable<ResultExercise> lastDateForExercises = CommandHandlerTools.Db.ResultsExercises.Where(re => exercisesIDs.Contains(re.ExerciseId))
-                                                .OrderBy(re => re.ExerciseId)
-                                                .ThenByDescending(re => re.DateTime)
+                    IEnumerable<IGrouping<DateTime, ResultExercise>> lastDateForExercises = CommandHandlerTools.Db.ResultsExercises.Where(re => exercisesIDs.Contains(re.ExerciseId))
                                                 .GroupBy(re => re.ExerciseId)
                                                 //order Data in group and get first (older) element for get lastDate
-                                                .Select(reGROUP => reGROUP.OrderByDescending(re => re.DateTime).First());
+                                                .Select(reGROUP => reGROUP.OrderByDescending(re => re.DateTime.Date).First())
+                                                .ToList()
+                                                .GroupBy(re => re.DateTime.Date);
 
-                    IQueryable<ResultExercise> lastResultsExercisesInCurrentDay = default;
+                    IQueryable<ResultExercise> lastResultsExercisesInCurrentDay = CommandHandlerTools.Db.ResultsExercises.Where(e => false);
                     
-                    bool isFirstQuery = true;
-                    
-                    foreach (ResultExercise resultExercise in lastDateForExercises)
+                    foreach (IGrouping<DateTime, ResultExercise> resultExercise in lastDateForExercises)
                     {
-                        if (isFirstQuery)
-                        {
-                            lastResultsExercisesInCurrentDay = CommandHandlerTools.Db.ResultsExercises.Where(re => re.ExerciseId == resultExercise.ExerciseId && 
-                                                                                         re.DateTime.Date == resultExercise.DateTime.Date);
-                            isFirstQuery = false;
-                        }
-                        else
-                            lastResultsExercisesInCurrentDay = lastResultsExercisesInCurrentDay.Union(CommandHandlerTools.Db.ResultsExercises.Where(re => re.ExerciseId == resultExercise.ExerciseId && 
-                                                                                                                                re.DateTime.Date == resultExercise.DateTime.Date));
+                        List<int> groupExercisesIDs = resultExercise.Select(x => x.ExerciseId).ToList();
+
+                        lastResultsExercisesInCurrentDay = lastResultsExercisesInCurrentDay.Union(CommandHandlerTools.Db.ResultsExercises.Where(re => 
+                                                                                                            groupExercisesIDs.Contains(re.ExerciseId) &&
+                                                                                                            re.DateTime.Date == resultExercise.Key));
                     }
 
                     information = GetInformationAboutLastDay(lastResultsExercisesInCurrentDay);
