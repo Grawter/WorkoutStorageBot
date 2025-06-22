@@ -436,6 +436,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers
 
             informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSet);
 
+            CurrentUserContext.DataManager.ResetAll();
+
             return false;
         }
     }

@@ -50,6 +50,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                     break;
 
                 #region Workout area
+
                 case ButtonsSet.DaysListWithLastWorkout:
                     AddInlineButton("Последняя тренировка", "1|LastResult|Exercises");
                     GetDomainsInButtons(CurrentUserContext.ActiveCycle.Days.Where(d => !d.IsArchive), "Selected");
@@ -63,9 +64,11 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                 case ButtonsSet.SaveResultsExercise:
                     AddInlineButton("Сохранить результаты", "1|SaveResultsExercise");
                     break;
+
                 #endregion
 
                 #region Settings area
+
                 case ButtonsSet.Settings:
                     AddInlineButton("Настройка тренировочных циклов", "3|Setting|Cycles");
                     AddInlineButton("Архив", "3|ArchiveStore");
@@ -93,7 +96,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                     break;
 
                 case ButtonsSet.SettingDays:
-                    AddInlineButton("Добавить новые дни в цикл", "3|Add|Day");
+                    AddInlineButton("Добавить новый день в цикл", "3|Add|Day");
                     AddInlineButton("Настройка существующих дней", "3|SettingExisting|Days");
                     AddInlineButton("Вернуться к главному меню", "0|ToMain");
                     break;
@@ -148,6 +151,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                     break;
 
                 #region Full adding cycle area
+
                 case ButtonsSet.AddCycle:
                     AddInlineButton("Добавить цикл", "3|Add|Cycle");
                     break;
@@ -155,7 +159,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                     AddInlineButton($"Добавить дни", "3|Add|Day");
                     break;
                 case ButtonsSet.AddExercises:
-                    AddInlineButton($"Добавить упражнеия", "3|Add|Exercise");
+                    AddInlineButton($"Добавить упражнения", "3|Add|Exercise");
                     break;
                 case ButtonsSet.SaveExercises:
                     AddInlineButton($"Сохранить упражнения", "3|SaveExercises");
@@ -164,9 +168,11 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                     AddInlineButton($"Добавить новый день", "3|Add|Day");
                     AddInlineButton($"Перейти в главное меню", "0|ToMain");
                     break;
+
                 #endregion
 
                 #region Archiving area
+
                 case ButtonsSet.ArchiveList:
                     AddInlineButton("Архивированные циклы", "3|Archive|Cycles");
                     AddInlineButton("Архивированные дни", "3|Archive|Days");
@@ -190,9 +196,11 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                         }
                     }
                     break;
+
                 #endregion
 
                 #region Export area
+
                 case ButtonsSet.Export:
                     AddInlineButton("Экспортировать тренировки в Excel", "3|ExportTo|Excel");
                     AddInlineButton("Экспортировать тренировки в JSON", "3|ExportTo|JSON");
@@ -212,6 +220,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                 #endregion
 
                 #region Confirm delete area
+
                 case ButtonsSet.ConfirmDelete:
                     AddInlineButton($"Да, удалить {additionalParameters["Name"]}", $"3|ConfirmDelete|{additionalParameters["DomainType"]}");
                     break;
@@ -219,6 +228,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                     break;
                 default:
                     throw new NotImplementedException($"Неожиданный buttonsSet: {buttonsSet}");
+
                 #endregion
 
                 #endregion

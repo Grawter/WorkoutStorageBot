@@ -1,7 +1,5 @@
 ﻿#region using
 
-using System;
-using System.Text;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.CoreRepositories.Repositories;
 using WorkoutStorageBot.BusinessLogic.Enums;
@@ -196,7 +194,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                             break;
 
                         case QueryFrom.Settings:
-                            buttonsSets = (ButtonsSet.None, ButtonsSet.SettingDay);
+                            buttonsSets = (ButtonsSet.None, ButtonsSet.SettingDays);
                             break;
                         default:
                             throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {this.CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom}");
@@ -222,7 +220,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                             break;
 
                         case QueryFrom.Settings:
-                            buttonsSets = (ButtonsSet.None, ButtonsSet.SettingExercise);
+                            buttonsSets = (ButtonsSet.None, ButtonsSet.SettingExercises);
                             break;
                         default:
                             throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {this.CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom}");
