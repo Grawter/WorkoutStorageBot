@@ -1,4 +1,6 @@
-﻿namespace WorkoutStorageBot.BusinessLogic.Exceptions
+﻿
+
+namespace WorkoutStorageBot.BusinessLogic.Exceptions
 {
     internal class CreateExerciseException : Exception
     {

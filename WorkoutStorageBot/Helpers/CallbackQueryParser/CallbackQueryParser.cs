@@ -1,4 +1,6 @@
-﻿namespace WorkoutStorageBot.Helpers.CallbackQueryParser
+﻿
+
+namespace WorkoutStorageBot.Helpers.CallbackQueryParser
 {
     internal class CallbackQueryParser
     {

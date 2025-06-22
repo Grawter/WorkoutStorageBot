@@ -1,7 +1,6 @@
 ﻿#region using
 
 using Microsoft.Extensions.Logging;
-using System;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using WorkoutStorageBot.Application.BotTools.Logging;
@@ -21,7 +20,6 @@ using WorkoutStorageBot.Model.Domain;
 using WorkoutStorageBot.Model.HandlerData;
 using WorkoutStorageBot.Model.HandlerData.Results;
 using WorkoutStorageBot.Model.HandlerData.Results.UpdateInfo;
-using static Microsoft.IO.RecyclableMemoryStreamManager;
 
 #endregion
 

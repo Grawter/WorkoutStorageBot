@@ -2,7 +2,6 @@
 
 using Microsoft.Extensions.Logging;
 using System.Text;
-using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.CoreRepositories.Repositories;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
@@ -167,7 +166,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             this.CommandHandlerTools.CurrentUserContext.LimitsManager.ChangeLimitsMode();
 
             ResponseTextConverter responseConverter =
-                new ResponseTextConverter($"Режим использования лимитов переключён на: <b>{this.CommandHandlerTools.CurrentUserContext.LimitsManager.IsEnableLimit}</b>",
+                new ResponseTextConverter($"Режим использования лимитов переключён на: {this.CommandHandlerTools.CurrentUserContext.LimitsManager.IsEnableLimit.ToString().AddBold()}",
                 "Выберите интересующее действие");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.Admin, ButtonsSet.Main);
 
@@ -183,7 +182,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
             AdminRepository.ChangeWhiteListMode();
 
-            ResponseTextConverter responseConverter = new ResponseTextConverter($"Белый список включён: <b>{AdminRepository.WhiteListIsEnable}</b>",
+            ResponseTextConverter responseConverter = new ResponseTextConverter($"Белый список включён: {AdminRepository.WhiteListIsEnable.ToString().AddBold()}",
                 "Выберите интересующее действие");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.Admin, ButtonsSet.Main);
 
@@ -214,7 +213,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
             this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.DeleteUser;
 
-            ResponseTextConverter responseConverter = new ResponseTextConverter("Удаление пользователя:", "<b>Внимание, пользователь будет удалён без возможности восстановления!</b>", $"Введите [userID/@userLogin]");
+            ResponseTextConverter responseConverter = new ResponseTextConverter("Удаление пользователя:", "Внимание, пользователь будет удалён без возможности восстановления!".AddBold(), $"Введите [userID/@userLogin]");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.None, ButtonsSet.Admin);
 
             this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);

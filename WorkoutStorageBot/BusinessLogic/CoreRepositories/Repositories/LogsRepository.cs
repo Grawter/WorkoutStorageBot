@@ -1,7 +1,11 @@
-﻿using WorkoutStorageBot.Core.Abstraction;
+﻿#region using
+
+using WorkoutStorageBot.Core.Abstraction;
 using WorkoutStorageBot.Core.Manager;
 using WorkoutStorageBot.Model.HandlerData;
 using WorkoutStorageBot.Model.Logging;
+
+#endregion
 
 namespace WorkoutStorageBot.BusinessLogic.CoreRepositories.Repositories
 {

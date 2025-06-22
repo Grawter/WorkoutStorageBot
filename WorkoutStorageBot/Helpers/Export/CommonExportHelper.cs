@@ -1,5 +1,8 @@
-﻿using WorkoutStorageBot.Model.Domain;
+﻿#region using
 
+using WorkoutStorageBot.Model.Domain;
+
+#endregion
 namespace WorkoutStorageBot.Helpers.Export
 {
     internal static class CommonExportHelper

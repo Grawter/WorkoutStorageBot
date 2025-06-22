@@ -1,7 +1,6 @@
 ﻿#region using
 
 using Microsoft.Extensions.Logging;
-using System.Reflection.Metadata;
 using WorkoutStorageBot.Application.Configuration;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.Extenions;

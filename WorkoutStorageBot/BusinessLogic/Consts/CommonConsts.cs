@@ -1,4 +1,6 @@
-﻿namespace WorkoutStorageBot.BusinessLogic.Consts
+﻿
+
+namespace WorkoutStorageBot.BusinessLogic.Consts
 {
     internal class CommonConsts
     {

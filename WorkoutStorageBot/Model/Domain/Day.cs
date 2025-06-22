@@ -1,4 +1,6 @@
-﻿namespace WorkoutStorageBot.Model.Domain
+﻿
+
+namespace WorkoutStorageBot.Model.Domain
 {
     public class Day : IDomain
     {

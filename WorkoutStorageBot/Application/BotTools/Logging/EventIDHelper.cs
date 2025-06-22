@@ -1,4 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+﻿#region using
+
+using Microsoft.Extensions.Logging;
+
+#endregion
 
 namespace WorkoutStorageBot.Application.BotTools.Logging
 {

@@ -45,7 +45,7 @@ namespace WorkoutStorageBot.Helpers.Export
             // Нельзя изменять уже используемую настройку (starterJsonSerializerOptions)
             JsonSerializerOptions finalJsonSerializerOptions = new JsonSerializerOptions(starterJsonSerializerOptions) 
             {
-                WriteIndented = true,
+                WriteIndented = true, // форматированный сериалзиация с табуляцией
                 Encoder = JavaScriptEncoder.Create(UnicodeRanges.All), // Чтобы кириллические (или возможные другие) символы не экранировались
             };
 

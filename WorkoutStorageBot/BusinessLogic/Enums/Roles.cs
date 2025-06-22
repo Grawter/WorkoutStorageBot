@@ -1,4 +1,6 @@
-﻿namespace WorkoutStorageBot.BusinessLogic.Enums
+﻿
+
+namespace WorkoutStorageBot.BusinessLogic.Enums
 {
     [Flags]
     internal enum Roles

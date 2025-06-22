@@ -10,6 +10,7 @@ using WorkoutStorageBot.Application.BotTools.Sender;
 using WorkoutStorageBot.Application.Configuration;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.Core.Manager;
+using WorkoutStorageBot.Extenions;
 using WorkoutStorageBot.Helpers.Common;
 
 #endregion
@@ -77,7 +78,7 @@ namespace WorkoutStorageBot.Application.BotTools.Listener
                 LogFormatter.CriticalExBotFormatter);
 
             if (_configurationData.Notifications.NotifyOwnersAboutCriticalErrors)
-                await _botSender.SendSimpleMassiveResponse(_configurationData.Bot.OwnersChatIDs, @$"<b>Необработанная ошибка</b>:
+                await _botSender.SendSimpleMassiveResponse(_configurationData.Bot.OwnersChatIDs, @$"{"Необработанная ошибка".AddBold()}:
 {exception.ToString()}");
         }
     }

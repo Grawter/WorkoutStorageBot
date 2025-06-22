@@ -1,4 +1,5 @@
 ﻿
+
 namespace WorkoutStorageBot.BusinessLogic.Enums
 {
     internal enum DomainType

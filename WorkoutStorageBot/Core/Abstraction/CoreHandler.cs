@@ -6,7 +6,6 @@ using WorkoutStorageBot.Helpers.Common;
 using WorkoutStorageBot.Model.HandlerData;
 using WorkoutStorageBot.Model.HandlerData.Results;
 
-
 #endregion
 
 namespace WorkoutStorageBot.Core.Abstraction

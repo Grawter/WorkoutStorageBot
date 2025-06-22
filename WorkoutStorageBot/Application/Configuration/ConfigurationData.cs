@@ -1,4 +1,6 @@
-﻿namespace WorkoutStorageBot.Application.Configuration
+﻿
+
+namespace WorkoutStorageBot.Application.Configuration
 {
     public class ConfigurationData
     {

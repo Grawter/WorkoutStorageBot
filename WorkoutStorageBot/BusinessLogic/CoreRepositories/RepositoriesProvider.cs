@@ -1,7 +1,6 @@
 ﻿#region using
 
 using Microsoft.Extensions.Logging;
-using OfficeOpenXml.FormulaParsing.Logging;
 using WorkoutStorageBot.Application.Configuration;
 using WorkoutStorageBot.BusinessLogic.CoreRepositories.Repositories;
 using WorkoutStorageBot.Core.Abstraction;

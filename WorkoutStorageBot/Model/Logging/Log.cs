@@ -1,4 +1,4 @@
-﻿using WorkoutStorageBot.Model.Domain;
+﻿
 
 namespace WorkoutStorageBot.Model.Logging
 {

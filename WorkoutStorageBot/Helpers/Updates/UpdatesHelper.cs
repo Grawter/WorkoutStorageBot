@@ -4,7 +4,6 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using WorkoutStorageBot.Model.HandlerData.Results.UpdateInfo;
 
-
 #endregion
 
 namespace WorkoutStorageBot.Helpers.Updates

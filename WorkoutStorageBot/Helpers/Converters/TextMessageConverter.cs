@@ -1,6 +1,5 @@
 ﻿#region using
 
-using System;
 using System.Text;
 using WorkoutStorageBot.BusinessLogic.Exceptions;
 using WorkoutStorageBot.Extenions;

@@ -1,4 +1,6 @@
-﻿namespace WorkoutStorageBot.Helpers.Common
+﻿
+
+namespace WorkoutStorageBot.Helpers.Common
 {
     internal class CommonHelper
     {

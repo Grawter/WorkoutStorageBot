@@ -1,4 +1,6 @@
-﻿namespace WorkoutStorageBot.Extenions
+﻿
+
+namespace WorkoutStorageBot.Extenions
 {
     internal static class CommonExtensions
     {
