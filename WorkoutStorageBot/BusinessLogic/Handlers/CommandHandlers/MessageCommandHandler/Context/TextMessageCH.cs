@@ -49,8 +49,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                     break;
 
                 default:
-                    responseConverter = new ResponseTextConverter($"Неизвестная команда: {requestConverter.Convert().AddBoldQuotes()}", 
-                        $"Для получения разделов воспользуйтесь командой {"/Start".AddBoldQuotes()}");
+                    responseConverter = new ResponseTextConverter($"Неизвестная команда: {requestConverter.Convert().AddBoldAndQuotes()}", 
+                        $"Для получения разделов воспользуйтесь командой {"/Start".AddBoldAndQuotes()}");
                     buttonsSets = (ButtonsSet.None, ButtonsSet.None);
                     break;
             }
@@ -71,7 +71,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             if (AlreadyExistDomainWithName(domainName, DomainType.Cycle))
             {
-                responseConverter = new ResponseTextConverter("Ошибка при добавлении названия!", $"Цикл с названием {domainName.AddBoldQuotes()} уже существует",
+                responseConverter = new ResponseTextConverter("Ошибка при добавлении названия!", $"Цикл с названием {domainName.AddBoldAndQuotes()} уже существует",
                     "Ввведите другое название тренировочного цикла");
                 buttonsSets = (ButtonsSet.None, ButtonsSet.SettingCycles);
 
@@ -93,15 +93,15 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 case QueryFrom.Start:
                     CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.AddDays;
 
-                    responseConverter = new ResponseTextConverter($"Цикл {CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldQuotes()} сохранён!",
-                        $"Введите название тренирочного дня для цикла {CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldQuotes()}");
+                    responseConverter = new ResponseTextConverter($"Цикл {CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()} сохранён!",
+                        $"Введите название тренирочного дня для цикла {CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()}");
                     buttonsSets = (ButtonsSet.None, ButtonsSet.None);
                     break;
 
                 case QueryFrom.Settings:
                     CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.Default;
 
-                    responseConverter = new ResponseTextConverter($"Цикл {CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldQuotes()} сохранён!",
+                    responseConverter = new ResponseTextConverter($"Цикл {CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()} сохранён!",
                         "Выберите дальнейшие действия");
                     buttonsSets = (ButtonsSet.AddDays, ButtonsSet.SettingCycles);
                     break;
@@ -125,8 +125,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             if (AlreadyExistDomainWithName(domainName, DomainType.Day))
             {
-                responseConverter = new ResponseTextConverter("Ошибка при сохранении!", $"В этом цикле уже существует день с названием {domainName.AddBoldQuotes()}",
-            $"Ввведите другое название дня для цикла {CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldQuotes()}");
+                responseConverter = new ResponseTextConverter("Ошибка при сохранении!", $"В этом цикле уже существует день с названием {domainName.AddBoldAndQuotes()}",
+            $"Ввведите другое название дня для цикла {CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()}");
 
                 buttonsSets = GetButtonsSetIfFailedSaveNewDomainValue(ButtonsSet.SettingDays);
 
@@ -144,7 +144,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 case QueryFrom.Start:
                     CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.AddExercises;
 
-                    responseConverter = new ResponseTextConverter($"День {CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldQuotes()} сохранён!",
+                    responseConverter = new ResponseTextConverter($"День {CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldAndQuotes()} сохранён!",
                         "Введите название упражения для этого дня");
                     buttonsSets = (ButtonsSet.None, ButtonsSet.None);
                     break;
@@ -152,7 +152,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 case QueryFrom.Settings:
                     CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.Default;
 
-                    responseConverter = new ResponseTextConverter($"День {CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldQuotes()} сохранён!");
+                    responseConverter = new ResponseTextConverter($"День {CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldAndQuotes()} сохранён!");
                     buttonsSets = (ButtonsSet.AddExercises, ButtonsSet.SettingDays);
 
                     break;
@@ -189,26 +189,26 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             foreach (Exercise exercise in exercises)
             {
                 if (AlreadyExistDomainWithName(exercise.Name, DomainType.Exercise))
-                    exceptionMessage = $"В этом дне уже существует упражнение с названием {exercise.Name.AddBoldQuotes()}";
+                    exceptionMessage = $"В этом дне уже существует упражнение с названием {exercise.Name.AddBoldAndQuotes()}";
             }
 
             if (string.IsNullOrWhiteSpace(exceptionMessage))
             {
                 if (!CommandHandlerTools.CurrentUserContext.DataManager.TryAddExercise(exercises, out string existingExerciseName))
-                    exceptionMessage = $"В списке фиксаций уже существует упражнение с названием {existingExerciseName.AddBoldQuotes()}";
+                    exceptionMessage = $"В списке фиксаций уже существует упражнение с названием {existingExerciseName.AddBoldAndQuotes()}";
             }
 
             if (string.IsNullOrWhiteSpace(exceptionMessage))
             {
                 responseConverter = new ResponseTextConverter("Упражнение(я) зафиксировано(ы)!",
-                    $"Введите след. упражнение(я) для дня {CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldQuotes()} либо нажмите {"Сохранить".AddQuotes()} для сохранения зафиксированных упражнений");
+                    $"Введите след. упражнение(я) для дня {CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldAndQuotes()} либо нажмите {"Сохранить".AddQuotes()} для сохранения зафиксированных упражнений");
                 buttonsSets = (ButtonsSet.SaveExercises, ButtonsSet.None);
             }
             else
             {
                 responseConverter = new ResponseTextConverter("Упражнение(я) не зафиксировано(ы)!",
                     exceptionMessage,
-                    @$"Введите другое(ие) упражнение(й) для дня {CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldQuotes()}
+                    @$"Введите другое(ие) упражнение(й) для дня {CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldAndQuotes()}
 
 {CommonConsts.Exercise.InputFormatExercise}");
 
@@ -236,7 +236,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 CommandHandlerTools.CurrentUserContext.DataManager.AddResultsExercise(resultExercises);
 
                 responseConverter = new ResponseTextConverter("Подход(ы) зафиксирован(ы)",
-                $"Введите вес и кол-во повторений след. подхода для упражения {CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldQuotes()} " +
+                $"Введите вес и кол-во повторений след. подхода для упражения {CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldAndQuotes()} " +
                 $"либо нажмите {"".AddQuotes()} \"Сохранить\" для сохранения указанных подходов");
 
                 buttonsSets = (ButtonsSet.SaveResultsExercise, ButtonsSet.Main);
@@ -253,7 +253,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
                 responseConverter = new ResponseTextConverter(ex.Message,
                     inputFormatExerciseResult,
-                    $"Введите результат заново для упражения {CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldQuotes()}");
+                    $"Введите результат заново для упражения {CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldAndQuotes()}");
                 buttonsSets = (ButtonsSet.None, ButtonsSet.ExercisesListWithLastWorkoutForDay);
             }
 
@@ -278,7 +278,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 case "Cycle":
                     if (AlreadyExistDomainWithName(domainName, DomainType.Cycle))
                     {
-                        responseConverter = new ResponseTextConverter("Ошибка при добавлении названия!", $"Цикл с названием {domainName.AddBoldQuotes()} уже существует",
+                        responseConverter = new ResponseTextConverter("Ошибка при добавлении названия!", $"Цикл с названием {domainName.AddBoldAndQuotes()} уже существует",
                             "Ввведите другое название тренировочного цикла");
                         buttonsSets = (ButtonsSet.None, ButtonsSet.SettingCycles);
 
@@ -296,8 +296,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 case "Day":
                     if (AlreadyExistDomainWithName(domainName, DomainType.Day))
                     {
-                        responseConverter = new ResponseTextConverter("Ошибка при сохранении!", $"В этом цикле уже существует день с названием {domainName.AddBoldQuotes()}",
-                    $"Ввведите другое название дня для цикла {CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldQuotes()}");
+                        responseConverter = new ResponseTextConverter("Ошибка при сохранении!", $"В этом цикле уже существует день с названием {domainName.AddBoldAndQuotes()}",
+                    $"Ввведите другое название дня для цикла {CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()}");
 
                         buttonsSets = GetButtonsSetIfFailedSaveNewDomainValue(ButtonsSet.SettingDays);
 
@@ -316,7 +316,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
                     if (AlreadyExistDomainWithName(domainName, DomainType.Exercise))
                     {
-                        responseConverter = new ResponseTextConverter("Ошибка при сохранении!", $"В этом дне уже существует упражнение с названием {domainName.AddBoldQuotes()}",
+                        responseConverter = new ResponseTextConverter("Ошибка при сохранении!", $"В этом дне уже существует упражнение с названием {domainName.AddBoldAndQuotes()}",
                         $"Введите другое(ие) название(я) упражнение(ий) для дня {CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name}");
 
                         buttonsSets = GetButtonsSetIfFailedSaveNewDomainValue(ButtonsSet.SettingExercises);
@@ -395,7 +395,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             if (!int.TryParse(IdStr, out int Id))
             {
-                responseConverter = new ResponseTextConverter($"Передан некорректный {identifierType}: {IdStr.AddBoldQuotes()}", "Выберите интересующее действие");
+                responseConverter = new ResponseTextConverter($"Передан некорректный {identifierType}: {IdStr.AddBoldAndQuotes()}", "Выберите интересующее действие");
 
                 this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
@@ -410,7 +410,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 log = logsRepository.GetLogsById(Id, 1).FirstOrDefault();
 
             if (log == null)
-                responseConverter = new ResponseTextConverter($"Не удалось найти лог с {identifierType}: {Id.ToString().AddBoldQuotes()}", "Выберите интересующее действие");
+                responseConverter = new ResponseTextConverter($"Не удалось найти лог с {identifierType}: {Id.ToString().AddBoldAndQuotes()}", "Выберите интересующее действие");
             else
             {
                 string logStr = LogFormatter.ConvertLogToStr(log);
@@ -452,7 +452,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 UserInformation? user = adminRepository.GetUserInformation(userIdentity);
 
                 if (user == null)
-                    responseConverter = new ResponseTextConverter($"Пользователь '{userIdentity.AddBoldQuotes()}' не найден!", "Выберите интересующее действие");
+                    responseConverter = new ResponseTextConverter($"Пользователь '{userIdentity.AddBoldAndQuotes()}' не найден!", "Выберите интересующее действие");
                 else
                 {
                     switch (list)
@@ -460,14 +460,14 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                         case "wl":
                             adminRepository.ChangeWhiteListByUser(user);
 
-                            responseConverter = new ResponseTextConverter($"WhiteList для {user.Username.AddBoldQuotes()} ({user.UserId}) установлен на {user.WhiteList.ToString().AddBold()}",
+                            responseConverter = new ResponseTextConverter($"WhiteList для {user.Username.AddBoldAndQuotes()} ({user.UserId}) установлен на {user.WhiteList.ToString().AddBold()}",
                                 "Выберите интересующее действие");
 
                             break;
                         case "bl":
                             adminRepository.ChangeBlackListByUser(user);
 
-                            responseConverter = new ResponseTextConverter($"BlackList для {user.Username.AddBoldQuotes()} ({user.UserId}) установлен на {user.BlackList.ToString().AddBold()}",
+                            responseConverter = new ResponseTextConverter($"BlackList для {user.Username.AddBoldAndQuotes()} ({user.UserId}) установлен на {user.BlackList.ToString().AddBold()}",
                                 "Выберите интересующее действие");
                             break;
                         default:
@@ -500,11 +500,11 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             UserInformation? user = adminRepository.GetUserInformation(userIdentity);
 
             if (user == null)
-                responseConverter = new ResponseTextConverter($"Пользователь '{userIdentity.AddBoldQuotes()}' не найден!", "Выберите интересующее действие");
+                responseConverter = new ResponseTextConverter($"Пользователь '{userIdentity.AddBoldAndQuotes()}' не найден!", "Выберите интересующее действие");
             else
             {
                 adminRepository.DeleteAccount(user);
-                responseConverter = new ResponseTextConverter($"Пользователь {user.Username.AddBoldQuotes()} ({user.UserId}) был успешно удалён", "Выберите интересующее действие");
+                responseConverter = new ResponseTextConverter($"Пользователь {user.Username.AddBoldAndQuotes()} ({user.UserId}) был успешно удалён", "Выберите интересующее действие");
             }
 
             buttonsSets = (ButtonsSet.Admin, ButtonsSet.Main);

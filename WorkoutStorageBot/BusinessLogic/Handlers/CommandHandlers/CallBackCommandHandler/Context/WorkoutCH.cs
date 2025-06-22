@@ -136,7 +136,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             {
                 ResultExercise firstGroupResultExercise = groupResultExercise.First();
 
-                sb.AppendLine($"Упражнение: {firstGroupResultExercise.Exercise.Name.AddBoldQuotes()}");
+                sb.AppendLine($"Упражнение: {firstGroupResultExercise.Exercise.Name.AddBoldAndQuotes()}");
 
                 foreach (ResultExercise resultExercise in groupResultExercise)
                 {
@@ -162,7 +162,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             {
                 ResultExercise firstResultExercise = groupResultExercise.First();
 
-                sb.AppendLine($"Упражнение: {firstResultExercise.Exercise.Name.AddBoldQuotes()} | Дата: {firstResultExercise.DateTime.ToShortDateString().AddBoldQuotes()}");
+                sb.AppendLine($"Упражнение: {firstResultExercise.Exercise.Name.AddBoldAndQuotes()} | Дата: {firstResultExercise.DateTime.ToShortDateString().AddBoldAndQuotes()}");
 
                 foreach (ResultExercise resultExercise in groupResultExercise)
                 {

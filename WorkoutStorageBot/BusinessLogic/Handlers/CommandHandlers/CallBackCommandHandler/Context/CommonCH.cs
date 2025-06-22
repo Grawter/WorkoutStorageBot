@@ -32,11 +32,11 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             ResponseTextConverter responseConverter = new ResponseTextConverter(previousStep.ButtonsSet switch // optional additional information
             {
                 ButtonsSet.SettingCycle
-                    => $"{previousStep.Message} {CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldQuotes()}",
+                    => $"{previousStep.Message} {CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()}",
                 ButtonsSet.SettingDay
-                    => $"{previousStep.Message} {CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldQuotes()}",
+                    => $"{previousStep.Message} {CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldAndQuotes()}",
                 ButtonsSet.SettingExercise
-                    => $"{previousStep.Message} {CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldQuotes()}",
+                    => $"{previousStep.Message} {CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldAndQuotes()}",
                 _ => previousStep.Message
             });
 

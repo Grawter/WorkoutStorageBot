@@ -19,7 +19,7 @@ namespace WorkoutStorageBot.Extenions
         internal static string AddQuotes(this string text)
             => $"\"{text}\"";
 
-        internal static string AddBoldQuotes(this string text)
+        internal static string AddBoldAndQuotes(this string text)
             => text.AddBold().AddQuotes();
     }
 }
