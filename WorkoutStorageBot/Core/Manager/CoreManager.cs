@@ -35,13 +35,13 @@ namespace WorkoutStorageBot.Core.Manager
 
             ConfigurationData = CommonHelper.GetIfNotNull(configurationData);
 
-            _loggerFactory = CommonHelper.GetIfNotNull(loggerFactory);
+            this.loggerFactory = CommonHelper.GetIfNotNull(loggerFactory);
 
-            _logger = _loggerFactory.CreateLogger<CoreManager>();
+            logger = this.loggerFactory.CreateLogger<CoreManager>();
 
             BotResponseSender = CommonHelper.GetIfNotNull(botResponseSender);
 
-            _cancellationTokenSource = CommonHelper.GetIfNotNull(cancellationToken);
+            cancellationTokenSource = CommonHelper.GetIfNotNull(cancellationToken);
 
             ResetCoreManager();
         }
@@ -53,13 +53,13 @@ namespace WorkoutStorageBot.Core.Manager
 
         private IBotResponseSender BotResponseSender { get; }
 
-        private readonly ILoggerFactory _loggerFactory;
+        private readonly ILoggerFactory loggerFactory;
 
-        private readonly ILogger<CoreManager> _logger;
+        private readonly ILogger<CoreManager> logger;
 
-        private readonly CancellationTokenSource _cancellationTokenSource;
+        private readonly CancellationTokenSource cancellationTokenSource;
 
-        internal CancellationToken CancellationToken => _cancellationTokenSource.Token;
+        internal CancellationToken CancellationToken => cancellationTokenSource.Token;
 
         private static readonly SemaphoreSlim processSemaphore = new SemaphoreSlim(1, 1);
 
@@ -102,7 +102,7 @@ namespace WorkoutStorageBot.Core.Manager
                 {
                     long? userId = shortUpdateInfo.User?.Id;
 
-                    _logger.Log(LogLevel.Error,
+                    logger.Log(LogLevel.Error,
                     eventId,
                     new Dictionary<string, object>()
                         {
@@ -198,11 +198,11 @@ namespace WorkoutStorageBot.Core.Manager
             if (timeSpan.TotalSeconds < 2)
                 timeSpan = TimeSpan.FromSeconds(2);
 
-            _logger.LogWarning("Инициировано отключение бота");
+            logger.LogWarning("Инициировано отключение бота");
 
             await Task.Delay(timeSpan);
 
-            this._cancellationTokenSource.Cancel();
+            this.cancellationTokenSource.Cancel();
         }
     }
 }

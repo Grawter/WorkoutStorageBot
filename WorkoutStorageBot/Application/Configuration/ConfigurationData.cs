@@ -23,7 +23,7 @@ namespace WorkoutStorageBot.Application.Configuration
                 if (string.IsNullOrWhiteSpace(Database))
                     throw new InvalidDataException("Не удалось сформировать строку подключения");
 
-                return Database;
+                return $"Data Source= {Database}";
             } 
         }
     }

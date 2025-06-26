@@ -67,7 +67,7 @@ namespace WorkoutStorageBot.Application
         private static EntityContext GetEntityContext(string connectionString)
         {
             DbContextOptionsBuilder<EntityContext> optionsBuilder = new DbContextOptionsBuilder<EntityContext>();
-            DbContextOptions<EntityContext> options = optionsBuilder.UseSqlite("Data Source=" + connectionString).Options;
+            DbContextOptions<EntityContext> options = optionsBuilder.UseSqlite(connectionString).Options;
             EntityContext db = new EntityContext(options);
 
             return db;

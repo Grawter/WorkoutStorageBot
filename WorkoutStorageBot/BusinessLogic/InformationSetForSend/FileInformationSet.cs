@@ -10,7 +10,7 @@ namespace WorkoutStorageBot.BusinessLogic.InformationSetForSend
         internal FileInformationSet(Stream stream, string fileName)
         {
             Stream = CommonHelper.GetIfNotNull(stream);
-            FileName = CommonHelper.GetIfNotNullOrEmpty(fileName);
+            FileName = CommonHelper.GetIfNotNullOrWhiteSpace(fileName);
         }
 
         internal FileInformationSet(Stream stream, string fileName, string message, (ButtonsSet buttonsSet, ButtonsSet backButtonsSet) buttonsSets) 

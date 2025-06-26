@@ -19,15 +19,15 @@ namespace WorkoutStorageBot.Application.BotTools.Listener
 {
     internal class BotListener
     {
-        private readonly ITelegramBotClient _botClient;
+        private readonly ITelegramBotClient botClient;
 
-        private readonly IBotResponseSender _botSender;
+        private readonly IBotResponseSender botSender;
 
-        private readonly CoreManager _coreManager;
+        private readonly CoreManager coreManager;
 
-        private readonly ConfigurationData _configurationData;
+        private readonly ConfigurationData configurationData;
 
-        private readonly ILogger<BotListener> _logger;
+        private readonly ILogger<BotListener> logger;
 
         public BotListener(ITelegramBotClient botClient,
                            IBotResponseSender botSender,
@@ -35,22 +35,22 @@ namespace WorkoutStorageBot.Application.BotTools.Listener
                            ConfigurationData configurationData,
                            ILoggerFactory loggerFactory)
         {
-            _botClient = CommonHelper.GetIfNotNull(botClient);
-            _botSender = CommonHelper.GetIfNotNull(botSender);
+            botClient = CommonHelper.GetIfNotNull(botClient);
+            botSender = CommonHelper.GetIfNotNull(botSender);
 
-            _coreManager = CommonHelper.GetIfNotNull(coreManager);
+            this.coreManager = CommonHelper.GetIfNotNull(coreManager);
 
-            _configurationData = CommonHelper.GetIfNotNull(configurationData);
-            ConfigurationManager.SetCensorToDBSettings(_configurationData);
+            this.configurationData = CommonHelper.GetIfNotNull(configurationData);
+            ConfigurationManager.SetCensorToDBSettings(this.configurationData);
 
-            _logger = CommonHelper.GetIfNotNull(loggerFactory).CreateLogger<BotListener>();
+            logger = CommonHelper.GetIfNotNull(loggerFactory).CreateLogger<BotListener>();
         }
 
         internal async Task StartListen()
         {
-            User bot = await _botClient.GetMe();
+            User bot = await botClient.GetMe();
 
-            _logger.LogInformation(EventIDHelper.GetNextEventId(CommonConsts.EventNames.StartingBot), $"Телеграм бот @{bot.Username} запущен");
+            logger.LogInformation(EventIDHelper.GetNextEventId(CommonConsts.EventNames.StartingBot), $"Телеграм бот @{bot.Username} запущен");
 
             ReceiverOptions receiverOptions = new ReceiverOptions()
             {
@@ -58,27 +58,27 @@ namespace WorkoutStorageBot.Application.BotTools.Listener
                 DropPendingUpdates = true,
             };
 
-            _botClient.StartReceiving(updateHandler: HandleUpdateAsync,
+            botClient.StartReceiving(updateHandler: HandleUpdateAsync,
                                      errorHandler: HandleErrorAsync,
                                      receiverOptions: receiverOptions,
-                                     cancellationToken: _coreManager.CancellationToken);
+                                     cancellationToken: coreManager.CancellationToken);
         }
 
         async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
-            => await _coreManager.ProcessUpdate(update);
+            => await coreManager.ProcessUpdate(update);
 
         async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
         {
             EventId eventId = EventIDHelper.GetNextEventIdThreadSave(CommonConsts.EventNames.Critical);
 
-            _logger.Log(LogLevel.Critical,
+            logger.Log(LogLevel.Critical,
                 eventId,
                 new Dictionary<string, object>(),
                 exception,
                 LogFormatter.CriticalExBotFormatter);
 
-            if (_configurationData.Notifications.NotifyOwnersAboutCriticalErrors)
-                await _botSender.SendSimpleMassiveResponse(_configurationData.Bot.OwnersChatIDs, @$"{"Необработанная ошибка".AddBold()}:
+            if (configurationData.Notifications.NotifyOwnersAboutCriticalErrors)
+                await botSender.SendSimpleMassiveResponse(configurationData.Bot.OwnersChatIDs, @$"{"Необработанная ошибка".AddBold()}:
 {exception.ToString()}");
         }
     }

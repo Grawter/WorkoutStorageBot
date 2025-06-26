@@ -10,21 +10,21 @@ namespace WorkoutStorageBot.Application.BotTools.Logging
 {
     internal class CustomLoggerProvider : ILoggerProvider
     {
-        private readonly EntityContext _db;
+        private readonly EntityContext db;
 
-        private readonly ConfigurationData _configurationData;
+        private readonly ConfigurationData configurationData;
 
         internal CustomLoggerProvider(EntityContext db, ConfigurationData configurationData)
         {
             ArgumentNullException.ThrowIfNull(db);
             ArgumentNullException.ThrowIfNull(configurationData);
 
-            _db = db;
-            _configurationData = configurationData;
+            this.db = db;
+            this.configurationData = configurationData;
         }
 
         public ILogger CreateLogger(string categoryName)
-            => new CustomLogger(categoryName, _db, _configurationData);
+            => new CustomLogger(categoryName, db, configurationData);
 
         public void Dispose()
         {

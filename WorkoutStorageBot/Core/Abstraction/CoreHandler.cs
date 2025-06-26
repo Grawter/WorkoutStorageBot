@@ -18,13 +18,13 @@ namespace WorkoutStorageBot.Core.Abstraction
 
         protected CoreHandler(CoreTools coreTools, string handlerName) : base(coreTools)
         { 
-            HandlerName = CommonHelper.GetIfNotNullOrEmpty(handlerName);
+            HandlerName = CommonHelper.GetIfNotNullOrWhiteSpace(handlerName);
             Logger = CoreTools.LoggerFactory.CreateLogger<CoreHandler>();
         }
 
         protected CoreHandler(CoreTools coreTools, CoreManager coreManager, string handlerName) : base(coreTools, coreManager)
         {
-            HandlerName = CommonHelper.GetIfNotNullOrEmpty(handlerName);
+            HandlerName = CommonHelper.GetIfNotNullOrWhiteSpace(handlerName);
             Logger = CoreTools.LoggerFactory.CreateLogger<CoreHandler>();
         }
 

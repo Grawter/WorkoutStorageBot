@@ -1,4 +1,6 @@
-﻿namespace WorkoutStorageBot.BusinessLogic.SessionContext
+﻿
+
+namespace WorkoutStorageBot.BusinessLogic.SessionContext
 {
     internal class LimitsManager
     {
@@ -6,14 +8,14 @@
         {
             IsEnableLimit = isNeedLimits;
 
-            limits = new Dictionary<string, DateTime>();
+            timeLimits = new Dictionary<string, DateTime>();
         }
 
-        private readonly Dictionary<string, DateTime> limits;
+        private readonly Dictionary<string, DateTime> timeLimits;
 
         internal bool IsEnableLimit { get; set; }
 
-        internal bool HasBlockByLimit(string limitName, out DateTime limit)
+        internal bool HasBlockByTimeLimit(string limitName, out DateTime limit)
         {
             ArgumentNullException.ThrowIfNullOrWhiteSpace(limitName);
 
@@ -22,23 +24,23 @@
             if (!IsEnableLimit)
                 return false;
 
-            if (!limits.TryGetValue(limitName, out limit))
+            if (!timeLimits.TryGetValue(limitName, out limit))
                 return false;
 
             return limit >= DateTime.Now;
         }
 
-        internal bool AddOrUpdateLimit(string limitName, DateTime newLimit)
+        internal bool AddOrUpdateTimeLimit(string limitName, DateTime newLimit)
         {
             ArgumentNullException.ThrowIfNullOrWhiteSpace(limitName);
 
             if (!IsEnableLimit) 
                 return false;
 
-            if (limits.ContainsKey(limitName))
-                limits[limitName] = newLimit;
+            if (timeLimits.ContainsKey(limitName))
+                timeLimits[limitName] = newLimit;
             else
-                limits.Add(limitName, newLimit);
+                timeLimits.Add(limitName, newLimit);
 
             return true;
         }

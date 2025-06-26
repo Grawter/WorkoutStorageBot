@@ -13,32 +13,32 @@ namespace WorkoutStorageBot.Application.BotTools.Logging
 {
     internal class CustomLogger : ILogger
     {
-        private readonly string _categoryName;
-        private readonly EntityContext _db;
-        private readonly ConfigurationData _configurationData;
-        private const string _dateTimeFormat = CommonConsts.Common.DateTimeFormatDateFirst;
+        private readonly string categoryName;
+        private readonly EntityContext db;
+        private readonly ConfigurationData configurationData;
+        private const string dateTimeFormat = CommonConsts.Common.DateTimeFormatDateFirst;
 
-        private static readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
+        private static readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
 
         public CustomLogger(string categoryName)
         {
             ArgumentNullException.ThrowIfNullOrWhiteSpace(categoryName);
 
-            _categoryName = categoryName;
+            this.categoryName = categoryName;
         }
 
         public CustomLogger(string categoryName, EntityContext db) : this(categoryName)
         {
             ArgumentNullException.ThrowIfNull(db);
 
-            _db = db;
+            this.db = db;
         }
 
         public CustomLogger(string categoryName, EntityContext db, ConfigurationData configurationData) : this(categoryName, db)
         {
             ArgumentNullException.ThrowIfNull(configurationData);
 
-            _configurationData = configurationData;
+            this.configurationData = configurationData;
         }
 
         public IDisposable BeginScope<TState>(TState state) => default!;
@@ -86,16 +86,16 @@ namespace WorkoutStorageBot.Application.BotTools.Logging
             if (customRuleLog != null)
                 return customRuleLog;
             else
-                return _configurationData.LogInfo.MainRuleLog;
+                return configurationData.LogInfo.MainRuleLog;
         }
 
         private CustomRuleLog? GetCustomRuleLog()
         {
-            if (!_configurationData.LogInfo.CustomRulesLog.HasItemsInCollection())
+            if (!configurationData.LogInfo.CustomRulesLog.HasItemsInCollection())
                 return default;
 
             CustomRuleLog? customRuleLog =
-                _configurationData.LogInfo.CustomRulesLog.FirstOrDefault(x => string.Equals(x.FullClassName, _categoryName, StringComparison.InvariantCulture));
+                configurationData.LogInfo.CustomRulesLog.FirstOrDefault(x => string.Equals(x.FullClassName, categoryName, StringComparison.InvariantCulture));
 
             return customRuleLog;
         }
@@ -192,10 +192,10 @@ CallStack: {Environment.StackTrace}");
             string logMessage = string.Empty;
 
             if (HasEventId(eventId, out string eventIdStr))
-                logMessage = @$"[{currentLogLevelStr}] [{eventIdStr}] [{dateTime.ToString(_dateTimeFormat)}] {_categoryName}:
+                logMessage = @$"[{currentLogLevelStr}] [{eventIdStr}] [{dateTime.ToString(dateTimeFormat)}] {categoryName}:
 {logData["Message"]}";
             else
-                logMessage = @$"[{currentLogLevelStr}] [{dateTime.ToString(_dateTimeFormat)}] {_categoryName}:
+                logMessage = @$"[{currentLogLevelStr}] [{dateTime.ToString(dateTimeFormat)}] {categoryName}:
 {logData["Message"]}";
 
             if (CommonHelper.TryConvertToLong(logData.GetValueOrDefault("TelegaramUserId"), out long? telegaramUserId))
@@ -242,21 +242,21 @@ CallStack: {Environment.StackTrace}");
                 EventName = eventId.Name,
                 DateTime = dateTime,
                 Message = message,
-                SourceContext = _categoryName,
+                SourceContext = categoryName,
                 TelegaramUserId = telegaramUserId,
             };
 
-            await _semaphore.WaitAsync();
+            await semaphore.WaitAsync();
 
             try
             {
-                _db.Logs.Add(log);
+                db.Logs.Add(log);
 
-                _db.SaveChanges();
+                db.SaveChanges();
             }
             finally
             {
-                _semaphore.Release();
+                semaphore.Release();
             }
 
             return true;

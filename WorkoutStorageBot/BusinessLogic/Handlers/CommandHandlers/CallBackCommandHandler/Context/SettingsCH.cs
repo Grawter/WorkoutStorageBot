@@ -768,7 +768,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
             IInformationSet result = null;
 
-            if (this.CommandHandlerTools.CurrentUserContext.LimitsManager.HasBlockByLimit("Export", out DateTime limit))
+            if (this.CommandHandlerTools.CurrentUserContext.LimitsManager.HasBlockByTimeLimit("Export", out DateTime limit))
             {
                 responseConverter =
                     new ResponseTextConverter($"Следующее выполнение этой операции будет доступно {limit.ToString(CommonConsts.Common.DateTimeFormatHoursFirst)})",
@@ -782,7 +782,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             {
                 IQueryable<ResultExercise> resultsExercisesForExcel = GetResultExercises();
 
-                this.CommandHandlerTools.CurrentUserContext.LimitsManager.AddOrUpdateLimit("Export", DateTime.Now.AddHours(6));
+                this.CommandHandlerTools.CurrentUserContext.LimitsManager.AddOrUpdateTimeLimit("Export", DateTime.Now.AddHours(6));
 
                 byte[] file = new byte[0];
 

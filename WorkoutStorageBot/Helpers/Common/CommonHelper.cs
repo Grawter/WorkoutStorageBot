@@ -2,19 +2,19 @@
 
 namespace WorkoutStorageBot.Helpers.Common
 {
-    internal class CommonHelper
+    public class CommonHelper
     {
-        internal static T GetIfNotNull<T>(T source)
+        public static T GetIfNotNull<T>(T source)
         {
             ArgumentNullException.ThrowIfNull(source);
 
             return source;
         }
 
-        internal static T GetIfNotNullOrEmpty<T>(T source)
+        public static T GetIfNotNullOrWhiteSpace<T>(T source)
         {
             if (source is string sourceString)
-                ArgumentNullException.ThrowIfNullOrEmpty(sourceString);
+                ArgumentNullException.ThrowIfNullOrWhiteSpace(sourceString);
             else
                 ArgumentNullException.ThrowIfNull(source);
 
