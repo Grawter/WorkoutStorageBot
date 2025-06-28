@@ -2,9 +2,8 @@
 
 namespace WorkoutStorageBot.Model.Domain
 {
-    public interface IDomain
+    public interface IDomain : ILightDomain
     {
-        public int Id { get; set; }
         public string Name { get; set; }
         public bool IsArchive { get; set; }
     }

@@ -2,13 +2,14 @@
 
 using Microsoft.EntityFrameworkCore;
 using WorkoutStorageBot.Model.Domain;
+using WorkoutStorageBot.Model.Import;
 using WorkoutStorageBot.Model.Logging;
 
 #endregion
 
 namespace WorkoutStorageBot.Model.AppContext
 {
-    internal class EntityContext : DbContext
+    public class EntityContext : DbContext
     {
         public DbSet<UserInformation> UsersInformation => Set<UserInformation>();
         public DbSet<Cycle> Cycles => Set<Cycle>();
@@ -16,6 +17,7 @@ namespace WorkoutStorageBot.Model.AppContext
         public DbSet<Exercise> Exercises => Set<Exercise>();
         public DbSet<ResultExercise> ResultsExercises => Set<ResultExercise>();
         public DbSet<Log> Logs => Set<Log>();
+        public DbSet<ImportInfo> ImportInfo => Set<ImportInfo>();
 
         public EntityContext(DbContextOptions<EntityContext> options) : base(options)
         {
