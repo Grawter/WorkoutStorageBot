@@ -27,21 +27,21 @@ namespace WorkoutStorageBot.Core.Manager
                              ConfigurationData configurationData,
                              IBotResponseSender botResponseSender,
                              ILoggerFactory loggerFactory,
-                             CancellationTokenSource cancellationToken)
+                             CancellationTokenSource cancellationTokenSource)
         {
-            Handlers = CommonHelper.GetIfNotNull(handlers);
+            this.Handlers = CommonHelper.GetIfNotNull(handlers);
 
-            Repositories = CommonHelper.GetIfNotNull(repositories);
+            this.Repositories = CommonHelper.GetIfNotNull(repositories);
 
-            ConfigurationData = CommonHelper.GetIfNotNull(configurationData);
+            this.ConfigurationData = CommonHelper.GetIfNotNull(configurationData);
 
             this.loggerFactory = CommonHelper.GetIfNotNull(loggerFactory);
 
-            logger = this.loggerFactory.CreateLogger<CoreManager>();
+            this.logger = this.loggerFactory.CreateLogger<CoreManager>();
 
-            BotResponseSender = CommonHelper.GetIfNotNull(botResponseSender);
+            this.BotResponseSender = CommonHelper.GetIfNotNull(botResponseSender);
 
-            cancellationTokenSource = CommonHelper.GetIfNotNull(cancellationToken);
+            this.cancellationTokenSource = CommonHelper.GetIfNotNull(cancellationTokenSource);
 
             ResetCoreManager();
         }

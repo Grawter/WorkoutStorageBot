@@ -35,15 +35,15 @@ namespace WorkoutStorageBot.Application.BotTools.Listener
                            ConfigurationData configurationData,
                            ILoggerFactory loggerFactory)
         {
-            botClient = CommonHelper.GetIfNotNull(botClient);
-            botSender = CommonHelper.GetIfNotNull(botSender);
+            this.botClient = CommonHelper.GetIfNotNull(botClient);
+            this.botSender = CommonHelper.GetIfNotNull(botSender);
 
             this.coreManager = CommonHelper.GetIfNotNull(coreManager);
 
             this.configurationData = CommonHelper.GetIfNotNull(configurationData);
             ConfigurationManager.SetCensorToDBSettings(this.configurationData);
 
-            logger = CommonHelper.GetIfNotNull(loggerFactory).CreateLogger<BotListener>();
+            this.logger = CommonHelper.GetIfNotNull(loggerFactory).CreateLogger<BotListener>();
         }
 
         internal async Task StartListen()
