@@ -70,7 +70,7 @@ namespace WorkoutStorageImport
                 }
             }
 
-            EntityContext.SaveChanges(true);
+            EntityContext.SaveChanges();
 
             ImportResult = GetImportResult(userInformation, countCycles, countDays, countExercise, countResultExercise);
 
