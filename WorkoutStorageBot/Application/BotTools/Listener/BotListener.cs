@@ -72,10 +72,10 @@ namespace WorkoutStorageBot.Application.BotTools.Listener
             EventId eventId = EventIDHelper.GetNextEventIdThreadSave(CommonConsts.EventNames.Critical);
 
             logger.Log(LogLevel.Critical,
-                eventId,
-                new Dictionary<string, object>(),
-                exception,
-                LogFormatter.CriticalExBotFormatter);
+                       eventId,
+                       new Dictionary<string, object>(),
+                       exception,
+                       LogFormatter.CriticalExBotFormatter);
 
             if (configurationData.Notifications.NotifyOwnersAboutCriticalErrors)
                 await botSender.SendSimpleMassiveResponse(configurationData.Bot.OwnersChatIDs, @$"{"Необработанная ошибка".AddBold()}:

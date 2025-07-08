@@ -2,7 +2,7 @@
 
 namespace WorkoutStorageBot.Model.Domain
 {
-    public class ResultExercise : ILightDomain
+    public class ResultExercise : IEntity
     {
         public int Id { get; set; }
         public int? Count { get; set; }

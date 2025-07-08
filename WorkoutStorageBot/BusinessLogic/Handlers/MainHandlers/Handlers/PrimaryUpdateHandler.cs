@@ -160,14 +160,14 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers
             primaryHandledData.IsNeedContinue = false;
 
             Logger.Log(LogLevel.Information,
-                eventId,
-                new Dictionary<string, object>()
-                {
-                    { "Message", message },
-                    { "TelegaramUserId", shortUpdateInfo.User.Id },
-                },
-                null,
-                LogFormatter.EmptyFormatter);
+                       eventId,
+                       new Dictionary<string, object>()
+                       {
+                           { "Message", message },
+                           { "TelegaramUserId", shortUpdateInfo.User.Id },
+                       },
+                       null,
+                       LogFormatter.EmptyFormatter);
         }
 
         private void LoggingExpectedUpdateType(User user, string data, UpdateType updateType)
@@ -196,14 +196,14 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers
             EventId eventId = EventIDHelper.GetNextEventId(CommonConsts.EventNames.ExpectedUpdateType);
 
             Logger.Log(logLevel,
-                eventId,
-                new Dictionary<string, object>()
-                {
-                    { "Message", message },
-                    { "TelegaramUserId", user.Id },
-                },
-                null,
-                LogFormatter.EmptyFormatter);
+                       eventId,
+                       new Dictionary<string, object>()
+                       {
+                           { "Message", message },
+                           { "TelegaramUserId", user.Id },
+                       },
+                       null,
+                       LogFormatter.EmptyFormatter);
         }
 
         private void SetInformationSetForNewContext(PrimaryHandlerResult primaryHandledData)

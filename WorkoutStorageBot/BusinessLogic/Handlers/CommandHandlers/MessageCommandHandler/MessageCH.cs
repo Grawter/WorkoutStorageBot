@@ -40,7 +40,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                         CommandHandlerTools.Db.SaveChanges();
                         break;
                     default:
-                        throw new NotImplementedException($"Неожиданный handlerAction: {handlerAction}");
+                        throw new NotImplementedException($"Неожиданный {nameof(handlerAction)}: {handlerAction}");
                 }
             }
 

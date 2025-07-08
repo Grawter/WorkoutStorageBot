@@ -21,7 +21,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
         {
             foreach (HandlerAction handlerAction in this.HandlerActions)
             {
-                if (this.Domain == null && (handlerAction != HandlerAction.None && handlerAction != HandlerAction.Save))
+                if (this.Domain == null && handlerAction != HandlerAction.None && handlerAction != HandlerAction.Save)
                     throw new NullReferenceException($"{nameof(this.Domain)} is null!");
                 
                 switch (handlerAction)

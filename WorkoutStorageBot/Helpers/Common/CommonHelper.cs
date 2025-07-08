@@ -1,9 +1,12 @@
 ﻿
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace WorkoutStorageBot.Helpers.Common
 {
     public class CommonHelper
     {
+        [return: NotNull]
         public static T GetIfNotNull<T>(T source)
         {
             ArgumentNullException.ThrowIfNull(source);
@@ -11,6 +14,7 @@ namespace WorkoutStorageBot.Helpers.Common
             return source;
         }
 
+        [return: NotNull]
         public static T GetIfNotNullOrWhiteSpace<T>(T source)
         {
             if (source is string sourceString)

@@ -94,32 +94,11 @@ namespace WorkoutStorageBot.Core.Manager
             }
             catch (Exception ex)
             {
-                EventId eventId = EventIDHelper.GetNextEventId(CommonConsts.EventNames.RuntimeError);
-
                 IUpdateInfo updateInfo = UpdatesHelper.GetUpdateInfo(update);
 
-                if (updateInfo is ShortUpdateInfo shortUpdateInfo)
-                {
-                    long? userId = shortUpdateInfo.User?.Id;
+                EventId eventId = EventIDHelper.GetNextEventId(CommonConsts.EventNames.RuntimeError);
 
-                    logger.Log(LogLevel.Error,
-                    eventId,
-                    new Dictionary<string, object>()
-                        {
-                            { "TelegaramUserId", userId },
-                        },
-                    ex,
-                    LogFormatter.EmptyFormatter);
-
-                    if (shortUpdateInfo.ChatId > 0)
-                    {
-                        // не отправлять EventID, если нет доступа у пользователя
-                        // выглядит излишне, но пускай будет
-                        // if(IsNeedSendEventIdToUser(userId))
-
-                        await BotResponseSender.SimpleNotification(shortUpdateInfo.ChatId, $"Ошибка обработки. EventId: {eventId.Id}");
-                    }
-                }
+                await LogRuntimeError(updateInfo, eventId, ex);
 
                 if (ConfigurationData.Notifications.NotifyOwnersAboutRuntimeErrors)
                     await BotResponseSender.SendSimpleMassiveResponse(ConfigurationData.Bot.OwnersChatIDs, @$"Ошибка во время исполнения. EventID: {eventId.Id}
@@ -130,6 +109,38 @@ namespace WorkoutStorageBot.Core.Manager
             {
                 processSemaphore.Release(); // освобождаем секцию
             }
+        }
+
+        private async Task LogRuntimeError(IUpdateInfo updateInfo, EventId eventId, Exception ex)
+        {
+            if (updateInfo is ShortUpdateInfo shortUpdateInfo)
+            {
+                long? userId = shortUpdateInfo.User?.Id;
+
+                logger.Log(LogLevel.Error,
+                           eventId,
+                           new Dictionary<string, object>()
+                           {
+                               { "TelegaramUserId", userId },
+                           },
+                           ex,
+                           LogFormatter.EmptyFormatter);
+
+                if (shortUpdateInfo.ChatId > 0)
+                {
+                    // не отправлять EventID, если нет доступа у пользователя
+                    // выглядит излишне, но пускай будет
+                    // if(IsNeedSendEventIdToUser(userId))
+
+                    await BotResponseSender.SimpleNotification(shortUpdateInfo.ChatId, $"Ошибка обработки. EventId: {eventId.Id}");
+                }
+            }
+            else
+                logger.Log(LogLevel.Error, 
+                           eventId,
+                           new Dictionary<string, object>(),
+                           ex,
+                           LogFormatter.EmptyFormatter);
         }
 
         private bool IsNeedSendEventIdToUser(long? userId)

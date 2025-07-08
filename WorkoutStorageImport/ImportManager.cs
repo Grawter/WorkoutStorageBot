@@ -77,7 +77,7 @@ namespace WorkoutStorageImport
             return;
         }
 
-        private void ProcessLightDomain(ILightDomain lightDomain, int userInformationId, DateTime currentDate, ref int countAddedLightDomain)
+        private void ProcessLightDomain(IEntity lightDomain, int userInformationId, DateTime currentDate, ref int countAddedLightDomain)
         {
             if (TryAddIfLightDomainIsUnique(lightDomain))
             {
@@ -86,7 +86,7 @@ namespace WorkoutStorageImport
             }
         }
 
-        private bool TryAddIfLightDomainIsUnique(ILightDomain lightDomain)
+        private bool TryAddIfLightDomainIsUnique(IEntity lightDomain)
         {
             bool lightDomainWasAdded = false;
 
@@ -133,7 +133,7 @@ namespace WorkoutStorageImport
             return lightDomainWasAdded;
         }
 
-        private void AddImportInfoEntry(ILightDomain lightDomain, int userInformationId, DateTime currentDate)
+        private void AddImportInfoEntry(IEntity lightDomain, int userInformationId, DateTime currentDate)
         {
             ImportInfo importInfo = new ImportInfo()
             {
@@ -146,7 +146,7 @@ namespace WorkoutStorageImport
             EntityContext.ImportInfo.Add(importInfo);
         }
 
-        internal string GetDomainTypeName(ILightDomain lightDomain)
+        internal string GetDomainTypeName(IEntity lightDomain)
         {
             string domainTypeName;
 
