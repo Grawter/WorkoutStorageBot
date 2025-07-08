@@ -6,20 +6,37 @@ namespace WorkoutStorageBot.Helpers.CallbackQueryParser
     {
         internal CallbackQueryParser(string data)
         {
-            Args = data.Split('|');
+            AllParameters = data.Split(['|'], StringSplitOptions.RemoveEmptyEntries);
 
-            if (Args.Length == 0)
+            if (AllParameters.Length == 0)
                 throw new FormatException("Получен пустой CallBack");
         }
 
-        internal int Direction { get => int.Parse(Args[0]); }
-        internal string SubDirection { get => Args[1]; }
-        internal string DomainType { get => Args[2]; }
-        internal int DomainId { get => int.Parse(Args[3]); }
-        internal string DomainName { get => Args[4]; }
-        internal IEnumerable<string> AdditionalParameters { get => Args.Skip(5).SkipLast(1); }
-        internal string CallBackId { get => Args[Args.Length - 1]; }
+        internal int Direction { get => int.Parse(AllParameters[0]); }
+        internal string SubDirection { get => AllParameters[1]; }
+        internal string DomainType { get => AllParameters[2]; }
+        internal List<string> AdditionalParameters { get => AllParameters.Skip(3).SkipLast(1).ToList(); }
+        internal string CallBackId { get => AllParameters[AllParameters.Length - 1]; }
 
-        internal string[] Args { get; private set; }
+        private string[] AllParameters { get; }
+
+
+        internal string GetRequiredParameter(int index)
+            => AllParameters[index];
+
+        internal string GetRequiredAdditionalParameter(int index)
+            => AdditionalParameters[index];
+
+        public bool TryGetAdditionalParameter(int index, out string? value)
+        {
+            if (index >= 0 && index < AdditionalParameters.Count)
+            {
+                value = AdditionalParameters[index];
+                return true;
+            }
+
+            value = default;
+            return false;
+        }
     }
 }

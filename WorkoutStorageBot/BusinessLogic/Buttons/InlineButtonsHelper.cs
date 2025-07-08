@@ -139,9 +139,9 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                     break;
 
                 case ButtonsSet.ChangeType:
-                    AddInlineButton("Режим только повторения", "2|ChangedMode|Exercise|||0");
-                    AddInlineButton("Режим повторения и вес", "2|ChangedMode|Exercise|||1");
-                    AddInlineButton("Режим свободного формата результата", "2|ChangedMode|Exercise|||2");
+                    AddInlineButton("Режим только повторения", "2|ChangedMode|Exercise|0");
+                    AddInlineButton("Режим повторения и вес", "2|ChangedMode|Exercise|1");
+                    AddInlineButton("Режим свободного формата результата", "2|ChangedMode|Exercise|2");
                     break;
 
                 case ButtonsSet.ReplaceToDay:
@@ -212,11 +212,11 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons
                 #region Period area
 
                 case ButtonsSet.Period:
-                    AddInlineButton("Месяц", $"2|Period||||{additionalParameters["Act"]}|1");
-                    AddInlineButton("Квартал", $"2|Period||||{additionalParameters["Act"]}|3");
-                    AddInlineButton("Полгода", $"2|Period||||{additionalParameters["Act"]}|6");
-                    AddInlineButton("Год", $"2|Period||||{additionalParameters["Act"]}|12");
-                    AddInlineButton("За всё время", $"2|Period||||{additionalParameters["Act"]}|0");
+                    AddInlineButton("Месяц", $"2|Period||{additionalParameters["Act"]}|1");
+                    AddInlineButton("Квартал", $"2|Period||{additionalParameters["Act"]}|3");
+                    AddInlineButton("Полгода", $"2|Period||{additionalParameters["Act"]}|6");
+                    AddInlineButton("Год", $"2|Period||{additionalParameters["Act"]}|12");
+                    AddInlineButton("За всё время", $"2|Period||{additionalParameters["Act"]}|0");
                     break;
                 #endregion
 

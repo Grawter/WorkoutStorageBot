@@ -80,7 +80,10 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
         internal SettingsCH UnArchiveCommand()
         {
-            this.Domain = this.CommandHandlerTools.Db.GetDomainWithId(callbackQueryParser.DomainId, callbackQueryParser.DomainType);
+            string domainIDStr = callbackQueryParser.GetRequiredAdditionalParameter(0);
+            int domainID = int.Parse(domainIDStr);
+
+            this.Domain = this.CommandHandlerTools.Db.GetDomainWithId(domainID, callbackQueryParser.DomainType);
             this.Domain.IsArchive = false;
 
             ResponseTextConverter responseConverter = new ResponseTextConverter($"{this.Domain.Name.AddBoldAndQuotes()} разархивирован!");
@@ -299,11 +302,14 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
+            string domainIDStr = callbackQueryParser.GetRequiredAdditionalParameter(0);
+            int domainID = int.Parse(domainIDStr);
+
             switch (callbackQueryParser.DomainType)
             {
                 case "Cycle":
                     this.CommandHandlerTools.CurrentUserContext.DataManager.SetDomain(this.CommandHandlerTools.CurrentUserContext.UserInformation.Cycles
-                                                                                                                                .First(c => c.Id == callbackQueryParser.DomainId));
+                                                                                                                                .First(c => c.Id == domainID));
 
                     responseConverter = new ResponseTextConverter($"Выберите интересующую настройку для цикла {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()}");
                     buttonsSets = (ButtonsSet.SettingCycle, ButtonsSet.CycleList);
@@ -314,7 +320,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     {
                         case QueryFrom.NoMatter:
                             this.CommandHandlerTools.CurrentUserContext.DataManager.SetDomain(this.CommandHandlerTools.CurrentUserContext.ActiveCycle.Days
-                                                                                                                                .First(d => d.Id == callbackQueryParser.DomainId));
+                                                                                                                                .First(d => d.Id == domainID));
 
                             responseConverter = new ResponseTextConverter("Выберите упраженение");
                             buttonsSets = (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout);
@@ -322,7 +328,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
                         case QueryFrom.Settings:
                             this.CommandHandlerTools.CurrentUserContext.DataManager.SetDomain(this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Days
-                                                                                                                                .First(d => d.Id == callbackQueryParser.DomainId));
+                                                                                                                                .First(d => d.Id == domainID));
 
                             responseConverter = new ResponseTextConverter($"Выберите интересующую настройку для дня {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldAndQuotes()}");
                             buttonsSets = (ButtonsSet.SettingDay, ButtonsSet.DaysList);
@@ -333,7 +339,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     break;
 
                 case "Exercise":
-                    Exercise currentExercise = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Exercises.First(e => e.Id == callbackQueryParser.DomainId);
+                    Exercise currentExercise = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Exercises.First(e => e.Id == domainID);
 
                     this.CommandHandlerTools.CurrentUserContext.DataManager.SetDomain(currentExercise);
 
@@ -490,10 +496,15 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
+            string domainIDStr = callbackQueryParser.GetRequiredAdditionalParameter(0);
+            int domainID = int.Parse(domainIDStr);
+
+            string domainName = callbackQueryParser.GetRequiredAdditionalParameter(1);
+
             switch (callbackQueryParser.DomainType)
             {
                 case "Cycle":
-                    if (this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.CycleId == callbackQueryParser.DomainId)
+                    if (this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.CycleId == domainID)
                     {
                         responseConverter = new ResponseTextConverter($"Ошибка при переносе дня!", "Нельзя перенести день в тот же самый цикл",
                             $"Выберите цикл, в который хотите перенести день {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldAndQuotes()}");
@@ -504,15 +515,15 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                         return this;
                     }
 
-                    this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.CycleId = callbackQueryParser.DomainId;
+                    this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.CycleId = domainID;
                     this.CommandHandlerTools.Db.Days.Update(this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay);
 
-                    responseConverter = new ResponseTextConverter($"День {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldAndQuotes()}, перенесён в цикл {callbackQueryParser.DomainName.AddBoldAndQuotes()}",
+                    responseConverter = new ResponseTextConverter($"День {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldAndQuotes()}, перенесён в цикл {domainName.AddBoldAndQuotes()}",
                         "Выберите интересующий цикл");
                     break;
 
                 case "Day":
-                    if (this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.DayId == callbackQueryParser.DomainId)
+                    if (this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.DayId == domainID)
                     {
                         responseConverter = new ResponseTextConverter($"Ошибка при переносе упражнения!", "Нельзя перенести упражнение в тот же самый день",
                             $"Выберите день, в который хотите перенести упражнение {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldAndQuotes()}");
@@ -523,10 +534,10 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                         return this;
                     }
 
-                    this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.DayId = callbackQueryParser.DomainId;
+                    this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.DayId = domainID;
                     this.CommandHandlerTools.Db.Exercises.Update(this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise);
 
-                    responseConverter = new ResponseTextConverter($"Упражнение {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldAndQuotes()}, перенесёно в день {callbackQueryParser.DomainName.AddBoldAndQuotes()}",
+                    responseConverter = new ResponseTextConverter($"Упражнение {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldAndQuotes()}, перенесёно в день {domainName.AddBoldAndQuotes()}",
                         "Выберите интересующий цикл");
                     break;
                 default:
