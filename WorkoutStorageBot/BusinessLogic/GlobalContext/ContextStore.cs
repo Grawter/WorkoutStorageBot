@@ -1,6 +1,5 @@
 ﻿#region using
 
-using Microsoft.Extensions.Caching.Memory;
 using WorkoutStorageBot.BusinessLogic.SessionContext;
 
 #endregion
@@ -11,55 +10,34 @@ namespace WorkoutStorageBot.BusinessLogic.GlobalContext
     {
         internal ContextStore(bool isNeedCacheMode)
         {
-            IsNeedCacheMode = isNeedCacheMode;
-
-            memoryCacheContextStore = new MemoryCache(new MemoryCacheOptions());
-            memoryCacheEntryOptions = new MemoryCacheEntryOptions()
-                                            .SetSlidingExpiration(TimeSpan.FromHours(6));
-
-            contextStore = new Dictionary<long, UserContext>();
+            contextKeeper = GetContextKeeper(isNeedCacheMode);
         }
 
-        internal bool IsNeedCacheMode { get; }
-
-        private readonly MemoryCacheEntryOptions memoryCacheEntryOptions;
-        private readonly MemoryCache memoryCacheContextStore;
-
-        private readonly Dictionary<long, UserContext> contextStore;
+        private readonly IContextKeeper contextKeeper;
 
         internal bool HasContext(long userID)
-        {
-            if (IsNeedCacheMode)
-                return memoryCacheContextStore.TryGetValue(userID, out UserContext? result);
-            else
-               return contextStore.ContainsKey(userID);
-        }
+            => contextKeeper.HasContext(userID);
 
         internal UserContext? GetContext(long userID)
-        {
-            if (IsNeedCacheMode)
-                return memoryCacheContextStore.Get<UserContext?>(userID);
-            else
-                return contextStore.GetValueOrDefault(userID);
-        }
+            => contextKeeper.GetContext(userID);
 
         internal void AddContext(long userID, UserContext userContext)
         {
             if (userID < 1 || userContext == null)
                 throw new InvalidOperationException($"Аномалия: Попытка добавления некорректных данных в глобальный контекст!");
 
-            if (IsNeedCacheMode)
-                memoryCacheContextStore.Set(userID, userContext, memoryCacheEntryOptions);
-            else
-                contextStore.Add(userID, userContext);
+            contextKeeper.AddContext(userID, userContext);
         }
 
         internal void RemoveContext(long userID)
+            => contextKeeper.RemoveContext(userID);
+
+        private IContextKeeper GetContextKeeper(bool isNeedCacheMode)
         {
-            if (IsNeedCacheMode)
-                memoryCacheContextStore.Remove(userID);
+            if (isNeedCacheMode)
+                return new MemoryCacheAdapterContextKeeper();
             else
-                contextStore.Remove(userID);
+                return new DictionaryAdapterContextKeeper();
         }
     }
 }
