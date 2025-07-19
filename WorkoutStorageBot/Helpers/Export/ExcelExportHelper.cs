@@ -15,6 +15,9 @@ namespace WorkoutStorageBot.Helpers.Export
         {
             SetLicense();
 
+            DateTime filterDateTime = CommonExportHelper.GetFilterDateTime(monthFilterPeriod, resultsExercises);
+            CommonExportHelper.LoadDBDataToDBContextForFilterDate(resultsExercises, filterDateTime);
+
             byte[] packageInfo;
 
             using (ExcelPackage package = new ExcelPackage())
@@ -36,8 +39,7 @@ namespace WorkoutStorageBot.Helpers.Export
 
                 int maxResultExercisePointY = resultExercisePoint.Y;
 
-                DateTime filterDateTime = CommonExportHelper.GetFilterDateTime(monthFilterPeriod, resultsExercises);
-                CommonExportHelper.LoadDBDataToDBContextForFilterDate(resultsExercises, filterDateTime);
+                int newCyclePointY = 0;
 
                 string informationAboutSelectedPeriod = filterDateTime > DateTime.MinValue
                                 ? $"Временной промежуток формирования данных {filterDateTime.ToShortDateString()} - {filterDateTime.AddMonths(monthFilterPeriod).ToShortDateString()}"
@@ -87,7 +89,11 @@ namespace WorkoutStorageBot.Helpers.Export
                         }
 
                         // calculate endDayPoint
-                        endDayPoint = new Point(exercisePoint.X - 1, startDayPoint.Y);
+                        if (day.Exercises.Count == 0)
+                            endDayPoint = new Point(startDayPoint.X + 1, startDayPoint.Y);
+                        else
+                            endDayPoint = new Point(exercisePoint.X - 1, startDayPoint.Y);
+
                         SetDayName(day.Name, startDayPoint, endDayPoint, mainSheet);
 
                         // shift to next day
@@ -99,7 +105,11 @@ namespace WorkoutStorageBot.Helpers.Export
                     SetCycleName(cycle.Name, startCyclePoint, endCyclePoint, mainSheet);
 
                     // shift to next cycle
-                    startCyclePoint = new Point(startPosition, maxResultExercisePointY + 3);
+                    newCyclePointY = maxResultExercisePointY + 3;
+                    if (newCyclePointY <= endCyclePoint.Y) // case ResultExercise hasnt elements 
+                        newCyclePointY = endCyclePoint.Y + 3;
+
+                    startCyclePoint = new Point(startPosition, newCyclePointY);
                     startDayPoint = new Point(startPosition, startCyclePoint.Y + 1);
                     exercisePoint = new Point(startPosition, startDayPoint.Y + 1);
                     resultTitlePoint = new Point(startPosition, exercisePoint.Y + 1);
