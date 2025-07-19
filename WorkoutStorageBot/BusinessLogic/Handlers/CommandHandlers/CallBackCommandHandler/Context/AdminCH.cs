@@ -18,6 +18,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 {
     internal class AdminCH : CallBackCH
     {
+        private ILogger<AdminCH> Logger { get; }
         private AdminRepository AdminRepository { get; }
         private LogsRepository LogsRepository { get; }
 
@@ -25,6 +26,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
         {
             AdminRepository = this.CommandHandlerTools.ParentHandler.CoreManager.GetRepository<AdminRepository>()!;
             LogsRepository = this.CommandHandlerTools.ParentHandler.CoreManager.GetRepository<LogsRepository>()!;
+
+            Logger = CommonHelper.GetIfNotNull(commandHandlerTools.ParentHandler.CoreTools.LoggerFactory).CreateLogger<AdminCH>();
         }
 
         internal override AdminCH Expectation(params HandlerAction[] handlerActions)
@@ -166,11 +169,13 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             this.CommandHandlerTools.CurrentUserContext.LimitsManager.ChangeLimitsMode();
 
             ResponseTextConverter responseConverter =
-                new ResponseTextConverter($"Режим использования лимитов переключён на: {this.CommandHandlerTools.CurrentUserContext.LimitsManager.IsEnableLimit.ToString().AddBold()}",
+                new ResponseTextConverter($"Режим использования лимитов переключён в: {this.CommandHandlerTools.CurrentUserContext.LimitsManager.IsEnableLimit.ToString().AddBold()}",
                 "Выберите интересующее действие");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.Admin, ButtonsSet.Main);
 
             this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+
+            Logger.LogWarning($"Режим использования лимитов переключён в: {this.CommandHandlerTools.CurrentUserContext.LimitsManager.IsEnableLimit.ToString()}");
 
             return this;
         }
