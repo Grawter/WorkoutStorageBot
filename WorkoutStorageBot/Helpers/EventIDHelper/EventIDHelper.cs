@@ -4,11 +4,11 @@ using Microsoft.Extensions.Logging;
 
 #endregion
 
-namespace WorkoutStorageBot.Application.BotTools.Logging
+namespace WorkoutStorageBot.Helpers.EventIDHelper
 {
     internal class EventIDHelper
     {
-        // Создание отдельное экземпляра для кажого потока, иначе при вызове Next() random может сломаться
+        // Создание отдельного экземпляра для кажого потока, иначе при вызове Next() random может сломаться
         private static readonly ThreadLocal<Random> random = new ThreadLocal<Random>(() => new Random());
 
         internal static EventId GetNextEventIdThreadSave(string? name = null) 

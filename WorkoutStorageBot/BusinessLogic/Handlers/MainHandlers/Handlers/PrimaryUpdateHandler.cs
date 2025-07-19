@@ -3,7 +3,6 @@
 using Microsoft.Extensions.Logging;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using WorkoutStorageBot.Application.BotTools.Logging;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.CoreRepositories.Repositories;
 using WorkoutStorageBot.BusinessLogic.Enums;
@@ -15,6 +14,7 @@ using WorkoutStorageBot.Core.Abstraction;
 using WorkoutStorageBot.Core.Manager;
 using WorkoutStorageBot.Helpers.Common;
 using WorkoutStorageBot.Helpers.Converters;
+using WorkoutStorageBot.Helpers.EventIDHelper;
 using WorkoutStorageBot.Helpers.Updates;
 using WorkoutStorageBot.Model.Domain;
 using WorkoutStorageBot.Model.HandlerData;

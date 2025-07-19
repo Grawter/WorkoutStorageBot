@@ -5,13 +5,12 @@ using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using WorkoutStorageBot.Application.BotTools.Logging;
 using WorkoutStorageBot.Application.BotTools.Sender;
 using WorkoutStorageBot.Application.Configuration;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.Core.Manager;
-using WorkoutStorageBot.Extenions;
 using WorkoutStorageBot.Helpers.Common;
+using WorkoutStorageBot.Helpers.EventIDHelper;
 
 #endregion
 
@@ -78,7 +77,7 @@ namespace WorkoutStorageBot.Application.BotTools.Listener
                        LogFormatter.CriticalExBotFormatter);
 
             if (configurationData.Notifications.NotifyOwnersAboutCriticalErrors)
-                await botSender.SendSimpleMassiveResponse(configurationData.Bot.OwnersChatIDs, @$"{"Необработанная ошибка".AddBold()}:
+                await botSender.SendSimpleMassiveResponse(configurationData.Bot.OwnersChatIDs, @$"!!!Необработанная ошибка!!!:
 {exception.ToString()}");
         }
     }
