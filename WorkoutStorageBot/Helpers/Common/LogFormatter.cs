@@ -23,7 +23,7 @@ namespace WorkoutStorageBot.Helpers.Common
             errorMessage = exception switch
             {
                 ApiRequestException apiRequestException
-                    => $"Telegram API Error:\n[{apiRequestException.ErrorCode}]\n{apiRequestException.Message}",
+                    => $"Telegram API Error:{Environment.NewLine}[{apiRequestException.ErrorCode}]{Environment.NewLine}{apiRequestException.Message}",
                 _ => exception.ToString()
             };
 

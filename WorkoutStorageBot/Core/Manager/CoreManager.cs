@@ -2,7 +2,6 @@
 
 using Microsoft.Extensions.Logging;
 using Telegram.Bot.Types;
-using WorkoutStorageBot.Application.BotTools.Logging;
 using WorkoutStorageBot.Application.BotTools.Sender;
 using WorkoutStorageBot.Application.Configuration;
 using WorkoutStorageBot.BusinessLogic.Consts;
@@ -11,6 +10,7 @@ using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.BusinessLogic.SessionContext;
 using WorkoutStorageBot.Core.Abstraction;
 using WorkoutStorageBot.Helpers.Common;
+using WorkoutStorageBot.Helpers.EventIDHelper;
 using WorkoutStorageBot.Helpers.Updates;
 using WorkoutStorageBot.Model.Domain;
 using WorkoutStorageBot.Model.HandlerData.Results;
@@ -69,46 +69,56 @@ namespace WorkoutStorageBot.Core.Manager
 
             try
             {
-                HandlerResult handlerResult = new HandlerResult()
-                {
-                    Update = update,
-                    HasAccess = true, // Устанавливаем true, считая любое первоначальное обращение разрешённым (чтобы первый раз пройти условие на .HasAccess) 
-                };
-
-                foreach (CoreHandler handler in Handlers)
-                {
-                    if (handlerResult.HasAccess)
-                    {
-                        handlerResult = handler.Process(handlerResult);
-
-                        // Перепроверяем доступ, т.к. во время работы очередного обработчика доступ мог быть отозван
-                        if (handlerResult.InformationSet != null && handlerResult.HasAccess)
-                        {
-                            await SendResponse(handlerResult.ShortUpdateInfo.ChatId, handlerResult.InformationSet, handlerResult.CurrentUserContext);
-
-                            if (!handlerResult.IsNeedContinue)
-                                return;
-                        }
-                    }
-                }
+                await StartProcess(update);
             }
             catch (Exception ex)
             {
-                IUpdateInfo updateInfo = UpdatesHelper.GetUpdateInfo(update);
-
-                EventId eventId = EventIDHelper.GetNextEventId(CommonConsts.EventNames.RuntimeError);
-
-                await LogRuntimeError(updateInfo, eventId, ex);
-
-                if (ConfigurationData.Notifications.NotifyOwnersAboutRuntimeErrors)
-                    await BotResponseSender.SendSimpleMassiveResponse(ConfigurationData.Bot.OwnersChatIDs, @$"Ошибка во время исполнения. EventID: {eventId.Id}
-{ex.ToString()}");
-
+                await ProcessError(ex, update);
             }
             finally
             {
                 processSemaphore.Release(); // освобождаем секцию
             }
+        }
+
+        private async Task StartProcess(Update update)
+        {
+            HandlerResult handlerResult = new HandlerResult()
+            {
+                Update = update,
+                HasAccess = true, // Устанавливаем true, считая любое первоначальное обращение разрешённым (чтобы первый раз пройти условие на .HasAccess) 
+            };
+
+            foreach (CoreHandler handler in Handlers)
+            {
+                if (handlerResult.HasAccess)
+                {
+                    handlerResult = handler.Process(handlerResult);
+
+                    // Перепроверяем доступ, т.к. во время работы очередного обработчика доступ мог быть отозван
+                    if (handlerResult.InformationSet != null && handlerResult.HasAccess)
+                    {
+                        await SendResponse(handlerResult.ShortUpdateInfo.ChatId, handlerResult.InformationSet, handlerResult.CurrentUserContext);
+
+                        if (!handlerResult.IsNeedContinue)
+                            return;
+                    }
+                }
+            }
+        }
+
+        private async Task ProcessError(Exception ex, Update update)
+        {
+            IUpdateInfo updateInfo = UpdatesHelper.GetUpdateInfo(update);
+
+            EventId eventId = EventIDHelper.GetNextEventId(CommonConsts.EventNames.RuntimeError);
+
+            await LogRuntimeError(updateInfo, eventId, ex);
+
+            if (ConfigurationData.Notifications.NotifyOwnersAboutRuntimeErrors)
+                await BotResponseSender.SendSimpleMassiveResponse(ConfigurationData.Bot.OwnersChatIDs, @$"Ошибка во время исполнения. EventID: {eventId.Id}
+{ex.ToString()}");
+
         }
 
         private async Task LogRuntimeError(IUpdateInfo updateInfo, EventId eventId, Exception ex)

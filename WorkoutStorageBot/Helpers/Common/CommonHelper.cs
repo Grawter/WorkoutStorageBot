@@ -7,7 +7,7 @@ namespace WorkoutStorageBot.Helpers.Common
     public class CommonHelper
     {
         [return: NotNull]
-        public static T GetIfNotNull<T>(T source)
+        public static T GetIfNotNull<T>([NotNull] T source)
         {
             ArgumentNullException.ThrowIfNull(source);
 
@@ -15,7 +15,7 @@ namespace WorkoutStorageBot.Helpers.Common
         }
 
         [return: NotNull]
-        public static T GetIfNotNullOrWhiteSpace<T>(T source)
+        public static T GetIfNotNullOrWhiteSpace<T>([NotNull] T source)
         {
             if (source is string sourceString)
                 ArgumentNullException.ThrowIfNullOrWhiteSpace(sourceString);

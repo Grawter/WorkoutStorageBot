@@ -1,6 +1,7 @@
 ﻿#region using
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
+using WorkoutStorageBot.Helpers.Common;
 using WorkoutStorageBot.Model.Domain;
 using WorkoutStorageBot.Model.HandlerData;
 #endregion
@@ -19,7 +20,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.Abstraction
 
         internal CommandHandler(CommandHandlerData commandHandlerTools)
         {
-            this.CommandHandlerTools = commandHandlerTools;
+            this.CommandHandlerTools = CommonHelper.GetIfNotNull(commandHandlerTools);
 
             this.HandlerActions = Enumerable.Empty<HandlerAction>();
         }
