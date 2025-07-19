@@ -63,7 +63,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                                                                 .FirstOrDefault();
 
 
-                    information = GetInformationAboutLastExercises(resultlasttraining.Data);
+                    information = GetInformationAboutLastExercises(resultlasttraining?.Data);
                     responseConverter = new ResponseTextConverter("Последняя тренировка:", information, "Выберите тренировочный день");
                     buttonsSets = (ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main);
                     break;
@@ -121,7 +121,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
         private string GetInformationAboutLastExercises(IEnumerable<ResultExercise>? resultExercises)
         {
-            if (!resultExercises.Any())
+            if (!resultExercises.HasItemsInCollection())
                 return "Нет информации для данного цикла";
 
             StringBuilder sb = new StringBuilder();

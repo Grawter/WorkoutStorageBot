@@ -1,6 +1,7 @@
 ﻿#region using
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.Extenions;
+using WorkoutStorageBot.Helpers.Common;
 using WorkoutStorageBot.Model.Domain;
 #endregion
 
@@ -120,24 +121,6 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
             ResetResultExercises();
         }
 
-        internal void SetDomain(IDomain domain)
-        {
-            switch (domain)
-            {
-                case Cycle cycle:
-                    SetCycle(cycle);
-                    break;
-
-                case Day day:
-                    SetDay(day);
-                    break;
-
-                case Exercise exercise:
-                    SetExercise(exercise);
-                    break;
-            }
-        }
-
         internal void ResetDomain(IDomain domain)
         {
             switch (domain)
@@ -153,21 +136,53 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
                 case Exercise:
                     ResetExercise();
                     break;
+
+                default:
+                    throw new InvalidOperationException($"Неизвестный тип домена: {domain.GetType().Name}");
             }
         }
 
-        internal DomainType GetDomainType (IDomain domain)
+        internal void SetDomain(IDomain domain)
         {
-            return domain switch
+            switch (domain)
             {
-                Cycle
-                    => DomainType.Cycle,
-                Day
-                    => DomainType.Day,
-                Exercise
-                     => DomainType.Exercise,
-                _ => throw new NotImplementedException($"Неожиданный domain: {domain.GetType().FullName}")
+                case Cycle cycle:
+                    SetCycle(cycle);
+                    break;
+
+                case Day day:
+                    SetDay(day);
+                    break;
+
+                case Exercise exercise:
+                    SetExercise(exercise);
+                    break;
+
+                default:
+                    throw new InvalidOperationException($"Неизвестный тип домена: {domain.GetType().Name}");
+            }
+        }
+
+        internal IDomain? GetCurrentDomain(DomainType domainType, bool throwEx = true)
+            => GetCurrentDomain(domainType.ToString(), throwEx);
+
+        internal IDomain? GetCurrentDomain(string domainType, bool throwEx = true)
+        {
+            IDomain? domain = domainType switch
+            {
+                Consts.CommonConsts.Domain.Cycle
+                    => CurrentCycle,
+                Consts.CommonConsts.Domain.Day
+                    => CurrentDay,
+                Consts.CommonConsts.Domain.Exercise
+                    => CurrentExercise,
+                _ => throwEx ? throw new NotImplementedException($"Неожиданный domainTyped: {domainType}") : null,
             };
+
+            if (throwEx)
+                domain = CommonHelper.GetIfNotNull(domain);
+
+            return domain;
         }
 
         internal string ConvertResultExerciseToString(ResultExercise resultExercise)

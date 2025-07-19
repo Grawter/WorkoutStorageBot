@@ -42,41 +42,10 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
             CallBackId = CryptographyHelper.CreateRandomCallBackQueryId();
         }
 
-        internal void UdpateCycleForce(Cycle cycle)
+        internal void UdpateActiveCycleForce(Cycle cycle)
         {
             ActiveCycle = cycle;
             ActiveCycle.IsActive = true;
-        }
-
-        internal IEnumerable<int> GetUserExercisesIds()
-        {
-            foreach (Cycle cycle in UserInformation.Cycles)
-            {
-                foreach (Day day in cycle.Days)
-                {
-                    foreach(Exercise exercise in day.Exercises)
-                    {
-                        yield return exercise.Id;
-                    }
-                }
-            }
-        }
-
-        internal IDomain? GetCurrentDomainFromDataManager(DomainType domainType, bool throwEx = true)
-            => GetCurrentDomainFromDataManager(domainType.ToString());
-
-        internal IDomain? GetCurrentDomainFromDataManager(string domainType, bool throwEx = true)
-        {
-            return domainType switch
-            {
-                "Cycle"
-                    => DataManager.CurrentCycle,
-                "Day"
-                    => DataManager.CurrentDay,
-                "Exercise"
-                     => DataManager.CurrentExercise,
-                _ => throwEx ? throw new NotImplementedException($"Неожиданный domainTyped: {domainType}") : null,
-            };
         }
     }
 }

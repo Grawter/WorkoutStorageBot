@@ -3,6 +3,7 @@ using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.CoreRepositories.Repositories;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.Exceptions;
+using WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.Extenions;
 using WorkoutStorageBot.Helpers.Common;
@@ -86,7 +87,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             this.Domain = CommandHandlerTools.CurrentUserContext.DataManager.SetCycle(requestConverter.Convert(), !hasActiveCycle, CommandHandlerTools.CurrentUserContext.UserInformation.Id);
 
             if (!hasActiveCycle)
-                CommandHandlerTools.CurrentUserContext.UdpateCycleForce((Cycle)this.Domain);
+                CommandHandlerTools.CurrentUserContext.UdpateActiveCycleForce((Cycle)this.Domain);
 
             switch (CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom)
             {
@@ -145,7 +146,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                     CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.AddExercises;
 
                     responseConverter = new ResponseTextConverter($"День {CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldAndQuotes()} сохранён!",
-                        "Введите название упражения для этого дня");
+                        $"Введите название упражения для этого дня.{Environment.NewLine}{CommonConsts.Exercise.ExamplesTypesExercise}", 
+                        CommonConsts.Exercise.InputFormatExercise);
                     buttonsSets = (ButtonsSet.None, ButtonsSet.None);
                     break;
 
@@ -264,7 +266,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
         internal TextMessageCH ChangeNameCommand(string domainType)
         {
-            this.Domain = CommandHandlerTools.CurrentUserContext.GetCurrentDomainFromDataManager(domainType);
+            this.Domain = CommandHandlerTools.CurrentUserContext.DataManager.GetCurrentDomain(domainType);
 
             requestConverter.RemoveCompletely(25).WithoutServiceSymbol();
 
@@ -460,14 +462,14 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                         case "wl":
                             adminRepository.ChangeWhiteListByUser(user);
 
-                            responseConverter = new ResponseTextConverter($"WhiteList для {user.Username.AddBoldAndQuotes()} ({user.UserId}) установлен на {user.WhiteList.ToString().AddBold()}",
+                            responseConverter = new ResponseTextConverter($"WhiteList для {user.Username.AddBoldAndQuotes()} ({user.UserId}) установлен в: {user.WhiteList.ToString().AddBold()}",
                                 "Выберите интересующее действие");
 
                             break;
                         case "bl":
                             adminRepository.ChangeBlackListByUser(user);
 
-                            responseConverter = new ResponseTextConverter($"BlackList для {user.Username.AddBoldAndQuotes()} ({user.UserId}) установлен на {user.BlackList.ToString().AddBold()}",
+                            responseConverter = new ResponseTextConverter($"BlackList для {user.Username.AddBoldAndQuotes()} ({user.UserId}) установлен в: {user.BlackList.ToString().AddBold()}",
                                 "Выберите интересующее действие");
                             break;
                         default:
@@ -503,6 +505,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 responseConverter = new ResponseTextConverter($"Пользователь '{userIdentity.AddBoldAndQuotes()}' не найден!", "Выберите интересующее действие");
             else
             {
+                PrimaryUpdateHandler handler = CommandHandlerTools.ParentHandler.CoreManager.GetHandler<PrimaryUpdateHandler>()!;
+                handler.DeleteContext(user.UserId);
+
                 adminRepository.DeleteAccount(user);
                 responseConverter = new ResponseTextConverter($"Пользователь {user.Username.AddBoldAndQuotes()} ({user.UserId}) был успешно удалён", "Выберите интересующее действие");
             }

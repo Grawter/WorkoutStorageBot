@@ -6,7 +6,7 @@ namespace WorkoutStorageBot.Helpers.CallbackQueryParser
     {
         internal CallbackQueryParser(string data)
         {
-            AllParameters = data.Split(['|'], StringSplitOptions.RemoveEmptyEntries);
+            AllParameters = data.Split(['|']);
 
             if (AllParameters.Length == 0)
                 throw new FormatException("Получен пустой CallBack");

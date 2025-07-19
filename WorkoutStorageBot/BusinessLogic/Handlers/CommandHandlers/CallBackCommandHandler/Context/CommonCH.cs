@@ -24,7 +24,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
         internal CommonCH BackCommand()
         {
-            string buttonsSet = callbackQueryParser.GetRequiredParameter(2);
+            string buttonsSet = callbackQueryParser.AdditionalParameters.First();
 
             StepInformation previousStep = StepStorage.GetStep(buttonsSet);
 

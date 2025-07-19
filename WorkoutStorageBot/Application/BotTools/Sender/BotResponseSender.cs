@@ -2,11 +2,11 @@
 
 using Telegram.Bot.Types;
 using Telegram.Bot;
-using WorkoutStorageBot.BusinessLogic.Buttons;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.BusinessLogic.SessionContext;
 using Telegram.Bot.Types.Enums;
 using WorkoutStorageBot.Helpers.Common;
+using WorkoutStorageBot.Helpers.Buttons;
 
 #endregion
 

@@ -322,7 +322,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers
 
                 case "ReplaceTo":
                     CHResult = commandHandler.Expectation(HandlerAction.Save)
-                                             .ReplaceCommand();
+                                             .ReplaceToCommand();
                     break;
 
                 case "ChangeName":
@@ -430,11 +430,22 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers
                 return true;
             }
 
-            ResponseTextConverter responseConverter = new ResponseTextConverter("Действие не может быть выполнено, т.к. информация устарела",
-                    "Для продолжения работы используйте действия, предложенные ниже");
-            (ButtonsSet, ButtonsSet) buttonsSet = (ButtonsSet.Main, ButtonsSet.None);
+            ResponseTextConverter responseConverter;
+            (ButtonsSet, ButtonsSet) buttonsSets;
 
-            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSet);
+            if (CurrentUserContext.ActiveCycle == null)
+            {
+                responseConverter = new ResponseTextConverter("Начнём");
+                buttonsSets = (ButtonsSet.AddCycle, ButtonsSet.None);
+            }
+            else
+            {
+                responseConverter = new ResponseTextConverter("Действие не может быть выполнено, т.к. информация устарела",
+                        "Для продолжения работы используйте действия, предложенные ниже");
+                buttonsSets = (ButtonsSet.Main, ButtonsSet.None);
+            }
+
+            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
             CurrentUserContext.DataManager.ResetAll();
 
