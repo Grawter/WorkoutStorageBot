@@ -33,7 +33,7 @@
   "Bot": {
     "Token": "",
     "WhiteListIsEnable": "False",
-    "OwnersChatIDs": [],
+    "OwnersChatIDs": [ "" ],
     "IsNeedCacheContext": "True",
     "IsNeedLimits": "True"
   },
@@ -70,8 +70,8 @@
     "CustomRulesLog": [
       {
         "FullClassName": "",
-        "DBLogLevels": [],
-        "ConsoleLogLevels": []
+        "DBLogLevels": [ "" ],
+        "ConsoleLogLevels": [ "" ]
       }
     ]
   }
