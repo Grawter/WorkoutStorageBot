@@ -82,7 +82,7 @@ dotnet run
 
 ```
 {
-  // Настроить считывания настроек под свои нужды можно в ConfigurationData -> GetConfiguration.
+  // Настроить считывание настроек под свои нужды можно в ConfigurationData -> GetConfiguration
 
   /*
   Настройки подключения к БД.
