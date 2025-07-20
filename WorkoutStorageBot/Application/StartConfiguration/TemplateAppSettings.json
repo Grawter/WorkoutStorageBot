@@ -31,9 +31,9 @@
   IsNeedLimits - Нужно ли включать режим лимитов. [Необязательно] [По-умолчанию - False]
   */
   "Bot": {
-    "Token": "",
+    "Token": "<Your telegram bot token>",
     "WhiteListIsEnable": "False",
-    "OwnersChatIDs": [ "" ],
+    "OwnersChatIDs": [ "000000000" ],
     "IsNeedCacheContext": "True",
     "IsNeedLimits": "True"
   },
