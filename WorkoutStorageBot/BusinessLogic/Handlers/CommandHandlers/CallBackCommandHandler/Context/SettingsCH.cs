@@ -94,6 +94,21 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             return this;
         }
 
+        internal SettingsCH AboutBotCommand()
+        {
+            string aboutBotText = this.CommandHandlerTools.ParentHandler.CoreTools.ConfigurationData.AboutBotText;
+
+            if (string.IsNullOrWhiteSpace(aboutBotText))
+                aboutBotText = "Информации о боте не указано";
+
+            ResponseTextConverter responseConverter = new ResponseTextConverter(aboutBotText);
+            (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.None, ButtonsSet.Settings);
+
+            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+
+            return this;
+        }
+
         internal SettingsCH ExportCommand()
         {
             ResponseTextConverter responseConverter = new ResponseTextConverter("Выберите формат в котором экспортировать данные о ваших тренировках");

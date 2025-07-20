@@ -285,6 +285,11 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers
                                              .UnArchiveCommand();
                     break;
 
+                case "AboutBot":
+                    CHResult = commandHandler.AboutBotCommand();
+
+                    break;
+
                 case "Setting":
                     CHResult = commandHandler.SettingCommand();
                     break;

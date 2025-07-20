@@ -19,6 +19,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.BusinessButtonsFactories
             AddInlineButton("Архив", "2|ArchiveStore");
             AddInlineButton("Экспорт тренировок", "2|Export");
             AddInlineButton("Удалить свой аккаунт", "2|Delete|Account");
+            AddInlineButton("О боте", "2|AboutBot");
         }
     }
 }

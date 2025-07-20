@@ -1,5 +1,6 @@
 ﻿#region using
 
+using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.Model.AppContext;
 using WorkoutStorageBot.Model.Domain;
@@ -18,11 +19,11 @@ namespace WorkoutStorageBot.Extenions
         {
             return domainType switch
             {
-                "Cycle"
+                CommonConsts.Domain.Cycle
                     => db.Cycles.First(c => c.Id == id),
-                "Day"
+                CommonConsts.Domain.Day
                     => db.Days.First(d => d.Id == id),
-                "Exercise"
+                CommonConsts.Domain.Exercise
                      => db.Exercises.First(e => e.Id == id),
                 _ => throw new NotImplementedException($"Неожиданный domainTyped: {domainType}")
             };

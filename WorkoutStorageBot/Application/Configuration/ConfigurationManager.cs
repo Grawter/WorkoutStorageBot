@@ -23,6 +23,8 @@ namespace WorkoutStorageBot.Application.Configuration
 
             ConfigurationData configurationData = new ConfigurationData();
 
+            FillAboutBotText(configurationData, configuration);
+
             FillDBSetting(configurationData.DB, configuration);
 
             FillBotSettings(configurationData.Bot, configuration);
@@ -33,6 +35,9 @@ namespace WorkoutStorageBot.Application.Configuration
 
             return configurationData;
         }
+
+        private static void FillAboutBotText(ConfigurationData configurationData, IConfigurationRoot configuration)
+            => configurationData.AboutBotText = configuration.GetSection("AboutBot")?.Value;
 
         private static void FillDBSetting(DbSettings settings, IConfigurationRoot configuration)
         {

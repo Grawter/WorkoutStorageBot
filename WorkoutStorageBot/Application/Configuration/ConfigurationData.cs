@@ -8,6 +8,8 @@ namespace WorkoutStorageBot.Application.Configuration
         public BotSettings Bot { get; set; } = new BotSettings();
         public NotificationsSettings Notifications { get; set; } = new NotificationsSettings();
         public LogSettings LogInfo { get; set; } = new LogSettings();
+
+        public string AboutBotText { get; set; } = string.Empty;
     }
 
     public class DbSettings

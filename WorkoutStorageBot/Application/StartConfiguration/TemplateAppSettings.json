@@ -74,5 +74,10 @@
         "ConsoleLogLevels": [ "" ]
       }
     ]
-  }
+  },
+
+  /*
+  AboutBot - Описание, выводимое из меню настройки по кнопке "О боте" [Необязательно]
+  */
+  "AboutBot": "Some information about bot"
 }
