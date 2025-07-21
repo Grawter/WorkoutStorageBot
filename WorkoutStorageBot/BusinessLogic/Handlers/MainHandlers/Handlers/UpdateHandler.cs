@@ -152,6 +152,11 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers
 
                     break;
 
+                case MessageNavigationTarget.DeleteResultsExercises:
+                    CHResult = commandHandler.DeleteResultsExercisesCommand();
+
+                    break;
+
                 default:
                     throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.MessageNavigationTarget: {CurrentUserContext.Navigation.MessageNavigationTarget}!");
             }
@@ -453,7 +458,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers
             informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
             CurrentUserContext.DataManager.ResetAll();
-
+            
             return false;
         }
     }

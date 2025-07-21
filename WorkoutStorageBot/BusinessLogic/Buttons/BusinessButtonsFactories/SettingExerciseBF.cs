@@ -20,6 +20,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.BusinessButtonsFactories
             AddInlineButton("Перенести упражнение", "2|Replace|Exercise");
             AddInlineButton("Добавить в архив", $"2|Archiving|Exercise");
             AddInlineButton("Удалить", "2|Delete|Exercise");
+            AddInlineButton("Удалить результаты упражнения", "2|Delete|ResultsExercises");
             AddInlineButton("Вернуться к главному меню", "0|ToMain");
         }
     }

@@ -695,29 +695,39 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             switch (callbackQueryParser.DomainType)
             {
                 case "Account":
-                    responseConverter = new ResponseTextConverter("Вы уверены?", "Удаление аккаунта приведёт к полной и безвозвратной потере информации о ваших тренировках");
+                    responseConverter = new ResponseTextConverter("Вы уверены?", $"{"Удаление аккаунта приведёт к полной и безвозвратной потере информации о ваших тренировках".AddBold()}");
                     buttonsSets = (ButtonsSet.ConfirmDelete, ButtonsSet.Settings);
 
                     additionalParameters.Add("Name", "аккаунт");
                     break;
 
                 case "Cycle":
-                    responseConverter = new ResponseTextConverter("Вы уверены?", "Удаление цикла приведёт к полной и безвозвратной потере информации о ваших тренировках в этом цикле");
+                    responseConverter = new ResponseTextConverter("Вы уверены?", $"{"Удаление цикла приведёт к полной и безвозвратной потере информации о ваших тренировках в этом цикле".AddBold()}");
                     buttonsSets = (ButtonsSet.ConfirmDelete, ButtonsSet.SettingCycle);
 
                     additionalParameters.Add("Name", "цикл");
                     break;
 
                 case "Day":
-                    responseConverter = new ResponseTextConverter("Вы уверены?", "Удаление дня приведёт к полной и безвозвратной потере информации о ваших тренировках в этом дне");
+                    responseConverter = new ResponseTextConverter("Вы уверены?", $"{"Удаление дня приведёт к полной и безвозвратной потере информации о ваших тренировках в этом дне".AddBold()}");
                     buttonsSets = (ButtonsSet.ConfirmDelete, ButtonsSet.SettingDay);
 
                     additionalParameters.Add("Name", "день");
                     break;
 
                 case "Exercise":
-                    responseConverter = new ResponseTextConverter("Вы уверены?", "Удаление упражнения приведёт к полной и безвозвратной потере информации о ваших тренировках с этим упражнением");
+                    responseConverter = new ResponseTextConverter("Вы уверены?", $"{"Удаление упражнения приведёт к полной и безвозвратной потере информации о ваших тренировках с этим упражнением".AddBold()}");
                     buttonsSets = (ButtonsSet.ConfirmDelete, ButtonsSet.SettingExercise);
+
+                    additionalParameters.Add("Name", "упражнение");
+                    break;
+
+                case "ResultsExercises":
+                    responseConverter = new ResponseTextConverter("Вы уверены?", $"{"Удаление подходов приведёт к полной и безвозвратной потере информации".AddBold()}",
+                        "Для удаления введите кол-во последних записей, которые требуется удалить");
+                    buttonsSets = (ButtonsSet.None, ButtonsSet.SettingExercise);
+
+                    this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.DeleteResultsExercises;
 
                     additionalParameters.Add("Name", "упражнение");
                     break;

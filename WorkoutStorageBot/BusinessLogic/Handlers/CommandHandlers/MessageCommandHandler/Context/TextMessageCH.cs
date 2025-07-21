@@ -519,6 +519,56 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             return this;
         }
 
+        internal TextMessageCH DeleteResultsExercisesCommand()
+        {
+            string countToDeleteStr = requestConverter.RemoveCompletely(35).WithoutServiceSymbol().Convert();
+
+            ResponseTextConverter responseConverter;
+            (ButtonsSet, ButtonsSet) buttonsSets;
+
+            if (!int.TryParse(countToDeleteStr, out int countToDelete))
+            {
+                responseConverter = new ResponseTextConverter($"Не удалось получить кол-во записей для удаления из текста '{countToDeleteStr}'",
+                    "Для удаления введите кол-во последних записей, которые требуется удалить");
+
+                buttonsSets = (ButtonsSet.None, ButtonsSet.SettingExercise);
+            }
+            else
+            {
+                Exercise currentExercise = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise;
+
+                string dbProvider = this.CommandHandlerTools.Db.GetDBProvider();
+
+                if (dbProvider == "Microsoft.EntityFrameworkCore.Sqlite")
+                {
+                    string sqlQuery = $@"
+DELETE FROM [ResultsExercises]
+WHERE Id IN (
+    SELECT Id 
+    FROM [ResultsExercises]
+    WHERE ExerciseId = {currentExercise.Id}
+    ORDER BY DateTime DESC, ID DESC
+    LIMIT {countToDelete}
+)";
+
+                    int numberOfRowsAffected = this.CommandHandlerTools.Db.ExecuteSQL(sqlQuery);
+
+                    responseConverter = new ResponseTextConverter($"Было удалено {numberOfRowsAffected} строк",
+                        $"Выберите интересуюущую настройку для упражения {currentExercise.Name.AddBoldAndQuotes()}");
+
+                    buttonsSets = (ButtonsSet.SettingExercise, ButtonsSet.ExercisesList);
+                }
+                else
+                    throw new NotImplementedException($"Операция не поддерживается для DBProvider {dbProvider}");
+            }
+
+            this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.Default;
+
+            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+
+            return this;
+        }
+
         private bool AccessDenied()
         {
             if (!this.CommandHandlerTools.CurrentUserContext.IsAdmin())
