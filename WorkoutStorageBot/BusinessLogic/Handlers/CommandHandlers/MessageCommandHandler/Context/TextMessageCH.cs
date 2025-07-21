@@ -172,7 +172,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
-            requestConverter.RemoveCompletely().WithoutServiceSymbol();
+            requestConverter.RemoveCompletely(80).WithoutServiceSymbol();
 
             List<Exercise> exercises = new List<Exercise>();
 

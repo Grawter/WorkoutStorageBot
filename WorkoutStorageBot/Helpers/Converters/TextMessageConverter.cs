@@ -62,7 +62,7 @@ namespace WorkoutStorageBot.Helpers.Converters
                     throw new CreateExerciseException("Не удалось получилось название упражнения.");
 
                 if (!int.TryParse(exerciseAndType.Skip(1).FirstOrDefault(), out int type))
-                    throw new CreateExerciseException("Не удалось получить тип упражнения");
+                    throw new CreateExerciseException($"Не удалось получить тип упражнения '{name}'");
 
                 if (!Enum.IsDefined(typeof(ExercisesMods), type))
                     throw new CreateExerciseException($"Указанный тип упражнения ({type}) не относится к допустимым");
