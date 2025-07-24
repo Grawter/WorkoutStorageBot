@@ -38,8 +38,6 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
             Navigation = new();
 
             LimitsManager = new(isEnableLimit);
-
-            CallBackId = CryptographyHelper.CreateRandomCallBackQueryId();
         }
 
         internal void UdpateActiveCycleForce(Cycle cycle)

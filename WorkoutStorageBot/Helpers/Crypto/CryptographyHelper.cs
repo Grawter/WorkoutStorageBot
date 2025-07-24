@@ -6,20 +6,18 @@ namespace WorkoutStorageBot.Helpers.Crypto
 {
     internal class CryptographyHelper
     {
-        internal static byte[] CreateRandomByteArray(int size = 5)
+        internal static string CreateRandomCallBackQueryId(uint size = 5)
+            => Convert.ToBase64String(CreateRandomByteArray(size));
+
+        private static byte[] CreateRandomByteArray(uint size = 5)
         {
-            byte[] mas = new byte[size];
+            byte[] arr = new byte[size];
             using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
             {
-                rng.GetBytes(mas);
+                rng.GetBytes(arr);
             }
 
-            return mas;
-        }
-
-        internal static string CreateRandomCallBackQueryId(int size = 5)
-        {
-            return Convert.ToBase64String(CreateRandomByteArray(size));
+            return arr;
         }
     }
 }

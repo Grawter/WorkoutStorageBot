@@ -65,7 +65,7 @@ namespace WorkoutStorageBot.Helpers.Converters
                     throw new CreateExerciseException($"Не удалось получить тип упражнения '{name}'");
 
                 if (!Enum.IsDefined(typeof(ExercisesMods), type))
-                    throw new CreateExerciseException($"Указанный тип упражнения ({type}) не относится к допустимым");
+                    throw new CreateExerciseException($"Указанный тип ({type}) упражнения '{name}' не относится к допустимым");
 
                 Exercise exercise = new Exercise() { Name = name, Mode = (ExercisesMods)type };
                 exercises.Add(exercise);
