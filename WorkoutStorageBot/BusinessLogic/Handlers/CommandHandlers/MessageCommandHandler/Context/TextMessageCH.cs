@@ -381,6 +381,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
         internal TextMessageCH FindLogByIDCommand(bool isEventID)
         {
+            this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.Default;
+
             if (AccessDenied())
                 return this;
 
@@ -427,6 +429,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
         internal TextMessageCH ChangeUserStateCommand()
         {
+            this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.Default;
+
             if (AccessDenied())
                 return this;
 
@@ -486,6 +490,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
         internal TextMessageCH DeleteUserCommand()
         {
+            this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.Default;
+
             if (AccessDenied())
                 return this;
 
