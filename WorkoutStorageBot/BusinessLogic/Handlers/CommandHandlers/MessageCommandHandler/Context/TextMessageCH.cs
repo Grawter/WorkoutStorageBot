@@ -105,6 +105,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                     responseConverter = new ResponseTextConverter($"Цикл {CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()} сохранён!",
                         "Выберите дальнейшие действия");
                     buttonsSets = (ButtonsSet.AddDays, ButtonsSet.SettingCycles);
+
+                    this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.Default;
+
                     break;
                 default:
                     throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom}");
@@ -156,6 +159,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
                     responseConverter = new ResponseTextConverter($"День {CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldAndQuotes()} сохранён!");
                     buttonsSets = (ButtonsSet.AddExercises, ButtonsSet.SettingDays);
+
+                    this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.Default;
 
                     break;
                 default:
@@ -238,8 +243,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 CommandHandlerTools.CurrentUserContext.DataManager.AddResultsExercise(resultExercises);
 
                 responseConverter = new ResponseTextConverter("Подход(ы) зафиксирован(ы)",
-                $"Введите вес и кол-во повторений след. подхода для упражения {CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldAndQuotes()} " +
-                $"либо нажмите {"".AddQuotes()} \"Сохранить\" для сохранения указанных подходов");
+                @$"Введите вес и кол-во повторений след. подхода для упражения {CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldAndQuotes()} 
+либо нажмите {"Сохранить".AddQuotes()} для сохранения указанных подходов");
 
                 buttonsSets = (ButtonsSet.SaveResultsExercise, ButtonsSet.Main);
             }
@@ -339,9 +344,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             this.Domain.Name = domainName;
 
-            this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.Default;
-
             this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+
+            this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.Default;
 
             return this;
         }
@@ -580,6 +585,9 @@ WHERE Id IN (
             if (!this.CommandHandlerTools.CurrentUserContext.IsAdmin())
             {
                 this.InformationSet = GetAccessDeniedMessageInformationSet();
+
+                this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.Default;
+
                 return true;
             }
 
