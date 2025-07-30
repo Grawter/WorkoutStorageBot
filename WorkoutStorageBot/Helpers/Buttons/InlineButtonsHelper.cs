@@ -56,6 +56,18 @@ namespace WorkoutStorageBot.Helpers.Buttons
                     buttonsFactory = new ExercisesListWithLastWorkoutForDayBF(CurrentUserContext);
                     break;
 
+                #region Timer area
+
+                case ButtonsSet.EnableExerciseTimer:
+                    buttonsFactory = new EnableExerciseTimerBF(CurrentUserContext);
+                    break;
+
+                case ButtonsSet.FixExerciseTimer:
+                    buttonsFactory = new FixExerciseTimerBF(CurrentUserContext);
+                    break;
+
+                #endregion
+
                 case ButtonsSet.SaveResultsExercise:
                     buttonsFactory = new SaveResultsExerciseBF(CurrentUserContext);
                     break;

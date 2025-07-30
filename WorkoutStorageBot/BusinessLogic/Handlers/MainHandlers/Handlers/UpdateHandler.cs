@@ -114,6 +114,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers
 
                     break;
 
+                case MessageNavigationTarget.AddCommentForExerciseTimer:
+                    CHResult = commandHandler.Expectation(HandlerAction.Save)
+                                             .AddCommentForExerciseTimerCommand();
+
+                    break;
+
                 case MessageNavigationTarget.ChangeNameCycle:
                     CHResult = commandHandler.Expectation(HandlerAction.Update, HandlerAction.Save)
                                              .ChangeNameCommand(CommonConsts.Domain.Cycle);
@@ -242,6 +248,18 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers
 
                 case "LastResult":
                     CHResult = commandHandler.LastResultCommand();
+                    break;
+
+                case "StartExerciseTimer":
+                    CHResult = commandHandler.StartExerciseTimerCommand();
+                    break;
+
+                case "StopExerciseTimer":
+                    CHResult = commandHandler.StopExerciseTimerCommand();
+                    break;
+
+                case "ResetResultsExercise":
+                    CHResult = commandHandler.ResetResultsExerciseCommand();
                     break;
 
                 case "SaveResultsExercise":

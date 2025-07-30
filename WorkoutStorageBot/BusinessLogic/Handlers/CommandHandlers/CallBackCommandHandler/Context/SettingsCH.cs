@@ -361,6 +361,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     {
                         ExercisesMods.Count => CommonConsts.ResultExercise.InputFormatExerciseResultCount,
                         ExercisesMods.WeightCount => CommonConsts.ResultExercise.InputFormatExerciseResultWeightCount,
+                        ExercisesMods.Timer => "Timer",
                         ExercisesMods.FreeResult => CommonConsts.ResultExercise.InputFormatExerciseResultFreeResult,
                         _ => throw new NotImplementedException($"Неожиданный тип упражнения: {currentExercise.Mode.ToString()}")
                     };
@@ -368,12 +369,21 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     switch (this.CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom)
                     {
                         case QueryFrom.NoMatter:
-                            this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.AddResultForExercise;
+                            if (currentExercise.Mode == ExercisesMods.Timer)
+                            {
+                                responseConverter = new ResponseTextConverter($"Включение таймера для упражнения {currentExerciseName.AddBoldAndQuotes()}");
+                                buttonsSets = (ButtonsSet.EnableExerciseTimer, ButtonsSet.ExercisesListWithLastWorkoutForDay);
+                            }
+                            else
+                            {
+                                this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.AddResultForExercise;
 
-                            responseConverter = new ResponseTextConverter($"Фиксирование результатов упражнения {currentExerciseName.AddBoldAndQuotes()}",
-                                inputFormatExerciseResult,
-                                $"Введите результат(ы) подхода(ов)");
-                            buttonsSets = (ButtonsSet.None, ButtonsSet.ExercisesListWithLastWorkoutForDay);
+                                responseConverter = new ResponseTextConverter($"Фиксирование результатов упражнения {currentExerciseName.AddBoldAndQuotes()}",
+                                    inputFormatExerciseResult,
+                                    $"Введите результат(ы) подхода(ов)");
+                                buttonsSets = (ButtonsSet.None, ButtonsSet.ExercisesListWithLastWorkoutForDay);
+                            }
+                                
                             break;
 
                         case QueryFrom.Settings:

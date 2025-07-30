@@ -20,6 +20,7 @@ namespace WorkoutStorageBot.Model.Domain
     {
         Count = 0,
         WeightCount = 1,
-        FreeResult = 2
+        Timer = 2,
+        FreeResult = 3
     }
 }

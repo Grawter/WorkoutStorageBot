@@ -9,7 +9,8 @@ namespace WorkoutStorageBot.BusinessLogic.Enums
         AddCycle,
         AddDays,
         AddExercises,
-        AddResultForExercise, 
+        AddResultForExercise,
+        AddCommentForExerciseTimer,
 
         ChangeNameCycle,
         ChangeNameDay,

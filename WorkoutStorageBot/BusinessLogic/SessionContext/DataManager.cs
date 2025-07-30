@@ -16,6 +16,8 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
         internal List<Exercise>? Exercises { get; private set; }
         internal List<ResultExercise>? ResultExercises { get; private set; }
 
+        internal DateTime ExerciseTimer { get; private set; }
+
         internal Cycle SetCycle(string nameCycle, bool isActive, int userInformationId)
         {
             CurrentCycle = new() { Name = nameCycle, IsActive = isActive, UserInformationId = userInformationId };
@@ -33,6 +35,11 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
             CurrentDay = new() { Name = nameDay, CycleId = CurrentCycle.Id };
 
             return CurrentDay;
+        }
+
+        internal void StartExerciseTimer()
+        {
+            ExerciseTimer = DateTime.Now;
         }
 
         private void SetDay(Day day)
@@ -112,6 +119,11 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
             ResultExercises = null;
         }
 
+        internal void ResetExerciseTimer()
+        {
+            ExerciseTimer = DateTime.MinValue;
+        }
+
         internal void ResetAll()
         {
             ResetCycle();
@@ -119,6 +131,7 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
             ResetExercise();
             ResetExercises();
             ResetResultExercises();
+            ResetExerciseTimer();
         }
 
         internal void ResetDomain(IDomain domain)

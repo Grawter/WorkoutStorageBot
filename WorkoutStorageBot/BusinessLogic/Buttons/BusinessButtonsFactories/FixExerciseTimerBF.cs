@@ -7,16 +7,15 @@ using WorkoutStorageBot.BusinessLogic.SessionContext;
 
 namespace WorkoutStorageBot.BusinessLogic.Buttons.BusinessButtonsFactories
 {
-    internal class SaveResultsExerciseBF : ButtonsFactory
+    internal class FixExerciseTimerBF : ButtonsFactory
     {
-        public SaveResultsExerciseBF(UserContext userContext) : base(userContext)
+        public FixExerciseTimerBF(UserContext userContext) : base(userContext)
         {
         }
 
         internal override void AddBusinessButtons(Dictionary<string, string>? additionalParameters = null)
         {
-            AddInlineButton("Сохранить результаты", "1|SaveResultsExercise");
-            AddInlineButton("Сбросить результаты", "1|ResetResultsExercise");
+            AddInlineButton("Остановить таймер", $"1|StopExerciseTimer");
         }
     }
 }

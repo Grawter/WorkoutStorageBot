@@ -103,6 +103,54 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             return this;
         }
 
+        internal WorkoutCH StartExerciseTimerCommand()
+        {
+            this.CommandHandlerTools.CurrentUserContext.DataManager.StartExerciseTimer();
+
+            ResponseTextConverter responseConverter = new ResponseTextConverter("Таймер запущен");
+            (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.FixExerciseTimer, ButtonsSet.None);
+
+            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+
+            return this;
+        }
+
+        internal WorkoutCH StopExerciseTimerCommand()
+        {
+            string timerValue = GetTimerValue();
+
+            ResultExercise resultExercise = new ResultExercise() { FreeResult = timerValue, DateTime = DateTime.Now};
+
+            this.CommandHandlerTools.CurrentUserContext.DataManager.AddResultsExercise([resultExercise]);
+
+            this.CommandHandlerTools.CurrentUserContext.DataManager.ResetExerciseTimer();
+
+            this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.AddCommentForExerciseTimer;
+
+            ResponseTextConverter responseConverter = new ResponseTextConverter($"Результат: {timerValue.AddBold()}", 
+                "Если требуется, введите комментарий к результату или выберите интересующее действие");
+            (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.SaveResultsExercise, ButtonsSet.None);
+
+            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+
+            return this;
+        }
+
+        internal WorkoutCH ResetResultsExerciseCommand()
+        {
+            CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.Default;
+
+            this.CommandHandlerTools.CurrentUserContext.DataManager.ResetResultExercises();
+
+            ResponseTextConverter responseConverter = new ResponseTextConverter($"Результат упражнения '{this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldAndQuotes()}' был сброшен", 
+                "Выберите упражнение");
+            (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout);
+
+            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+
+            return this;
+        }
+
         internal WorkoutCH SaveResultsExerciseCommand()
         {
             CommandHandlerTools.Db.ResultsExercises.AddRange(CommandHandlerTools.CurrentUserContext.DataManager.ResultExercises);
@@ -173,6 +221,17 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             }
 
             return sb.ToString().Trim();
+        }
+
+        private string GetTimerValue()
+        {
+            DateTime currentTime = DateTime.Now;
+
+            TimeSpan timerResult = currentTime.Subtract(this.CommandHandlerTools.CurrentUserContext.DataManager.ExerciseTimer);
+
+            string timerResultStr = $"{timerResult.ToString(@"hh\:mm\:ss")}";
+
+            return timerResultStr;
         }
     }
 }

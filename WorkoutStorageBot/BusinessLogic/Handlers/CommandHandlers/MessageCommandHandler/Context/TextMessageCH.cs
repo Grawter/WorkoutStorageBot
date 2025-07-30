@@ -243,10 +243,10 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 CommandHandlerTools.CurrentUserContext.DataManager.AddResultsExercise(resultExercises);
 
                 responseConverter = new ResponseTextConverter("Подход(ы) зафиксирован(ы)",
-                @$"Введите вес и кол-во повторений след. подхода для упражения {CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldAndQuotes()} 
+                @$"Введите результат след. подхода для упражения {CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldAndQuotes()} 
 либо нажмите {"Сохранить".AddQuotes()} для сохранения указанных подходов");
 
-                buttonsSets = (ButtonsSet.SaveResultsExercise, ButtonsSet.Main);
+                buttonsSets = (ButtonsSet.SaveResultsExercise, ButtonsSet.None);
             }
             catch (CreateResultExerciseException ex)
             {
@@ -263,6 +263,27 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                     $"Введите результат заново для упражения {CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldAndQuotes()}");
                 buttonsSets = (ButtonsSet.None, ButtonsSet.ExercisesListWithLastWorkoutForDay);
             }
+
+            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+
+            return this;
+        }
+
+        internal TextMessageCH AddCommentForExerciseTimerCommand()
+        {
+            string comment = requestConverter.RemoveCompletely(50).WithoutServiceSymbol().Convert();
+
+            ResultExercise resultExercise = this.CommandHandlerTools.CurrentUserContext.DataManager.ResultExercises.Single();
+            resultExercise.FreeResult += $" / {comment}";
+
+            CommandHandlerTools.Db.ResultsExercises.Add(resultExercise);
+
+            CommandHandlerTools.CurrentUserContext.DataManager.ResetResultExercises();
+
+            CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.Default;
+
+            ResponseTextConverter responseConverter = new ResponseTextConverter(resultExercise.FreeResult.AddBold(), "Введённые данные сохранены!", "Выберите упраженение");
+            (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout);
 
             this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
