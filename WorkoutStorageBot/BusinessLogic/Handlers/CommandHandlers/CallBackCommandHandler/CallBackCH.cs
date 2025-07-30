@@ -46,6 +46,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
             }
 
+            if (this.InformationSet == null)
+                throw new InvalidOperationException($"Операция '{callbackQueryParser.Direction}|{callbackQueryParser.SubDirection}' вернула пустой {nameof(this.InformationSet)}");
+
             switch (this.InformationSet)
             {
                 case MessageInformationSet MISet:

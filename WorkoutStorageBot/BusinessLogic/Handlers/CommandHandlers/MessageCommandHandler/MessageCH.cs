@@ -44,6 +44,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 }
             }
 
+            if (this.InformationSet == null)
+                throw new InvalidOperationException($"Операция '{this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget}' вернула пустой {nameof(this.InformationSet)}");
+
             switch (this.InformationSet)
             {
                 case MessageInformationSet MISet:
