@@ -476,8 +476,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers
             informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
             CurrentUserContext.DataManager.ResetAll();
-            CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.Default;
-            CurrentUserContext.Navigation.QueryFrom = QueryFrom.NoMatter;
+            CurrentUserContext.Navigation.ResetNavigation();
 
             return false;
         }

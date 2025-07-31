@@ -256,7 +256,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
             this.CommandHandlerTools.CurrentUserContext.DataManager.ResetExercises();
 
-            this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.Default;
+            this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;

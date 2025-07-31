@@ -29,7 +29,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             StepInformation previousStep = StepStorage.GetStep(buttonsSet);
 
             this.CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom = previousStep.QueryFrom;
-            this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.Default;
+            this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
             ResponseTextConverter responseConverter = new ResponseTextConverter(previousStep.ButtonsSet switch // optional additional information
             {
@@ -56,7 +56,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             StepInformation mainStep = StepStorage.GetMainStep();
 
             this.CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom = mainStep.QueryFrom;
-            this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.Default;
+            this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
             ResponseTextConverter responseConverter = new ResponseTextConverter(mainStep.Message);
             (ButtonsSet, ButtonsSet) buttonsSets = (mainStep.ButtonsSet, mainStep.BackButtonsSet);

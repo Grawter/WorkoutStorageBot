@@ -8,5 +8,21 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
     {
         internal MessageNavigationTarget MessageNavigationTarget { get; set; }
         internal QueryFrom QueryFrom { get; set; }
+
+        internal void ResetMessageNavigationTarget()
+        {
+            this.MessageNavigationTarget = MessageNavigationTarget.Default;
+        }
+
+        internal void ResetQueryFrom()
+        {
+            this.QueryFrom = QueryFrom.NoMatter;
+        }
+
+        internal void ResetNavigation()
+        {
+            ResetMessageNavigationTarget();
+            ResetQueryFrom();
+        }
     }
 }
