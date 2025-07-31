@@ -222,7 +222,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers
             }
             else
             {
-                primaryHandledData.CurrentUserContext.Navigation.QueryFrom = QueryFrom.Start;
+                primaryHandledData.CurrentUserContext.Navigation.SetQueryFrom(QueryFrom.Start);
                 message = "Начнём";
                 buttonsSet = ButtonsSet.AddCycle;
             }

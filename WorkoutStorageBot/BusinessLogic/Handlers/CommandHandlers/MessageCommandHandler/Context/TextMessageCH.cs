@@ -42,7 +42,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                     }
                     else
                     {
-                        this.CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom = QueryFrom.Start;
+                        this.CommandHandlerTools.CurrentUserContext.Navigation.SetQueryFrom(QueryFrom.Start);
 
                         responseConverter = new ResponseTextConverter("Начнём");
                         buttonsSets = (ButtonsSet.AddCycle, ButtonsSet.None);
@@ -92,7 +92,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             switch (this.CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom)
             {
                 case QueryFrom.Start:
-                    this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.AddDays;
+                    this.CommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.AddDays);
 
                     responseConverter = new ResponseTextConverter($"Цикл {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()} сохранён!",
                         $"Введите название тренирочного дня для цикла {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()}");
@@ -144,7 +144,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             switch (this.CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom)
             {
                 case QueryFrom.Start:
-                    this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.AddExercises;
+                    this.CommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.AddExercises);
 
                     responseConverter = new ResponseTextConverter($"День {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldAndQuotes()} сохранён!",
                         $"Введите название упражения для этого дня.{Environment.NewLine}{CommonConsts.Exercise.ExamplesTypesExercise}", 

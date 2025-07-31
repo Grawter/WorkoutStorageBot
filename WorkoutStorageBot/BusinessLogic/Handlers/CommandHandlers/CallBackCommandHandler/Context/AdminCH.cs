@@ -134,9 +134,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                              ? "eventId"
                              : "Id";
 
-            this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = isEventID
+            this.CommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(isEventID
                                                                                              ? MessageNavigationTarget.FindLogByEventID
-                                                                                             : MessageNavigationTarget.FindLogByID;
+                                                                                             : MessageNavigationTarget.FindLogByID);
 
             ResponseTextConverter responseConverter = new ResponseTextConverter($"Введите {identifierType} интересующего лога:");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.None, ButtonsSet.AdminLogs);
@@ -201,7 +201,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             if (AccessDenied())
                 return this;
 
-            this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.ChangeUserState;
+            this.CommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.ChangeUserState);
 
             ResponseTextConverter responseConverter = new ResponseTextConverter("Изменение black/white list у пользователя:", $"Введите [userID/@userLogin] [bl/wl]");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.None, ButtonsSet.Admin);
@@ -216,7 +216,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             if (AccessDenied())
                 return this;
 
-            this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.DeleteUser;
+            this.CommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.DeleteUser);
 
             ResponseTextConverter responseConverter = new ResponseTextConverter("Удаление пользователя:", "Внимание, пользователь будет удалён без возможности восстановления!".AddBold(), $"Введите [userID/@userLogin]");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.None, ButtonsSet.Admin);

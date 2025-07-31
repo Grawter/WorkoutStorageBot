@@ -6,8 +6,18 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
 {
     internal class Navigation
     {
-        internal MessageNavigationTarget MessageNavigationTarget { get; set; }
-        internal QueryFrom QueryFrom { get; set; }
+        internal MessageNavigationTarget MessageNavigationTarget { get; private set; }
+        internal QueryFrom QueryFrom { get; private set; }
+
+        internal void SetMessageNavigationTarget(MessageNavigationTarget messageNavigationTarget)
+        {
+            MessageNavigationTarget = messageNavigationTarget;
+        }
+
+        internal void SetQueryFrom(QueryFrom queryFrom)
+        {
+            QueryFrom = queryFrom;
+        }
 
         internal void ResetMessageNavigationTarget()
         {

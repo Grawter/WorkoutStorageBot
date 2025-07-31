@@ -125,7 +125,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
             this.CommandHandlerTools.CurrentUserContext.DataManager.ResetExerciseTimer();
 
-            this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.AddCommentForExerciseTimer;
+            this.CommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.AddCommentForExerciseTimer);
 
             ResponseTextConverter responseConverter = new ResponseTextConverter($"Результат: {timerValue.AddBold()}", 
                 "Если требуется, введите комментарий к результату или выберите интересующее действие");

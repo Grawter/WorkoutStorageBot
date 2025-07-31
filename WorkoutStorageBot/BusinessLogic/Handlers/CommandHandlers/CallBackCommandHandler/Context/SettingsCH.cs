@@ -30,7 +30,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
         internal SettingsCH SettingsCommand()
         {
-            this.CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom = QueryFrom.Settings;
+            this.CommandHandlerTools.CurrentUserContext.Navigation.SetQueryFrom(QueryFrom.Settings);
 
             ResponseTextConverter responseConverter = new ResponseTextConverter("Выберите интересующие настройки");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.Settings, ButtonsSet.Main);
@@ -184,7 +184,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             switch (callbackQueryParser.DomainType)
             {
                 case "Cycle":
-                    this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.AddCycle;
+                    this.CommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.AddCycle);
 
                     responseConverter = new ResponseTextConverter("Введите название тренировочного цикла");
 
@@ -203,7 +203,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     break;
 
                 case "Day":
-                    this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.AddDays;
+                    this.CommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.AddDays);
 
                     responseConverter = new ResponseTextConverter($"Введите название тренирочного дня для цикла {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()}");
 
@@ -222,7 +222,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     break;
 
                 case "Exercise":
-                    this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.AddExercises;
+                    this.CommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.AddExercises);
 
                     responseConverter = new ResponseTextConverter($"Введите название(я) и тип(ы) упражнения(й) для дня {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldAndQuotes()}",
                         CommonConsts.Exercise.ExamplesTypesExercise,
@@ -376,7 +376,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                             }
                             else
                             {
-                                this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.AddResultForExercise;
+                                this.CommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.AddResultForExercise);
 
                                 responseConverter = new ResponseTextConverter($"Фиксирование результатов упражнения {currentExerciseName.AddBoldAndQuotes()}",
                                     inputFormatExerciseResult,
@@ -587,21 +587,21 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             switch (callbackQueryParser.DomainType)
             {
                 case "Cycle":
-                    this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.ChangeNameCycle;
+                    this.CommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.ChangeNameCycle);
 
                     responseConverter = new ResponseTextConverter($"Введите новоё название для цикла {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()}");
                     buttonsSets = (ButtonsSet.None, ButtonsSet.SettingCycle);
                     break;
 
                 case "Day":
-                    this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.ChangeNameDay;
+                    this.CommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.ChangeNameDay);
 
                     responseConverter = new ResponseTextConverter($"Введите новоё название для дня {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldAndQuotes()}");
                     buttonsSets = (ButtonsSet.None, ButtonsSet.SettingDay);
                     break;
 
                 case "Exercise":
-                    this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.ChangeNameExercise;
+                    this.CommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.ChangeNameExercise);
 
                     responseConverter = new ResponseTextConverter($"Введите новоё название для упражнения {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldAndQuotes()}");
                     buttonsSets = (ButtonsSet.None, ButtonsSet.SettingExercise);
@@ -737,7 +737,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                         "Для удаления введите кол-во последних записей, которые требуется удалить");
                     buttonsSets = (ButtonsSet.None, ButtonsSet.SettingExercise);
 
-                    this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget = MessageNavigationTarget.DeleteResultsExercises;
+                    this.CommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.DeleteResultsExercises);
 
                     additionalParameters.Add("Name", "упражнение");
                     break;
