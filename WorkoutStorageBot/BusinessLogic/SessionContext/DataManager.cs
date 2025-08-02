@@ -18,19 +18,19 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
 
         internal DateTime ExerciseTimer { get; private set; }
 
-        internal Cycle SetCycle(string nameCycle, bool isActive, int userInformationId)
+        internal Cycle SetCurrentCycle(string nameCycle, bool isActive, int userInformationId)
         {
             CurrentCycle = new() { Name = nameCycle, IsActive = isActive, UserInformationId = userInformationId };
 
             return CurrentCycle;
         }
 
-        private void SetCycle(Cycle cycle)
+        private void SetCurrentCycle(Cycle cycle)
         {
             CurrentCycle = cycle;
         }
 
-        internal Day SetDay(string nameDay)
+        internal Day SetCurrentDay(string nameDay)
         {
             CurrentDay = new() { Name = nameDay, CycleId = CurrentCycle.Id };
 
@@ -42,12 +42,12 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
             ExerciseTimer = DateTime.Now;
         }
 
-        private void SetDay(Day day)
+        private void SetCurrentDay(Day day)
         {
             CurrentDay = day;
         }
 
-        private void SetExercise(Exercise exercise)
+        private void SetCurrentExercise(Exercise exercise)
         {
             CurrentExercise = exercise;
         }
@@ -94,17 +94,17 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
             }
         }
 
-        private void ResetCycle()
+        private void ResetCurrentCycle()
         {
             CurrentCycle = null;
         }
 
-        private void ResetDay()
+        private void ResetCurrentDay()
         {
             CurrentDay = null;
         }
 
-        private void ResetExercise()
+        private void ResetCurrentExercise()
         {
             CurrentExercise = null;
         }
@@ -126,28 +126,28 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
 
         internal void ResetAll()
         {
-            ResetCycle();
-            ResetDay();
-            ResetExercise();
+            ResetCurrentCycle();
+            ResetCurrentDay();
+            ResetCurrentExercise();
             ResetExercises();
             ResetResultExercises();
             ResetExerciseTimer();
         }
 
-        internal void ResetDomain(IDomain domain)
+        internal void ResetCurrentDomain(IDomain domain)
         {
             switch (domain)
             {
                 case Cycle:
-                    ResetCycle();
+                    ResetCurrentCycle();
                     break;
 
                 case Day:
-                    ResetDay();
+                    ResetCurrentDay();
                     break;
 
                 case Exercise:
-                    ResetExercise();
+                    ResetCurrentExercise();
                     break;
 
                 default:
@@ -155,20 +155,20 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
             }
         }
 
-        internal void SetDomain(IDomain domain)
+        internal void SetCurrentDomain(IDomain domain)
         {
             switch (domain)
             {
                 case Cycle cycle:
-                    SetCycle(cycle);
+                    SetCurrentCycle(cycle);
                     break;
 
                 case Day day:
-                    SetDay(day);
+                    SetCurrentDay(day);
                     break;
 
                 case Exercise exercise:
-                    SetExercise(exercise);
+                    SetCurrentExercise(exercise);
                     break;
 
                 default:

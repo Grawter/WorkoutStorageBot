@@ -347,7 +347,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             switch (callbackQueryParser.DomainType)
             {
                 case "Cycle":
-                    this.CommandHandlerTools.CurrentUserContext.DataManager.SetDomain(this.CommandHandlerTools.CurrentUserContext.UserInformation.Cycles
+                    this.CommandHandlerTools.CurrentUserContext.DataManager.SetCurrentDomain(this.CommandHandlerTools.CurrentUserContext.UserInformation.Cycles
                                                                                                                                 .First(c => c.Id == domainID));
 
                     responseConverter = new ResponseTextConverter($"Выберите интересующую настройку для цикла {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()}");
@@ -358,7 +358,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     switch (this.CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom)
                     {
                         case QueryFrom.NoMatter:
-                            this.CommandHandlerTools.CurrentUserContext.DataManager.SetDomain(this.CommandHandlerTools.CurrentUserContext.ActiveCycle.Days
+                            this.CommandHandlerTools.CurrentUserContext.DataManager.SetCurrentDomain(this.CommandHandlerTools.CurrentUserContext.ActiveCycle.Days
                                                                                                                                 .First(d => d.Id == domainID));
 
                             responseConverter = new ResponseTextConverter("Выберите упраженение");
@@ -366,7 +366,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                             break;
 
                         case QueryFrom.Settings:
-                            this.CommandHandlerTools.CurrentUserContext.DataManager.SetDomain(this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Days
+                            this.CommandHandlerTools.CurrentUserContext.DataManager.SetCurrentDomain(this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Days
                                                                                                                                 .First(d => d.Id == domainID));
 
                             responseConverter = new ResponseTextConverter($"Выберите интересующую настройку для дня {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldAndQuotes()}");
@@ -380,7 +380,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                 case "Exercise":
                     Exercise currentExercise = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Exercises.First(e => e.Id == domainID);
 
-                    this.CommandHandlerTools.CurrentUserContext.DataManager.SetDomain(currentExercise);
+                    this.CommandHandlerTools.CurrentUserContext.DataManager.SetCurrentDomain(currentExercise);
 
                     string currentExerciseName = currentExercise.Name.AddBoldAndQuotes();
 
@@ -509,7 +509,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
             this.Domain.IsArchive = true;
 
-            this.CommandHandlerTools.CurrentUserContext.DataManager.ResetDomain(this.Domain);
+            this.CommandHandlerTools.CurrentUserContext.DataManager.ResetCurrentDomain(this.Domain);
 
             this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
@@ -829,7 +829,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
             }
 
-            this.CommandHandlerTools.CurrentUserContext.DataManager.ResetDomain(this.Domain);
+            this.CommandHandlerTools.CurrentUserContext.DataManager.ResetCurrentDomain(this.Domain);
 
             this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 

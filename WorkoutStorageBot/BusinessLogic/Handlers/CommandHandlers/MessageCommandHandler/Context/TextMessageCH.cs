@@ -84,7 +84,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             }
 
             bool hasActiveCycle = this.CommandHandlerTools.CurrentUserContext.ActiveCycle == null ? false : true;
-            this.Domain = this.CommandHandlerTools.CurrentUserContext.DataManager.SetCycle(requestConverter.Convert(), !hasActiveCycle, this.CommandHandlerTools.CurrentUserContext.UserInformation.Id);
+            this.Domain = this.CommandHandlerTools.CurrentUserContext.DataManager.SetCurrentCycle(requestConverter.Convert(), !hasActiveCycle, this.CommandHandlerTools.CurrentUserContext.UserInformation.Id);
 
             if (!hasActiveCycle)
                 this.CommandHandlerTools.CurrentUserContext.UdpateActiveCycleForce((Cycle)this.Domain);
@@ -139,7 +139,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 return this;
             }
 
-            this.Domain = this.CommandHandlerTools.CurrentUserContext.DataManager.SetDay(domainName);
+            this.Domain = this.CommandHandlerTools.CurrentUserContext.DataManager.SetCurrentDay(domainName);
 
             switch (this.CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom)
             {
