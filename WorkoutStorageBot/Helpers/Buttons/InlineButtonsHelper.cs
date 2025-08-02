@@ -139,6 +139,9 @@ namespace WorkoutStorageBot.Helpers.Buttons
                 case ButtonsSet.AddExercises:
                     buttonsFactory = new AddExercisesBF(CurrentUserContext);
                     break;
+                case ButtonsSet.ResetTempDomains:
+                    buttonsFactory = new ResetTempDomainsBF(CurrentUserContext);
+                    break;
                 case ButtonsSet.SaveExercises:
                     buttonsFactory = new SaveExercisesBF(CurrentUserContext);
                     break;

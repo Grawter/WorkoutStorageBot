@@ -250,6 +250,33 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             return this;
         }
 
+        internal SettingsCH ResetTempDomainsCommand()
+        {
+            ResponseTextConverter responseConverter;
+            (ButtonsSet, ButtonsSet) buttonsSets;
+
+            switch (callbackQueryParser.DomainType)
+            {
+                case CommonConsts.Domain.Day:
+                    throw new NotImplementedException($"Нереализовано для типа домена {CommonConsts.Domain.Day}, т.к. не нашлось ни одно небходимого кейса");
+
+                case CommonConsts.Domain.Exercise:
+                    this.CommandHandlerTools.CurrentUserContext.DataManager.ResetExercises();
+
+                    responseConverter = new ResponseTextConverter("Упражнения для сохранения сброшены!", "Выберите интересующую настройку");
+                    buttonsSets = (ButtonsSet.SettingExercises, ButtonsSet.None);
+
+                    break;
+
+                default:
+                    throw new InvalidOperationException($"Неожиданный {nameof(callbackQueryParser.DomainType)}: {callbackQueryParser.DomainType}");
+            }
+
+            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+
+            return this;
+        }
+        
         internal SettingsCH SaveExercisesCommand()
         {
             this.CommandHandlerTools.Db.Exercises.AddRange(this.CommandHandlerTools.CurrentUserContext.DataManager.Exercises);

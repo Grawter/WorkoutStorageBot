@@ -321,6 +321,10 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers
                     CHResult = commandHandler.AddCommand();
                     break;
 
+                case "ResetTempDomains":
+                    CHResult = commandHandler.ResetTempDomainsCommand();
+                    break;
+
                 case "SaveExercises":
                     CHResult = commandHandler.Expectation(HandlerAction.Save)
                                              .SaveExercisesCommand();

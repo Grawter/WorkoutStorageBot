@@ -11,6 +11,7 @@ namespace WorkoutStorageBot.BusinessLogic.Enums
             ExercisesListWithLastWorkoutForDay,
             EnableExerciseTimer,
             FixExerciseTimer,
+            ResetResultsExercise,
             SaveResultsExercise,
 
         Settings,
@@ -34,7 +35,8 @@ namespace WorkoutStorageBot.BusinessLogic.Enums
                                                 ChangeType,
                                                 ReplaceToDay,
                                                 ArchiveExercisesList,
-                                                
+
+            ResetTempDomains,
             ArchiveList,
             Export,
             ConfirmDelete,

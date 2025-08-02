@@ -173,6 +173,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
+            Dictionary<string, string>? additionalParameters = new Dictionary<string, string>();
+
             requestConverter.RemoveCompletely(80).WithoutServiceSymbol();
 
             List<Exercise> exercises = new List<Exercise>();
@@ -210,15 +212,36 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             else
             {
                 responseConverter = new ResponseTextConverter("Упражнение(я) не зафиксировано(ы)!",
-                    exceptionMessage,
-                    @$"Введите другое(ие) упражнение(й) для дня {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldAndQuotes()}
+                    exceptionMessage, string.Empty);
+
+                switch (this.CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom)
+                {
+                    case QueryFrom.Start:
+
+                        responseConverter.ResetTarget(@$"Введите другое(ие) упражнение(й) для дня {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldAndQuotes()}
 
 {CommonConsts.Exercise.InputFormatExercise}");
+                        buttonsSets = (ButtonsSet.None, ButtonsSet.None);
 
-                buttonsSets = GetButtonsSetIfFailedSaveNewDomainValue(ButtonsSet.SettingExercises);
+                        break;
+
+                    case QueryFrom.Settings:
+
+                        responseConverter.ResetTarget(@$"Сбросьте текущие упражнения, что вернуться обратно или введите другое(ие) упражнение(й) для дня {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldAndQuotes()}
+
+{CommonConsts.Exercise.InputFormatExercise}");
+                        buttonsSets = (ButtonsSet.ResetTempDomains, ButtonsSet.None);
+
+                        additionalParameters.Add("type", CommonConsts.Domain.Exercise);
+
+                        break;
+
+                    default:
+                        throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {this.CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom}");
+                }
             }
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets, additionalParameters);
 
             return this;
         }
@@ -256,8 +279,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
                 responseConverter = new ResponseTextConverter(ex.Message,
                     inputFormatExerciseResult,
-                    $"Введите результат заново для упражения {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldAndQuotes()}");
-                buttonsSets = (ButtonsSet.None, ButtonsSet.ExercisesListWithLastWorkoutForDay);
+                    $"Сбросьте текущие результаты, что вернуться обратно или введите результат заново для упражения {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldAndQuotes()}");
+                buttonsSets = (ButtonsSet.ResetResultsExercise, ButtonsSet.None);
             }
 
             this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
