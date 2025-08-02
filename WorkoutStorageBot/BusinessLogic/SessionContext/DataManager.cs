@@ -124,6 +124,30 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
             ExerciseTimer = DateTime.MinValue;
         }
 
+        private void ResetChildDomains(IDomain domain)
+        {
+            switch (domain)
+            {
+                case Cycle:
+                    ResetCurrentDay();
+                    ResetCurrentExercise();
+                    ResetResultExercises();
+                    break;
+
+                case Day:
+                    ResetCurrentExercise();
+                    ResetResultExercises();
+                    break;
+
+                case Exercise:
+                    ResetResultExercises();
+                    break;
+
+                default:
+                    throw new InvalidOperationException($"Неизвестный тип домена: {domain.GetType().Name}");
+            }
+        }
+
         internal void ResetAll()
         {
             ResetCurrentCycle();
@@ -174,6 +198,8 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
                 default:
                     throw new InvalidOperationException($"Неизвестный тип домена: {domain.GetType().Name}");
             }
+
+            ResetChildDomains(domain);
         }
 
         internal IDomain? GetCurrentDomain(DomainType domainType, bool throwEx = true)
