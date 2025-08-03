@@ -21,7 +21,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.BusinessButtonsFactories
             AddInlineButton("Перенести упражнение", $"2|Replace|{CommonConsts.DomainsAndEntities.Exercise}");
             AddInlineButton("Добавить в архив", $"2|Archiving|{CommonConsts.DomainsAndEntities.Exercise}");
             AddInlineButton("Удалить", $"2|Delete|{CommonConsts.DomainsAndEntities.Exercise}");
-            AddInlineButton("Удалить результаты упражнения", $"2|Delete|{CommonConsts.DomainsAndEntities.ResultsExercises}");
+            AddInlineButton("Удалить результаты упражнения", $"2|Delete|{CommonConsts.DomainsAndEntities.ResultsExercise}");
             AddInlineButton("Вернуться к главному меню", "0|ToMain");
         }
     }

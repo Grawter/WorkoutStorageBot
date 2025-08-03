@@ -63,7 +63,7 @@ namespace WorkoutStorageBot.Helpers.Export
 
                             SetResultTitle(resultTitlePoint, mainSheet);
 
-                            foreach (ResultExercise resultExercise in exercise.ResultExercises)
+                            foreach (ResultExercise resultExercise in exercise.ResultsExercise)
                             {
                                 SetResultExercise(++resultExerciseRowNumber, resultExercise, resultExercisePoint, mainSheet);
 

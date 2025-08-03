@@ -759,12 +759,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     additionalParameters.Add("Name", "упражнение");
                     break;
 
-                case CommonConsts.DomainsAndEntities.ResultsExercises:
+                case CommonConsts.DomainsAndEntities.ResultsExercise:
                     responseConverter = new ResponseTextConverter("Вы уверены?", $"{"Удаление подходов приведёт к полной и безвозвратной потере информации".AddBold()}",
                         "Для удаления введите кол-во последних записей, которые требуется удалить");
                     buttonsSets = (ButtonsSet.None, ButtonsSet.SettingExercise);
 
-                    this.CommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.DeleteResultsExercises);
+                    this.CommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.DeleteResultsExercise);
 
                     additionalParameters.Add("Name", "упражнение");
                     break;
@@ -857,7 +857,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             }
             else
             {
-                IQueryable<ResultExercise> resultsExercisesForExcel = GetResultExercises();
+                IQueryable<ResultExercise> resultsExercisesForExcel = GetResultsExercises();
 
                 if (resultsExercisesForExcel.Count() < 1)
                 {
@@ -892,7 +892,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             return result;
         }
 
-        private IQueryable<ResultExercise> GetResultExercises()
+        private IQueryable<ResultExercise> GetResultsExercises()
         {
             IEnumerable<int> userExercisesIds = GetUserExercisesIds(this.CommandHandlerTools.CurrentUserContext.UserInformation);
 

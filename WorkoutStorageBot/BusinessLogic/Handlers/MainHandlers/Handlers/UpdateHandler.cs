@@ -158,8 +158,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers
 
                     break;
 
-                case MessageNavigationTarget.DeleteResultsExercises:
-                    CHResult = commandHandler.DeleteResultsExercisesCommand();
+                case MessageNavigationTarget.DeleteResultsExercise:
+                    CHResult = commandHandler.DeleteResultsExerciseCommand();
 
                     break;
 

@@ -14,7 +14,7 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
         internal Exercise? CurrentExercise { get; private set; }
 
         internal List<Exercise>? Exercises { get; private set; }
-        internal List<ResultExercise>? ResultExercises { get; private set; }
+        internal List<ResultExercise>? ResultsExercise { get; private set; }
 
         internal DateTime ExerciseTimer { get; private set; }
 
@@ -84,13 +84,13 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
             if (!resultsExercise.HasItemsInCollection())
                 throw new InvalidOperationException($"Получена пустая коллеция {nameof(resultsExercise)}");
 
-            if (ResultExercises == null)
-                ResultExercises = new();
+            if (ResultsExercise == null)
+                ResultsExercise = new();
 
             foreach (ResultExercise result in resultsExercise)
             {
                 result.ExerciseId = CurrentExercise.Id;
-                ResultExercises.Add(result);
+                ResultsExercise.Add(result);
             }
         }
 
@@ -114,9 +114,9 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
             Exercises = null;
         }
 
-        internal void ResetResultExercises()
+        internal void ResetResultsExercise()
         {
-            ResultExercises = null;
+            ResultsExercise = null;
         }
 
         internal void ResetExerciseTimer()
@@ -131,16 +131,16 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
                 case Cycle:
                     ResetCurrentDay();
                     ResetCurrentExercise();
-                    ResetResultExercises();
+                    ResetResultsExercise();
                     break;
 
                 case Day:
                     ResetCurrentExercise();
-                    ResetResultExercises();
+                    ResetResultsExercise();
                     break;
 
                 case Exercise:
-                    ResetResultExercises();
+                    ResetResultsExercise();
                     break;
 
                 default:
@@ -154,7 +154,7 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
             ResetCurrentDay();
             ResetCurrentExercise();
             ResetExercises();
-            ResetResultExercises();
+            ResetResultsExercise();
             ResetExerciseTimer();
         }
 

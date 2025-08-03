@@ -62,7 +62,7 @@ namespace WorkoutStorageImport
                     {
                         ProcessLightDomain(exercise, userInformation.Id, currentDate, ref countExercise);
 
-                        foreach (ResultExercise resultExercise in exercise.ResultExercises)
+                        foreach (ResultExercise resultExercise in exercise.ResultsExercise)
                         {
                             ProcessLightDomain(resultExercise, userInformation.Id, currentDate, ref countResultExercise);
                         }

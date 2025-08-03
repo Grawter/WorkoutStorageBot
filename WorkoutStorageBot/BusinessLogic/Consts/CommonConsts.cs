@@ -13,7 +13,7 @@ namespace WorkoutStorageBot.BusinessLogic.Consts
             internal const string Day = "Day";
             internal const string Exercises = "Exercises";
             internal const string Exercise = "Exercise";
-            internal const string ResultsExercises = "ResultsExercises";
+            internal const string ResultsExercise = "ResultsExercise";
         }
 
         public class EventNames

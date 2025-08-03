@@ -9,7 +9,7 @@ namespace WorkoutStorageBot.Model.DomainsAndEntities
 
         public required ExercisesMods Mode { get; set; } = ExercisesMods.WeightCount;
 
-        public List<ResultExercise> ResultExercises { get; set; } = new();
+        public List<ResultExercise> ResultsExercise { get; set; } = new();
 
         public int DayId { get; set; }
         public Day? Day { get; set; }

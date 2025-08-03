@@ -257,9 +257,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             try
             {
-                List<ResultExercise> resultExercises = requestConverter.GetResultsExercise(currentExercise.Mode);
+                List<ResultExercise> resultsExercise = requestConverter.GetResultsExercise(currentExercise.Mode);
 
-                this.CommandHandlerTools.CurrentUserContext.DataManager.AddResultsExercise(resultExercises);
+                this.CommandHandlerTools.CurrentUserContext.DataManager.AddResultsExercise(resultsExercise);
 
                 responseConverter = new ResponseTextConverter("Подход(ы) зафиксирован(ы)",
                 @$"Введите результат след. подхода для упражения {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldAndQuotes()} 
@@ -293,12 +293,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
         {
             string comment = requestConverter.RemoveCompletely(50).WithoutServiceSymbol().Convert();
 
-            ResultExercise resultExercise = this.CommandHandlerTools.CurrentUserContext.DataManager.ResultExercises.Single();
+            ResultExercise resultExercise = this.CommandHandlerTools.CurrentUserContext.DataManager.ResultsExercise.Single();
             resultExercise.FreeResult += $" / {comment}";
 
             this.CommandHandlerTools.Db.ResultsExercises.Add(resultExercise);
 
-            this.CommandHandlerTools.CurrentUserContext.DataManager.ResetResultExercises();
+            this.CommandHandlerTools.CurrentUserContext.DataManager.ResetResultsExercise();
 
             this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
@@ -571,7 +571,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             return this;
         }
 
-        internal TextMessageCH DeleteResultsExercisesCommand()
+        internal TextMessageCH DeleteResultsExerciseCommand()
         {
             string countToDeleteStr = requestConverter.RemoveCompletely(35).WithoutServiceSymbol().Convert();
 

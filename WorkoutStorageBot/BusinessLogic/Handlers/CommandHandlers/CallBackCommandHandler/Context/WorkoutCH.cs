@@ -141,7 +141,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
         {
             this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
-            this.CommandHandlerTools.CurrentUserContext.DataManager.ResetResultExercises();
+            this.CommandHandlerTools.CurrentUserContext.DataManager.ResetResultsExercise();
 
             ResponseTextConverter responseConverter = new ResponseTextConverter($"Результат упражнения '{this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldAndQuotes()}' был сброшен", 
                 "Выберите упражнение");
@@ -154,9 +154,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
         internal WorkoutCH SaveResultsExerciseCommand()
         {
-            this.CommandHandlerTools.Db.ResultsExercises.AddRange(this.CommandHandlerTools.CurrentUserContext.DataManager.ResultExercises);
+            this.CommandHandlerTools.Db.ResultsExercises.AddRange(this.CommandHandlerTools.CurrentUserContext.DataManager.ResultsExercise);
 
-            this.CommandHandlerTools.CurrentUserContext.DataManager.ResetResultExercises();
+            this.CommandHandlerTools.CurrentUserContext.DataManager.ResetResultsExercise();
 
             this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
@@ -168,16 +168,16 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             return this;
         }
 
-        private string GetInformationAboutLastExercises(IEnumerable<ResultExercise>? resultExercises)
+        private string GetInformationAboutLastExercises(IEnumerable<ResultExercise>? resultsExercises)
         {
-            if (!resultExercises.HasItemsInCollection())
+            if (!resultsExercises.HasItemsInCollection())
                 return "Нет информации для данного цикла";
 
             StringBuilder sb = new StringBuilder();
 
-            ResultExercise firstResultExercise = resultExercises.First();
+            ResultExercise firstResultExercise = resultsExercises.First();
 
-            IEnumerable<IGrouping<int, ResultExercise>> groupsResultsExercise = resultExercises.GroupBy(x => x.ExerciseId);
+            IEnumerable<IGrouping<int, ResultExercise>> groupsResultsExercise = resultsExercises.GroupBy(x => x.ExerciseId);
 
             sb.AppendLine($"Дата: {firstResultExercise.DateTime.ToShortDateString()}");
 
@@ -198,14 +198,14 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             return sb.ToString().Trim();
         }
 
-        private string GetInformationAboutLastDay(IEnumerable<ResultExercise>? resultExercises)
+        private string GetInformationAboutLastDay(IEnumerable<ResultExercise>? resultsExercises)
         {
-            if (!resultExercises.HasItemsInCollection())
+            if (!resultsExercises.HasItemsInCollection())
                 return "Нет информации для данного дня";
 
             StringBuilder sb = new StringBuilder();
 
-            IEnumerable<IGrouping<int, ResultExercise>> groupsResultsExercise = resultExercises.GroupBy(x => x.ExerciseId);
+            IEnumerable<IGrouping<int, ResultExercise>> groupsResultsExercise = resultsExercises.GroupBy(x => x.ExerciseId);
 
             foreach (IGrouping<int, ResultExercise> groupResultExercise in groupsResultsExercise)
             {
