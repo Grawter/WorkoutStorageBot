@@ -19,11 +19,11 @@ namespace WorkoutStorageBot.Extenions
         {
             return domainType switch
             {
-                CommonConsts.Domain.Cycle
+                CommonConsts.DomainsAndEntities.Cycle
                     => db.Cycles.First(c => c.Id == id),
-                CommonConsts.Domain.Day
+                CommonConsts.DomainsAndEntities.Day
                     => db.Days.First(d => d.Id == id),
-                CommonConsts.Domain.Exercise
+                CommonConsts.DomainsAndEntities.Exercise
                      => db.Exercises.First(e => e.Id == id),
                 _ => throw new NotImplementedException($"Неожиданный domainTyped: {domainType}")
             };

@@ -1,5 +1,6 @@
 ﻿#region using
 using System.Text;
+using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.Extenions;
@@ -43,7 +44,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
             switch (callbackQueryParser.DomainType)
             {
-                case "Exercises":
+                case CommonConsts.DomainsAndEntities.Exercises:
                     IEnumerable<int> activeDayIDs = this.CommandHandlerTools.CurrentUserContext.ActiveCycle.Days.Where(d => !d.IsArchive)
                                                                                                            .Select(d => d.Id);
 
@@ -68,7 +69,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     buttonsSets = (ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main);
                     break;
 
-                case "Day":
+                case CommonConsts.DomainsAndEntities.Day:
                     IEnumerable<int> exercisesIDs = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Exercises.Where(e => !e.IsArchive)
                                                                                                                            .Select(d => d.Id);
 

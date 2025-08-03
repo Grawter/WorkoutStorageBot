@@ -1,6 +1,7 @@
 ﻿#region using
 
 using WorkoutStorageBot.BusinessLogic.Buttons.Abstraction;
+using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.SessionContext;
 
 #endregion
@@ -15,12 +16,12 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.BusinessButtonsFactories
 
         internal override void AddBusinessButtons(Dictionary<string, string>? additionalParameters = null)
         {
-            AddInlineButton("Сменить название", "2|ChangeName|Exercise");
-            AddInlineButton("Сменить тип", "2|ChangeMode|Exercise");
-            AddInlineButton("Перенести упражнение", "2|Replace|Exercise");
-            AddInlineButton("Добавить в архив", $"2|Archiving|Exercise");
-            AddInlineButton("Удалить", "2|Delete|Exercise");
-            AddInlineButton("Удалить результаты упражнения", "2|Delete|ResultsExercises");
+            AddInlineButton("Сменить название", $"2|ChangeName|{CommonConsts.DomainsAndEntities.Exercise}");
+            AddInlineButton("Сменить тип", $"2|ChangeMode|{CommonConsts.DomainsAndEntities.Exercise}");
+            AddInlineButton("Перенести упражнение", $"2|Replace|{CommonConsts.DomainsAndEntities.Exercise}");
+            AddInlineButton("Добавить в архив", $"2|Archiving|{CommonConsts.DomainsAndEntities.Exercise}");
+            AddInlineButton("Удалить", $"2|Delete|{CommonConsts.DomainsAndEntities.Exercise}");
+            AddInlineButton("Удалить результаты упражнения", $"2|Delete|{CommonConsts.DomainsAndEntities.ResultsExercises}");
             AddInlineButton("Вернуться к главному меню", "0|ToMain");
         }
     }

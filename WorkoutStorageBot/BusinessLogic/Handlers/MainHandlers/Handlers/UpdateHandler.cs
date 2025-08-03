@@ -122,19 +122,19 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers
 
                 case MessageNavigationTarget.ChangeNameCycle:
                     CHResult = commandHandler.Expectation(HandlerAction.Update, HandlerAction.Save)
-                                             .ChangeNameCommand(CommonConsts.Domain.Cycle);
+                                             .ChangeNameCommand(CommonConsts.DomainsAndEntities.Cycle);
 
                     break;
 
                 case MessageNavigationTarget.ChangeNameDay:
                     CHResult = commandHandler.Expectation(HandlerAction.Update, HandlerAction.Save)
-                                             .ChangeNameCommand(CommonConsts.Domain.Day);
+                                             .ChangeNameCommand(CommonConsts.DomainsAndEntities.Day);
 
                     break;
 
                 case MessageNavigationTarget.ChangeNameExercise:
                     CHResult = commandHandler.Expectation(HandlerAction.Update, HandlerAction.Save)
-                                             .ChangeNameCommand(CommonConsts.Domain.Exercise);
+                                             .ChangeNameCommand(CommonConsts.DomainsAndEntities.Exercise);
 
                     break;
 

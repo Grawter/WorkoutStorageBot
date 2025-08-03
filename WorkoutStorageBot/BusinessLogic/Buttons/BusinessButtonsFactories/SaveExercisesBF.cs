@@ -17,7 +17,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.BusinessButtonsFactories
         internal override void AddBusinessButtons(Dictionary<string, string>? additionalParameters = null)
         {
             AddInlineButton($"Сохранить упражнения", "2|SaveExercises");
-            AddInlineButton($"Сбросить добавленные упражнения", $"2|ResetTempDomains|{CommonConsts.Domain.Exercise}");
+            AddInlineButton($"Сбросить добавленные упражнения", $"2|ResetTempDomains|{CommonConsts.DomainsAndEntities.Exercise}");
         }
     }
 }

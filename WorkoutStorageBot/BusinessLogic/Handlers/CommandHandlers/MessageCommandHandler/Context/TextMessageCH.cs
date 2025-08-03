@@ -232,7 +232,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 {CommonConsts.Exercise.InputFormatExercise}");
                         buttonsSets = (ButtonsSet.ResetTempDomains, ButtonsSet.None);
 
-                        additionalParameters.Add("type", CommonConsts.Domain.Exercise);
+                        additionalParameters.Add("type", CommonConsts.DomainsAndEntities.Exercise);
 
                         break;
 
@@ -273,6 +273,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 {
                     ExercisesMods.Count => CommonConsts.ResultExercise.InputFormatExerciseResultCount,
                     ExercisesMods.WeightCount => CommonConsts.ResultExercise.InputFormatExerciseResultWeightCount,
+                    ExercisesMods.Timer => CommonConsts.ResultExercise.InputFormatExerciseResultTimer,
                     ExercisesMods.FreeResult => CommonConsts.ResultExercise.InputFormatExerciseResultFreeResult,
                     _ => throw new NotImplementedException($"Неожиданный тип упражнения: {currentExercise.Mode.ToString()}")
                 };
@@ -322,7 +323,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             switch (domainType)
             {
-                case "Cycle":
+                case CommonConsts.DomainsAndEntities.Cycle:
                     if (AlreadyExistDomainWithName(domainName, DomainType.Cycle))
                     {
                         responseConverter = new ResponseTextConverter("Ошибка при добавлении названия!", $"Цикл с названием {domainName.AddBoldAndQuotes()} уже существует",
@@ -340,7 +341,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                     buttonsSets = (ButtonsSet.SettingCycle, ButtonsSet.CycleList);
                     break;
 
-                case "Day":
+                case CommonConsts.DomainsAndEntities.Day:
                     if (AlreadyExistDomainWithName(domainName, DomainType.Day))
                     {
                         responseConverter = new ResponseTextConverter("Ошибка при сохранении!", $"В этом цикле уже существует день с названием {domainName.AddBoldAndQuotes()}",
@@ -359,7 +360,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                     buttonsSets = (ButtonsSet.SettingDay, ButtonsSet.DaysList);
                     break;
 
-                case "Exercise":
+                case CommonConsts.DomainsAndEntities.Exercise:
 
                     if (AlreadyExistDomainWithName(domainName, DomainType.Exercise))
                     {

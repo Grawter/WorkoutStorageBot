@@ -4,11 +4,16 @@ namespace WorkoutStorageBot.BusinessLogic.Consts
 {
     internal class CommonConsts
     {
-        public class Domain
+        public class DomainsAndEntities
         {
+            internal const string Account = "Account";
+            internal const string Cycles = "Cycles";
             internal const string Cycle = "Cycle";
+            internal const string Days = "Days";
             internal const string Day = "Day";
+            internal const string Exercises = "Exercises";
             internal const string Exercise = "Exercise";
+            internal const string ResultsExercises = "ResultsExercises";
         }
 
         public class EventNames
@@ -52,6 +57,8 @@ namespace WorkoutStorageBot.BusinessLogic.Consts
             internal const string InputFormatExerciseResultWeightCount = @"Формат общего ввода: [вес] [кол-во повторений].
 Пример единичного ввода: 25 10
 Пример множественного ввода: 25 10;35 10;45 10";
+
+            internal const string InputFormatExerciseResultTimer = "Timer";
 
             internal const string InputFormatExerciseResultFreeResult = @"Формат общего ввода: [Свободная запись до 80 символов].
 Пример ввода: Пробежка 10 км/1.25 ч.";

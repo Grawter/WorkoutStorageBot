@@ -1,6 +1,7 @@
 ﻿#region using
 
 using WorkoutStorageBot.BusinessLogic.Buttons.Abstraction;
+using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.SessionContext;
 
 #endregion
@@ -15,7 +16,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.BusinessButtonsFactories
 
         internal override void AddBusinessButtons(Dictionary<string, string>? additionalParameters = null)
         {
-            AddInlineButton("Последняя тренировка", "1|LastResult|Exercises");
+            AddInlineButton("Последняя тренировка", $"1|LastResult|{CommonConsts.DomainsAndEntities.Exercises}");
             GetDomainsInButtons(CurrentUserContext.ActiveCycle.Days.Where(d => !d.IsArchive), "Selected");
         }
     }

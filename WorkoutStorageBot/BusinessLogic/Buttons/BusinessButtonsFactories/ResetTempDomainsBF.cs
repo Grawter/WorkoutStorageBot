@@ -20,11 +20,11 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.BusinessButtonsFactories
 
             switch (domainType)
             {
-                case CommonConsts.Domain.Day:
-                    throw new NotImplementedException($"Нереализовано для типа домена {CommonConsts.Domain.Day}, т.к. не нашлось ни одно небходимого кейса");
+                case CommonConsts.DomainsAndEntities.Day:
+                    throw new NotImplementedException($"Нереализовано для типа домена {CommonConsts.DomainsAndEntities.Day}, т.к. не нашлось ни одно небходимого кейса");
 
-                case CommonConsts.Domain.Exercise:
-                    AddInlineButton($"Сбросить добавленные упражнения", $"2|ResetTempDomains|{CommonConsts.Domain.Exercise}");
+                case CommonConsts.DomainsAndEntities.Exercise:
+                    AddInlineButton($"Сбросить добавленные упражнения", $"2|ResetTempDomains|{CommonConsts.DomainsAndEntities.Exercise}");
 
                     break;
 

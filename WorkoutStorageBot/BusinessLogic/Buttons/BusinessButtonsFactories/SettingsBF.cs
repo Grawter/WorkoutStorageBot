@@ -1,6 +1,7 @@
 ﻿#region using
 
 using WorkoutStorageBot.BusinessLogic.Buttons.Abstraction;
+using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.SessionContext;
 
 #endregion
@@ -15,10 +16,10 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.BusinessButtonsFactories
 
         internal override void AddBusinessButtons(Dictionary<string, string>? additionalParameters = null)
         {
-            AddInlineButton("Настройка тренировочных циклов", "2|Setting|Cycles");
+            AddInlineButton("Настройка тренировочных циклов", $"2|Setting|{CommonConsts.DomainsAndEntities.Cycles}");
             AddInlineButton("Архив", "2|ArchiveStore");
             AddInlineButton("Экспорт тренировок", "2|Export");
-            AddInlineButton("Удалить свой аккаунт", "2|Delete|Account");
+            AddInlineButton("Удалить свой аккаунт", $"2|Delete|{CommonConsts.DomainsAndEntities.Account}");
             AddInlineButton("О боте", "2|AboutBot");
         }
     }

@@ -209,11 +209,11 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
         {
             IDomain? domain = domainType switch
             {
-                Consts.CommonConsts.Domain.Cycle
+                Consts.CommonConsts.DomainsAndEntities.Cycle
                     => CurrentCycle,
-                Consts.CommonConsts.Domain.Day
+                Consts.CommonConsts.DomainsAndEntities.Day
                     => CurrentDay,
-                Consts.CommonConsts.Domain.Exercise
+                Consts.CommonConsts.DomainsAndEntities.Exercise
                     => CurrentExercise,
                 _ => throwEx ? throw new NotImplementedException($"Неожиданный domainTyped: {domainType}") : null,
             };

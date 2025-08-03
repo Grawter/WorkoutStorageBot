@@ -2,7 +2,7 @@
 
 namespace WorkoutStorageBot.Model.Domain
 {
-    public class UserInformation
+    public class UserInformation : IEntity
     {
         public int Id { get; set; }
         public long UserId { get; set; }
