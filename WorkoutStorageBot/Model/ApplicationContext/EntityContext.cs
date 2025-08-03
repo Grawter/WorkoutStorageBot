@@ -1,7 +1,7 @@
 ﻿#region using
 
 using Microsoft.EntityFrameworkCore;
-using WorkoutStorageBot.Model.Domain;
+using WorkoutStorageBot.Model.DomainsAndEntities;
 using WorkoutStorageBot.Model.Import;
 using WorkoutStorageBot.Model.Logging;
 

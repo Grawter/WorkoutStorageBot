@@ -2,7 +2,7 @@
 
 using Microsoft.EntityFrameworkCore;
 using WorkoutStorageBot.Model.AppContext;
-using WorkoutStorageBot.Model.Domain;
+using WorkoutStorageBot.Model.DomainsAndEntities;
 
 #endregion
 

@@ -1,6 +1,6 @@
 ﻿
 
-namespace WorkoutStorageBot.Model.Domain
+namespace WorkoutStorageBot.Model.DomainsAndEntities
 {
     public class UserInformation : IEntity
     {

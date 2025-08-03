@@ -7,7 +7,7 @@ using WorkoutStorageBot.Application.Configuration;
 using WorkoutStorageBot.Core.Abstraction;
 using WorkoutStorageBot.Core.Manager;
 using WorkoutStorageBot.Helpers.Common;
-using WorkoutStorageBot.Model.Domain;
+using WorkoutStorageBot.Model.DomainsAndEntities;
 using WorkoutStorageBot.Model.HandlerData;
 
 #endregion

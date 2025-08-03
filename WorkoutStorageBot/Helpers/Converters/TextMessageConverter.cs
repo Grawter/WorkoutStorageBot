@@ -3,7 +3,7 @@
 using System.Text;
 using WorkoutStorageBot.BusinessLogic.Exceptions;
 using WorkoutStorageBot.Extenions;
-using WorkoutStorageBot.Model.Domain;
+using WorkoutStorageBot.Model.DomainsAndEntities;
 
 #endregion
 

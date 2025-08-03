@@ -9,7 +9,7 @@ using WorkoutStorageBot.Extenions;
 using WorkoutStorageBot.Helpers.CallbackQueryParser;
 using WorkoutStorageBot.Helpers.Converters;
 using WorkoutStorageBot.Helpers.Export;
-using WorkoutStorageBot.Model.Domain;
+using WorkoutStorageBot.Model.DomainsAndEntities;
 using WorkoutStorageBot.Model.HandlerData;
 
 #endregion

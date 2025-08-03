@@ -1,6 +1,6 @@
 ﻿#region using
 
-using WorkoutStorageBot.Model.Domain;
+using WorkoutStorageBot.Model.DomainsAndEntities;
 
 #endregion
 namespace WorkoutStorageBot.Helpers.Export

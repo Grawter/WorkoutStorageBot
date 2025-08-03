@@ -1,4 +1,4 @@
-﻿namespace WorkoutStorageBot.Model.Domain
+﻿namespace WorkoutStorageBot.Model.DomainsAndEntities
 {
     public interface IEntity
     {

@@ -3,7 +3,7 @@
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using System.Drawing;
-using WorkoutStorageBot.Model.Domain;
+using WorkoutStorageBot.Model.DomainsAndEntities;
 
 #endregion
 

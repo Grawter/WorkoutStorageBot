@@ -2,7 +2,7 @@
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.Extenions;
 using WorkoutStorageBot.Helpers.Common;
-using WorkoutStorageBot.Model.Domain;
+using WorkoutStorageBot.Model.DomainsAndEntities;
 #endregion
 
 namespace WorkoutStorageBot.BusinessLogic.SessionContext

@@ -8,7 +8,7 @@ using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.Extenions;
 using WorkoutStorageBot.Helpers.Common;
 using WorkoutStorageBot.Helpers.Converters;
-using WorkoutStorageBot.Model.Domain;
+using WorkoutStorageBot.Model.DomainsAndEntities;
 using WorkoutStorageBot.Model.HandlerData;
 using WorkoutStorageBot.Model.Logging;
 #endregion

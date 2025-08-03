@@ -2,7 +2,7 @@
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.Helpers.Common;
-using WorkoutStorageBot.Model.Domain;
+using WorkoutStorageBot.Model.DomainsAndEntities;
 using WorkoutStorageBot.Model.HandlerData;
 #endregion
 

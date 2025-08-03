@@ -2,8 +2,7 @@
 
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.Helpers.Common;
-using WorkoutStorageBot.Helpers.Crypto;
-using WorkoutStorageBot.Model.Domain;
+using WorkoutStorageBot.Model.DomainsAndEntities;
 
 #endregion
 

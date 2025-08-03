@@ -4,7 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using WorkoutStorageBot.Helpers.Common;
 using WorkoutStorageBot.Model.AppContext;
-using WorkoutStorageBot.Model.Domain;
+using WorkoutStorageBot.Model.DomainsAndEntities;
 using WorkoutStorageBot.Model.Import;
 
 #endregion

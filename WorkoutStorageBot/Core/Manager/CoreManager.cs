@@ -12,7 +12,7 @@ using WorkoutStorageBot.Core.Abstraction;
 using WorkoutStorageBot.Helpers.Common;
 using WorkoutStorageBot.Helpers.EventIDHelper;
 using WorkoutStorageBot.Helpers.Updates;
-using WorkoutStorageBot.Model.Domain;
+using WorkoutStorageBot.Model.DomainsAndEntities;
 using WorkoutStorageBot.Model.HandlerData.Results;
 using WorkoutStorageBot.Model.HandlerData.Results.UpdateInfo;
 

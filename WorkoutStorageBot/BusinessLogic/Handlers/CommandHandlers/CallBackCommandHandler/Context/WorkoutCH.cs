@@ -6,7 +6,7 @@ using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.Extenions;
 using WorkoutStorageBot.Helpers.CallbackQueryParser;
 using WorkoutStorageBot.Helpers.Converters;
-using WorkoutStorageBot.Model.Domain;
+using WorkoutStorageBot.Model.DomainsAndEntities;
 using WorkoutStorageBot.Model.HandlerData;
 #endregion
 
