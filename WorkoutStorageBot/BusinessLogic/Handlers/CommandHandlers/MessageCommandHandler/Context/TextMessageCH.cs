@@ -227,7 +227,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
                     case QueryFrom.Settings:
 
-                        responseConverter.ResetTarget(@$"Сбросьте текущие упражнения, что вернуться обратно или введите другое(ие) упражнение(й) для дня {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldAndQuotes()}
+                        responseConverter.ResetTarget(@$"Сбросьте текущие упражнения, чтобы вернуться обратно или введите другое(ие) упражнение(й) для дня {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldAndQuotes()}
 
 {CommonConsts.Exercise.InputFormatExercise}");
                         buttonsSets = (ButtonsSet.ResetTempDomains, ButtonsSet.None);
@@ -280,7 +280,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
                 responseConverter = new ResponseTextConverter(ex.Message,
                     inputFormatExerciseResult,
-                    $"Сбросьте текущие результаты, что вернуться обратно или введите результат заново для упражения {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldAndQuotes()}");
+                    $"Сбросьте текущие результаты, чтобы вернуться обратно или введите результат заново для упражения {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldAndQuotes()}");
                 buttonsSets = (ButtonsSet.ResetResultsExercise, ButtonsSet.None);
             }
 
