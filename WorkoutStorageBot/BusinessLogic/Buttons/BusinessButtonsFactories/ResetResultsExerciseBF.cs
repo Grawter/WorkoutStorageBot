@@ -7,9 +7,9 @@ using WorkoutStorageBot.BusinessLogic.SessionContext;
 
 namespace WorkoutStorageBot.BusinessLogic.Buttons.BusinessButtonsFactories
 {
-    internal class ResetResultsExercisesBF : ButtonsFactory
+    internal class ResetResultsExerciseBF : ButtonsFactory
     {
-        public ResetResultsExercisesBF(UserContext userContext) : base(userContext)
+        public ResetResultsExerciseBF(UserContext userContext) : base(userContext)
         {
         }
 

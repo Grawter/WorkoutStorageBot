@@ -68,6 +68,10 @@ namespace WorkoutStorageBot.Helpers.Buttons
 
                 #endregion
 
+                case ButtonsSet.ResetResultsExercise:
+                    buttonsFactory = new ResetResultsExerciseBF(CurrentUserContext);
+                    break;
+
                 case ButtonsSet.SaveResultsExercise:
                     buttonsFactory = new SaveResultsExerciseBF(CurrentUserContext);
                     break;
