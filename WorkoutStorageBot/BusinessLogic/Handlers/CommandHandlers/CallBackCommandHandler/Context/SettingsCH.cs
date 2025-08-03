@@ -586,8 +586,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                         return this;
                     }
 
-                    targetDomain = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle?.Days?.FirstOrDefault(x => x.Id == targetDomainID)
-                        ?? throw new InvalidOperationException($"Не удалось найти targetDomain c ID = '{targetDomainID}' среди дней цикла с ID = '{this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Id}' у пользователя '{this.CommandHandlerTools.CurrentUserContext.UserInformation.UserId}'");
+                    targetDomain = this.CommandHandlerTools.CurrentUserContext.UserInformation.Cycles.SelectMany(cycle => cycle.Days)
+                                                                                                      ?.FirstOrDefault(day => day.Id == targetDomainID)
+                        ?? throw new InvalidOperationException($"Не удалось найти targetDomain c ID = '{targetDomainID}' среди дней неархивных циклов у пользователя '{this.CommandHandlerTools.CurrentUserContext.UserInformation.UserId}'");
 
                     this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.DayId = targetDomain.Id;
                     this.CommandHandlerTools.Db.Exercises.Update(this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise);
