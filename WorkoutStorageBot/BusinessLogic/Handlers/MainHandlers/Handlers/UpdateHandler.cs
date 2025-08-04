@@ -475,12 +475,13 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers
                 responseConverter = new ResponseTextConverter("Действие не может быть выполнено, т.к. информация устарела",
                         "Для продолжения работы используйте действия, предложенные ниже");
                 buttonsSets = (ButtonsSet.Main, ButtonsSet.None);
+
+                CurrentUserContext.Navigation.ResetNavigation();
             }
 
             informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
             CurrentUserContext.DataManager.ResetAll();
-            CurrentUserContext.Navigation.ResetNavigation();
 
             return false;
         }
