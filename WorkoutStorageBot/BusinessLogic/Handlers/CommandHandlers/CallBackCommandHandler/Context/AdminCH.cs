@@ -233,7 +233,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
             this.InformationSet = new MessageInformationSet("Бот отключён");
 
-            this.CommandHandlerTools.ParentHandler.CoreManager.StopManaging(TimeSpan.FromSeconds(2));
+            Task.Run(() => this.CommandHandlerTools.ParentHandler.CoreManager.StopManaging(TimeSpan.FromSeconds(2)));
 
             return this;
         }
