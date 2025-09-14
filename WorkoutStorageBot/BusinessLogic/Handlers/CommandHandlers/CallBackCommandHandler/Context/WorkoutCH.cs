@@ -49,11 +49,10 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     IEnumerable<int> activeDayIDs = this.CommandHandlerTools.CurrentUserContext.ActiveCycle.Days.Where(d => !d.IsArchive)
                                                                                                            .Select(d => d.Id);
 
-                    IQueryable<Exercise> activeExercisesInActiveDays = this.CommandHandlerTools.Db.Exercises.Where(e => !e.IsArchive && activeDayIDs.Contains(e.DayId));
+                    IQueryable<int> activeExercisesIDsInActiveDays = this.CommandHandlerTools.Db.Exercises.Where(e => !e.IsArchive && activeDayIDs.Contains(e.DayId))
+                                                                                                          .Select(e => e.Id);
 
-                    IQueryable<int> activeExercisesIDsInActiveDays = activeExercisesInActiveDays.Select(e => e.Id);
-
-                    var resultlasttraining = this.CommandHandlerTools.Db.ResultsExercises
+                    var resultLastTraining = this.CommandHandlerTools.Db.ResultsExercises
                                                                 .Where(re => activeExercisesIDsInActiveDays.Contains(re.ExerciseId))
                                                                 .GroupBy(re => re.DateTime.Date)
                                                                 .Select(g => new
@@ -97,7 +96,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     buttonsSets = (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout);
                     break;
                 default:
-                    throw new NotImplementedException($"Неожиданный CallbackQueryParser.SubDirection: {callbackQueryParser.SubDirection}");
+                    throw new NotImplementedException($"Неожиданный callbackQueryParser.DomainType: {callbackQueryParser.DomainType}");
             }
 
             this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
