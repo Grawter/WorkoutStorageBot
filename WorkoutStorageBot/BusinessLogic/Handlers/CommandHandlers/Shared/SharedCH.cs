@@ -12,6 +12,9 @@ using WorkoutStorageBot.Model.HandlerData;
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.Shared
 {
+    /// <summary>
+    /// Логика, которая может быть применима в разных CommandHandler
+    /// </summary>
     internal class SharedCH : CommandHandler
     {
         internal SharedCH(CommandHandlerData commandHandlerTools) : base(commandHandlerTools)
@@ -29,6 +32,40 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.Shared
                 throw new InvalidOperationException($"Из '{nameof(SharedCH)}' вернулся пустой {nameof(this.InformationSet)}");
 
             return this.InformationSet;
+        }
+
+        internal IEnumerable<int> GetUserExercisesIds()
+        {
+            List<Cycle> cycles = this.CommandHandlerTools.CurrentUserContext.UserInformation.Cycles;
+
+            foreach (Cycle cycle in cycles)
+            {
+                foreach (Day day in cycle.Days)
+                {
+                    foreach (Exercise exercise in day.Exercises)
+                    {
+                        yield return exercise.Id;
+                    }
+                }
+            }
+        }
+
+        internal IQueryable<ResultExercise> GetUserResultsExercises()
+        {
+            IEnumerable<int> userExercisesIds = GetUserExercisesIds();
+
+            IQueryable<ResultExercise> resultsExercises = this.CommandHandlerTools.Db.ResultsExercises.Where(x => userExercisesIds.Contains(x.ExerciseId));
+
+            return resultsExercises;
+        }
+
+        internal MessageInformationSet GetAccessDeniedMessageInformationSet()
+        {
+            ResponseTextConverter responseConverter = new ResponseTextConverter("Отказано в действии");
+
+            (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.Main, ButtonsSet.None);
+
+            return new MessageInformationSet(responseConverter.Convert(), buttonsSets);
         }
 
         internal SharedCH FindResultByDateCommand(string findedDate, bool isNeedFindByCurrentDay)

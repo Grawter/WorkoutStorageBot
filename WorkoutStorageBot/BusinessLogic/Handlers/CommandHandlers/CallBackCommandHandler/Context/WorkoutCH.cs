@@ -139,7 +139,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
         internal WorkoutCH FindResultsByDateCommand()
         {
-            SharedCH sharedCH = new SharedCH(CommandHandlerTools);
+            SharedCH sharedCH = new SharedCH(this.CommandHandlerTools);
 
             string findedDate = callbackQueryParser.GetRequiredAdditionalParameter(0);
 
@@ -215,14 +215,14 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
             return this;
         }
-
+        
         private string GetTimerValue()
         {
             DateTime currentTime = DateTime.Now;
 
             TimeSpan timerResult = currentTime.Subtract(this.CommandHandlerTools.CurrentUserContext.DataManager.ExerciseTimer);
 
-            string timerResultStr = $"{timerResult.ToString(@"hh\:mm\:ss")}";
+            string timerResultStr = $"{timerResult.ToString(CommonConsts.Common.TimeFormatTimeSpan)}";
 
             return timerResultStr;
         }

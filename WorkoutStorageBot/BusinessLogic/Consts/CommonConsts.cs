@@ -32,6 +32,8 @@ namespace WorkoutStorageBot.BusinessLogic.Consts
             internal const string DateTimeFormatHoursFirst = "HH:mm:ss dd.MM.yyyy";
 
             internal const string DateFormat = "dd.MM.yyyy";
+
+            internal const string TimeFormatTimeSpan = @"hh\:mm\:ss";
         }
 
         public class Exercise

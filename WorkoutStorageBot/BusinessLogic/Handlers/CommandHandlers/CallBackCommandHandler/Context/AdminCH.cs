@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using System.Text;
 using WorkoutStorageBot.BusinessLogic.CoreRepositories.Repositories;
 using WorkoutStorageBot.BusinessLogic.Enums;
+using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.Shared;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.Extenions;
 using WorkoutStorageBot.Helpers.CallbackQueryParser;
@@ -242,20 +243,13 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
         {
             if (!this.CommandHandlerTools.CurrentUserContext.IsAdmin())
             {
-                this.InformationSet = GetAccessDeniedMessageInformationSet();
+                SharedCH sharedCH = new SharedCH(this.CommandHandlerTools);
+
+                this.InformationSet = sharedCH.GetAccessDeniedMessageInformationSet();
                 return true;
             }
                 
             return false;
-        }
-
-        private MessageInformationSet GetAccessDeniedMessageInformationSet()
-        {
-            ResponseTextConverter responseConverter = new ResponseTextConverter("Отказано в действии");
-
-            (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.Main, ButtonsSet.None);
-
-            return new MessageInformationSet(responseConverter.Convert(), buttonsSets);
         }
     }
 }

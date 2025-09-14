@@ -417,7 +417,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             {
                 case QueryFrom.Start:
                     return (ButtonsSet.None, ButtonsSet.None);
-
+        
                 case QueryFrom.Settings:
                     return (ButtonsSet.None, backButtonForSetting);
 
@@ -428,7 +428,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
         internal TextMessageCH FindResultByDateCommand(bool isNeedFindByCurrentDay)
         {
-            SharedCH sharedCH = new SharedCH(CommandHandlerTools);
+            SharedCH sharedCH = new SharedCH(this.CommandHandlerTools);
 
             string findedDate = requestConverter.RemoveCompletely(10).Convert();
 
@@ -639,7 +639,9 @@ WHERE Id IN (
         {
             if (!this.CommandHandlerTools.CurrentUserContext.IsAdmin())
             {
-                this.InformationSet = GetAccessDeniedMessageInformationSet();
+                SharedCH sharedCH = new SharedCH(this.CommandHandlerTools);
+
+                this.InformationSet = sharedCH.GetAccessDeniedMessageInformationSet();
 
                 this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
@@ -647,15 +649,6 @@ WHERE Id IN (
             }
 
             return false;
-        }
-
-        private MessageInformationSet GetAccessDeniedMessageInformationSet()
-        {
-            ResponseTextConverter responseConverter = new ResponseTextConverter("Отказано в действии");
-
-            (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.Main, ButtonsSet.None);
-
-            return new MessageInformationSet(responseConverter.Convert(), buttonsSets);
         }
     }
 }

@@ -3,6 +3,7 @@
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.CoreRepositories.Repositories;
 using WorkoutStorageBot.BusinessLogic.Enums;
+using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.Shared;
 using WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.Extenions;
@@ -858,7 +859,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             }
             else
             {
-                IQueryable<ResultExercise> resultsExercisesForExcel = GetResultsExercises();
+                SharedCH sharedCH = new SharedCH(this.CommandHandlerTools);
+
+                IQueryable<ResultExercise> resultsExercisesForExcel = sharedCH.GetUserResultsExercises();
 
                 if (resultsExercisesForExcel.Count() < 1)
                 {
@@ -891,29 +894,6 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             }
 
             return result;
-        }
-
-        private IQueryable<ResultExercise> GetResultsExercises()
-        {
-            IEnumerable<int> userExercisesIds = GetUserExercisesIds(this.CommandHandlerTools.CurrentUserContext.UserInformation);
-
-            IQueryable<ResultExercise> resultsExercises = this.CommandHandlerTools.Db.ResultsExercises.Where(x => userExercisesIds.Contains(x.ExerciseId));
-                                                            
-            return resultsExercises;
-        }
-
-        private IEnumerable<int> GetUserExercisesIds(UserInformation userInformation)
-        {
-            foreach (Cycle cycle in userInformation.Cycles)
-            {
-                foreach (Day day in cycle.Days)
-                {
-                    foreach (Exercise exercise in day.Exercises)
-                    {
-                        yield return exercise.Id;
-                    }
-                }
-            }
         }
     }
 }
