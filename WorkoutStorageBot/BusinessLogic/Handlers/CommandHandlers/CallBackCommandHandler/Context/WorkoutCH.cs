@@ -4,6 +4,7 @@ using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.Extenions;
+using WorkoutStorageBot.Helpers.BusinessLogicHelpers;
 using WorkoutStorageBot.Helpers.CallbackQueryParser;
 using WorkoutStorageBot.Helpers.Converters;
 using WorkoutStorageBot.Model.DomainsAndEntities;
@@ -64,7 +65,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                                                                 .FirstOrDefault();
 
 
-                    information = GetInformationAboutLastExercises(resultlasttraining?.Data);
+                    information = WorkoutDataHelper.GetInformationAboutLastExercises(resultLastTraining?.Data);
                     responseConverter = new ResponseTextConverter("Последняя тренировка:", information, "Выберите тренировочный день");
                     buttonsSets = (ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main);
                     break;
@@ -91,7 +92,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                                                                                                             re.DateTime.Date == resultExercise.Key));
                     }
 
-                    information = GetInformationAboutLastDay(lastResultsExercisesInCurrentDay);
+                    information = WorkoutDataHelper.GetInformationAboutLastDay(lastResultsExercisesInCurrentDay);
                     responseConverter = new ResponseTextConverter("Последние результаты упражнений из этого дня:", information, "Выберите упражнение");
                     buttonsSets = (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout);
                     break;
@@ -166,62 +167,6 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
             return this;
-        }
-
-        private string GetInformationAboutLastExercises(IEnumerable<ResultExercise>? resultsExercises)
-        {
-            if (!resultsExercises.HasItemsInCollection())
-                return "Нет информации для данного цикла";
-
-            StringBuilder sb = new StringBuilder();
-
-            ResultExercise firstResultExercise = resultsExercises.First();
-
-            IEnumerable<IGrouping<int, ResultExercise>> groupsResultsExercise = resultsExercises.GroupBy(x => x.ExerciseId);
-
-            sb.AppendLine($"Дата: {firstResultExercise.DateTime.ToShortDateString()}");
-
-            foreach (IGrouping<int, ResultExercise> groupResultExercise in groupsResultsExercise)
-            {
-                ResultExercise firstGroupResultExercise = groupResultExercise.First();
-
-                sb.AppendLine($"Упражнение: {firstGroupResultExercise.Exercise.Name.AddBoldAndQuotes()}");
-
-                foreach (ResultExercise resultExercise in groupResultExercise)
-                {
-                    string resultExerciseStr = this.CommandHandlerTools.CurrentUserContext.DataManager.ConvertResultExerciseToString(resultExercise);
-
-                    sb.AppendLine(resultExerciseStr);
-                }
-            }
-
-            return sb.ToString().Trim();
-        }
-
-        private string GetInformationAboutLastDay(IEnumerable<ResultExercise>? resultsExercises)
-        {
-            if (!resultsExercises.HasItemsInCollection())
-                return "Нет информации для данного дня";
-
-            StringBuilder sb = new StringBuilder();
-
-            IEnumerable<IGrouping<int, ResultExercise>> groupsResultsExercise = resultsExercises.GroupBy(x => x.ExerciseId);
-
-            foreach (IGrouping<int, ResultExercise> groupResultExercise in groupsResultsExercise)
-            {
-                ResultExercise firstResultExercise = groupResultExercise.First();
-
-                sb.AppendLine($"Упражнение: {firstResultExercise.Exercise.Name.AddBoldAndQuotes()} | Дата: {firstResultExercise.DateTime.ToShortDateString().AddBoldAndQuotes()}");
-
-                foreach (ResultExercise resultExercise in groupResultExercise)
-                {
-                    string resultExerciseStr = this.CommandHandlerTools.CurrentUserContext.DataManager.ConvertResultExerciseToString(resultExercise);
-
-                    sb.AppendLine(resultExerciseStr);
-                }
-            }
-
-            return sb.ToString().Trim();
         }
 
         private string GetTimerValue()

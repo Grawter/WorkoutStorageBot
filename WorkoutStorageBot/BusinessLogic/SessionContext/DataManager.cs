@@ -223,20 +223,5 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
 
             return domain;
         }
-
-        internal string ConvertResultExerciseToString(ResultExercise resultExercise)
-        {
-            if (!string.IsNullOrWhiteSpace(resultExercise.FreeResult))
-                return $"=> {resultExercise.FreeResult}";
-            else if (resultExercise.Count.HasValue)
-            {
-                if (resultExercise.Weight.HasValue)
-                    return $"Повторения: ({resultExercise.Count}) => Вес: ({resultExercise.Weight})";
-                else
-                    return $"Повторения: ({resultExercise.Count})";
-            }
-            else
-                throw new InvalidOperationException($"Не удалось отобразить данные для результата упражнения с ID: {resultExercise.Id}, ID упражнения: {resultExercise.ExerciseId}, тип упражнения: {resultExercise.Exercise.Mode.ToString().AddQuotes()}");
-        }
     }
 }
