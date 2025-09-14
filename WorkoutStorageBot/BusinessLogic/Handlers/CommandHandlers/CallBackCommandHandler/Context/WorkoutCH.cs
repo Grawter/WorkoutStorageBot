@@ -36,7 +36,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             return this;
         }
 
-        internal WorkoutCH LastResultCommand()
+        internal WorkoutCH LastResultsCommand()
         {
             ResponseTextConverter responseConverter;
             string information;

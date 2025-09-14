@@ -16,7 +16,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.BusinessButtonsFactories
 
         internal override void AddBusinessButtons(Dictionary<string, string>? additionalParameters = null)
         {
-            AddInlineButton("Последние результаты выбранного дня", $"1|LastResult|{CommonConsts.DomainsAndEntities.Day}");
+            AddInlineButton("Последние результаты выбранного дня", $"1|LastResults|{CommonConsts.DomainsAndEntities.Day}");
             GetDomainsInButtons(CurrentUserContext.DataManager.CurrentDay.Exercises.Where(e => !e.IsArchive), "Selected");
         }
     }

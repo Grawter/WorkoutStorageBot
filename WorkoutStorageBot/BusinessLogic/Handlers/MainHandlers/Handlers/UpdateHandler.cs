@@ -246,8 +246,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers
                     CHResult = commandHandler.WorkoutCommand();
                     break;
 
-                case "LastResult":
-                    CHResult = commandHandler.LastResultCommand();
+                case "LastResults":
+                    CHResult = commandHandler.LastResultsCommand();
                     break;
 
                 case "StartExerciseTimer":
