@@ -138,6 +138,14 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers
 
                     break;
 
+                case MessageNavigationTarget.FindResultsByDate:
+                    CHResult = commandHandler.FindResultByDateCommand(false);
+                    break;
+
+                case MessageNavigationTarget.FindResultsByDateInDay:
+                    CHResult = commandHandler.FindResultByDateCommand(true);
+                    break;
+
                 case MessageNavigationTarget.FindLogByID:
                     CHResult = commandHandler.FindLogByIDCommand(isEventID: false);
 
@@ -248,6 +256,14 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers
 
                 case "LastResults":
                     CHResult = commandHandler.LastResultsCommand();
+                    break;
+
+                case "StartFindResultsByDate":
+                    CHResult = commandHandler.StartFindResultsByDateCommand();
+                    break;
+
+                case "FindResultsByDate":
+                    CHResult = commandHandler.FindResultsByDateCommand();
                     break;
 
                 case "StartExerciseTimer":

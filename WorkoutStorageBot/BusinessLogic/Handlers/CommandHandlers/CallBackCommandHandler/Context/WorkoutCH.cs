@@ -1,7 +1,7 @@
 ﻿#region using
-using System.Text;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Enums;
+using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.Shared;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.Extenions;
 using WorkoutStorageBot.Helpers.BusinessLogicHelpers;
@@ -47,7 +47,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             {
                 case CommonConsts.DomainsAndEntities.Exercises:
                     IEnumerable<int> activeDayIDs = this.CommandHandlerTools.CurrentUserContext.ActiveCycle.Days.Where(d => !d.IsArchive)
-                                                                                                           .Select(d => d.Id);
+                                                                                                                .Select(d => d.Id);
 
                     IQueryable<int> activeExercisesIDsInActiveDays = this.CommandHandlerTools.Db.Exercises.Where(e => !e.IsArchive && activeDayIDs.Contains(e.DayId))
                                                                                                           .Select(e => e.Id);
@@ -71,7 +71,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
                 case CommonConsts.DomainsAndEntities.Day:
                     IEnumerable<int> exercisesIDs = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Exercises.Where(e => !e.IsArchive)
-                                                                                                                           .Select(d => d.Id);
+                                                                                                                                .Select(d => d.Id);
 
                     IEnumerable<IGrouping<DateTime, ResultExercise>> lastDateForExercises = this.CommandHandlerTools.Db.ResultsExercises.Where(re => exercisesIDs.Contains(re.ExerciseId))
                                                 .GroupBy(re => re.ExerciseId)
@@ -96,10 +96,58 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     buttonsSets = (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout);
                     break;
                 default:
+                    throw new NotImplementedException($"Неожиданный CallbackQueryParser.DomainType: {callbackQueryParser.DomainType}");
+            }
+
+            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+
+            return this;
+        }
+
+        internal WorkoutCH StartFindResultsByDateCommand()
+        {
+            ResponseTextConverter responseConverter = new ResponseTextConverter($"Введите дату искомой тренировки", CommonConsts.Exercise.FindResultsByDateFormat);
+            string information;
+            (ButtonsSet, ButtonsSet) buttonsSets;
+
+            switch (callbackQueryParser.DomainType)
+            {
+                case CommonConsts.DomainsAndEntities.Exercises:
+
+                    this.CommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.FindResultsByDate);
+
+                    buttonsSets = (ButtonsSet.None, ButtonsSet.DaysListWithLastWorkout); 
+
+                    break;
+
+                case CommonConsts.DomainsAndEntities.Day:
+
+                    this.CommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.FindResultsByDateInDay);
+
+                    buttonsSets = (ButtonsSet.None, ButtonsSet.ExercisesListWithLastWorkoutForDay);
+
+                    break;
+
+                default:
                     throw new NotImplementedException($"Неожиданный callbackQueryParser.DomainType: {callbackQueryParser.DomainType}");
             }
 
             this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+
+            return this;
+        }
+
+        internal WorkoutCH FindResultsByDateCommand()
+        {
+            SharedCH sharedCH = new SharedCH(CommandHandlerTools);
+
+            string findedDate = callbackQueryParser.GetRequiredAdditionalParameter(0);
+
+            bool isNeedFindByCurrentDay = callbackQueryParser.DomainType == CommonConsts.DomainsAndEntities.Exercise;
+
+            sharedCH.FindResultByDateCommand(findedDate, isNeedFindByCurrentDay);
+
+            this.InformationSet = sharedCH.GetData();
 
             return this;
         }

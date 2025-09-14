@@ -48,6 +48,10 @@ namespace WorkoutStorageBot.Helpers.Buttons
 
                 #region Workout area
 
+                case ButtonsSet.FoundResultsByDate:
+                    buttonsFactory = new FoundResultsByDateBF(CurrentUserContext);
+                    break;
+
                 case ButtonsSet.DaysListWithLastWorkout:
                     buttonsFactory = new DaysListWithLastWorkoutBF(CurrentUserContext);
                     break;

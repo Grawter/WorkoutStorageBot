@@ -8,6 +8,7 @@ namespace WorkoutStorageBot.BusinessLogic.Enums
 
         Main,
             DaysListWithLastWorkout,
+            FoundResultsByDate,
             ExercisesListWithLastWorkoutForDay,
             EnableExerciseTimer,
             FixExerciseTimer,

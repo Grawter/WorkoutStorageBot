@@ -30,12 +30,29 @@ namespace WorkoutStorageBot.BusinessLogic.Consts
             internal const string DateTimeFormatDateFirst = "dd.MM.yyyy HH:mm:ss";
 
             internal const string DateTimeFormatHoursFirst = "HH:mm:ss dd.MM.yyyy";
+
+            internal const string DateFormat = "dd.MM.yyyy";
         }
 
         public class Exercise
         {
+            internal const string FindResultsByDateFormat = @"Допустимый формат:
+<b>13.12</b>
+<b>13.12.2000</b>
+<b>2000.13.12</b>
+<b>13/12/2000</b>
+<b>2000/13/12</b>
+<b>13-12</b>
+<b>13-12-2000</b>
+<b>2000-13-12</b>
+<b>13 12</b>
+<b>13 12 2000</b>
+<b>2000 13 12</b>";
+
+            internal static string[] ValidDateFormats = ["dd.MM", "dd.MM.yyyy", "yyyy.MM.dd", "dd/MM/yyyy", "yyyy/MM/dd", "dd-MM", "dd-MM-yyyy", "yyyy-MM-dd", "dd MM", "dd MM yyyy", "yyyy MM dd"];
+
             internal const string ExamplesTypesExercise = @$"Доступные типы упражений:
-<b>0</b> - только кол-во повторений (например, подтягивания)
+<b>0 - только кол-во повторений (например, подтягивания)
 <b>1</b> - вес и кол-во повторений (например, жим лёжа)
 <b>2</b> - таймер (например, бег)
 <b>3</b> - свободный формат результата (например, отработка на груше)

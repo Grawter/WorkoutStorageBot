@@ -3,6 +3,7 @@ using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.CoreRepositories.Repositories;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.Exceptions;
+using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.Shared;
 using WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.Extenions;
@@ -423,6 +424,19 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 default:
                     throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {this.CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom}");
             }
+        }
+
+        internal TextMessageCH FindResultByDateCommand(bool isNeedFindByCurrentDay)
+        {
+            SharedCH sharedCH = new SharedCH(CommandHandlerTools);
+
+            string findedDate = requestConverter.RemoveCompletely(10).Convert();
+
+            sharedCH.FindResultByDateCommand(findedDate, isNeedFindByCurrentDay);
+
+            this.InformationSet = sharedCH.GetData();
+
+            return this;
         }
 
         internal TextMessageCH FindLogByIDCommand(bool isEventID)
