@@ -42,13 +42,15 @@ namespace WorkoutStorageBot.Helpers.Export
                 int newCyclePointY = 0;
 
                 string informationAboutSelectedPeriod = filterDateTime > DateTime.MinValue
-                                ? $"Временной промежуток формирования данных {filterDateTime.ToShortDateString()} - {filterDateTime.AddMonths(monthFilterPeriod).ToShortDateString()}"
+                                ? $"Временной промежуток формирования данных {filterDateTime.ToShortDateString()} - {filterDateTime.AddMonths(monthFilterPeriod).ToString()}"
                                 : "Тренировки, зафиксированные за всё время";
 
                 // informationAboutSelectedPeriod
                 SetStyle(mainSheet.Cells[informationAboutSelectedPeriodPoint.Y, informationAboutSelectedPeriodPoint.X, 
-                                         informationAboutSelectedPeriodPoint.Y, informationAboutSelectedPeriodPoint.X + 7],
-                                         true, true, false, Color.Azure);
+                                         informationAboutSelectedPeriodPoint.Y, informationAboutSelectedPeriodPoint.X + 7], 
+                                         needMerge: true, 
+                                         needBorder: true,
+                                         backgroundCellColor: Color.Azure);
                 mainSheet.Cells[informationAboutSelectedPeriodPoint.Y, informationAboutSelectedPeriodPoint.X].Value = informationAboutSelectedPeriod;
 
                 int resultExerciseRowNumber = 0;
@@ -149,25 +151,25 @@ namespace WorkoutStorageBot.Helpers.Export
         {
             Point endExercisePoint = new Point(exercisePoint.X + 3, exercisePoint.Y);
 
-            SetStyle(mainSheet.Cells[exercisePoint.Y, exercisePoint.X, endExercisePoint.Y, endExercisePoint.X], true, true, false, Color.NavajoWhite);
+            SetStyle(mainSheet.Cells[exercisePoint.Y, exercisePoint.X, endExercisePoint.Y, endExercisePoint.X], needMerge: true, needBorder: true, backgroundCellColor: Color.NavajoWhite);
             mainSheet.Cells[exercisePoint.Y, exercisePoint.X].Value = exerciseName;
         }
 
         private static void SetResultTitle(Point resultTitlePoint, ExcelWorksheet mainSheet)
         {
-            SetStyle(mainSheet.Cells[resultTitlePoint.Y, resultTitlePoint.X], false, true, false, Color.Salmon);
+            SetStyle(mainSheet.Cells[resultTitlePoint.Y, resultTitlePoint.X], needBorder: true, backgroundCellColor: Color.Salmon);
             mainSheet.Cells[resultTitlePoint.Y, resultTitlePoint.X].Value = "Дата";
 
             resultTitlePoint.X += 1;
-            SetStyle(mainSheet.Cells[resultTitlePoint.Y, resultTitlePoint.X], false, true, false, Color.SkyBlue);
+            SetStyle(mainSheet.Cells[resultTitlePoint.Y, resultTitlePoint.X], needBorder: true, backgroundCellColor: Color.SkyBlue);
             mainSheet.Cells[resultTitlePoint.Y, resultTitlePoint.X].Value = "Кол-во";
 
             resultTitlePoint.X += 1;
-            SetStyle(mainSheet.Cells[resultTitlePoint.Y, resultTitlePoint.X], false, true, false, Color.DarkSeaGreen);
+            SetStyle(mainSheet.Cells[resultTitlePoint.Y, resultTitlePoint.X], needBorder: true, backgroundCellColor: Color.DarkSeaGreen);
             mainSheet.Cells[resultTitlePoint.Y, resultTitlePoint.X].Value = "Вес";
 
             resultTitlePoint.X += 1;
-            SetStyle(mainSheet.Cells[resultTitlePoint.Y, resultTitlePoint.X], false, true, false, Color.LightCyan);
+            SetStyle(mainSheet.Cells[resultTitlePoint.Y, resultTitlePoint.X], needBorder: true, backgroundCellColor: Color.LightCyan);
             mainSheet.Cells[resultTitlePoint.Y, resultTitlePoint.X].Value = "Свободный рез.";
         }
 
@@ -175,42 +177,47 @@ namespace WorkoutStorageBot.Helpers.Export
         {
             Color backgroundCellColor = GetColorForRow(rowNumber);
 
-            SetStyle(mainSheet.Cells[resultExercisePoint.Y, resultExercisePoint.X], false, true, false, Color.Yellow, needBold: true);
+            SetStyle(mainSheet.Cells[resultExercisePoint.Y, resultExercisePoint.X], needBorder: true, needBold: true, backgroundCellColor: Color.Yellow);
             if (isNeedWriteDate)
                 mainSheet.Cells[resultExercisePoint.Y, resultExercisePoint.X].Value = resultExercise.DateTime.ToShortDateString();
 
             resultExercisePoint.X += 1;
-            SetStyle(mainSheet.Cells[resultExercisePoint.Y, resultExercisePoint.X], false, true, false, backgroundCellColor);
+            SetStyle(mainSheet.Cells[resultExercisePoint.Y, resultExercisePoint.X], needBorder: true, backgroundCellColor: backgroundCellColor);
             mainSheet.Cells[resultExercisePoint.Y, resultExercisePoint.X].Value = resultExercise.Count;
 
             resultExercisePoint.X += 1;
-            SetStyle(mainSheet.Cells[resultExercisePoint.Y, resultExercisePoint.X], false, true, false, backgroundCellColor);
+            SetStyle(mainSheet.Cells[resultExercisePoint.Y, resultExercisePoint.X], needBorder: true, backgroundCellColor: backgroundCellColor);
             mainSheet.Cells[resultExercisePoint.Y, resultExercisePoint.X].Value = resultExercise.Weight;
 
             resultExercisePoint.X += 1;
-            SetStyle(mainSheet.Cells[resultExercisePoint.Y, resultExercisePoint.X], false, true, true, backgroundCellColor);
+            SetStyle(mainSheet.Cells[resultExercisePoint.Y, resultExercisePoint.X], needBorder: true, needWrapText: true, backgroundCellColor: backgroundCellColor);
             mainSheet.Cells[resultExercisePoint.Y, resultExercisePoint.X].Value = resultExercise.FreeResult;
         }
 
         private static void SetDayName(string dayName, Point startDayPoint, Point endDayPoint, ExcelWorksheet mainSheet)
         {
-            SetStyle(mainSheet.Cells[startDayPoint.Y, startDayPoint.X, endDayPoint.Y, endDayPoint.X], true, true, false, Color.Gold);
+            SetStyle(mainSheet.Cells[startDayPoint.Y, startDayPoint.X, endDayPoint.Y, endDayPoint.X], needMerge: true, needBorder: true, backgroundCellColor: Color.Gold);
             mainSheet.Cells[startDayPoint.Y, startDayPoint.X].Value = dayName;
         }
 
         private static void SetCycleName(string cycleName, Point startCyclePoint, Point endCyclePoint, ExcelWorksheet mainSheet)
         {
-            SetStyle(mainSheet.Cells[startCyclePoint.Y, startCyclePoint.X, endCyclePoint.Y, endCyclePoint.X], true, true, false, Color.PaleGreen);
+            SetStyle(mainSheet.Cells[startCyclePoint.Y, startCyclePoint.X, endCyclePoint.Y, endCyclePoint.X], needMerge: true, needBorder: true, backgroundCellColor: Color.PaleGreen);
             mainSheet.Cells[startCyclePoint.Y, startCyclePoint.X].Value = cycleName;
         }
 
         private static void SetStyle(ExcelRange excelRange, 
-            bool needMerge, bool needBorder, bool wrapText, 
-            Color backgroundCellColor, 
-            ExcelHorizontalAlignment horizontalAlignment = ExcelHorizontalAlignment.Center, 
-            ExcelVerticalAlignment verticalAlignment = ExcelVerticalAlignment.Center,
-            bool needBold = false)
+                                     bool needMerge = false, 
+                                     bool needBorder = false, 
+                                     bool needWrapText = false,
+                                     bool needBold = false,
+                                     Color backgroundCellColor = default, 
+                                     ExcelHorizontalAlignment horizontalAlignment = ExcelHorizontalAlignment.Center, 
+                                     ExcelVerticalAlignment verticalAlignment = ExcelVerticalAlignment.Center)
         {
+            if (backgroundCellColor == default)
+                backgroundCellColor = Color.White;
+
             excelRange.Merge = needMerge;              
            
             if (needBorder)
@@ -220,7 +227,7 @@ namespace WorkoutStorageBot.Helpers.Export
             excelRange.Style.HorizontalAlignment = horizontalAlignment;
             excelRange.Style.Fill.PatternType = ExcelFillStyle.Solid;
             excelRange.Style.Fill.BackgroundColor.SetColor(backgroundCellColor);
-            excelRange.Style.WrapText = wrapText;
+            excelRange.Style.WrapText = needWrapText;
             excelRange.Style.Font.Bold = needBold;
         }
 
