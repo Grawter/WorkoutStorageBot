@@ -10,7 +10,7 @@ using WorkoutStorageBot.Model.DomainsAndEntities;
 using WorkoutStorageBot.Model.HandlerData;
 #endregion
 
-namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.Shared
+namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommandHandler
 {
     /// <summary>
     /// Логика, которая может быть применима в разных CommandHandler
@@ -34,7 +34,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.Shared
             return this.InformationSet;
         }
 
-        internal IEnumerable<int> GetUserExercisesIds()
+        internal IEnumerable<int> GetAllUserExercisesIds()
         {
             List<Cycle> cycles = this.CommandHandlerTools.CurrentUserContext.UserInformation.Cycles;
 
@@ -50,9 +50,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.Shared
             }
         }
 
-        internal IQueryable<ResultExercise> GetUserResultsExercises()
+        internal IQueryable<ResultExercise> GetAllUserResultsExercises()
         {
-            IEnumerable<int> userExercisesIds = GetUserExercisesIds();
+            IEnumerable<int> userExercisesIds = GetAllUserExercisesIds();
 
             IQueryable<ResultExercise> resultsExercises = this.CommandHandlerTools.Db.ResultsExercises.Where(x => userExercisesIds.Contains(x.ExerciseId));
 
