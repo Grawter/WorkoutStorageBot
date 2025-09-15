@@ -3,6 +3,7 @@
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using System.Drawing;
+using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.Model.DomainsAndEntities;
 
 #endregion
@@ -28,7 +29,7 @@ namespace WorkoutStorageBot.Helpers.Export
 
                 // init start positions
                 Point informationAboutSelectedPeriodPoint = new Point(startPosition, 2);
-                
+
                 Point startCyclePoint = new Point(startPosition, 4);
                 Point endCyclePoint = new Point(startPosition, 4);
                 Point startDayPoint = new Point(startPosition, startCyclePoint.Y + 1);
@@ -42,13 +43,13 @@ namespace WorkoutStorageBot.Helpers.Export
                 int newCyclePointY = 0;
 
                 string informationAboutSelectedPeriod = filterDateTime > DateTime.MinValue
-                                ? $"Временной промежуток формирования данных {filterDateTime.ToShortDateString()} - {filterDateTime.AddMonths(monthFilterPeriod).ToString()}"
+                                ? $"Временной промежуток формирования данных {filterDateTime.ToString(CommonConsts.Common.DateFormat)} - {filterDateTime.AddMonths(monthFilterPeriod).ToString(CommonConsts.Common.DateFormat)}"
                                 : "Тренировки, зафиксированные за всё время";
 
                 // informationAboutSelectedPeriod
-                SetStyle(mainSheet.Cells[informationAboutSelectedPeriodPoint.Y, informationAboutSelectedPeriodPoint.X, 
-                                         informationAboutSelectedPeriodPoint.Y, informationAboutSelectedPeriodPoint.X + 7], 
-                                         needMerge: true, 
+                SetStyle(mainSheet.Cells[informationAboutSelectedPeriodPoint.Y, informationAboutSelectedPeriodPoint.X,
+                                         informationAboutSelectedPeriodPoint.Y, informationAboutSelectedPeriodPoint.X + 7],
+                                         needMerge: true,
                                          needBorder: true,
                                          backgroundCellColor: Color.Azure);
                 mainSheet.Cells[informationAboutSelectedPeriodPoint.Y, informationAboutSelectedPeriodPoint.X].Value = informationAboutSelectedPeriod;
@@ -143,7 +144,7 @@ namespace WorkoutStorageBot.Helpers.Export
              * Ставит текст в теги и комментарии к документу, что сделано при помощи EPPlus по некоммерческой лицензии
              * для такого то проекта (указывается строка в аргументе).
              * В целом, совсем не мешает, но пускай остаётся старая версия "без" этих доп. надписей.
-            */ 
+            */
             //ExcelPackage.License.SetNonCommercialPersonal("WorkoutStorageBot");
         }
 
@@ -179,7 +180,7 @@ namespace WorkoutStorageBot.Helpers.Export
 
             SetStyle(mainSheet.Cells[resultExercisePoint.Y, resultExercisePoint.X], needBorder: true, needBold: true, backgroundCellColor: Color.Yellow);
             if (isNeedWriteDate)
-                mainSheet.Cells[resultExercisePoint.Y, resultExercisePoint.X].Value = resultExercise.DateTime.ToShortDateString();
+                mainSheet.Cells[resultExercisePoint.Y, resultExercisePoint.X].Value = resultExercise.DateTime.ToString(CommonConsts.Common.DateFormat);
 
             resultExercisePoint.X += 1;
             SetStyle(mainSheet.Cells[resultExercisePoint.Y, resultExercisePoint.X], needBorder: true, backgroundCellColor: backgroundCellColor);
@@ -206,20 +207,20 @@ namespace WorkoutStorageBot.Helpers.Export
             mainSheet.Cells[startCyclePoint.Y, startCyclePoint.X].Value = cycleName;
         }
 
-        private static void SetStyle(ExcelRange excelRange, 
-                                     bool needMerge = false, 
-                                     bool needBorder = false, 
+        private static void SetStyle(ExcelRange excelRange,
+                                     bool needMerge = false,
+                                     bool needBorder = false,
                                      bool needWrapText = false,
                                      bool needBold = false,
-                                     Color backgroundCellColor = default, 
-                                     ExcelHorizontalAlignment horizontalAlignment = ExcelHorizontalAlignment.Center, 
+                                     Color backgroundCellColor = default,
+                                     ExcelHorizontalAlignment horizontalAlignment = ExcelHorizontalAlignment.Center,
                                      ExcelVerticalAlignment verticalAlignment = ExcelVerticalAlignment.Center)
         {
             if (backgroundCellColor == default)
                 backgroundCellColor = Color.White;
 
-            excelRange.Merge = needMerge;              
-           
+            excelRange.Merge = needMerge;
+
             if (needBorder)
                 excelRange.Style.Border.BorderAround(ExcelBorderStyle.Thin);
 

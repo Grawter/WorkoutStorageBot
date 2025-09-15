@@ -1,5 +1,6 @@
 ﻿#region using
 using System.Text;
+using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.Extenions;
 using WorkoutStorageBot.Model.DomainsAndEntities;
 #endregion
@@ -19,7 +20,7 @@ namespace WorkoutStorageBot.Helpers.BusinessLogicHelpers
 
             IEnumerable<IGrouping<int, ResultExercise>> groupsResultsExercise = resultsExercises.GroupBy(x => x.ExerciseId);
 
-            sb.AppendLine($"Дата: {firstResultExercise.DateTime.ToShortDateString()}");
+            sb.AppendLine($"Дата: {firstResultExercise.DateTime.ToString(CommonConsts.Common.DateFormat)}");
 
             foreach (IGrouping<int, ResultExercise> groupResultExercise in groupsResultsExercise)
             {
@@ -51,7 +52,7 @@ namespace WorkoutStorageBot.Helpers.BusinessLogicHelpers
             {
                 ResultExercise firstResultExercise = groupResultExercise.First();
 
-                sb.AppendLine($"Упражнение: {firstResultExercise.Exercise.Name.AddBoldAndQuotes()} | Дата: {firstResultExercise.DateTime.ToShortDateString().AddBoldAndQuotes()}");
+                sb.AppendLine($"Упражнение: {firstResultExercise.Exercise.Name.AddBoldAndQuotes()} | Дата: {firstResultExercise.DateTime.ToString(CommonConsts.Common.DateFormat).AddBoldAndQuotes()}");
 
                 foreach (ResultExercise resultExercise in groupResultExercise)
                 {
