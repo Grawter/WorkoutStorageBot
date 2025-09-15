@@ -63,9 +63,17 @@ namespace WorkoutStorageBot.Helpers.Export
 
                             SetResultTitle(resultTitlePoint, mainSheet);
 
+                            DateTime tempDate = DateTime.MinValue;
                             foreach (ResultExercise resultExercise in exercise.ResultsExercise)
                             {
-                                SetResultExercise(++resultExerciseRowNumber, resultExercise, resultExercisePoint, mainSheet);
+                                bool isNeedWriteDate = false;
+                                if (tempDate.Date != resultExercise.DateTime.Date)
+                                {
+                                    tempDate = resultExercise.DateTime.Date;
+                                    isNeedWriteDate = true;
+                                }
+
+                                SetResultExercise(++resultExerciseRowNumber, resultExercise, resultExercisePoint, mainSheet, isNeedWriteDate);
 
                                 // shift to next (row) resultExercisePoint
                                 resultExercisePoint.X = exercisePoint.X;
@@ -163,12 +171,13 @@ namespace WorkoutStorageBot.Helpers.Export
             mainSheet.Cells[resultTitlePoint.Y, resultTitlePoint.X].Value = "Свободный рез.";
         }
 
-        private static void SetResultExercise(int rowNumber, ResultExercise resultExercise, Point resultExercisePoint, ExcelWorksheet mainSheet)
+        private static void SetResultExercise(int rowNumber, ResultExercise resultExercise, Point resultExercisePoint, ExcelWorksheet mainSheet, bool isNeedWriteDate = true)
         {
             Color backgroundCellColor = GetColorForRow(rowNumber);
 
-            SetStyle(mainSheet.Cells[resultExercisePoint.Y, resultExercisePoint.X], false, true, false, Color.Yellow);
-            mainSheet.Cells[resultExercisePoint.Y, resultExercisePoint.X].Value = resultExercise.DateTime.ToShortDateString();
+            SetStyle(mainSheet.Cells[resultExercisePoint.Y, resultExercisePoint.X], false, true, false, Color.Yellow, needBold: true);
+            if (isNeedWriteDate)
+                mainSheet.Cells[resultExercisePoint.Y, resultExercisePoint.X].Value = resultExercise.DateTime.ToShortDateString();
 
             resultExercisePoint.X += 1;
             SetStyle(mainSheet.Cells[resultExercisePoint.Y, resultExercisePoint.X], false, true, false, backgroundCellColor);
@@ -199,7 +208,8 @@ namespace WorkoutStorageBot.Helpers.Export
             bool needMerge, bool needBorder, bool wrapText, 
             Color backgroundCellColor, 
             ExcelHorizontalAlignment horizontalAlignment = ExcelHorizontalAlignment.Center, 
-            ExcelVerticalAlignment verticalAlignment = ExcelVerticalAlignment.Center)
+            ExcelVerticalAlignment verticalAlignment = ExcelVerticalAlignment.Center,
+            bool needBold = false)
         {
             excelRange.Merge = needMerge;              
            
@@ -211,6 +221,7 @@ namespace WorkoutStorageBot.Helpers.Export
             excelRange.Style.Fill.PatternType = ExcelFillStyle.Solid;
             excelRange.Style.Fill.BackgroundColor.SetColor(backgroundCellColor);
             excelRange.Style.WrapText = wrapText;
+            excelRange.Style.Font.Bold = needBold;
         }
 
         private static Color GetColorForRow(int rowNumber)
