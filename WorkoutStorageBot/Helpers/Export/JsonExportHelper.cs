@@ -1,5 +1,6 @@
 ﻿#region using
 
+using Microsoft.IO;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -14,13 +15,20 @@ namespace WorkoutStorageBot.Helpers.Export
 {
     internal static class JsonExportHelper
     {
-        internal static byte[] GetJSONFileByte(List<Cycle> cycles, IQueryable<ResultExercise> resultsExercises, int monthFilterPeriod)
+        internal static RecyclableMemoryStream GetJSONFile(List<Cycle> cycles, IQueryable<ResultExercise> resultsExercises, int monthFilterPeriod)
         {
             string json = GetJSONFileStrl(cycles, resultsExercises, monthFilterPeriod);
 
             byte[] byteJson = new UTF8Encoding(true).GetBytes(json);
 
-            return byteJson;
+            RecyclableMemoryStream recyclableMemoryStream = CommonExportHelper.RecyclableMSManager.GetStream();
+
+            using (StreamWriter writer = new StreamWriter(recyclableMemoryStream, Encoding.UTF8, leaveOpen: true))
+            {
+                writer.Write(json);
+            }
+
+            return recyclableMemoryStream;
         }
 
         internal static string GetJSONFileStrl(List<Cycle> cycles, IQueryable<ResultExercise> resultsExercises, int monthFilterPeriod)

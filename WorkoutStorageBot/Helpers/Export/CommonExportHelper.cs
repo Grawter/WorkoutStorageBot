@@ -1,12 +1,15 @@
 ﻿#region using
 
 using WorkoutStorageBot.Model.DomainsAndEntities;
+using Microsoft.IO;
 
 #endregion
 namespace WorkoutStorageBot.Helpers.Export
 {
     internal static class CommonExportHelper
     {
+        internal static RecyclableMemoryStreamManager RecyclableMSManager { get; } = new RecyclableMemoryStreamManager();
+
         internal static DateTime GetFilterDateTime(int monthFilterPeriod, IQueryable<ResultExercise> fromDBData)
         {
             DateTime filterDateTime = DateTime.MinValue;

@@ -1,5 +1,6 @@
 ﻿#region using
 
+using Microsoft.IO;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.CoreRepositories.Repositories;
 using WorkoutStorageBot.BusinessLogic.Enums;
@@ -874,15 +875,15 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
                 this.CommandHandlerTools.CurrentUserContext.LimitsManager.AddOrUpdateTimeLimit("Export", DateTime.Now.AddHours(6));
 
-                byte[] file = new byte[0];
+                RecyclableMemoryStream recyclableMemoryStream;
 
                 switch (fileExtenstion)
                 {
                     case ".xlsx":
-                        file = ExcelExportHelper.GetExcelFile(this.CommandHandlerTools.CurrentUserContext.UserInformation.Cycles, resultsExercisesForExcel, monthFilterPeriod);
+                        recyclableMemoryStream = ExcelExportHelper.GetExcelFile(this.CommandHandlerTools.CurrentUserContext.UserInformation.Cycles, resultsExercisesForExcel, monthFilterPeriod);
                     break;
                     case ".json":
-                        file = JsonExportHelper.GetJSONFileByte(this.CommandHandlerTools.CurrentUserContext.UserInformation.Cycles, resultsExercisesForExcel, monthFilterPeriod);
+                        recyclableMemoryStream = JsonExportHelper.GetJSONFile(this.CommandHandlerTools.CurrentUserContext.UserInformation.Cycles, resultsExercisesForExcel, monthFilterPeriod);
                     break;
                     default:
                         throw new NotSupportedException("Неподдерживаемый формат экспорта");
@@ -890,7 +891,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
                 string fileName = $"Workout{fileExtenstion}";
 
-                result = new FileInformationSet(new MemoryStream(file), fileName, $"Тренировки успешно экспортированы!", buttonsSets);
+                recyclableMemoryStream.Position = 0;
+
+                result = new FileInformationSet(recyclableMemoryStream, fileName, $"Тренировки успешно экспортированы!", buttonsSets);
             }
 
             return result;

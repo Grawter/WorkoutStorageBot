@@ -5,6 +5,7 @@ using OfficeOpenXml.Style;
 using System.Drawing;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.Model.DomainsAndEntities;
+using Microsoft.IO;
 
 #endregion
 
@@ -12,7 +13,7 @@ namespace WorkoutStorageBot.Helpers.Export
 {
     internal static class ExcelExportHelper
     {
-        internal static byte[] GetExcelFile(List<Cycle> cycles, IQueryable<ResultExercise> resultsExercises, int monthFilterPeriod)
+        internal static RecyclableMemoryStream GetExcelFile(List<Cycle> cycles, IQueryable<ResultExercise> resultsExercises, int monthFilterPeriod)
         {
             SetLicense();
 
@@ -20,6 +21,8 @@ namespace WorkoutStorageBot.Helpers.Export
             CommonExportHelper.LoadDBDataToDBContextForFilterDate(resultsExercises, filterDateTime);
 
             byte[] packageInfo;
+
+            RecyclableMemoryStream recyclableMemoryStream = CommonExportHelper.RecyclableMSManager.GetStream();
 
             using (ExcelPackage package = new ExcelPackage())
             {
@@ -129,9 +132,9 @@ namespace WorkoutStorageBot.Helpers.Export
 
                 mainSheet.Cells.AutoFitColumns();
 
-                package.Save();
+                package.SaveAs(recyclableMemoryStream);
 
-                return package.GetAsByteArray();
+                return recyclableMemoryStream;
             }
         }
 
