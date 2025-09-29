@@ -17,7 +17,7 @@ namespace WorkoutStorageBot.Helpers.Export
     {
         internal static RecyclableMemoryStream GetJSONFile(List<Cycle> cycles, IQueryable<ResultExercise> resultsExercises, int monthFilterPeriod)
         {
-            string json = GetJSONFileStrl(cycles, resultsExercises, monthFilterPeriod);
+            string json = GetJSONFileStr(cycles, resultsExercises, monthFilterPeriod);
 
             byte[] byteJson = new UTF8Encoding(true).GetBytes(json);
 
@@ -31,7 +31,7 @@ namespace WorkoutStorageBot.Helpers.Export
             return recyclableMemoryStream;
         }
 
-        internal static string GetJSONFileStrl(List<Cycle> cycles, IQueryable<ResultExercise> resultsExercises, int monthFilterPeriod)
+        internal static string GetJSONFileStr(List<Cycle> cycles, IQueryable<ResultExercise> resultsExercises, int monthFilterPeriod)
         {
             ArgumentNullException.ThrowIfNull(cycles);
             ArgumentNullException.ThrowIfNull(resultsExercises);
