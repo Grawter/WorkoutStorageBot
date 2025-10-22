@@ -26,7 +26,12 @@ namespace WorkoutStorageBot.BusinessLogic.GlobalContext
             => memoryCacheContextStore.Get<UserContext?>(userID);
 
         void IContextKeeper.AddContext(long userID, UserContext userContext)
-            => memoryCacheContextStore.Set(userID, userContext, memoryCacheEntryOptions);
+        {
+            if (userID < 1 || userContext == null)
+                throw new InvalidOperationException($"Аномалия: Попытка добавления некорректных данных в глобальный контекст!");
+
+            memoryCacheContextStore.Set(userID, userContext, memoryCacheEntryOptions);
+        }
 
         void IContextKeeper.RemoveContext(long userID)
             => memoryCacheContextStore.Remove(userID);

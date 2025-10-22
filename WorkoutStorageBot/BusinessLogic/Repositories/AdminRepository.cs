@@ -12,23 +12,11 @@ using WorkoutStorageBot.Model.HandlerData;
 
 #endregion
 
-namespace WorkoutStorageBot.BusinessLogic.CoreRepositories.Repositories
+namespace WorkoutStorageBot.BusinessLogic.Repositories
 {
     internal class AdminRepository : CoreRepository
     {
         internal AdminRepository(CoreTools coreTools, CoreManager coreManager) : base(coreTools, coreManager, nameof(AdminRepository))
-        {
-            ConfigurationData configurationData = CommonHelper.GetIfNotNull(coreTools.ConfigurationData);
-
-            Logger = CommonHelper.GetIfNotNull(coreTools.LoggerFactory).CreateLogger<AdminRepository>();
-
-            WhiteListIsEnable = configurationData.Bot.WhiteListIsEnable;
-            OwnersChatIDs = configurationData.Bot.OwnersChatIDs;
-
-            SaveConfigurationData = ConfigurationManager.GetSerializedSaveDeepCopy(configurationData);
-        }
-
-        internal AdminRepository(CoreTools coreTools) : base(coreTools, nameof(AdminRepository))
         {
             ConfigurationData configurationData = CommonHelper.GetIfNotNull(coreTools.ConfigurationData);
 
@@ -46,7 +34,7 @@ namespace WorkoutStorageBot.BusinessLogic.CoreRepositories.Repositories
 
         internal string SaveConfigurationData { get;} 
 
-        private ILogger<AdminRepository> Logger { get; }
+        private ILogger Logger { get; }
 
         internal void ChangeWhiteListMode()
         {

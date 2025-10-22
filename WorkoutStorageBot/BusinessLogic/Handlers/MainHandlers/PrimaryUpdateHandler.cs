@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using WorkoutStorageBot.BusinessLogic.Consts;
-using WorkoutStorageBot.BusinessLogic.CoreRepositories.Repositories;
+using WorkoutStorageBot.BusinessLogic.Repositories;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.GlobalContext;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
@@ -23,26 +23,23 @@ using WorkoutStorageBot.Model.HandlerData.Results.UpdateInfo;
 
 #endregion
 
-namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers
+namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
 {
     internal class PrimaryUpdateHandler : CoreHandler
     {
-        private ContextStore ContextStore { get; }
+        private IContextKeeper ContextKeeper { get; }
+
+        private AdminRepository AdminRepository { get; }
 
         protected override ILogger Logger { get; }
 
-        internal PrimaryUpdateHandler(CoreTools coreTools, CoreManager coreManager) : base(coreTools, coreManager, nameof(PrimaryUpdateHandler))
+        internal PrimaryUpdateHandler(CoreTools coreTools, CoreManager coreManager, IContextKeeper contextKeeper) : base(coreTools, coreManager, nameof(PrimaryUpdateHandler))
         {
-            Logger = CoreTools.LoggerFactory.CreateLogger<PrimaryUpdateHandler>();
+            this.Logger = CoreTools.LoggerFactory.CreateLogger<PrimaryUpdateHandler>();
 
-            ContextStore = new ContextStore(CommonHelper.GetIfNotNull(coreTools.ConfigurationData.Bot.IsNeedCacheContext));
-        }
+            this.ContextKeeper = CommonHelper.GetIfNotNull(contextKeeper);
 
-        internal PrimaryUpdateHandler(CoreTools coreTools) : base(coreTools, nameof(PrimaryUpdateHandler))
-        {
-            Logger = CoreTools.LoggerFactory.CreateLogger<PrimaryUpdateHandler>();
-
-            ContextStore = new ContextStore(CommonHelper.GetIfNotNull(coreTools.ConfigurationData.Bot.IsNeedCacheContext));
+            this.AdminRepository = CoreManager.GetRequiredRepository<AdminRepository>();
         }
 
         internal override PrimaryHandlerResult Process(HandlerResult handlerResult)
@@ -88,37 +85,35 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers
 
         private void TryGetContextAndAccess(PrimaryHandlerResult primaryHandledData)
         {
-            AdminRepository adminRepository = CoreManager.GetRepository<AdminRepository>();
-
             User user = primaryHandledData.ShortUpdateInfo.User;
 
-            if (!ContextStore.HasContext(user.Id))
+            if (!ContextKeeper.HasContext(user.Id))
             {
-                AddNewContext(primaryHandledData, adminRepository);
+                AddNewContext(primaryHandledData);
                 primaryHandledData.IsNewContext = true;
             }
             else
             {
-                primaryHandledData.CurrentUserContext = ContextStore.GetContext(user.Id) 
+                primaryHandledData.CurrentUserContext = ContextKeeper.GetContext(user.Id) 
                     ?? throw new InvalidOperationException($"Аномалия: Не удалось найти userContext с userID: '{user.Id}'");
-                primaryHandledData.HasAccess = adminRepository.UserHasAccess(primaryHandledData.CurrentUserContext.UserInformation);
+                primaryHandledData.HasAccess = AdminRepository.UserHasAccess(primaryHandledData.CurrentUserContext.UserInformation);
                 primaryHandledData.IsNewContext = false;
             }
         }
 
-        private void AddNewContext(PrimaryHandlerResult primaryHandledData, AdminRepository adminRepository)
+        private void AddNewContext(PrimaryHandlerResult primaryHandledData)
         {
-            UserInformation currentUser = adminRepository.GetFullUserInformation(primaryHandledData.ShortUpdateInfo.User.Id)
-                ?? adminRepository.CreateNewUser(primaryHandledData.ShortUpdateInfo.User);
+            UserInformation currentUser = AdminRepository.GetFullUserInformation(primaryHandledData.ShortUpdateInfo.User.Id)
+                ?? AdminRepository.CreateNewUser(primaryHandledData.ShortUpdateInfo.User);
 
-            primaryHandledData.HasAccess = adminRepository.UserHasAccess(currentUser);
+            primaryHandledData.HasAccess = AdminRepository.UserHasAccess(currentUser);
 
             if (primaryHandledData.HasAccess)
             {
-                Roles currentRoles = GetUserRoles(currentUser, adminRepository);
+                Roles currentRoles = GetUserRoles(currentUser, AdminRepository);
 
                 primaryHandledData.CurrentUserContext = new UserContext(currentUser, currentRoles, CoreTools.ConfigurationData.Bot.IsNeedLimits);
-                ContextStore.AddContext(primaryHandledData.ShortUpdateInfo.User.Id, primaryHandledData.CurrentUserContext);
+                ContextKeeper.AddContext(primaryHandledData.ShortUpdateInfo.User.Id, primaryHandledData.CurrentUserContext);
             }
         }
 
@@ -154,7 +149,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers
 
             string message = $"Неподдерживаемый тип сообщения: {textUpdateType}";
 
-            EventId eventId = EventIDHelper.GetNextEventId(CommonConsts.EventNames.NotSupportedUpdateType);
+            EventId eventId = EventIDHelper.GetNextEventIdThreadSave(CommonConsts.EventNames.NotSupportedUpdateType);
 
             primaryHandledData.InformationSet = new MessageInformationSet($"{message} | EventId: {eventId.Id}");
             primaryHandledData.IsNeedContinue = false;
@@ -193,7 +188,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers
                     break;
             }
 
-            EventId eventId = EventIDHelper.GetNextEventId(CommonConsts.EventNames.ExpectedUpdateType);
+            EventId eventId = EventIDHelper.GetNextEventIdThreadSave(CommonConsts.EventNames.ExpectedUpdateType);
 
             Logger.Log(logLevel,
                        eventId,
@@ -238,7 +233,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers
 
         internal void DeleteContext(long userID)
         {
-            ContextStore.RemoveContext(userID);
+            ContextKeeper.RemoveContext(userID);
         }
     }
 }

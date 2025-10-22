@@ -15,10 +15,5 @@ namespace WorkoutStorageBot.Core.Abstraction
         {
             HandlerName = handlerName;
         }
-
-        protected CoreRepository(CoreTools coreTools, string handlerName) : base(coreTools)
-        { 
-            HandlerName = handlerName;
-        }
     }
 }

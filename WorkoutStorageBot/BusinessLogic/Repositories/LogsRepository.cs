@@ -7,41 +7,36 @@ using WorkoutStorageBot.Model.Logging;
 
 #endregion
 
-namespace WorkoutStorageBot.BusinessLogic.CoreRepositories.Repositories
+namespace WorkoutStorageBot.BusinessLogic.Repositories
 {
     internal class LogsRepository : CoreRepository
     {
         internal LogsRepository(CoreTools coreTools, CoreManager coreManager) : base(coreTools, coreManager, nameof(AdminRepository))
-        {
-        }
-
-        internal LogsRepository(CoreTools coreTools) : base(coreTools, nameof(AdminRepository))
-        {
-        }
+        {}
 
         internal IQueryable<Log> GetLogs(int count)
         {
-            return this.CoreTools.Db.Logs.OrderByDescending(x => x.Id)
+            return CoreTools.Db.Logs.OrderByDescending(x => x.Id)
                                          .Take(count);
         }
 
         internal IQueryable<Log> GetLogs(string logLevel, int count)
         {
-            IQueryable<Log> predResult = this.CoreTools.Db.Logs.Where(x => x.LogLevel == logLevel);
+            IQueryable<Log> predResult = CoreTools.Db.Logs.Where(x => x.LogLevel == logLevel);
 
             return GetLogs(predResult, count);
         }
 
         internal IQueryable<Log> GetLogs(int eventID, int count)
         {
-            IQueryable<Log> predResult = this.CoreTools.Db.Logs.Where(x => x.EventID == eventID);
+            IQueryable<Log> predResult = CoreTools.Db.Logs.Where(x => x.EventID == eventID);
 
             return GetLogs(predResult, count);
         }
 
         internal IQueryable<Log> GetLogsById(int id, int count)
         {
-            IQueryable<Log> predResult = this.CoreTools.Db.Logs.Where(x => x.Id == id);
+            IQueryable<Log> predResult = CoreTools.Db.Logs.Where(x => x.Id == id);
 
             return GetLogs(predResult, count);
         }

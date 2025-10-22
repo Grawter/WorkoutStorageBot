@@ -2,17 +2,22 @@
 
 using Microsoft.Extensions.Logging;
 using Telegram.Bot.Types;
+using WorkoutStorageBot.Application.BotTools.Logging;
 using WorkoutStorageBot.Application.BotTools.Sender;
 using WorkoutStorageBot.Application.Configuration;
 using WorkoutStorageBot.BusinessLogic.Consts;
-using WorkoutStorageBot.BusinessLogic.CoreRepositories.Repositories;
+using WorkoutStorageBot.BusinessLogic.Repositories;
+using WorkoutStorageBot.BusinessLogic.GlobalContext;
+using WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.BusinessLogic.SessionContext;
 using WorkoutStorageBot.Core.Abstraction;
 using WorkoutStorageBot.Helpers.Common;
 using WorkoutStorageBot.Helpers.EventIDHelper;
 using WorkoutStorageBot.Helpers.Updates;
+using WorkoutStorageBot.Model.AppContext;
 using WorkoutStorageBot.Model.DomainsAndEntities;
+using WorkoutStorageBot.Model.HandlerData;
 using WorkoutStorageBot.Model.HandlerData.Results;
 using WorkoutStorageBot.Model.HandlerData.Results.UpdateInfo;
 
@@ -22,17 +27,13 @@ namespace WorkoutStorageBot.Core.Manager
 {
     internal class CoreManager
     {
-        internal CoreManager(List<CoreHandler> handlers,
-                             List<CoreRepository> repositories,
-                             ConfigurationData configurationData,
+        internal CoreManager(ConfigurationData configurationData,
+                             EntityContext db,
+                             IContextKeeper contextKeeper,
                              IBotResponseSender botResponseSender,
-                             ILoggerFactory loggerFactory,
+                             ICustomLoggerFactory loggerFactory,
                              CancellationTokenSource cancellationTokenSource)
         {
-            this.Handlers = CommonHelper.GetIfNotNull(handlers);
-
-            this.Repositories = CommonHelper.GetIfNotNull(repositories);
-
             this.ConfigurationData = CommonHelper.GetIfNotNull(configurationData);
 
             this.loggerFactory = CommonHelper.GetIfNotNull(loggerFactory);
@@ -43,7 +44,24 @@ namespace WorkoutStorageBot.Core.Manager
 
             this.cancellationTokenSource = CommonHelper.GetIfNotNull(cancellationTokenSource);
 
-            ResetCoreManager();
+            CoreTools coreTools = new CoreTools()
+            {
+                Db = db,
+                LoggerFactory = loggerFactory,
+                ConfigurationData = configurationData
+            };
+
+            this.Repositories = new List<CoreRepository>()
+            {
+                new AdminRepository(coreTools, this),
+                new LogsRepository(coreTools, this),
+            };
+
+            this.Handlers = new List<CoreHandler>()
+            {
+                new PrimaryUpdateHandler(coreTools, this, contextKeeper),
+                new UpdateHandler(coreTools, this),
+            };
         }
 
         internal List<CoreHandler> Handlers { get; }
@@ -53,20 +71,16 @@ namespace WorkoutStorageBot.Core.Manager
 
         private IBotResponseSender BotResponseSender { get; }
 
-        private readonly ILoggerFactory loggerFactory;
+        private readonly ICustomLoggerFactory loggerFactory;
 
-        private readonly ILogger<CoreManager> logger;
+        private readonly ILogger logger;
 
         private readonly CancellationTokenSource cancellationTokenSource;
 
         internal CancellationToken CancellationToken => cancellationTokenSource.Token;
 
-        private static readonly SemaphoreSlim processSemaphore = new SemaphoreSlim(1, 1);
-
         internal async Task ProcessUpdate(Update update)
         {
-            await processSemaphore.WaitAsync(); // входим в критическую секцию
-
             try
             {
                 await StartProcess(update);
@@ -74,10 +88,6 @@ namespace WorkoutStorageBot.Core.Manager
             catch (Exception ex)
             {
                 await ProcessError(ex, update);
-            }
-            finally
-            {
-                processSemaphore.Release(); // освобождаем секцию
             }
         }
 
@@ -111,7 +121,7 @@ namespace WorkoutStorageBot.Core.Manager
         {
             IUpdateInfo updateInfo = UpdatesHelper.GetUpdateInfo(update);
 
-            EventId eventId = EventIDHelper.GetNextEventId(CommonConsts.EventNames.RuntimeError);
+            EventId eventId = EventIDHelper.GetNextEventIdThreadSave(CommonConsts.EventNames.RuntimeError);
 
             await LogRuntimeError(updateInfo, eventId, ex);
 
@@ -158,61 +168,42 @@ namespace WorkoutStorageBot.Core.Manager
             if (userId == null)
                 return false;
 
-            AdminRepository adminRepository = GetRepository<AdminRepository>(false);
-
-            if (adminRepository == null)
-                return false;
+            AdminRepository adminRepository = GetRequiredRepository<AdminRepository>();
 
             UserInformation? userInformation = adminRepository.GetUserInformation(userId.Value);
 
             return userInformation != null && adminRepository.UserHasAccess(userInformation);
         }
 
-        private void ResetCoreManager()
-        {
-            foreach (CoreHandler handler in Handlers)
-            {
-                handler.TryResetCoreManager(this);
-            }
-
-            foreach (CoreRepository repository in Repositories)
-            {
-                repository.TryResetCoreManager(this);
-            }
-        }
-
         private async Task SendResponse(long chatId, IInformationSet messageInformationSetting, UserContext currentUserContext)
             => await BotResponseSender.SendResponse(chatId, messageInformationSetting, currentUserContext);
 
-        internal T? GetHandler<T>(bool throwNotFoundEx = true) where T : CoreHandler
+        internal T GetRequiredHandler<T>() where T : CoreHandler
         {
-            T? handler = Handlers.OfType<T>().FirstOrDefault();
+            T? handler = GetHandler<T>();
 
             if (handler == null)
-            {
-                if (throwNotFoundEx)
-                    throw new InvalidOperationException($"Обработчик {typeof(T).Name} не найден");
-                else
-                    return default;
-            }
+            
+                throw new InvalidOperationException($"Обработчик {typeof(T).Name} не найден");
 
             return handler;
         }
 
-        internal T? GetRepository<T>(bool throwNotFoundEx = true) where T : CoreRepository
+        internal T? GetHandler<T>() where T : CoreHandler
+            => Handlers.OfType<T>().FirstOrDefault();
+
+        internal T GetRequiredRepository<T>() where T : CoreRepository
         {
-            T? repository = Repositories.OfType<T>().FirstOrDefault();
+            T? repository = GetRepository<T>();
 
             if (repository == null)
-            {
-                if (throwNotFoundEx)
-                    throw new InvalidOperationException($"Репозиторий {typeof(T).Name} не найден");
-                else
-                    return default;
-            }
+                throw new InvalidOperationException($"Репозиторий {typeof(T).Name} не найден");
 
             return repository;
         }
+
+        internal T? GetRepository<T>() where T : CoreRepository
+            => Repositories.OfType<T>().FirstOrDefault();
 
         internal async Task StopManaging(TimeSpan timeSpan)
         {

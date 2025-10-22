@@ -17,16 +17,13 @@ using WorkoutStorageBot.Model.HandlerData.Results.UpdateInfo;
 
 #endregion
 
-namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers
+namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
 {
     internal class UpdateHandler : CoreHandler
     {
-        private UserContext CurrentUserContext { get; set; }
+        private  UserContext CurrentUserContext { get; set; }
 
         internal UpdateHandler(CoreTools coreTools, CoreManager coreManager) : base(coreTools, coreManager, nameof(PrimaryUpdateHandler))
-        { }
-
-        internal UpdateHandler(CoreTools coreTools) : base(coreTools, nameof(PrimaryUpdateHandler))
         { }
 
         internal override UpdateHandlerResult Process(HandlerResult handlerResult)

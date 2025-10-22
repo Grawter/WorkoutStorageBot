@@ -1,10 +1,10 @@
 ﻿#region using
 using WorkoutStorageBot.BusinessLogic.Consts;
-using WorkoutStorageBot.BusinessLogic.CoreRepositories.Repositories;
+using WorkoutStorageBot.BusinessLogic.Repositories;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.Exceptions;
 using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommandHandler;
-using WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers;
+using WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.Extenions;
 using WorkoutStorageBot.Helpers.Common;
@@ -446,7 +446,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             if (AccessDenied())
                 return this;
 
-            LogsRepository logsRepository = this.CommandHandlerTools.ParentHandler.CoreManager.GetRepository<LogsRepository>()!;
+            LogsRepository logsRepository = this.CommandHandlerTools.ParentHandler.CoreManager.GetRequiredRepository<LogsRepository>();
 
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.AdminLogs, ButtonsSet.Admin);
@@ -494,7 +494,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             if (AccessDenied())
                 return this;
 
-            AdminRepository adminRepository = this.CommandHandlerTools.ParentHandler.CoreManager.GetRepository<AdminRepository>()!;
+            AdminRepository adminRepository = this.CommandHandlerTools.ParentHandler.CoreManager.GetRequiredRepository<AdminRepository>();
 
             ResponseTextConverter responseConverter = default;
             (ButtonsSet, ButtonsSet) buttonsSets;
@@ -555,7 +555,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             if (AccessDenied())
                 return this;
 
-            AdminRepository adminRepository = this.CommandHandlerTools.ParentHandler.CoreManager.GetRepository<AdminRepository>()!;
+            AdminRepository adminRepository = this.CommandHandlerTools.ParentHandler.CoreManager.GetRequiredRepository<AdminRepository>();
 
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
@@ -571,7 +571,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 responseConverter = new ResponseTextConverter($"Пользователь '{userIdentity.AddBoldAndQuotes()}' не найден!", "Выберите интересующее действие");
             else
             {
-                PrimaryUpdateHandler handler = this.CommandHandlerTools.ParentHandler.CoreManager.GetHandler<PrimaryUpdateHandler>()!;
+                PrimaryUpdateHandler handler = this.CommandHandlerTools.ParentHandler.CoreManager.GetRequiredHandler<PrimaryUpdateHandler>();
                 handler.DeleteContext(user.UserId);
 
                 adminRepository.DeleteAccount(user);

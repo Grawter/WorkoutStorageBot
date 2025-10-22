@@ -2,7 +2,7 @@
 
 using Microsoft.Extensions.Logging;
 using System.Text;
-using WorkoutStorageBot.BusinessLogic.CoreRepositories.Repositories;
+using WorkoutStorageBot.BusinessLogic.Repositories;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommandHandler;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
@@ -19,14 +19,14 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 {
     internal class AdminCH : CallBackCH
     {
-        private ILogger<AdminCH> Logger { get; }
+        private ILogger Logger { get; }
         private AdminRepository AdminRepository { get; }
         private LogsRepository LogsRepository { get; }
 
         internal AdminCH(CommandHandlerData commandHandlerTools, CallbackQueryParser callbackQueryParser) : base(commandHandlerTools, callbackQueryParser)
         {
-            AdminRepository = this.CommandHandlerTools.ParentHandler.CoreManager.GetRepository<AdminRepository>()!;
-            LogsRepository = this.CommandHandlerTools.ParentHandler.CoreManager.GetRepository<LogsRepository>()!;
+            AdminRepository = this.CommandHandlerTools.ParentHandler.CoreManager.GetRequiredRepository<AdminRepository>();
+            LogsRepository = this.CommandHandlerTools.ParentHandler.CoreManager.GetRequiredRepository<LogsRepository>();
 
             Logger = CommonHelper.GetIfNotNull(commandHandlerTools.ParentHandler.CoreTools.LoggerFactory).CreateLogger<AdminCH>();
         }
@@ -96,7 +96,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             Log? lastErrorLog = LogsRepository.GetLogs(LogLevel.Error.ToString(), 1).FirstOrDefault();
             Log? lastCriticalLog = LogsRepository.GetLogs(LogLevel.Critical.ToString(), 1).FirstOrDefault();
 
-            List<Log> exceptionLogs = new List<Log>() { lastErrorLog, lastCriticalLog };
+            List<Log?> exceptionLogs = new List<Log?>() { lastErrorLog, lastCriticalLog };
 
             bool isNotFirstStr = false;
             StringBuilder sb = new StringBuilder();

@@ -20,8 +20,6 @@ namespace WorkoutStorageBot.Model.AppContext
         public DbSet<ImportInfo> ImportInfo => Set<ImportInfo>();
 
         public EntityContext(DbContextOptions<EntityContext> options) : base(options)
-        {
-            Database.EnsureCreated();
-        }
+        { }
     }
 }

@@ -1,16 +1,20 @@
 ﻿#region using
 
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using WorkoutStorageBot.Application.BotTools.Logging;
 using WorkoutStorageBot.Application.BotTools.Sender;
 using WorkoutStorageBot.Application.Configuration;
 using WorkoutStorageBot.BusinessLogic.Consts;
+using WorkoutStorageBot.BusinessLogic.GlobalContext;
 using WorkoutStorageBot.Core.Manager;
 using WorkoutStorageBot.Helpers.Common;
 using WorkoutStorageBot.Helpers.EventIDHelper;
+using WorkoutStorageBot.Model.AppContext;
 
 #endregion
 
@@ -18,35 +22,39 @@ namespace WorkoutStorageBot.Application.BotTools.Listener
 {
     internal class BotListener
     {
+        private readonly IServiceScopeFactory scopeFactory;
+
+        private readonly IContextKeeper contextKeeper;
+
         private readonly ITelegramBotClient botClient;
 
         private readonly IBotResponseSender botSender;
 
-        private readonly CoreManager coreManager;
-
         private readonly ConfigurationData configurationData;
 
-        private readonly ILogger<BotListener> logger;
+        private CancellationTokenSource cancellationTokenSource;
 
-        public BotListener(ITelegramBotClient botClient,
+        public BotListener(IServiceScopeFactory scopeFactory,
+                           IContextKeeper contextKeeper,
+                           ITelegramBotClient botClient,
                            IBotResponseSender botSender,
-                           CoreManager coreManager,
-                           ConfigurationData configurationData,
-                           ILoggerFactory loggerFactory)
+                           ConfigurationData configurationData)
         {
+            this.scopeFactory = CommonHelper.GetIfNotNull(scopeFactory);
+            this.contextKeeper = CommonHelper.GetIfNotNull(contextKeeper);
             this.botClient = CommonHelper.GetIfNotNull(botClient);
             this.botSender = CommonHelper.GetIfNotNull(botSender);
 
-            this.coreManager = CommonHelper.GetIfNotNull(coreManager);
-
             this.configurationData = CommonHelper.GetIfNotNull(configurationData);
             ConfigurationManager.SetCensorToDBSettings(this.configurationData);
-
-            this.logger = CommonHelper.GetIfNotNull(loggerFactory).CreateLogger<BotListener>();
         }
 
-        internal async Task StartListen()
+        internal async Task StartListen(CancellationTokenSource cancellationTokenSource)
         {
+            this.cancellationTokenSource = CommonHelper.GetIfNotNull(cancellationTokenSource);
+
+            ILogger logger = GetLoggerOnScope();
+
             User bot = await botClient.GetMe();
 
             logger.LogInformation(EventIDHelper.GetNextEventId(CommonConsts.EventNames.StartingBot), $"Телеграм бот @{bot.Username} запущен");
@@ -60,14 +68,25 @@ namespace WorkoutStorageBot.Application.BotTools.Listener
             botClient.StartReceiving(updateHandler: HandleUpdateAsync,
                                      errorHandler: HandleErrorAsync,
                                      receiverOptions: receiverOptions,
-                                     cancellationToken: coreManager.CancellationToken);
+                                     cancellationToken: this.cancellationTokenSource.Token);
         }
 
-        async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
-            => await coreManager.ProcessUpdate(update);
-
-        async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
+        private async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
+            using IServiceScope scope = scopeFactory.CreateScope();
+
+            EntityContext db = scope.ServiceProvider.GetRequiredService<EntityContext>();
+            ICustomLoggerFactory loggerFactory = scope.ServiceProvider.GetRequiredService<ICustomLoggerFactory>();
+
+            CoreManager coreManager = new CoreManager(configurationData, db, contextKeeper, botSender, loggerFactory, this.cancellationTokenSource);
+
+            await coreManager.ProcessUpdate(update);
+        }
+
+        private async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
+        {
+            ILogger logger = GetLoggerOnScope();
+
             EventId eventId = EventIDHelper.GetNextEventIdThreadSave(CommonConsts.EventNames.Critical);
 
             logger.Log(LogLevel.Critical,
@@ -79,6 +98,17 @@ namespace WorkoutStorageBot.Application.BotTools.Listener
             if (configurationData.Notifications.NotifyOwnersAboutCriticalErrors)
                 await botSender.SendSimpleMassiveResponse(configurationData.Bot.OwnersChatIDs, @$"!!!Необработанная ошибка!!!:
 {exception.ToString()}");
+        }
+
+        private ILogger GetLoggerOnScope()
+        {
+            using IServiceScope scope = scopeFactory.CreateScope();
+
+            EntityContext dbOnScope = scope.ServiceProvider.GetRequiredService<EntityContext>();
+            ICustomLoggerFactory loggerFactory = scope.ServiceProvider.GetRequiredService<ICustomLoggerFactory>();
+            ILogger logger = loggerFactory.CreateLogger<BotListener>();
+
+            return logger;
         }
     }
 }

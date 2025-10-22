@@ -9,10 +9,7 @@ using WorkoutStorageBot.Application.BotTools.Listener;
 using WorkoutStorageBot.Application.BotTools.Logging;
 using WorkoutStorageBot.Application.BotTools.Sender;
 using WorkoutStorageBot.Application.Configuration;
-using WorkoutStorageBot.BusinessLogic.CoreRepositories;
-using WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers;
-using WorkoutStorageBot.Core.Abstraction;
-using WorkoutStorageBot.Core.Manager;
+using WorkoutStorageBot.BusinessLogic.GlobalContext;
 using WorkoutStorageBot.Model.AppContext;
 
 #endregion
@@ -30,25 +27,24 @@ namespace WorkoutStorageBot.Application
                 {
                     ConfigurationData configurationData = GetConfigurationData();
 
-                    EntityContext db = GetEntityContext(configurationData.DB.ConnectionString);
-
-                    CustomLoggerProvider loggerProvider = new CustomLoggerProvider(db, configurationData);
-
-                    LoggerFactory loggerFactory = new LoggerFactory([loggerProvider]);
-
                     serviceCollection.AddSingleton<ConfigurationData>(configurationData);
-                    serviceCollection.AddSingleton<EntityContext>(db);
 
-                    serviceCollection.AddSingleton<ILoggerProvider, CustomLoggerProvider>(sp => loggerProvider);
-                    serviceCollection.AddSingleton<ILoggerFactory, LoggerFactory>(sp => loggerFactory);
+                    serviceCollection.AddLogging(builder =>
+                    {
+                        //builder.AddFilter("Microsoft.Hosting.Lifetime", LogLevel.Warning); // выключение логов Microsoft.Hosting.Lifetime
+                        builder.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning); // выключение логирование SQL-команд EF Core
+                    });
+
+                    serviceCollection.AddDbContext<EntityContext>(options =>
+                    options.UseSqlite(configurationData.DB.ConnectionString)
+                           .EnableSensitiveDataLogging(false));
+
+                    serviceCollection.AddScoped<ICustomLoggerFactory, CustomLoggerFactory>();
+
+                    serviceCollection.AddSingleton<IContextKeeper>(GetContextKeeper(configurationData.Bot.IsNeedCacheContext));
 
                     serviceCollection.AddSingleton<ITelegramBotClient, TelegramBotClient>(sp => new TelegramBotClient(configurationData.Bot.Token));
                     serviceCollection.AddSingleton<IBotResponseSender, BotResponseSender>();
-
-                    List<CoreHandler> handlers = HandlersProvider.InitHandlers(db, loggerFactory, configurationData);
-                    List<CoreRepository> repositories = RepositoriesProvider.InitRepositories(db, loggerFactory, configurationData);
-
-                    serviceCollection.AddSingleton<CoreManager>(sp => new CoreManager(handlers, repositories, configurationData, sp.GetRequiredService<IBotResponseSender>(), loggerFactory, cancellationToken));
 
                     serviceCollection.AddSingleton<BotListener>();
                 })
@@ -56,7 +52,7 @@ namespace WorkoutStorageBot.Application
 
             BotListener botListener = host.Services.GetRequiredService<BotListener>();
 
-            await botListener.StartListen();
+            await botListener.StartListen(cancellationToken);
 
             await host.RunAsync(cancellationToken.Token);
         }
@@ -64,13 +60,12 @@ namespace WorkoutStorageBot.Application
         private static ConfigurationData GetConfigurationData()
             => ConfigurationManager.GetConfiguration("./Application/StartConfiguration/appsettings.json");
 
-        private static EntityContext GetEntityContext(string connectionString)
+        private static IContextKeeper GetContextKeeper(bool isNeedCacheMode)
         {
-            DbContextOptionsBuilder<EntityContext> optionsBuilder = new DbContextOptionsBuilder<EntityContext>();
-            DbContextOptions<EntityContext> options = optionsBuilder.UseSqlite(connectionString).Options;
-            EntityContext db = new EntityContext(options);
-
-            return db;
+            if (isNeedCacheMode)
+                return new MemoryCacheAdapterContextKeeper();
+            else
+                return new DictionaryAdapterContextKeeper();
         }
     }
 }

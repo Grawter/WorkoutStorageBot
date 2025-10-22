@@ -16,12 +16,6 @@ namespace WorkoutStorageBot.Core.Abstraction
 
         protected virtual ILogger Logger { get; }
 
-        protected CoreHandler(CoreTools coreTools, string handlerName) : base(coreTools)
-        { 
-            HandlerName = CommonHelper.GetIfNotNullOrWhiteSpace(handlerName);
-            Logger = CoreTools.LoggerFactory.CreateLogger<CoreHandler>();
-        }
-
         protected CoreHandler(CoreTools coreTools, CoreManager coreManager, string handlerName) : base(coreTools, coreManager)
         {
             HandlerName = CommonHelper.GetIfNotNullOrWhiteSpace(handlerName);

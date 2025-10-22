@@ -2,10 +2,10 @@
 
 using Microsoft.IO;
 using WorkoutStorageBot.BusinessLogic.Consts;
-using WorkoutStorageBot.BusinessLogic.CoreRepositories.Repositories;
+using WorkoutStorageBot.BusinessLogic.Repositories;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommandHandler;
-using WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.Handlers;
+using WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.Extenions;
 using WorkoutStorageBot.Helpers.CallbackQueryParser;
@@ -819,10 +819,10 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
                 case CommonConsts.DomainsAndEntities.Account:
 
-                    PrimaryUpdateHandler handler = CommandHandlerTools.ParentHandler.CoreManager.GetHandler<PrimaryUpdateHandler>();
+                    PrimaryUpdateHandler handler = CommandHandlerTools.ParentHandler.CoreManager.GetRequiredHandler<PrimaryUpdateHandler>();
                     handler.DeleteContext(this.CommandHandlerTools.CurrentUserContext.UserInformation.UserId);
 
-                    AdminRepository repository = CommandHandlerTools.ParentHandler.CoreManager.GetRepository<AdminRepository>();
+                    AdminRepository repository = CommandHandlerTools.ParentHandler.CoreManager.GetRequiredRepository<AdminRepository>();
                     repository.DeleteAccount(this.CommandHandlerTools.CurrentUserContext.UserInformation);
 
                     buttonsSets = (ButtonsSet.None, ButtonsSet.None);

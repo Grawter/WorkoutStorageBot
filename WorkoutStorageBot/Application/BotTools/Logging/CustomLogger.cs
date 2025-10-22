@@ -18,27 +18,11 @@ namespace WorkoutStorageBot.Application.BotTools.Logging
         private readonly ConfigurationData configurationData;
         private const string dateTimeFormat = CommonConsts.Common.DateTimeFormatDateFirst;
 
-        private static readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
-
-        public CustomLogger(string categoryName)
-        {
-            ArgumentNullException.ThrowIfNullOrWhiteSpace(categoryName);
-
-            this.categoryName = categoryName;
-        }
-
-        public CustomLogger(string categoryName, EntityContext db) : this(categoryName)
-        {
-            ArgumentNullException.ThrowIfNull(db);
-
-            this.db = db;
-        }
-
-        public CustomLogger(string categoryName, EntityContext db, ConfigurationData configurationData) : this(categoryName, db)
-        {
-            ArgumentNullException.ThrowIfNull(configurationData);
-
-            this.configurationData = configurationData;
+        public CustomLogger(string categoryName, EntityContext db, ConfigurationData configurationData) 
+        { 
+            this.categoryName = CommonHelper.GetIfNotNullOrWhiteSpace(categoryName);
+            this.db = CommonHelper.GetIfNotNull(db);
+            this.configurationData = CommonHelper.GetIfNotNull(configurationData);
         }
 
         public IDisposable BeginScope<TState>(TState state) => default!;
@@ -246,18 +230,9 @@ CallStack: {Environment.StackTrace}");
                 TelegaramUserId = telegaramUserId,
             };
 
-            await semaphore.WaitAsync();
+            db.Logs.Add(log);
 
-            try
-            {
-                db.Logs.Add(log);
-
-                db.SaveChanges();
-            }
-            finally
-            {
-                semaphore.Release();
-            }
+            db.SaveChanges();
 
             return true;
         }
