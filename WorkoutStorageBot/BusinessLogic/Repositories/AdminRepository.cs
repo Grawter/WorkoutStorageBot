@@ -85,20 +85,25 @@ namespace WorkoutStorageBot.BusinessLogic.Repositories
 
         internal UserInformation? GetFullUserInformation(long userID)
         {
-            return CoreTools.Db.UsersInformation.Where(u => u.UserId == userID)
-                                                    .Include(u => u.Cycles)
-                                                        .ThenInclude(c => c.Days)
-                                                            .ThenInclude(d => d.Exercises)
-                                                .FirstOrDefault();
+            IQueryable<UserInformation> userInformation = CoreTools.Db.UsersInformation.Where(u => u.UserId == userID);
+
+            return IncludeWorkoutTables(userInformation);
         }
 
         internal UserInformation? GetFullUserInformation(string userName)
         {
-            return CoreTools.Db.UsersInformation.Where(u => u.Username == userName)
-                                                    .Include(u => u.Cycles)
-                                                        .ThenInclude(c => c.Days)
-                                                            .ThenInclude(d => d.Exercises)
-                                                .FirstOrDefault();
+            IQueryable<UserInformation> userInformation = CoreTools.Db.UsersInformation.Where(u => u.Username == userName);
+
+            return IncludeWorkoutTables(userInformation);
+        }
+
+        private UserInformation? IncludeWorkoutTables(IQueryable<UserInformation> userInformation)
+        {
+            return userInformation.Include(u => u.Cycles)
+                                     .ThenInclude(c => c.Days)
+                                         .ThenInclude(d => d.Exercises)
+                                  .AsSplitQuery() // Разделение запросов, для оптимизации
+                                  .FirstOrDefault();
         }
 
         internal UserInformation CreateNewUser(User user)
