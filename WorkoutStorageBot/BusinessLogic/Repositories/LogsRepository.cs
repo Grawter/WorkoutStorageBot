@@ -2,8 +2,8 @@
 
 using WorkoutStorageBot.Core.Abstraction;
 using WorkoutStorageBot.Core.Manager;
-using WorkoutStorageBot.Model.HandlerData;
-using WorkoutStorageBot.Model.Logging;
+using WorkoutStorageBot.Model.DTO.HandlerData;
+using WorkoutStorageBot.Model.Entities.Logging;
 
 #endregion
 

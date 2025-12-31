@@ -1,8 +1,12 @@
-﻿
+﻿#region using
 
-namespace WorkoutStorageBot.Model.Logging
+using WorkoutStorageBot.Model.Interfaces;
+
+#endregion
+
+namespace WorkoutStorageBot.Model.Entities.Logging
 {
-    public class Log
+    public class Log : IEntity
     {
         public int Id { get; set; }
 

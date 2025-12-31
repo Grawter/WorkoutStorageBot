@@ -4,8 +4,8 @@ using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using System.Drawing;
 using WorkoutStorageBot.BusinessLogic.Consts;
-using WorkoutStorageBot.Model.DomainsAndEntities;
 using Microsoft.IO;
+using WorkoutStorageBot.Model.Entities.BusinessLogic;
 
 #endregion
 

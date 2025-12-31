@@ -6,6 +6,7 @@ using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.Extenions;
 using WorkoutStorageBot.Helpers.Common;
 using WorkoutStorageBot.Model.AppContext;
+using WorkoutStorageBot.Model.Entities.Logging;
 
 #endregion
 
@@ -219,7 +220,7 @@ CallStack: {Environment.StackTrace}");
             string message = logData["Message"].ToString();
             CommonHelper.TryConvertToLong(logData.GetValueOrDefault("TelegaramUserId"), out long? telegaramUserId);
 
-            Model.Logging.Log log = new Model.Logging.Log()
+            Log log = new Log()
             {
                 LogLevel = currentLogLevelStr,
                 EventID = eventId.Id,

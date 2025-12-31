@@ -16,10 +16,10 @@ using WorkoutStorageBot.Helpers.Common;
 using WorkoutStorageBot.Helpers.EventIDHelper;
 using WorkoutStorageBot.Helpers.Updates;
 using WorkoutStorageBot.Model.AppContext;
-using WorkoutStorageBot.Model.DomainsAndEntities;
-using WorkoutStorageBot.Model.HandlerData;
-using WorkoutStorageBot.Model.HandlerData.Results;
-using WorkoutStorageBot.Model.HandlerData.Results.UpdateInfo;
+using WorkoutStorageBot.Model.Entities.BusinessLogic;
+using WorkoutStorageBot.Model.DTO.HandlerData;
+using WorkoutStorageBot.Model.DTO.HandlerData.Results;
+using WorkoutStorageBot.Model.DTO.HandlerData.Results.UpdateInfo;
 
 #endregion using
 

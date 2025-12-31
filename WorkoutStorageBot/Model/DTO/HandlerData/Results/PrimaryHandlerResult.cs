@@ -2,7 +2,7 @@
 
 #endregion
 
-namespace WorkoutStorageBot.Model.HandlerData.Results
+namespace WorkoutStorageBot.Model.DTO.HandlerData.Results
 {
     internal class PrimaryHandlerResult : HandlerResult
     {

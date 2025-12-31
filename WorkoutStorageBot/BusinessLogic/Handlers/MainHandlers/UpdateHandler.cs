@@ -11,9 +11,9 @@ using WorkoutStorageBot.Core.Abstraction;
 using WorkoutStorageBot.Core.Manager;
 using WorkoutStorageBot.Helpers.CallbackQueryParser;
 using WorkoutStorageBot.Helpers.Converters;
-using WorkoutStorageBot.Model.HandlerData;
-using WorkoutStorageBot.Model.HandlerData.Results;
-using WorkoutStorageBot.Model.HandlerData.Results.UpdateInfo;
+using WorkoutStorageBot.Model.DTO.HandlerData;
+using WorkoutStorageBot.Model.DTO.HandlerData.Results;
+using WorkoutStorageBot.Model.DTO.HandlerData.Results.UpdateInfo;
 
 #endregion
 

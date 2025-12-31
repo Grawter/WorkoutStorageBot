@@ -5,7 +5,7 @@ using Telegram.Bot.Types.Enums;
 
 #endregion
 
-namespace WorkoutStorageBot.Model.HandlerData.Results.UpdateInfo
+namespace WorkoutStorageBot.Model.DTO.HandlerData.Results.UpdateInfo
 {
     public interface IUpdateInfo
     {

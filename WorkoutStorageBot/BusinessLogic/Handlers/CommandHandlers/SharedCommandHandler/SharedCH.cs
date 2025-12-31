@@ -6,8 +6,8 @@ using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.Extenions;
 using WorkoutStorageBot.Helpers.BusinessLogicHelpers;
 using WorkoutStorageBot.Helpers.Converters;
-using WorkoutStorageBot.Model.DomainsAndEntities;
-using WorkoutStorageBot.Model.HandlerData;
+using WorkoutStorageBot.Model.Entities.BusinessLogic;
+using WorkoutStorageBot.Model.DTO.HandlerData;
 #endregion
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommandHandler

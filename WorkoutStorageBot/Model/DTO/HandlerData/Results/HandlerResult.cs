@@ -3,11 +3,11 @@
 using Telegram.Bot.Types;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.BusinessLogic.SessionContext;
-using WorkoutStorageBot.Model.HandlerData.Results.UpdateInfo;
+using WorkoutStorageBot.Model.DTO.HandlerData.Results.UpdateInfo;
 
 #endregion
 
-namespace WorkoutStorageBot.Model.HandlerData.Results
+namespace WorkoutStorageBot.Model.DTO.HandlerData.Results
 {
     internal class HandlerResult
     {

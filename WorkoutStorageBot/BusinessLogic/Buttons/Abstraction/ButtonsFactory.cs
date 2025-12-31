@@ -6,7 +6,7 @@ using WorkoutStorageBot.BusinessLogic.SessionContext;
 using WorkoutStorageBot.Extenions;
 using WorkoutStorageBot.Helpers.Common;
 using WorkoutStorageBot.Helpers.Crypto;
-using WorkoutStorageBot.Model.DomainsAndEntities;
+using WorkoutStorageBot.Model.Interfaces;
 
 #endregion
 

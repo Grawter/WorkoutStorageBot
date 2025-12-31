@@ -1,7 +1,7 @@
 ﻿#region using
 
 using WorkoutStorageBot.Core.Manager;
-using WorkoutStorageBot.Model.HandlerData;
+using WorkoutStorageBot.Model.DTO.HandlerData;
 
 #endregion
 

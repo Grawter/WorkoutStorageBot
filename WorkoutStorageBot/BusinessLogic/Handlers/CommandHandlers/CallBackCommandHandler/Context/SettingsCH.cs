@@ -1,18 +1,20 @@
 ﻿#region using
 
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IO;
 using WorkoutStorageBot.BusinessLogic.Consts;
-using WorkoutStorageBot.BusinessLogic.Repositories;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommandHandler;
 using WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
+using WorkoutStorageBot.BusinessLogic.Repositories;
 using WorkoutStorageBot.Extenions;
 using WorkoutStorageBot.Helpers.CallbackQueryParser;
 using WorkoutStorageBot.Helpers.Converters;
 using WorkoutStorageBot.Helpers.Export;
-using WorkoutStorageBot.Model.DomainsAndEntities;
-using WorkoutStorageBot.Model.HandlerData;
+using WorkoutStorageBot.Model.DTO.HandlerData;
+using WorkoutStorageBot.Model.Entities.BusinessLogic;
+using WorkoutStorageBot.Model.Interfaces;
 
 #endregion
 

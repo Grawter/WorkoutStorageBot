@@ -2,7 +2,7 @@
 
 using WorkoutStorageBot.BusinessLogic.Buttons.Abstraction;
 using WorkoutStorageBot.BusinessLogic.SessionContext;
-using WorkoutStorageBot.Model.DomainsAndEntities;
+using WorkoutStorageBot.Model.Entities.BusinessLogic;
 
 #endregion
 

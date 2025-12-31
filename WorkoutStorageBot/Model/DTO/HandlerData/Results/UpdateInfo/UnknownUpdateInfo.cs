@@ -6,7 +6,7 @@ using WorkoutStorageBot.Helpers.Common;
 
 #endregion
 
-namespace WorkoutStorageBot.Model.HandlerData.Results.UpdateInfo
+namespace WorkoutStorageBot.Model.DTO.HandlerData.Results.UpdateInfo
 {
     internal class UnknownUpdateInfo : IUpdateInfo
     {

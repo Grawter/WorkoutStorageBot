@@ -10,8 +10,8 @@ using WorkoutStorageBot.Extenions;
 using WorkoutStorageBot.Helpers.CallbackQueryParser;
 using WorkoutStorageBot.Helpers.Common;
 using WorkoutStorageBot.Helpers.Converters;
-using WorkoutStorageBot.Model.HandlerData;
-using WorkoutStorageBot.Model.Logging;
+using WorkoutStorageBot.Model.Entities.Logging;
+using WorkoutStorageBot.Model.DTO.HandlerData;
 
 #endregion
 

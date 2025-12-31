@@ -1,6 +1,10 @@
-﻿
+﻿#region using
 
-namespace WorkoutStorageBot.Model.DomainsAndEntities
+using WorkoutStorageBot.Model.Interfaces;
+
+#endregion
+
+namespace WorkoutStorageBot.Model.Entities.BusinessLogic
 {
     public class Day : IDomain
     {

@@ -3,7 +3,7 @@
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.Model.AppContext;
-using WorkoutStorageBot.Model.DomainsAndEntities;
+using WorkoutStorageBot.Model.Interfaces;
 
 #endregion
 

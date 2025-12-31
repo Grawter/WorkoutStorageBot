@@ -2,8 +2,8 @@
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.Helpers.Common;
-using WorkoutStorageBot.Model.DomainsAndEntities;
-using WorkoutStorageBot.Model.HandlerData;
+using WorkoutStorageBot.Model.DTO.HandlerData;
+using WorkoutStorageBot.Model.Interfaces;
 #endregion
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.Abstraction

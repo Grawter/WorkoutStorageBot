@@ -6,7 +6,7 @@ using WorkoutStorageBot.Model.AppContext;
 
 #endregion
 
-namespace WorkoutStorageBot.Model.HandlerData
+namespace WorkoutStorageBot.Model.DTO.HandlerData
 {
     internal class CoreTools
     {

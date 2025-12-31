@@ -2,7 +2,7 @@
 
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using WorkoutStorageBot.Model.HandlerData.Results.UpdateInfo;
+using WorkoutStorageBot.Model.DTO.HandlerData.Results.UpdateInfo;
 
 #endregion
 

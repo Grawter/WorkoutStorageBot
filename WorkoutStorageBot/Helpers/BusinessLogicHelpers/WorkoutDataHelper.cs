@@ -2,7 +2,7 @@
 using System.Text;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.Extenions;
-using WorkoutStorageBot.Model.DomainsAndEntities;
+using WorkoutStorageBot.Model.Entities.BusinessLogic;
 #endregion
 
 namespace WorkoutStorageBot.Helpers.BusinessLogicHelpers

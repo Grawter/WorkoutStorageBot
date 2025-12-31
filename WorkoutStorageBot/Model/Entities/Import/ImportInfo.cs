@@ -1,8 +1,12 @@
-﻿
+﻿#region using
 
-namespace WorkoutStorageBot.Model.Import
+using WorkoutStorageBot.Model.Interfaces;
+
+#endregion
+
+namespace WorkoutStorageBot.Model.Entities.Import
 {
-    public class ImportInfo
+    public class ImportInfo : IEntity
     {
         public int Id { get; set; }
         public required string DomainType { get; set; }

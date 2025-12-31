@@ -2,7 +2,7 @@
 
 using Telegram.Bot.Exceptions;
 using WorkoutStorageBot.BusinessLogic.Consts;
-using WorkoutStorageBot.Model.Logging;
+using WorkoutStorageBot.Model.Entities.Logging;
 
 #endregion
 

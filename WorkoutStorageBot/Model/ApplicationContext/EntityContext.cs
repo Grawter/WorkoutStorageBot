@@ -1,9 +1,9 @@
 ﻿#region using
 
 using Microsoft.EntityFrameworkCore;
-using WorkoutStorageBot.Model.DomainsAndEntities;
-using WorkoutStorageBot.Model.Import;
-using WorkoutStorageBot.Model.Logging;
+using WorkoutStorageBot.Model.Entities.BusinessLogic;
+using WorkoutStorageBot.Model.Entities.Import;
+using WorkoutStorageBot.Model.Entities.Logging;
 
 #endregion
 

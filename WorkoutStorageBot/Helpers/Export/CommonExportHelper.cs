@@ -1,6 +1,6 @@
 ﻿#region using
 
-using WorkoutStorageBot.Model.DomainsAndEntities;
+using WorkoutStorageBot.Model.Entities.BusinessLogic;
 using Microsoft.IO;
 
 #endregion
