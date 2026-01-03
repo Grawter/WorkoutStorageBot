@@ -1,5 +1,6 @@
 ﻿#region using
 
+using System.Diagnostics.CodeAnalysis;
 using Telegram.Bot.Types.Enums;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Enums;
@@ -181,7 +182,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
         {
             CallbackQueryParser callbackQueryParser = new CallbackQueryParser(updateInfo.Data);
 
-            if (CheckingComplianceCallBackId(callbackQueryParser.CallBackId, out IInformationSet informationSet))
+            if (CheckingComplianceCallBackId(callbackQueryParser.CallBackId, out IInformationSet? informationSet))
             {
                 CommandHandlerData commandHandlerData = new CommandHandlerData()
                 {
@@ -466,7 +467,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
             return informationSet;
         }
 
-        private bool CheckingComplianceCallBackId(string currentCallBackId, out IInformationSet? informationSet)
+        private bool CheckingComplianceCallBackId(string currentCallBackId, [NotNullWhen(false)] out IInformationSet? informationSet)
         {
             if (CurrentUserContext.CallBackId == currentCallBackId)
             {

@@ -88,17 +88,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
             User user = primaryHandledData.ShortUpdateInfo.User;
 
             if (!ContextKeeper.HasContext(user.Id))
-            {
                 AddNewContext(primaryHandledData);
-                primaryHandledData.IsNewContext = true;
-            }
             else
-            {
-                primaryHandledData.CurrentUserContext = ContextKeeper.GetContext(user.Id) 
-                    ?? throw new InvalidOperationException($"Аномалия: Не удалось найти userContext с userID: '{user.Id}'");
-                primaryHandledData.HasAccess = AdminRepository.UserHasAccess(primaryHandledData.CurrentUserContext.UserInformation);
-                primaryHandledData.IsNewContext = false;
-            }
+                SetExistingContext(primaryHandledData, user.Id);
         }
 
         private void AddNewContext(PrimaryHandlerResult primaryHandledData)
@@ -115,11 +107,21 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
                 primaryHandledData.CurrentUserContext = new UserContext(currentUser, currentRoles, CoreTools.ConfigurationData.Bot.IsNeedLimits);
                 ContextKeeper.AddContext(primaryHandledData.ShortUpdateInfo.User.Id, primaryHandledData.CurrentUserContext);
             }
+
+            primaryHandledData.IsNewContext = true;
+        }
+
+        private void SetExistingContext(PrimaryHandlerResult primaryHandledData, long userID)
+        {
+            primaryHandledData.CurrentUserContext = ContextKeeper.GetContext(userID)
+                    ?? throw new InvalidOperationException($"Аномалия: Не удалось найти userContext с userID: '{userID}'");
+            primaryHandledData.HasAccess = AdminRepository.UserHasAccess(primaryHandledData.CurrentUserContext.UserInformation);
+            primaryHandledData.IsNewContext = false;
         }
 
         private Roles GetUserRoles(UserInformation currentUser, AdminRepository adminRepository)
         {
-            Roles currentRoles = adminRepository.UserIsOwner(currentUser)
+            Roles currentRoles = adminRepository.UserIsOwner(currentUser.UserId)
                     ? Roles.Admin
                     : Roles.User;
 

@@ -203,10 +203,16 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
             ResetChildDomains(domain);
         }
 
-        internal IDomain? GetCurrentDomain(DomainType domainType, bool throwEx = true)
-            => GetCurrentDomain(domainType.ToString(), throwEx);
+        internal IDomain? GetRequiredCurrentDomain(DomainType domainType)
+            => GetRequiredCurrentDomain(domainType.ToString());
 
-        internal IDomain? GetCurrentDomain(string domainType, bool throwEx = true)
+        internal IDomain GetRequiredCurrentDomain(string domainType)
+            => CommonHelper.GetIfNotNull(GetCurrentDomain(domainType));
+
+        internal IDomain? GetCurrentDomain(DomainType domainType)
+            => GetCurrentDomain(domainType.ToString());
+
+        internal IDomain? GetCurrentDomain(string domainType)
         {
             IDomain? domain = domainType switch
             {
@@ -216,11 +222,8 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
                     => CurrentDay,
                 Consts.CommonConsts.DomainsAndEntities.Exercise
                     => CurrentExercise,
-                _ => throwEx ? throw new NotImplementedException($"Неожиданный domainTyped: {domainType}") : null,
+                _ => throw new NotImplementedException($"Неожиданный domainTyped: {domainType}")
             };
-
-            if (throwEx)
-                domain = CommonHelper.GetIfNotNull(domain);
 
             return domain;
         }

@@ -137,8 +137,8 @@ namespace WorkoutStorageBot.BusinessLogic.Repositories
             return true;
         }
 
-        internal bool UserIsOwner(UserInformation user)
-            => OwnersChatIDs.Contains(user.UserId.ToString());
+        internal bool UserIsOwner(long userID)
+            => OwnersChatIDs.Contains(userID.ToString());
 
         private void AddLogAction(string message)
             => Logger.LogWarning(message);

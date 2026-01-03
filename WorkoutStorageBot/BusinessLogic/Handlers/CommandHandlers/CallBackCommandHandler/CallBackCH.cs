@@ -46,6 +46,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
             }
 
+            this.Domain = null;
+
             if (this.InformationSet == null)
                 throw new InvalidOperationException($"Операция '{callbackQueryParser.Direction}|{callbackQueryParser.SubDirection}' вернула пустой {nameof(this.InformationSet)}");
 
@@ -58,7 +60,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     return FISet;
 
                 default:
-                    throw new NotImplementedException($"Неожиданный {nameof(this.InformationSet)}: {this.InformationSet.GetType()}");
+                    throw new NotImplementedException($"Неожиданный {nameof(this.InformationSet)}: {this.InformationSet.GetType().Name}");
             }
         }
     }
