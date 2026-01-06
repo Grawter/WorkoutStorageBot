@@ -144,6 +144,7 @@ namespace WorkoutStorageImport
                     break;
                 case 3:
                     string userName = Convert.ToString(userCondition);
+
                     userInformation = entityContext.UsersInformation.FirstOrDefault(x => string.Equals(x.Username, userName, StringComparison.Ordinal));
                     break;
                 default:

@@ -191,7 +191,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 exceptionMessage = ex.Message;
             }
 
-            // Сначала нужно, чтобы было общая проверка, есть ли в текущем дне добавляемое упражнение упражнение
+            // Сначала нужно чтобы была общая проверка, есть ли в текущем дне добавляемое упражнение
             foreach (Exercise exercise in exercises)
             {
                 if (AlreadyExistDomainWithName(exercise.Name, DomainType.Exercise))

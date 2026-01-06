@@ -54,7 +54,7 @@ namespace WorkoutStorageBot.BusinessLogic.Consts
             internal static string[] ValidDateFormats = ["dd.MM", "dd.MM.yyyy", "yyyy.MM.dd", "dd/MM/yyyy", "yyyy/MM/dd", "dd-MM", "dd-MM-yyyy", "yyyy-MM-dd", "dd MM", "dd MM yyyy", "yyyy MM dd"];
 
             internal const string ExamplesTypesExercise = @$"Доступные типы упражений:
-<b>0 - только кол-во повторений (например, подтягивания)
+<b>0</b> - только кол-во повторений (например, подтягивания)
 <b>1</b> - вес и кол-во повторений (например, жим лёжа)
 <b>2</b> - таймер (например, бег)
 <b>3</b> - свободный формат результата (например, отработка на груше)

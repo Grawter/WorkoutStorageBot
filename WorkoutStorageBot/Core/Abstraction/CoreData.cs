@@ -12,7 +12,7 @@ namespace WorkoutStorageBot.Core.Abstraction
     {
         internal CoreTools CoreTools { get; }
 
-        internal CoreManager CoreManager { get; private set; }
+        internal CoreManager CoreManager { get; }
 
         protected CoreData(CoreTools coreTools, CoreManager coreManager)
         {
