@@ -6,7 +6,6 @@ using Telegram.Bot.Types.Enums;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Repositories;
 using WorkoutStorageBot.BusinessLogic.Enums;
-using WorkoutStorageBot.BusinessLogic.GlobalContext;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.BusinessLogic.SessionContext;
 using WorkoutStorageBot.BusinessLogic.StepStore;
@@ -33,11 +32,11 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
 
         protected override ILogger Logger { get; }
 
-        internal PrimaryUpdateHandler(CoreTools coreTools, CoreManager coreManager, IContextKeeper contextKeeper) : base(coreTools, coreManager, nameof(PrimaryUpdateHandler))
+        internal PrimaryUpdateHandler(CoreTools coreTools, CoreManager coreManager) : base(coreTools, coreManager, nameof(PrimaryUpdateHandler))
         {
             this.Logger = CoreTools.LoggerFactory.CreateLogger<PrimaryUpdateHandler>();
 
-            this.ContextKeeper = CommonHelper.GetIfNotNull(contextKeeper);
+            this.ContextKeeper = coreManager.ContextKeeper;
 
             this.AdminRepository = CoreManager.GetRequiredRepository<AdminRepository>();
         }
@@ -231,11 +230,6 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
                 primaryHandledData.InformationSet.AdditionalParameters.Add("BotCallBackID", primaryHandledData.Update.CallbackQuery.Id);
 
             primaryHandledData.IsNeedContinue = false;
-        }
-
-        internal void DeleteContext(long userID)
-        {
-            ContextKeeper.RemoveContext(userID);
         }
     }
 }

@@ -40,6 +40,8 @@ namespace WorkoutStorageBot.Core.Manager
 
             this.logger = this.loggerFactory.CreateLogger<CoreManager>();
 
+            this.ContextKeeper = CommonHelper.GetIfNotNull(contextKeeper);
+
             this.BotResponseSender = CommonHelper.GetIfNotNull(botResponseSender);
 
             this.cancellationTokenSource = CommonHelper.GetIfNotNull(cancellationTokenSource);
@@ -59,13 +61,15 @@ namespace WorkoutStorageBot.Core.Manager
 
             this.Handlers = new List<CoreHandler>()
             {
-                new PrimaryUpdateHandler(coreTools, this, contextKeeper),
+                new PrimaryUpdateHandler(coreTools, this),
                 new UpdateHandler(coreTools, this),
             };
         }
 
         internal List<CoreHandler> Handlers { get; }
         internal List<CoreRepository> Repositories { get; }
+
+        internal IContextKeeper ContextKeeper { get; }
 
         private ConfigurationData ConfigurationData { get; }
 

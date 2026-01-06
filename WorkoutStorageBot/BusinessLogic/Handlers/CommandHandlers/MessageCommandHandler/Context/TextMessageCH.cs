@@ -571,8 +571,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 responseConverter = new ResponseTextConverter($"Пользователь '{userIdentity.AddBoldAndQuotes()}' не найден!", "Выберите интересующее действие");
             else
             {
-                PrimaryUpdateHandler handler = this.CommandHandlerTools.ParentHandler.CoreManager.GetRequiredHandler<PrimaryUpdateHandler>();
-                handler.DeleteContext(user.UserId);
+                this.CommandHandlerTools.ParentHandler.CoreManager.ContextKeeper.RemoveContext(user.UserId);
 
                 adminRepository.DeleteAccount(user);
                 responseConverter = new ResponseTextConverter($"Пользователь {user.Username.AddBoldAndQuotes()} ({user.UserId}) был успешно удалён", "Выберите интересующее действие");
