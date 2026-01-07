@@ -15,14 +15,29 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
         internal CommonCH(CommandHandlerData commandHandlerTools, CallbackQueryParser callbackQueryParser) : base(commandHandlerTools, callbackQueryParser)
         { }
 
-        internal override CommonCH Expectation(params HandlerAction[] handlerActions)
+        internal override IInformationSet GetInformationSet()
         {
-            this.HandlerActions = handlerActions;
+            IInformationSet informationSet;
 
-            return this;
+            switch (callbackQueryParser.SubDirection)
+            {
+                case "Back":
+                    informationSet = BackCommand();
+                    break;
+
+                case "ToMain":
+                    informationSet = ToMainCommand();
+                    break;
+                default:
+                    throw new NotImplementedException($"Неожиданный CallbackQueryParser.SubDirection: {callbackQueryParser.SubDirection}");
+            }
+
+            CheckInformationSet(informationSet);
+
+            return informationSet;
         }
 
-        internal CommonCH BackCommand()
+        private IInformationSet BackCommand()
         {
             string buttonsSet = callbackQueryParser.AdditionalParameters.First();
 
@@ -44,12 +59,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
             (ButtonsSet, ButtonsSet) buttonsSets = (previousStep.ButtonsSet, previousStep.BackButtonsSet);
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
-        internal CommonCH ToMainCommand()
+        private IInformationSet ToMainCommand()
         {
             this.CommandHandlerTools.CurrentUserContext.DataManager.ResetAll();
 
@@ -61,9 +76,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             ResponseTextConverter responseConverter = new ResponseTextConverter(mainStep.Message);
             (ButtonsSet, ButtonsSet) buttonsSets = (mainStep.ButtonsSet, mainStep.BackButtonsSet);
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
     }
 }

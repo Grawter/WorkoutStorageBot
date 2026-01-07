@@ -1,4 +1,5 @@
 ﻿#region using
+using System.Diagnostics.CodeAnalysis;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Enums;
@@ -23,14 +24,100 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
         internal TextMessageCH(CommandHandlerData commandHandlerTools, TextMessageConverter requestConverter) : base(commandHandlerTools, requestConverter)
         { }
 
-        internal override TextMessageCH Expectation(params HandlerAction[] handlerActions)
+        internal override IInformationSet GetInformationSet()
         {
-            this.HandlerActions = handlerActions;
+            IInformationSet informationSet;
 
-            return this;
+            switch (CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget)
+            {
+                case MessageNavigationTarget.Default:
+                    informationSet = DefaultCommand();
+
+                    break;
+
+                case MessageNavigationTarget.AddCycle:
+                    informationSet = AddCycleCommand();
+
+                    break;
+
+                case MessageNavigationTarget.AddDays:
+                    informationSet = AddDaysCommand();
+
+                    break;
+
+                case MessageNavigationTarget.AddExercises:
+                    informationSet = AddExercisesCommand();
+
+                    break;
+
+                case MessageNavigationTarget.AddResultForExercise:
+                    informationSet = AddResultForExerciseCommand();
+
+                    break;
+
+                case MessageNavigationTarget.AddCommentForExerciseTimer:
+                    informationSet = AddCommentForExerciseTimerCommand();
+
+                    break;
+
+                case MessageNavigationTarget.ChangeNameCycle:
+                    informationSet = ChangeNameCommand(CommonConsts.DomainsAndEntities.Cycle);
+
+                    break;
+
+                case MessageNavigationTarget.ChangeNameDay:
+                    informationSet = ChangeNameCommand(CommonConsts.DomainsAndEntities.Day);
+
+                    break;
+
+                case MessageNavigationTarget.ChangeNameExercise:
+                    informationSet = ChangeNameCommand(CommonConsts.DomainsAndEntities.Exercise);
+
+                    break;
+
+                case MessageNavigationTarget.FindResultsByDate:
+                    informationSet = FindResultByDateCommand(false);
+                    break;
+
+                case MessageNavigationTarget.FindResultsByDateInDay:
+                    informationSet = FindResultByDateCommand(true);
+                    break;
+
+                case MessageNavigationTarget.FindLogByID:
+                    informationSet = FindLogByIDCommand(isEventID: false);
+
+                    break;
+
+                case MessageNavigationTarget.FindLogByEventID:
+                    informationSet = FindLogByIDCommand(isEventID: true);
+
+                    break;
+
+                case MessageNavigationTarget.ChangeUserState:
+                    informationSet = ChangeUserStateCommand();
+
+                    break;
+
+                case MessageNavigationTarget.DeleteUser:
+                    informationSet = DeleteUserCommand();
+
+                    break;
+
+                case MessageNavigationTarget.DeleteResultsExercise:
+                    informationSet = DeleteResultsExerciseCommand();
+
+                    break;
+
+                default:
+                    throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.MessageNavigationTarget: {CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget}!");
+            }
+
+            CheckInformationSet(informationSet);
+
+            return informationSet;
         }
 
-        internal TextMessageCH DefaultCommand()
+        private IInformationSet DefaultCommand()
         {
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
@@ -59,12 +146,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                     break;
             }
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
-        internal TextMessageCH AddCycleCommand()
+        private IInformationSet AddCycleCommand()
         {
             requestConverter.RemoveCompletely().WithoutServiceSymbol();
 
@@ -72,6 +159,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
+            IInformationSet informationSet;
 
             if (AlreadyExistDomainWithName(domainName, DomainType.Cycle))
             {
@@ -79,11 +167,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                     "Ввведите другое название тренировочного цикла");
                 buttonsSets = (ButtonsSet.None, ButtonsSet.SettingCycles);
 
-                ClearHandlerAction();
+                informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-                this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
-
-                return this;
+                return informationSet;
             }
 
             bool hasActiveCycle = this.CommandHandlerTools.CurrentUserContext.ActiveCycle == null ? false : true;
@@ -117,12 +203,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                     throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {this.CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom}");
             }
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
-        internal TextMessageCH AddDaysCommand()
+        private IInformationSet AddDaysCommand()
         {
             requestConverter.RemoveCompletely().WithoutServiceSymbol();
 
@@ -130,6 +216,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
+            IInformationSet informationSet;
 
             if (AlreadyExistDomainWithName(domainName, DomainType.Day))
             {
@@ -138,11 +225,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
                 buttonsSets = GetButtonsSetIfFailedSaveNewDomainValue(ButtonsSet.SettingDays);
 
-                ClearHandlerAction();
+                informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-                this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
-
-                return this;
+                return informationSet;
             }
 
             DTODay currentDay = this.CommandHandlerTools.CurrentUserContext.DataManager.SetCurrentDay(domainName);
@@ -172,12 +257,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                     throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {this.CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom}");
             }
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
-        internal TextMessageCH AddExercisesCommand()
+        private IInformationSet AddExercisesCommand()
         {
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
@@ -250,12 +335,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 }
             }
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets, additionalParameters);
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets, additionalParameters);
 
-            return this;
+            return informationSet;
         }
 
-        internal TextMessageCH AddResultForExerciseCommand()
+        private IInformationSet AddResultForExerciseCommand()
         {
             requestConverter.RemoveCompletely(80).WithoutServiceSymbol();
 
@@ -293,12 +378,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 buttonsSets = (ButtonsSet.ResetResultsExercise, ButtonsSet.None);
             }
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
-        internal TextMessageCH AddCommentForExerciseTimerCommand()
+        private IInformationSet AddCommentForExerciseTimerCommand()
         {
             string comment = requestConverter.RemoveCompletely(50).WithoutServiceSymbol().Convert();
 
@@ -316,17 +401,18 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             ResponseTextConverter responseConverter = new ResponseTextConverter(resultExercise.FreeResult.AddBold(), "Введённые данные сохранены!", "Выберите упраженение");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout);
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
-        internal TextMessageCH ChangeNameCommand(string domainType)
+        private IInformationSet ChangeNameCommand(string domainType)
         {
             requestConverter.RemoveCompletely(25).WithoutServiceSymbol();
 
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
+            IInformationSet informationSet;
 
             string domainName = requestConverter.Convert();
 
@@ -339,11 +425,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                             "Ввведите другое название тренировочного цикла");
                         buttonsSets = (ButtonsSet.None, ButtonsSet.SettingCycles);
 
-                        ClearHandlerAction();
+                        informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-                        this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
-
-                        return this;
+                        return informationSet;
                     }
 
                     responseConverter = new ResponseTextConverter("Название цикла сохранено!");
@@ -358,11 +442,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
                         buttonsSets = GetButtonsSetIfFailedSaveNewDomainValue(ButtonsSet.SettingDays);
 
-                        ClearHandlerAction();
+                        informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-                        this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
-
-                        return this;
+                        return informationSet;
                     }
 
                     responseConverter = new ResponseTextConverter("Название дня сохранено!", "Выберите интересующую настройку для указанного дня");
@@ -378,11 +460,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
                         buttonsSets = GetButtonsSetIfFailedSaveNewDomainValue(ButtonsSet.SettingExercises);
 
-                        ClearHandlerAction();
+                        informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-                        this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
-
-                        return this;
+                        return informationSet;
                     }
 
                     responseConverter = new ResponseTextConverter("Название сохранено!", "Выберите интересующую настройку для указанного упражнения");
@@ -397,11 +477,11 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             this.CommandHandlerTools.Db.UpdateEntity(DTODomain);
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
             this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
-            return this;
+            return informationSet;
         }
 
         private bool AlreadyExistDomainWithName(string name, DomainType domainType)
@@ -437,25 +517,23 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             }
         }
 
-        internal TextMessageCH FindResultByDateCommand(bool isNeedFindByCurrentDay)
+        private IInformationSet FindResultByDateCommand(bool isNeedFindByCurrentDay)
         {
             SharedCH sharedCH = new SharedCH(this.CommandHandlerTools);
 
             string findedDate = requestConverter.RemoveCompletely(10).Convert();
 
-            sharedCH.FindResultByDateCommand(findedDate, isNeedFindByCurrentDay);
+            IInformationSet informationSet = sharedCH.FindResultByDateCommand(findedDate, isNeedFindByCurrentDay);
 
-            this.InformationSet = sharedCH.GetData();
-
-            return this;
+            return informationSet;
         }
 
-        internal TextMessageCH FindLogByIDCommand(bool isEventID)
+        private IInformationSet FindLogByIDCommand(bool isEventID)
         {
             this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
-            if (AccessDenied())
-                return this;
+            if (AccessDenied(out IInformationSet? informationSet))
+                return informationSet;
 
             LogsRepository logsRepository = this.CommandHandlerTools.ParentHandler.CoreManager.GetRequiredRepository<LogsRepository>();
 
@@ -472,9 +550,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             {
                 responseConverter = new ResponseTextConverter($"Передан некорректный {identifierType}: {IdStr.AddBoldAndQuotes()}", "Выберите интересующее действие");
 
-                this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+                informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-                return this;
+                return informationSet;
             }
 
             Log? log;
@@ -493,17 +571,17 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 responseConverter = new ResponseTextConverter("Найденный лог:", logStr, "Выберите интересующее действие");
             }
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
-        internal TextMessageCH ChangeUserStateCommand()
+        private IInformationSet ChangeUserStateCommand()
         {
             this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
-            if (AccessDenied())
-                return this;
+            if (AccessDenied(out IInformationSet? informationSet))
+                return informationSet;
 
             AdminRepository adminRepository = this.CommandHandlerTools.ParentHandler.CoreManager.GetRequiredRepository<AdminRepository>();
 
@@ -564,17 +642,17 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             }
 
             buttonsSets = (ButtonsSet.Admin, ButtonsSet.Main);
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
-        internal TextMessageCH DeleteUserCommand()
+        private IInformationSet DeleteUserCommand()
         {
             this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
-            if (AccessDenied())
-                return this;
+            if (AccessDenied(out IInformationSet? informationSet))
+                return informationSet;
 
             AdminRepository adminRepository = this.CommandHandlerTools.ParentHandler.CoreManager.GetRequiredRepository<AdminRepository>();
 
@@ -600,12 +678,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             buttonsSets = (ButtonsSet.Admin, ButtonsSet.Main);
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
-        internal TextMessageCH DeleteResultsExerciseCommand()
+        private IInformationSet DeleteResultsExerciseCommand()
         {
             string countToDeleteStr = requestConverter.RemoveCompletely(35).WithoutServiceSymbol().Convert();
 
@@ -650,18 +728,20 @@ WHERE Id IN (
 
             this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
-        private bool AccessDenied()
+        private bool AccessDenied([NotNullWhen(true)] out IInformationSet? informationSet)
         {
+            informationSet = null;
+
             if (!this.CommandHandlerTools.CurrentUserContext.IsAdmin())
             {
                 SharedCH sharedCH = new SharedCH(this.CommandHandlerTools);
 
-                this.InformationSet = sharedCH.GetAccessDeniedMessageInformationSet();
+                informationSet = sharedCH.GetAccessDeniedMessageInformationSet();
 
                 this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 

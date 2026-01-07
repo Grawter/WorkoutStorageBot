@@ -1,4 +1,5 @@
 ﻿#region using
+using Microsoft.EntityFrameworkCore;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.Abstraction;
@@ -6,10 +7,9 @@ using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.Extenions;
 using WorkoutStorageBot.Helpers.BusinessLogicHelpers;
 using WorkoutStorageBot.Helpers.Converters;
-using WorkoutStorageBot.Model.Entities.BusinessLogic;
-using WorkoutStorageBot.Model.DTO.HandlerData;
-using Microsoft.EntityFrameworkCore;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
+using WorkoutStorageBot.Model.DTO.HandlerData;
+using WorkoutStorageBot.Model.Entities.BusinessLogic;
 #endregion
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommandHandler
@@ -23,17 +23,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommand
         {
         }
 
-        internal override CommandHandler Expectation(params HandlerAction[] handlerActions)
+        internal override IInformationSet GetInformationSet()
         {
             throw new NotImplementedException();
-        }
-
-        internal override IInformationSet GetData()
-        {
-            if (this.InformationSet == null)
-                throw new InvalidOperationException($"Из '{nameof(SharedCH)}' вернулся пустой {nameof(this.InformationSet)}");
-
-            return this.InformationSet;
         }
 
         internal IEnumerable<int> GetAllUserExercisesIds()
@@ -71,7 +63,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommand
             return new MessageInformationSet(responseConverter.Convert(), buttonsSets);
         }
 
-        internal SharedCH FindResultByDateCommand(string findedDate, bool isNeedFindByCurrentDay)
+        internal IInformationSet FindResultByDateCommand(string findedDate, bool isNeedFindByCurrentDay)
         {
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
@@ -169,9 +161,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommand
                 }
             }
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets, additionalParameters);
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets, additionalParameters);
 
-            return this;
+            return informationSet;
         }
     }
 }

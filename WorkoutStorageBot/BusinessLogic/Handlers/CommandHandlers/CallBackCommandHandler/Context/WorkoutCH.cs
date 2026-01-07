@@ -20,26 +20,66 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
         internal WorkoutCH(CommandHandlerData commandHandlerTools, CallbackQueryParser callbackQueryParser) : base(commandHandlerTools, callbackQueryParser)
         { }
 
-        internal override WorkoutCH Expectation(params HandlerAction[] handlerActions)
+        internal override IInformationSet GetInformationSet()
         {
-            this.HandlerActions = handlerActions;
+            IInformationSet informationSet;
 
-            return this;
+            switch (callbackQueryParser.SubDirection)
+            {
+                case "Workout":
+                    informationSet = WorkoutCommand();
+                    break;
+
+                case "LastResults":
+                    informationSet = LastResultsCommand();
+                    break;
+
+                case "StartFindResultsByDate":
+                    informationSet = StartFindResultsByDateCommand();
+                    break;
+
+                case "FindResultsByDate":
+                    informationSet = FindResultsByDateCommand();
+                    break;
+
+                case "StartExerciseTimer":
+                    informationSet = StartExerciseTimerCommand();
+                    break;
+
+                case "StopExerciseTimer":
+                    informationSet = StopExerciseTimerCommand();
+                    break;
+
+                case "ResetResultsExercise":
+                    informationSet = ResetResultsExerciseCommand();
+                    break;
+
+                case "SaveResultsExercise":
+                    informationSet = SaveResultsExerciseCommand();                     
+                    break;
+
+                default:
+                    throw new NotImplementedException($"Неожиданный CallbackQueryParser.SubDirection: {callbackQueryParser.SubDirection}");
+            }
+
+            CheckInformationSet(informationSet); 
+
+            return informationSet;
         }
 
-        internal WorkoutCH WorkoutCommand()
+        private IInformationSet WorkoutCommand()
         {
             this.CommandHandlerTools.CurrentUserContext.Navigation.ResetNavigation(); // not necessary, but just in case
             
             ResponseTextConverter responseConverter = new ResponseTextConverter("Выберите тренировочный день");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main);
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
-        internal WorkoutCH LastResultsCommand()
+        private IInformationSet LastResultsCommand()
         {
             ResponseTextConverter responseConverter;
             string information;
@@ -108,12 +148,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     throw new NotImplementedException($"Неожиданный CallbackQueryParser.DomainType: {callbackQueryParser.DomainType}");
             }
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
-        internal WorkoutCH StartFindResultsByDateCommand()
+        private IInformationSet StartFindResultsByDateCommand()
         {
             ResponseTextConverter responseConverter = new ResponseTextConverter($"Введите дату искомой тренировки", CommonConsts.Exercise.FindResultsByDateFormat);
             string information;
@@ -141,12 +181,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     throw new NotImplementedException($"Неожиданный callbackQueryParser.DomainType: {callbackQueryParser.DomainType}");
             }
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
-        internal WorkoutCH FindResultsByDateCommand()
+        private IInformationSet FindResultsByDateCommand()
         {
             SharedCH sharedCH = new SharedCH(this.CommandHandlerTools);
 
@@ -154,26 +194,24 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
             bool isNeedFindByCurrentDay = callbackQueryParser.DomainType == CommonConsts.DomainsAndEntities.Exercise;
 
-            sharedCH.FindResultByDateCommand(findedDate, isNeedFindByCurrentDay);
+            IInformationSet informationSet = sharedCH.FindResultByDateCommand(findedDate, isNeedFindByCurrentDay);
 
-            this.InformationSet = sharedCH.GetData();
-
-            return this;
+            return informationSet;
         }
 
-        internal WorkoutCH StartExerciseTimerCommand()
+        private IInformationSet StartExerciseTimerCommand()
         {
             this.CommandHandlerTools.CurrentUserContext.DataManager.StartExerciseTimer();
 
             ResponseTextConverter responseConverter = new ResponseTextConverter("Таймер запущен");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.FixExerciseTimer, ButtonsSet.None);
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
-        internal WorkoutCH StopExerciseTimerCommand()
+        private IInformationSet StopExerciseTimerCommand()
         {
             string timerValue = GetTimerValue();
 
@@ -189,12 +227,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                 "Если требуется, введите комментарий к результату или выберите интересующее действие");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.SaveResultsExercise, ButtonsSet.None);
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
-        internal WorkoutCH ResetResultsExerciseCommand()
+        private IInformationSet ResetResultsExerciseCommand()
         {
             this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
@@ -204,12 +242,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                 "Выберите упражнение");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout);
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
-        internal WorkoutCH SaveResultsExerciseCommand()
+        private IInformationSet SaveResultsExerciseCommand()
         {
             foreach (DTOResultExercise tempResultsExercise in this.CommandHandlerTools.CurrentUserContext.DataManager.TempResultsExercise)
             {
@@ -225,9 +263,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             ResponseTextConverter responseConverter = new ResponseTextConverter("Введённые данные сохранены!", "Выберите упраженение");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout);
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
         
         private string GetTimerValue()

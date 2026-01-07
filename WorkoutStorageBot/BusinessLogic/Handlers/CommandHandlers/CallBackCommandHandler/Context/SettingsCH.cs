@@ -24,36 +24,135 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
         internal SettingsCH(CommandHandlerData commandHandlerTools, CallbackQueryParser callbackQueryParser) : base(commandHandlerTools, callbackQueryParser)
         { }
 
-        internal override SettingsCH Expectation(params HandlerAction[] handlerActions)
+        internal override IInformationSet GetInformationSet()
         {
-            this.HandlerActions = handlerActions;
+            IInformationSet informationSet;
 
-            return this;
+            switch (callbackQueryParser.SubDirection)
+            {
+                case "Settings":
+                    informationSet = SettingsCommand();
+                    break;
+
+                case "ArchiveStore":
+                    informationSet = ArchiveStoreCommand();
+                    break;
+
+                case "Archive":
+                    informationSet = ArchiveCommand();
+                    break;
+                case "Export":
+                    informationSet = ExportCommand();
+                    break;
+
+                case "ExportTo":
+                    informationSet = ExportToCommand();
+                    break;
+
+                case "UnArchive":
+                    informationSet = UnArchiveCommand();
+                    break;
+
+                case "AboutBot":
+                    informationSet = AboutBotCommand();
+
+                    break;
+
+                case "Setting":
+                    informationSet = SettingCommand();
+                    break;
+
+                case "Add":
+                    informationSet = AddCommand();
+                    break;
+
+                case "ResetTempDomains":
+                    informationSet = ResetTempDomainsCommand();
+                    break;
+
+                case "SaveExercises":
+                    informationSet = SaveExercisesCommand();
+                    break;
+
+                case "SettingExisting":
+                    informationSet = SettingExistingCommand();
+                    break;
+
+                case "Selected":
+                    informationSet = SelectedCommand();
+                    break;
+
+                case "ChangeActive":
+                    informationSet = ChangeActiveCommand();
+                    break;
+
+                case "Archiving":
+                    informationSet = ArchivingCommand();
+                    break;
+
+                case "Replace":
+                    informationSet = ReplaceCommand();
+                    break;
+
+                case "ReplaceTo":
+                    informationSet = ReplaceToCommand();
+                    break;
+
+                case "ChangeName":
+                    informationSet = ChangeNameCommand();
+                    break;
+
+                case "ChangeMode":
+                    informationSet = ChangeModeCommand();
+                    break;
+
+                case "ChangedMode":
+                    informationSet = ChangedModeCommand();
+                    break;
+
+                case "Period":
+                    informationSet = Period();
+                    break;
+
+                case "Delete":
+                    informationSet = DeleteCommand();
+                    break;
+
+                case "ConfirmDelete":
+                    informationSet = ConfirmDeleteCommand();
+                    break;
+                default:
+                    throw new NotImplementedException($"Неожиданный callbackQueryParser.SubDirection: {callbackQueryParser.SubDirection}");
+            }
+
+            CheckInformationSet(informationSet);
+
+            return informationSet;
         }
 
-        internal SettingsCH SettingsCommand()
+        private IInformationSet SettingsCommand()
         {
             this.CommandHandlerTools.CurrentUserContext.Navigation.SetQueryFrom(QueryFrom.Settings);
 
             ResponseTextConverter responseConverter = new ResponseTextConverter("Выберите интересующие настройки");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.Settings, ButtonsSet.Main);
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
-        internal SettingsCH ArchiveStoreCommand()
+        private IInformationSet ArchiveStoreCommand()
         {
             ResponseTextConverter responseConverter = new ResponseTextConverter("Выберите интересующий архив для разархивирования");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.ArchiveList, ButtonsSet.Settings);
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
-        internal SettingsCH ArchiveCommand()
+        private IInformationSet ArchiveCommand()
         {
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
@@ -76,12 +175,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
             }
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
-        internal SettingsCH UnArchiveCommand()
+        private IInformationSet UnArchiveCommand()
         {
             string domainIDStr = callbackQueryParser.GetRequiredAdditionalParameter(0);
             int domainID = int.Parse(domainIDStr);
@@ -114,12 +213,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             ResponseTextConverter responseConverter = new ResponseTextConverter($"{DTODomain.Name.AddBoldAndQuotes()} разархивирован!");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.ArchiveList, ButtonsSet.Settings);
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
-        internal SettingsCH AboutBotCommand()
+        private IInformationSet AboutBotCommand()
         {
             string aboutBotText = this.CommandHandlerTools.ParentHandler.CoreTools.ConfigurationData.AboutBotText;
 
@@ -129,22 +228,22 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             ResponseTextConverter responseConverter = new ResponseTextConverter(aboutBotText);
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.None, ButtonsSet.Settings);
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
-        internal SettingsCH ExportCommand()
+        private IInformationSet ExportCommand()
         {
             ResponseTextConverter responseConverter = new ResponseTextConverter("Выберите формат в котором экспортировать данные о ваших тренировках");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.Export, ButtonsSet.Settings);
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
-        internal SettingsCH ExportToCommand()
+        private IInformationSet ExportToCommand()
         {
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
@@ -168,12 +267,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
             }
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets, additionalParameters);
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets, additionalParameters);
 
-            return this;
+            return informationSet;
         }
 
-        internal SettingsCH SettingCommand()
+        private IInformationSet SettingCommand()
         {
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
@@ -196,12 +295,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
             }
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
-        internal SettingsCH AddCommand()
+        private IInformationSet AddCommand()
         {
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
@@ -270,12 +369,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     throw new NotImplementedException($"Неожиданный CallbackQueryParser.SubDirection: {callbackQueryParser.SubDirection}");
             }
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
-        internal SettingsCH ResetTempDomainsCommand()
+        private IInformationSet ResetTempDomainsCommand()
         {
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
@@ -297,12 +396,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     throw new InvalidOperationException($"Неожиданный {nameof(callbackQueryParser.DomainType)}: {callbackQueryParser.DomainType}");
             }
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
-        
-        internal SettingsCH SaveExercisesCommand()
+
+        private IInformationSet SaveExercisesCommand()
         {
             foreach (DTOExercise tempExercise in this.CommandHandlerTools.CurrentUserContext.DataManager.TempExercises)
             {
@@ -333,12 +432,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {this.CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom}");
             }
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
-        internal SettingsCH SettingExistingCommand()
+        private IInformationSet SettingExistingCommand()
         {
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
@@ -361,12 +460,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
             }
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
-        internal SettingsCH SelectedCommand()
+        private IInformationSet SelectedCommand()
         {
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
@@ -455,15 +554,16 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
             }
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
-        internal SettingsCH ChangeActiveCommand()
+        private IInformationSet ChangeActiveCommand()
         {
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
+            IInformationSet informationSet;
 
             switch (callbackQueryParser.DomainType)
             {
@@ -474,11 +574,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                             $"Выберите интересующую настройку для цикла {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()}");
                         buttonsSets = (ButtonsSet.SettingCycle, ButtonsSet.SettingCycles);
 
-                        ClearHandlerAction();
+                        informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-                        this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
-
-                        return this;
+                        return informationSet;
                     }
 
                     this.CommandHandlerTools.CurrentUserContext.ActiveCycle.IsActive = false;
@@ -494,17 +592,18 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
             }
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
-        internal SettingsCH ArchivingCommand()
+        private IInformationSet ArchivingCommand()
         {
             IDTODomain DTODomain = this.CommandHandlerTools.CurrentUserContext.DataManager.GetRequiredCurrentDomain(callbackQueryParser.DomainType);
 
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
+            IInformationSet informationSet;
 
             switch (callbackQueryParser.DomainType)
             {
@@ -515,9 +614,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                             $"Выберите интересующую настройку для цикла {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()}");
                         buttonsSets = (ButtonsSet.SettingCycle, ButtonsSet.CycleList);
 
-                        this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+                        informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-                        return this;
+                        return informationSet;
                     }
 
                     responseConverter = new ResponseTextConverter($"Цикл {DTODomain.Name.AddBoldAndQuotes()} был добавлен в архив", $"Выберите интересующий цикл");
@@ -542,12 +641,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
             this.CommandHandlerTools.CurrentUserContext.DataManager.ResetCurrentDomain(DTODomain);
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
-        internal SettingsCH ReplaceCommand()
+        private IInformationSet ReplaceCommand()
         {
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
@@ -566,15 +665,16 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
             }
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
-        internal SettingsCH ReplaceToCommand()
+        private IInformationSet ReplaceToCommand()
         {
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
+            IInformationSet informationSet;
 
             string targetDomainIDStr = callbackQueryParser.GetRequiredAdditionalParameter(0);
             int targetDomainID = int.Parse(targetDomainIDStr);
@@ -588,9 +688,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                             $"Выберите цикл, в который хотите перенести день {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldAndQuotes()}");
                         buttonsSets = (ButtonsSet.ReplaceToCycle, ButtonsSet.SettingDay);
 
-                        this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+                        informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-                        return this;
+                        return informationSet;
                     }
 
                     DTOCycle targetCycle = this.CommandHandlerTools.CurrentUserContext.UserInformation.Cycles.FirstOrDefault(x => x.Id == targetDomainID)
@@ -618,9 +718,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                             $"Выберите день, в который хотите перенести упражнение {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldAndQuotes()}");
                         buttonsSets = (ButtonsSet.ReplaceToDay, ButtonsSet.SettingExercise);
 
-                        this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+                        informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-                        return this;
+                        return informationSet;
                     }
 
                     DTODay targetDay = this.CommandHandlerTools.CurrentUserContext.UserInformation.Cycles.SelectMany(cycle => cycle.Days)
@@ -647,12 +747,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
             buttonsSets = (ButtonsSet.CycleList, ButtonsSet.SettingCycles);
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
-        internal SettingsCH ChangeNameCommand()
+        private IInformationSet ChangeNameCommand()
         {
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
@@ -683,12 +783,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
             }
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
-        internal SettingsCH ChangeModeCommand()
+        private IInformationSet ChangeModeCommand()
         {
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
@@ -704,12 +804,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
             }
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
-        internal SettingsCH ChangedModeCommand()
+        private IInformationSet ChangedModeCommand()
         {
             IDTODomain DTODomain = this.CommandHandlerTools.CurrentUserContext.DataManager.GetRequiredCurrentDomain(callbackQueryParser.DomainType);
 
@@ -738,15 +838,16 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
             }
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
-        internal SettingsCH Period()
+        private IInformationSet Period()
         {
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
+            IInformationSet informationSet;
 
             string operation = callbackQueryParser.AdditionalParameters.First();
             int monthFilterPeriod = int.Parse(callbackQueryParser.AdditionalParameters.Skip(1).First());
@@ -755,22 +856,22 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             {
                 case "Export/Excel":
 
-                    this.InformationSet = TryGetExportFile(".xlsx", monthFilterPeriod);
+                    informationSet = TryGetExportFile(".xlsx", monthFilterPeriod);
                        
                     break;
                 case "Export/JSON":
 
-                    this.InformationSet = TryGetExportFile(".json", monthFilterPeriod);
+                    informationSet = TryGetExportFile(".json", monthFilterPeriod);
 
                     break;
                 default:
                     throw new NotImplementedException($"Неожиданный {nameof(operation)}: {operation}");
             }
 
-            return this;
+            return informationSet;
         }
 
-        internal SettingsCH DeleteCommand()
+        private IInformationSet DeleteCommand()
         {
             Dictionary<string, string> additionalParameters = new Dictionary<string, string>() { { "DomainType", callbackQueryParser.DomainType } };
             ResponseTextConverter responseConverter;
@@ -819,15 +920,16 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
             }
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets, additionalParameters);
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets, additionalParameters);
 
-            return this;
+            return informationSet;
         }
 
-        internal SettingsCH ConfirmDeleteCommand()
+        private IInformationSet ConfirmDeleteCommand()
         {
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
+            IInformationSet informationSet;
 
             if (callbackQueryParser.DomainType == CommonConsts.DomainsAndEntities.Account)
             {
@@ -839,7 +941,6 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                 
                 buttonsSets = (ButtonsSet.None, ButtonsSet.None);
                 responseConverter = new ResponseTextConverter("Аккаунт успешно удалён");
-                this.ClearHandlerAction();
             }
             else
             {
@@ -850,15 +951,13 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     case CommonConsts.DomainsAndEntities.Cycle:
                         if (this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.IsActive)
                         {
-                            this.ClearHandlerAction();
-
                             responseConverter = new ResponseTextConverter("Ошибка при удалении!", "Нельзя удалить активный цикл!",
                                 $"Выберите интересующую настройку для цикла {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()}");
                             buttonsSets = (ButtonsSet.SettingCycle, ButtonsSet.CycleList);
 
-                            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+                            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-                            return this;
+                            return informationSet;
                         }
 
                         this.CommandHandlerTools.CurrentUserContext.UserInformation.Cycles.Remove((DTOCycle)DTODomain);
@@ -890,9 +989,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                 this.CommandHandlerTools.CurrentUserContext.DataManager.ResetCurrentDomain(DTODomain);
             }
 
-            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            return this;
+            return informationSet;
         }
 
         private IInformationSet TryGetExportFile(string fileExtenstion, int monthFilterPeriod)
