@@ -1,8 +1,8 @@
 ﻿#region using
 
 using Telegram.Bot.Types.ReplyMarkups;
+using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Enums;
-using WorkoutStorageBot.BusinessLogic.SessionContext;
 using WorkoutStorageBot.Extenions;
 using WorkoutStorageBot.Helpers.Common;
 using WorkoutStorageBot.Helpers.Crypto;

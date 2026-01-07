@@ -1,11 +1,11 @@
 ﻿#region using
 
 using Microsoft.Extensions.Caching.Memory;
-using WorkoutStorageBot.BusinessLogic.SessionContext;
+using WorkoutStorageBot.BusinessLogic.Context.Session;
 
-#endregion 
+#endregion
 
-namespace WorkoutStorageBot.BusinessLogic.GlobalContext
+namespace WorkoutStorageBot.BusinessLogic.Context.Global
 {
     internal class MemoryCacheAdapterContextKeeper : IContextKeeper
     {

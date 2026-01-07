@@ -2,7 +2,7 @@
 using WorkoutStorageBot.BusinessLogic.Enums;
 #endregion
 
-namespace WorkoutStorageBot.BusinessLogic.SessionContext
+namespace WorkoutStorageBot.BusinessLogic.Context.Session
 {
     internal class Navigation
     {
@@ -21,12 +21,12 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
 
         internal void ResetMessageNavigationTarget()
         {
-            this.MessageNavigationTarget = MessageNavigationTarget.Default;
+            MessageNavigationTarget = MessageNavigationTarget.Default;
         }
 
         internal void ResetQueryFrom()
         {
-            this.QueryFrom = QueryFrom.NoMatter;
+            QueryFrom = QueryFrom.NoMatter;
         }
 
         internal void ResetNavigation()

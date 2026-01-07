@@ -6,7 +6,7 @@ using WorkoutStorageBot.Model.DTO.BusinessLogic;
 
 #endregion
 
-namespace WorkoutStorageBot.BusinessLogic.SessionContext
+namespace WorkoutStorageBot.BusinessLogic.Context.Session
 {
     internal class UserContext
     {

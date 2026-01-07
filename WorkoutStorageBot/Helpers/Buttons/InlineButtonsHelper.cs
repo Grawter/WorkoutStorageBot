@@ -3,8 +3,8 @@
 using Telegram.Bot.Types.ReplyMarkups;
 using WorkoutStorageBot.BusinessLogic.Buttons.Abstraction;
 using WorkoutStorageBot.BusinessLogic.Buttons.BusinessButtonsFactories;
+using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Enums;
-using WorkoutStorageBot.BusinessLogic.SessionContext;
 
 #endregion
 

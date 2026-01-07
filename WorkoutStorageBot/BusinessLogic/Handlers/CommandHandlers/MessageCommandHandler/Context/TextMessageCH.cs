@@ -1,11 +1,11 @@
 ﻿#region using
 using WorkoutStorageBot.BusinessLogic.Consts;
+using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.Exceptions;
 using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommandHandler;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.BusinessLogic.Repositories;
-using WorkoutStorageBot.BusinessLogic.SessionContext;
 using WorkoutStorageBot.Extenions;
 using WorkoutStorageBot.Helpers.Common;
 using WorkoutStorageBot.Helpers.Converters;

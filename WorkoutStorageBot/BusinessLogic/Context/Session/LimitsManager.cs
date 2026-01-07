@@ -1,6 +1,4 @@
-﻿
-
-namespace WorkoutStorageBot.BusinessLogic.SessionContext
+﻿namespace WorkoutStorageBot.BusinessLogic.Context.Session
 {
     internal class LimitsManager
     {
@@ -17,7 +15,7 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
 
         internal bool HasBlockByTimeLimit(string limitName, out DateTime limit)
         {
-            ArgumentNullException.ThrowIfNullOrWhiteSpace(limitName);
+            ArgumentException.ThrowIfNullOrWhiteSpace(limitName);
 
             limit = DateTime.MinValue;
 
@@ -32,7 +30,7 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
 
         internal bool AddOrUpdateTimeLimit(string limitName, DateTime newLimit)
         {
-            ArgumentNullException.ThrowIfNullOrWhiteSpace(limitName);
+            ArgumentException.ThrowIfNullOrWhiteSpace(limitName);
 
             if (!IsEnableLimit) 
                 return false;

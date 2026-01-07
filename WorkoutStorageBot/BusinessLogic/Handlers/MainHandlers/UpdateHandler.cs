@@ -3,11 +3,11 @@
 using System.Diagnostics.CodeAnalysis;
 using Telegram.Bot.Types.Enums;
 using WorkoutStorageBot.BusinessLogic.Consts;
+using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackCommandHandler.Context;
 using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageCommandHandler.Context;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
-using WorkoutStorageBot.BusinessLogic.SessionContext;
 using WorkoutStorageBot.Core.Abstraction;
 using WorkoutStorageBot.Core.Manager;
 using WorkoutStorageBot.Helpers.CallbackQueryParser;
@@ -22,7 +22,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
 {
     internal class UpdateHandler : CoreHandler
     {
-        private  UserContext CurrentUserContext { get; set; }
+        private UserContext CurrentUserContext { get; set; }
 
         internal UpdateHandler(CoreTools coreTools, CoreManager coreManager) : base(coreTools, coreManager, nameof(PrimaryUpdateHandler))
         { }

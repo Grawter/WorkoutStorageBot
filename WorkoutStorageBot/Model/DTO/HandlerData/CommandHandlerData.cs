@@ -1,6 +1,6 @@
 ﻿#region using
 
-using WorkoutStorageBot.BusinessLogic.SessionContext;
+using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.Core.Abstraction;
 using WorkoutStorageBot.Model.AppContext;
 

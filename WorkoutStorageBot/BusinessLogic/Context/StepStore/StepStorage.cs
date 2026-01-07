@@ -4,7 +4,7 @@ using WorkoutStorageBot.BusinessLogic.Enums;
 
 #endregion
 
-namespace WorkoutStorageBot.BusinessLogic.StepStore
+namespace WorkoutStorageBot.BusinessLogic.Context.StepStore
 {
     internal static class StepStorage
     {

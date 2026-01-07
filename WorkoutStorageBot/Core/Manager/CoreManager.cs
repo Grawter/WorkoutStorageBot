@@ -7,10 +7,8 @@ using WorkoutStorageBot.Application.BotTools.Sender;
 using WorkoutStorageBot.Application.Configuration;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Repositories;
-using WorkoutStorageBot.BusinessLogic.GlobalContext;
 using WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
-using WorkoutStorageBot.BusinessLogic.SessionContext;
 using WorkoutStorageBot.Core.Abstraction;
 using WorkoutStorageBot.Helpers.Common;
 using WorkoutStorageBot.Helpers.EventIDHelper;
@@ -20,6 +18,8 @@ using WorkoutStorageBot.Model.Entities.BusinessLogic;
 using WorkoutStorageBot.Model.DTO.HandlerData;
 using WorkoutStorageBot.Model.DTO.HandlerData.Results;
 using WorkoutStorageBot.Model.DTO.HandlerData.Results.UpdateInfo;
+using WorkoutStorageBot.BusinessLogic.Context.Global;
+using WorkoutStorageBot.BusinessLogic.Context.Session;
 
 #endregion using
 

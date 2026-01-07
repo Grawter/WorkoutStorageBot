@@ -3,7 +3,7 @@
 using Telegram.Bot.Types;
 using Telegram.Bot;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
-using WorkoutStorageBot.BusinessLogic.SessionContext;
+using WorkoutStorageBot.BusinessLogic.Context.Session;
 using Telegram.Bot.Types.Enums;
 using WorkoutStorageBot.Helpers.Common;
 using WorkoutStorageBot.Helpers.Buttons;

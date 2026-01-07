@@ -9,7 +9,7 @@ using WorkoutStorageBot.Application.BotTools.Listener;
 using WorkoutStorageBot.Application.BotTools.Logging;
 using WorkoutStorageBot.Application.BotTools.Sender;
 using WorkoutStorageBot.Application.Configuration;
-using WorkoutStorageBot.BusinessLogic.GlobalContext;
+using WorkoutStorageBot.BusinessLogic.Context.Global;
 using WorkoutStorageBot.Model.AppContext;
 
 #endregion

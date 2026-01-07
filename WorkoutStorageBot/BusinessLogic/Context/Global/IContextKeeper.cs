@@ -1,10 +1,10 @@
 ﻿#region using
 
-using WorkoutStorageBot.BusinessLogic.SessionContext;
+using WorkoutStorageBot.BusinessLogic.Context.Session;
 
 #endregion
 
-namespace WorkoutStorageBot.BusinessLogic.GlobalContext
+namespace WorkoutStorageBot.BusinessLogic.Context.Global
 {
     public interface IContextKeeper
     {

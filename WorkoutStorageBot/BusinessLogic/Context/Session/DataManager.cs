@@ -6,7 +6,7 @@ using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.Model.Interfaces;
 #endregion
 
-namespace WorkoutStorageBot.BusinessLogic.SessionContext
+namespace WorkoutStorageBot.BusinessLogic.Context.Session
 {
     internal class DataManager
     {

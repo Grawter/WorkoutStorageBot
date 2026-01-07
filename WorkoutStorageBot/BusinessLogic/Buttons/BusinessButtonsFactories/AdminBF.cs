@@ -1,8 +1,8 @@
 ﻿#region using
 
 using WorkoutStorageBot.BusinessLogic.Buttons.Abstraction;
+using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Enums;
-using WorkoutStorageBot.BusinessLogic.SessionContext;
 
 #endregion
 

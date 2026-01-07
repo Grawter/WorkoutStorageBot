@@ -7,8 +7,6 @@ using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Repositories;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
-using WorkoutStorageBot.BusinessLogic.SessionContext;
-using WorkoutStorageBot.BusinessLogic.StepStore;
 using WorkoutStorageBot.Core.Abstraction;
 using WorkoutStorageBot.Core.Manager;
 using WorkoutStorageBot.Helpers.Common;
@@ -20,7 +18,9 @@ using WorkoutStorageBot.Model.DTO.HandlerData.Results;
 using WorkoutStorageBot.Model.DTO.HandlerData.Results.UpdateInfo;
 using WorkoutStorageBot.Model.Entities.BusinessLogic;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
-using WorkoutStorageBot.BusinessLogic.GlobalContext;
+using WorkoutStorageBot.BusinessLogic.Context.Global;
+using WorkoutStorageBot.BusinessLogic.Context.Session;
+using WorkoutStorageBot.BusinessLogic.Context.StepStore;
 
 #endregion
 

@@ -1,7 +1,7 @@
 ﻿#region using
 
+using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Enums;
-using WorkoutStorageBot.BusinessLogic.SessionContext;
 
 #endregion
 

@@ -1,7 +1,7 @@
 ﻿#region using
 
+using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
-using WorkoutStorageBot.BusinessLogic.SessionContext;
 
 #endregion
 

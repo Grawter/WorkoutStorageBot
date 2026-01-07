@@ -1,8 +1,8 @@
 ﻿#region
 
 using Telegram.Bot.Types;
+using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
-using WorkoutStorageBot.BusinessLogic.SessionContext;
 using WorkoutStorageBot.Model.DTO.HandlerData.Results.UpdateInfo;
 
 #endregion

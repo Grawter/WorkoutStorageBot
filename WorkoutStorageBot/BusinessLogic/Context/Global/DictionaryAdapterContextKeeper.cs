@@ -1,11 +1,11 @@
 ﻿#region using
 
 using System.Collections.Concurrent;
-using WorkoutStorageBot.BusinessLogic.SessionContext;
+using WorkoutStorageBot.BusinessLogic.Context.Session;
 
-#endregion 
+#endregion
 
-namespace WorkoutStorageBot.BusinessLogic.GlobalContext
+namespace WorkoutStorageBot.BusinessLogic.Context.Global
 {
     internal class DictionaryAdapterContextKeeper : IContextKeeper
     {
