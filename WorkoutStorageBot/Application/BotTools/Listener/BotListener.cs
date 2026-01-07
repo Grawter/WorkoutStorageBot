@@ -85,19 +85,28 @@ namespace WorkoutStorageBot.Application.BotTools.Listener
 
         private async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
         {
-            ILogger logger = GetLoggerOnScope();
+            try
+            {
+                ILogger logger = GetLoggerOnScope();
 
-            EventId eventId = EventIDHelper.GetNextEventIdThreadSave(CommonConsts.EventNames.Critical);
+                EventId eventId = EventIDHelper.GetNextEventIdThreadSave(CommonConsts.EventNames.Critical);
 
-            logger.Log(LogLevel.Critical,
-                       eventId,
-                       new Dictionary<string, object>(),
-                       exception,
-                       LogFormatter.CriticalExBotFormatter);
+                logger.Log(LogLevel.Critical,
+                           eventId,
+                           new Dictionary<string, object>(),
+                           exception,
+                           LogFormatter.CriticalExBotFormatter);
 
-            if (configurationData.Notifications.NotifyOwnersAboutCriticalErrors)
-                await botSender.SendSimpleMassiveResponse(configurationData.Bot.OwnersChatIDs, @$"!!!Необработанная ошибка!!!:
+                logger.LogWarning("Отключение бота после необработанной ошибки");
+
+                if (configurationData.Notifications.NotifyOwnersAboutCriticalErrors)
+                    await botSender.SendSimpleMassiveResponse(configurationData.Bot.OwnersChatIDs, @$"!!!Необработанная ошибка!!!:
 {exception.ToString()}");
+            }
+            finally
+            {
+                cancellationTokenSource.Cancel();
+            }
         }
 
         private ILogger GetLoggerOnScope()
