@@ -1,9 +1,9 @@
 /.vs
-/WorkoutStorageBot/bin/Debug/net9.0
-/WorkoutStorageBot/bin/Release/net9.0
+/WorkoutStorageBot/bin/Debug/
+/WorkoutStorageBot/bin/Release/
 /WorkoutStorageBot/obj
 /WorkoutStorageBot/Application/StartConfiguration/appsettings.json
 
-/WorkoutStorageImport/bin/Debug/net9.0
-/WorkoutStorageImport/bin/Release/net9.0
+/WorkoutStorageImport/bin/Debug/
+/WorkoutStorageImport/bin/Release/
 /WorkoutStorageImport/obj
