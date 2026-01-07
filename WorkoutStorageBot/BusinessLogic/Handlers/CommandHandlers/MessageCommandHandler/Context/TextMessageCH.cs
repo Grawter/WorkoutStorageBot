@@ -1,17 +1,19 @@
 ﻿#region using
 using WorkoutStorageBot.BusinessLogic.Consts;
-using WorkoutStorageBot.BusinessLogic.Repositories;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.Exceptions;
 using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommandHandler;
-using WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
+using WorkoutStorageBot.BusinessLogic.Repositories;
+using WorkoutStorageBot.BusinessLogic.SessionContext;
 using WorkoutStorageBot.Extenions;
 using WorkoutStorageBot.Helpers.Common;
 using WorkoutStorageBot.Helpers.Converters;
+using WorkoutStorageBot.Model.DTO.BusinessLogic;
+using WorkoutStorageBot.Model.DTO.HandlerData;
 using WorkoutStorageBot.Model.Entities.BusinessLogic;
 using WorkoutStorageBot.Model.Entities.Logging;
-using WorkoutStorageBot.Model.DTO.HandlerData;
+using WorkoutStorageBot.Model.Interfaces;
 #endregion
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageCommandHandler.Context
@@ -85,10 +87,13 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             }
 
             bool hasActiveCycle = this.CommandHandlerTools.CurrentUserContext.ActiveCycle == null ? false : true;
-            this.Domain = this.CommandHandlerTools.CurrentUserContext.DataManager.SetCurrentCycle(requestConverter.Convert(), !hasActiveCycle, this.CommandHandlerTools.CurrentUserContext.UserInformation.Id);
+            DTOCycle currentCycle = this.CommandHandlerTools.CurrentUserContext.DataManager.SetCurrentCycle(requestConverter.Convert(), !hasActiveCycle, this.CommandHandlerTools.CurrentUserContext.UserInformation);
 
             if (!hasActiveCycle)
-                this.CommandHandlerTools.CurrentUserContext.UdpateActiveCycleForce((Cycle)this.Domain);
+                this.CommandHandlerTools.CurrentUserContext.UdpateActiveCycleForce(currentCycle);
+
+            this.CommandHandlerTools.CurrentUserContext.UserInformation.Cycles.Add(currentCycle);
+            this.CommandHandlerTools.Db.AddEntity(currentCycle);
 
             switch (this.CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom)
             {
@@ -140,7 +145,10 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 return this;
             }
 
-            this.Domain = this.CommandHandlerTools.CurrentUserContext.DataManager.SetCurrentDay(domainName);
+            DTODay currentDay = this.CommandHandlerTools.CurrentUserContext.DataManager.SetCurrentDay(domainName);
+
+            this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Days.Add(currentDay);
+            this.CommandHandlerTools.Db.AddEntity(currentDay);
 
             switch (this.CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom)
             {
@@ -178,7 +186,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             requestConverter.RemoveCompletely(80).WithoutServiceSymbol();
 
-            List<Exercise> exercises = new List<Exercise>();
+            List<DTOExercise> exercises = new List<DTOExercise>();
 
             string exceptionMessage = string.Empty;
 
@@ -192,7 +200,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             }
 
             // Сначала нужно чтобы была общая проверка, есть ли в текущем дне добавляемое упражнение
-            foreach (Exercise exercise in exercises)
+            foreach (DTOExercise exercise in exercises)
             {
                 if (AlreadyExistDomainWithName(exercise.Name, DomainType.Exercise))
                     exceptionMessage = $"В этом дне уже существует упражнение с названием {exercise.Name.AddBoldAndQuotes()}";
@@ -200,7 +208,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             if (string.IsNullOrWhiteSpace(exceptionMessage))
             {
-                if (!this.CommandHandlerTools.CurrentUserContext.DataManager.TryAddExercise(exercises, out string existingExerciseName))
+                if (!this.CommandHandlerTools.CurrentUserContext.DataManager.TryAddTempExercises(exercises, out string existingExerciseName))
                     exceptionMessage = $"В списке фиксаций уже существует упражнение с названием {existingExerciseName.AddBoldAndQuotes()}";
             }
 
@@ -251,16 +259,16 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
         {
             requestConverter.RemoveCompletely(80).WithoutServiceSymbol();
 
-            Exercise currentExercise = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise;
+            DTOExercise currentExercise = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise;
 
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
             try
             {
-                List<ResultExercise> resultsExercise = requestConverter.GetResultsExercise(currentExercise.Mode);
+                List<DTOResultExercise> resultsExercise = requestConverter.GetResultsExercise(currentExercise.Mode);
 
-                this.CommandHandlerTools.CurrentUserContext.DataManager.AddResultsExercise(resultsExercise);
+                this.CommandHandlerTools.CurrentUserContext.DataManager.AddTempResultsExercise(resultsExercise);
 
                 responseConverter = new ResponseTextConverter("Подход(ы) зафиксирован(ы)",
                 @$"Введите результат след. подхода для упражения {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldAndQuotes()} 
@@ -294,12 +302,14 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
         {
             string comment = requestConverter.RemoveCompletely(50).WithoutServiceSymbol().Convert();
 
-            ResultExercise resultExercise = this.CommandHandlerTools.CurrentUserContext.DataManager.ResultsExercise.Single();
+            DTOResultExercise resultExercise = this.CommandHandlerTools.CurrentUserContext.DataManager.TempResultsExercise.Single();
             resultExercise.FreeResult += $" / {comment}";
 
-            this.CommandHandlerTools.Db.ResultsExercises.Add(resultExercise);
+            resultExercise.Exercise = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise;
+            this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.ResultsExercise.Add(resultExercise);
+            this.CommandHandlerTools.Db.AddEntity(resultExercise);
 
-            this.CommandHandlerTools.CurrentUserContext.DataManager.ResetResultsExercise();
+            this.CommandHandlerTools.CurrentUserContext.DataManager.ResetTempResultsExercise();
 
             this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
@@ -313,8 +323,6 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
         internal TextMessageCH ChangeNameCommand(string domainType)
         {
-            this.Domain = this.CommandHandlerTools.CurrentUserContext.DataManager.GetCurrentDomain(domainType);
-
             requestConverter.RemoveCompletely(25).WithoutServiceSymbol();
 
             ResponseTextConverter responseConverter;
@@ -384,7 +392,10 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                     throw new InvalidOperationException($"Неожиданный {nameof(domainType)} : {domainType}");
             }
 
-            this.Domain.Name = domainName;
+            IDTODomain DTODomain = this.CommandHandlerTools.CurrentUserContext.DataManager.GetRequiredCurrentDomain(domainType);
+            DTODomain.Name = domainName;
+
+            this.CommandHandlerTools.Db.UpdateEntity(DTODomain);
 
             this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
@@ -521,9 +532,15 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                     responseConverter = new ResponseTextConverter($"Пользователь '{userIdentity.AddBoldAndQuotes()}' не найден!", "Выберите интересующее действие");
                 else
                 {
+                    UserContext? userContext = this.CommandHandlerTools.ParentHandler.CoreManager.ContextKeeper.GetContext(user.UserId);
+
                     switch (list)
                     {
                         case "wl":
+
+                            if (userContext != null)
+                                userContext.UserInformation.WhiteList = !userContext.UserInformation.WhiteList;
+
                             adminRepository.ChangeWhiteListByUser(user);
 
                             responseConverter = new ResponseTextConverter($"WhiteList для {user.Username.AddBoldAndQuotes()} ({user.UserId}) установлен в: {user.WhiteList.ToString().AddBold()}",
@@ -531,6 +548,10 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
                             break;
                         case "bl":
+
+                            if (userContext != null)
+                                userContext.UserInformation.BlackList = !userContext.UserInformation.BlackList;
+
                             adminRepository.ChangeBlackListByUser(user);
 
                             responseConverter = new ResponseTextConverter($"BlackList для {user.Username.AddBoldAndQuotes()} ({user.UserId}) установлен в: {user.BlackList.ToString().AddBold()}",
@@ -600,7 +621,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             }
             else
             {
-                Exercise currentExercise = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise;
+                DTOExercise currentExercise = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise;
 
                 string dbProvider = this.CommandHandlerTools.Db.GetDBProvider();
 

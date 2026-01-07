@@ -12,8 +12,6 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.Abstraction
     {
         protected IEnumerable<HandlerAction> HandlerActions { get; set; } 
 
-        protected IDomain? Domain { get; set; }
-
         protected IInformationSet InformationSet { get; set; }
 
         protected CommandHandlerData CommandHandlerTools { get; }

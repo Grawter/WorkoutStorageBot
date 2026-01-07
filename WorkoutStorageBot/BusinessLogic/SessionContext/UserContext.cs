@@ -2,7 +2,7 @@
 
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.Helpers.Common;
-using WorkoutStorageBot.Model.Entities.BusinessLogic;
+using WorkoutStorageBot.Model.DTO.BusinessLogic;
 
 #endregion
 
@@ -10,11 +10,11 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
 {
     internal class UserContext
     {
-        internal UserInformation UserInformation { get; }
+        internal DTOUserInformation UserInformation { get; }
         
         internal Roles Roles { get; }
         
-        internal Cycle? ActiveCycle { get; private set; }
+        internal DTOCycle? ActiveCycle { get; private set; }
 
         internal DataManager DataManager { get; }
 
@@ -24,7 +24,7 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
 
         internal string CallBackId { get; set; }
 
-        internal UserContext(UserInformation userInformation, Roles currentRoles = Roles.User, bool isEnableLimit = true)
+        internal UserContext(DTOUserInformation userInformation, Roles currentRoles = Roles.User, bool isEnableLimit = true)
         {
             UserInformation = CommonHelper.GetIfNotNull(userInformation);
 
@@ -39,7 +39,7 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
             LimitsManager = new(isEnableLimit);
         }
 
-        internal void UdpateActiveCycleForce(Cycle cycle)
+        internal void UdpateActiveCycleForce(DTOCycle cycle)
         {
             ActiveCycle = cycle;
             ActiveCycle.IsActive = true;

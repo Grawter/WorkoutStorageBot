@@ -1,10 +1,12 @@
 ﻿#region using
 
+using Microsoft.IO;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using System.Drawing;
 using WorkoutStorageBot.BusinessLogic.Consts;
-using Microsoft.IO;
+using WorkoutStorageBot.Helpers.Converters;
+using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.Model.Entities.BusinessLogic;
 
 #endregion
@@ -13,12 +15,12 @@ namespace WorkoutStorageBot.Helpers.Export
 {
     internal static class ExcelExportHelper
     {
-        internal static RecyclableMemoryStream GetExcelFile(List<Cycle> cycles, IQueryable<ResultExercise> resultsExercises, int monthFilterPeriod)
+        internal static RecyclableMemoryStream GetExcelFile(List<DTOCycle> allUserCycles, IQueryable<ResultExercise> allUserResultsExercises, int monthFilterPeriod)
         {
             SetLicense();
 
-            DateTime filterDateTime = CommonExportHelper.GetFilterDateTime(monthFilterPeriod, resultsExercises);
-            CommonExportHelper.LoadDBDataToDBContextForFilterDate(resultsExercises, filterDateTime);
+            DateTime filterDateTime = CommonExportHelper.GetFilterDateTime(monthFilterPeriod, allUserResultsExercises);
+            IQueryable<ResultExercise> resultExercisesByFilterData = CommonExportHelper.GetResultExercisesByFilterDate(allUserResultsExercises, filterDateTime);
 
             byte[] packageInfo;
 
@@ -59,18 +61,23 @@ namespace WorkoutStorageBot.Helpers.Export
 
                 int resultExerciseRowNumber = 0;
 
-                foreach (Cycle cycle in cycles)
+                foreach (DTOCycle cycle in allUserCycles)
                 {
-                    foreach (Day day in cycle.Days)
+                    foreach (DTODay day in cycle.Days)
                     {
-                        foreach (Exercise exercise in day.Exercises)
+                        foreach (DTOExercise exercise in day.Exercises)
                         {
                             SetExerciseName(exercise.Name, exercisePoint, mainSheet);
 
                             SetResultTitle(resultTitlePoint, mainSheet);
 
                             DateTime tempDate = DateTime.MinValue;
-                            foreach (ResultExercise resultExercise in exercise.ResultsExercise)
+
+                            exercise.ResultsExercise = resultExercisesByFilterData.Where(x => x.ExerciseId == exercise.Id)
+                                                                                  .Select(y => EntityConverter.ToDTOResultExercise(y))
+                                                                                  .ToList();
+
+                            foreach (DTOResultExercise resultExercise in exercise.ResultsExercise)
                             {
                                 bool isNeedWriteDate = false;
                                 if (tempDate.Date != resultExercise.DateTime.Date)
@@ -177,7 +184,7 @@ namespace WorkoutStorageBot.Helpers.Export
             mainSheet.Cells[resultTitlePoint.Y, resultTitlePoint.X].Value = "Свободный рез.";
         }
 
-        private static void SetResultExercise(int rowNumber, ResultExercise resultExercise, Point resultExercisePoint, ExcelWorksheet mainSheet, bool isNeedWriteDate = true)
+        private static void SetResultExercise(int rowNumber, DTOResultExercise resultExercise, Point resultExercisePoint, ExcelWorksheet mainSheet, bool isNeedWriteDate = true)
         {
             Color backgroundCellColor = GetColorForRow(rowNumber);
 

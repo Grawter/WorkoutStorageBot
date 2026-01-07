@@ -3,6 +3,7 @@
 using System.Text;
 using WorkoutStorageBot.BusinessLogic.Exceptions;
 using WorkoutStorageBot.Extenions;
+using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.Model.Entities.BusinessLogic;
 
 #endregion
@@ -46,11 +47,11 @@ namespace WorkoutStorageBot.Helpers.Converters
             return this;
         }
 
-        internal List<Exercise> GetExercises()
+        internal List<DTOExercise> GetExercises()
         {
             string text = sb.ToString();
 
-            List<Exercise> exercises = new List<Exercise>();
+            List<DTOExercise> exercises = new List<DTOExercise>();
 
             foreach (string exerciseWithType in text.Split(';', stringSplitOptions))
             {
@@ -67,7 +68,7 @@ namespace WorkoutStorageBot.Helpers.Converters
                 if (!Enum.IsDefined(typeof(ExercisesMods), type))
                     throw new CreateExerciseException($"Указанный тип ({type}) упражнения '{name}' не относится к допустимым");
 
-                Exercise exercise = new Exercise() { Name = name, Mode = (ExercisesMods)type };
+                DTOExercise exercise = new DTOExercise() { Name = name, Mode = (ExercisesMods)type };
                 exercises.Add(exercise);
             }
 
@@ -76,9 +77,9 @@ namespace WorkoutStorageBot.Helpers.Converters
                 : throw new CreateExerciseException("Не удалось получить ни одного упражнения");
         }
 
-        internal List<ResultExercise> GetResultsExercise(ExercisesMods currentExerciseMode)
+        internal List<DTOResultExercise> GetResultsExercise(ExercisesMods currentExerciseMode)
         {
-            List<ResultExercise> results = new();
+            List<DTOResultExercise> results = new();
 
             StringSplitOptions stringSplitOptions = StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries;
 
@@ -93,7 +94,7 @@ namespace WorkoutStorageBot.Helpers.Converters
 
             foreach (string resultExerciseStr in text.Split(separator, stringSplitOptions))
             {
-                ResultExercise resultExercise = GetResultExercise(resultExerciseStr.Trim(), currentExerciseMode);
+                DTOResultExercise resultExercise = GetResultExercise(resultExerciseStr.Trim(), currentExerciseMode);
 
                 results.Add(resultExercise);
             }
@@ -106,7 +107,7 @@ namespace WorkoutStorageBot.Helpers.Converters
             return sb.ToString();
         }
 
-        private ResultExercise GetResultExercise(string resultExerciseStr, ExercisesMods currentExerciseMode)
+        private DTOResultExercise GetResultExercise(string resultExerciseStr, ExercisesMods currentExerciseMode)
         {
             string currentType = currentExerciseMode.ToString().AddQuotes();
 
@@ -117,7 +118,7 @@ namespace WorkoutStorageBot.Helpers.Converters
                     if (!int.TryParse(resultExerciseStr, out int singleCount))
                         throw new CreateResultExerciseException("Указанное количество повторений не является цифрой");
 
-                    return new ResultExercise()
+                    return new DTOResultExercise()
                     {
                         Count = singleCount,
                         DateTime = DateTime.Now,
@@ -139,7 +140,7 @@ namespace WorkoutStorageBot.Helpers.Converters
                     if (!int.TryParse(countStr, out int count))
                         throw new CreateResultExerciseException("Указанное количество повторений не является цифрой");
 
-                    return new ResultExercise()
+                    return new DTOResultExercise()
                     {
                         Weight = weight,
                         Count = count,
@@ -147,7 +148,7 @@ namespace WorkoutStorageBot.Helpers.Converters
                     };
                 
                 case ExercisesMods.FreeResult:
-                    return new ResultExercise()
+                    return new DTOResultExercise()
                     {
                         FreeResult = resultExerciseStr,
                         DateTime = DateTime.Now,

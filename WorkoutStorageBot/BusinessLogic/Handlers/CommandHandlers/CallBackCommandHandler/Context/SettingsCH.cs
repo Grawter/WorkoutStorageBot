@@ -1,6 +1,5 @@
 ﻿#region using
 
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IO;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Enums;
@@ -11,6 +10,7 @@ using WorkoutStorageBot.Extenions;
 using WorkoutStorageBot.Helpers.CallbackQueryParser;
 using WorkoutStorageBot.Helpers.Converters;
 using WorkoutStorageBot.Helpers.Export;
+using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.Model.DTO.HandlerData;
 using WorkoutStorageBot.Model.Entities.BusinessLogic;
 using WorkoutStorageBot.Model.Interfaces;
@@ -86,10 +86,32 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             string domainIDStr = callbackQueryParser.GetRequiredAdditionalParameter(0);
             int domainID = int.Parse(domainIDStr);
 
-            this.Domain = this.CommandHandlerTools.Db.GetDomainWithId(domainID, callbackQueryParser.DomainType);
-            this.Domain.IsArchive = false;
+            IDTODomain? DTODomain = null;
 
-            ResponseTextConverter responseConverter = new ResponseTextConverter($"{this.Domain.Name.AddBoldAndQuotes()} разархивирован!");
+            if (callbackQueryParser.DomainType == CommonConsts.DomainsAndEntities.Cycle)
+            {
+                DTODomain = this.CommandHandlerTools.CurrentUserContext.UserInformation.Cycles.FirstOrDefault(x => x.Id == domainID)
+                    ?? throw new InvalidOperationException($"Not found cycle for unarchiving with ID = {domainID}");
+            }
+            else if (callbackQueryParser.DomainType == CommonConsts.DomainsAndEntities.Day)
+            {
+                IEnumerable<DTODay> allDays = this.CommandHandlerTools.CurrentUserContext.UserInformation.Cycles.SelectMany(x => x.Days);
+
+                DTODomain = allDays.FirstOrDefault(x => x.Id == domainID) ?? throw new InvalidOperationException($"Not found day for unarchiving with ID = {domainID}");
+            }
+            else if (callbackQueryParser.DomainType == CommonConsts.DomainsAndEntities.Exercise)
+            {
+                IEnumerable<DTOExercise> allExercise = this.CommandHandlerTools.CurrentUserContext.UserInformation.Cycles.SelectMany(x => x.Days).SelectMany(x => x.Exercises);
+
+                DTODomain = allExercise.FirstOrDefault(x => x.Id == domainID) ?? throw new InvalidOperationException($"Not found exercise for unarchiving with ID = {domainID}");
+            }
+            else
+                throw new NotImplementedException($"Неожиданный domainTyped: {callbackQueryParser.DomainType}");
+
+            DTODomain.IsArchive = false;
+            this.CommandHandlerTools.Db.UpdateEntity(DTODomain);
+
+            ResponseTextConverter responseConverter = new ResponseTextConverter($"{DTODomain.Name.AddBoldAndQuotes()} разархивирован!");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.ArchiveList, ButtonsSet.Settings);
 
             this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
@@ -264,7 +286,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     throw new NotImplementedException($"Нереализовано для типа домена {CommonConsts.DomainsAndEntities.Day}, т.к. не нашлось ни одно небходимого кейса");
 
                 case CommonConsts.DomainsAndEntities.Exercise:
-                    this.CommandHandlerTools.CurrentUserContext.DataManager.ResetExercises();
+                    this.CommandHandlerTools.CurrentUserContext.DataManager.ResetTempExercises();
 
                     responseConverter = new ResponseTextConverter("Упражнения для сохранения сброшены!", "Выберите интересующую настройку");
                     buttonsSets = (ButtonsSet.SettingExercises, ButtonsSet.None);
@@ -282,9 +304,14 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
         
         internal SettingsCH SaveExercisesCommand()
         {
-            this.CommandHandlerTools.Db.Exercises.AddRange(this.CommandHandlerTools.CurrentUserContext.DataManager.Exercises);
+            foreach (DTOExercise tempExercise in this.CommandHandlerTools.CurrentUserContext.DataManager.TempExercises)
+            {
+                tempExercise.Day = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay;
+                this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Exercises.Add(tempExercise);
+            }
+            this.CommandHandlerTools.Db.AddEntities(this.CommandHandlerTools.CurrentUserContext.DataManager.TempExercises);
 
-            this.CommandHandlerTools.CurrentUserContext.DataManager.ResetExercises();
+            this.CommandHandlerTools.CurrentUserContext.DataManager.ResetTempExercises();
 
             this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
@@ -381,7 +408,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     break;
 
                 case CommonConsts.DomainsAndEntities.Exercise:
-                    Exercise currentExercise = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Exercises.First(e => e.Id == domainID);
+                    DTOExercise currentExercise = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Exercises.First(e => e.Id == domainID);
 
                     this.CommandHandlerTools.CurrentUserContext.DataManager.SetCurrentDomain(currentExercise);
 
@@ -455,9 +482,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     }
 
                     this.CommandHandlerTools.CurrentUserContext.ActiveCycle.IsActive = false;
-                    this.CommandHandlerTools.Db.Cycles.Update(this.CommandHandlerTools.CurrentUserContext.ActiveCycle);
+                    this.CommandHandlerTools.Db.UpdateEntity(this.CommandHandlerTools.CurrentUserContext.ActiveCycle, false);
                     this.CommandHandlerTools.CurrentUserContext.UdpateActiveCycleForce(this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle);
-                    this.CommandHandlerTools.Db.Cycles.Update(this.CommandHandlerTools.CurrentUserContext.ActiveCycle);
+                    this.CommandHandlerTools.Db.UpdateEntity(this.CommandHandlerTools.CurrentUserContext.ActiveCycle);
 
                     responseConverter = new ResponseTextConverter($"Активный цикл изменён на {this.CommandHandlerTools.CurrentUserContext.ActiveCycle.Name.AddBoldAndQuotes()}",
                     $"Выберите интересующую настройку для цикла {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()}");
@@ -474,7 +501,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
         internal SettingsCH ArchivingCommand()
         {
-            this.Domain = this.CommandHandlerTools.CurrentUserContext.DataManager.GetCurrentDomain(callbackQueryParser.DomainType);
+            IDTODomain DTODomain = this.CommandHandlerTools.CurrentUserContext.DataManager.GetRequiredCurrentDomain(callbackQueryParser.DomainType);
 
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
@@ -493,26 +520,27 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                         return this;
                     }
 
-                    responseConverter = new ResponseTextConverter($"Цикл {this.Domain.Name.AddBoldAndQuotes()} был добавлен в архив", $"Выберите интересующий цикл");
+                    responseConverter = new ResponseTextConverter($"Цикл {DTODomain.Name.AddBoldAndQuotes()} был добавлен в архив", $"Выберите интересующий цикл");
                     buttonsSets = (ButtonsSet.CycleList, ButtonsSet.SettingCycles);
                     break;
 
                 case CommonConsts.DomainsAndEntities.Day:
-                    responseConverter = new ResponseTextConverter($"День {this.Domain.Name.AddBoldAndQuotes()} был добавлен в архив", $"Выберите интересующий день");
+                    responseConverter = new ResponseTextConverter($"День {DTODomain.Name.AddBoldAndQuotes()} был добавлен в архив", $"Выберите интересующий день");
                     buttonsSets = (ButtonsSet.DaysList, ButtonsSet.SettingDays);
                     break;
 
                 case CommonConsts.DomainsAndEntities.Exercise:
-                    responseConverter = new ResponseTextConverter($"Упражнение {this.Domain.Name.AddBoldAndQuotes()} было добавлено в архив", $"Выберите интересующее упражнение");
+                    responseConverter = new ResponseTextConverter($"Упражнение {DTODomain.Name.AddBoldAndQuotes()} было добавлено в архив", $"Выберите интересующее упражнение");
                     buttonsSets = (ButtonsSet.ExercisesList, ButtonsSet.SettingExercises);
                     break;
                 default:
                     throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
             }
 
-            this.Domain.IsArchive = true;
+            DTODomain.IsArchive = true;
+            this.CommandHandlerTools.Db.UpdateEntity(DTODomain);
 
-            this.CommandHandlerTools.CurrentUserContext.DataManager.ResetCurrentDomain(this.Domain);
+            this.CommandHandlerTools.CurrentUserContext.DataManager.ResetCurrentDomain(DTODomain);
 
             this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
@@ -551,8 +579,6 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             string targetDomainIDStr = callbackQueryParser.GetRequiredAdditionalParameter(0);
             int targetDomainID = int.Parse(targetDomainIDStr);
 
-            IDomain targetDomain;
-
             switch (callbackQueryParser.DomainType)
             {
                 case CommonConsts.DomainsAndEntities.Cycle:
@@ -567,13 +593,21 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                         return this;
                     }
 
-                    targetDomain = this.CommandHandlerTools.CurrentUserContext.UserInformation.Cycles.FirstOrDefault(x => x.Id == targetDomainID)
+                    DTOCycle targetCycle = this.CommandHandlerTools.CurrentUserContext.UserInformation.Cycles.FirstOrDefault(x => x.Id == targetDomainID)
                         ?? throw new InvalidOperationException($"Не удалось найти targetDomain c ID = '{targetDomainID}' среди циклов у пользователя '{this.CommandHandlerTools.CurrentUserContext.UserInformation.UserId}'");
 
-                    this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.CycleId = targetDomain.Id;
-                    this.CommandHandlerTools.Db.Days.Update(this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay);
+                    DTODay currentDay = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay;
 
-                    responseConverter = new ResponseTextConverter($"День {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldAndQuotes()}, перенесён в цикл {targetDomain.Name.AddBoldAndQuotes()}",
+                    targetCycle.Days.Add(currentDay);
+                    DTOCycle oldCycleByDay = currentDay.Cycle;
+                    oldCycleByDay.Days.Remove(currentDay);
+
+                    currentDay.Cycle = targetCycle;
+                    currentDay.CycleId = targetCycle.Id;
+
+                    this.CommandHandlerTools.Db.UpdateEntity(currentDay);
+
+                    responseConverter = new ResponseTextConverter($"День {currentDay.Name.AddBoldAndQuotes()}, перенесён в цикл {targetCycle.Name.AddBoldAndQuotes()}",
                         "Выберите интересующий цикл");
                     break;
 
@@ -589,14 +623,22 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                         return this;
                     }
 
-                    targetDomain = this.CommandHandlerTools.CurrentUserContext.UserInformation.Cycles.SelectMany(cycle => cycle.Days)
+                    DTODay targetDay = this.CommandHandlerTools.CurrentUserContext.UserInformation.Cycles.SelectMany(cycle => cycle.Days)
                                                                                                       ?.FirstOrDefault(day => day.Id == targetDomainID)
                         ?? throw new InvalidOperationException($"Не удалось найти targetDomain c ID = '{targetDomainID}' среди дней неархивных циклов у пользователя '{this.CommandHandlerTools.CurrentUserContext.UserInformation.UserId}'");
 
-                    this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.DayId = targetDomain.Id;
-                    this.CommandHandlerTools.Db.Exercises.Update(this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise);
+                    DTOExercise currentExercise = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise;
 
-                    responseConverter = new ResponseTextConverter($"Упражнение {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldAndQuotes()}, перенесёно в день {targetDomain.Name.AddBoldAndQuotes()}",
+                    targetDay.Exercises.Add(currentExercise);
+                    DTODay oldDayByExercise = currentExercise.Day;
+                    oldDayByExercise.Exercises.Remove(currentExercise);
+
+                    currentExercise.Day = targetDay;
+                    currentExercise.DayId = targetDay.Id;
+
+                    this.CommandHandlerTools.Db.UpdateEntity(currentExercise);
+
+                    responseConverter = new ResponseTextConverter($"Упражнение {currentExercise.Name.AddBoldAndQuotes()}, перенесёно в день {targetDay.Name.AddBoldAndQuotes()}",
                         "Выберите интересующий цикл");
                     break;
                 default:
@@ -669,7 +711,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
         internal SettingsCH ChangedModeCommand()
         {
-            this.Domain = this.CommandHandlerTools.CurrentUserContext.DataManager.GetCurrentDomain(callbackQueryParser.DomainType);
+            IDTODomain DTODomain = this.CommandHandlerTools.CurrentUserContext.DataManager.GetRequiredCurrentDomain(callbackQueryParser.DomainType);
 
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
@@ -685,10 +727,11 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
                     ExercisesMods newMode = (ExercisesMods)int.Parse(modeStr);
 
-                    ((Exercise)this.Domain).Mode = newMode;
+                    ((Exercise)DTODomain).Mode = newMode;
+                    this.CommandHandlerTools.Db.UpdateEntity(DTODomain);
 
-                    responseConverter = new ResponseTextConverter($"Режим для упражнения {Domain.Name.AddBoldAndQuotes()} изменён на {newMode.ToString().AddBoldAndQuotes()}",
-                        $"Выберите интересующую настройку для упражнения {Domain.Name.AddBoldAndQuotes()}");
+                    responseConverter = new ResponseTextConverter($"Режим для упражнения {DTODomain.Name.AddBoldAndQuotes()} изменён на {newMode.ToString().AddBoldAndQuotes()}",
+                        $"Выберите интересующую настройку для упражнения {DTODomain.Name.AddBoldAndQuotes()}");
                     buttonsSets = (ButtonsSet.SettingExercise, ButtonsSet.ExercisesList);
                     break;
                 default:
@@ -783,58 +826,69 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
         internal SettingsCH ConfirmDeleteCommand()
         {
-            this.Domain = this.CommandHandlerTools.CurrentUserContext.DataManager.GetCurrentDomain(callbackQueryParser.DomainType);
-
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
-            switch (callbackQueryParser.DomainType)
+            if (callbackQueryParser.DomainType == CommonConsts.DomainsAndEntities.Account)
             {
-                case CommonConsts.DomainsAndEntities.Cycle:
-                    if (this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.IsActive)
-                    {
-                        this.ClearHandlerAction();
+                this.CommandHandlerTools.ParentHandler.CoreManager.ContextKeeper.RemoveContext(this.CommandHandlerTools.CurrentUserContext.UserInformation.UserId);
 
-                        responseConverter = new ResponseTextConverter("Ошибка при удалении!", "Нельзя удалить активный цикл!",
-                            $"Выберите интересующую настройку для цикла {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()}");
-                        buttonsSets = (ButtonsSet.SettingCycle, ButtonsSet.CycleList);
-
-                        this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
-
-                        return this;
-                    }
-
-                    responseConverter = new ResponseTextConverter($"Цикл {this.Domain.Name.AddBoldAndQuotes()} удалён!", "Выберите интересующий цикл");
-                    buttonsSets = (ButtonsSet.CycleList, ButtonsSet.SettingCycles);
-                    break;
-
-                case CommonConsts.DomainsAndEntities.Day:
-                    responseConverter = new ResponseTextConverter($"День {this.Domain.Name.AddBoldAndQuotes()} удалён!", "Выберите интересующий день");
-                    buttonsSets = (ButtonsSet.DaysList, ButtonsSet.SettingDays);
-                    break;
-
-                case CommonConsts.DomainsAndEntities.Exercise:
-                    responseConverter = new ResponseTextConverter($"Упражнение {this.Domain.Name.AddBoldAndQuotes()} удалёно!", "Выберите интересующее упражнение");
-                    buttonsSets = (ButtonsSet.ExercisesList, ButtonsSet.SettingExercises);
-                    break;
-
-                case CommonConsts.DomainsAndEntities.Account:
-
-                    PrimaryUpdateHandler handler = CommandHandlerTools.ParentHandler.CoreManager.GetRequiredHandler<PrimaryUpdateHandler>();
-                    handler.DeleteContext(this.CommandHandlerTools.CurrentUserContext.UserInformation.UserId);
-
-                    AdminRepository repository = CommandHandlerTools.ParentHandler.CoreManager.GetRequiredRepository<AdminRepository>();
-                    repository.DeleteAccount(this.CommandHandlerTools.CurrentUserContext.UserInformation);
-
-                    buttonsSets = (ButtonsSet.None, ButtonsSet.None);
-                    responseConverter = new ResponseTextConverter("Аккаунт успешно удалён");
-                    this.ClearHandlerAction();
-                    break;
-                default:
-                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
+                AdminRepository repository = CommandHandlerTools.ParentHandler.CoreManager.GetRequiredRepository<AdminRepository>();
+                UserInformation currentUser = repository.GetRequiredUserInformation(this.CommandHandlerTools.CurrentUserContext.UserInformation.UserId);
+                repository.DeleteAccount(currentUser);
+                
+                buttonsSets = (ButtonsSet.None, ButtonsSet.None);
+                responseConverter = new ResponseTextConverter("Аккаунт успешно удалён");
+                this.ClearHandlerAction();
             }
+            else
+            {
+                IDTODomain DTODomain = this.CommandHandlerTools.CurrentUserContext.DataManager.GetRequiredCurrentDomain(callbackQueryParser.DomainType);
 
-            this.CommandHandlerTools.CurrentUserContext.DataManager.ResetCurrentDomain(this.Domain);
+                switch (callbackQueryParser.DomainType)
+                {
+                    case CommonConsts.DomainsAndEntities.Cycle:
+                        if (this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.IsActive)
+                        {
+                            this.ClearHandlerAction();
+
+                            responseConverter = new ResponseTextConverter("Ошибка при удалении!", "Нельзя удалить активный цикл!",
+                                $"Выберите интересующую настройку для цикла {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()}");
+                            buttonsSets = (ButtonsSet.SettingCycle, ButtonsSet.CycleList);
+
+                            this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+
+                            return this;
+                        }
+
+                        this.CommandHandlerTools.CurrentUserContext.UserInformation.Cycles.Remove((DTOCycle)DTODomain);
+
+                        responseConverter = new ResponseTextConverter($"Цикл {DTODomain.Name.AddBoldAndQuotes()} удалён!", "Выберите интересующий цикл");
+                        buttonsSets = (ButtonsSet.CycleList, ButtonsSet.SettingCycles);
+                        break;
+
+                    case CommonConsts.DomainsAndEntities.Day:
+
+                        this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Days.Remove((DTODay)DTODomain);
+
+                        responseConverter = new ResponseTextConverter($"День {DTODomain.Name.AddBoldAndQuotes()} удалён!", "Выберите интересующий день");
+                        buttonsSets = (ButtonsSet.DaysList, ButtonsSet.SettingDays);
+                        break;
+
+                    case CommonConsts.DomainsAndEntities.Exercise:
+
+                        this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Exercises.Remove((DTOExercise)DTODomain);
+
+                        responseConverter = new ResponseTextConverter($"Упражнение {DTODomain.Name.AddBoldAndQuotes()} удалёно!", "Выберите интересующее упражнение");
+                        buttonsSets = (ButtonsSet.ExercisesList, ButtonsSet.SettingExercises);
+                        break;
+                    default:
+                        throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
+                }
+
+                this.CommandHandlerTools.Db.RemoveEntity(DTODomain);
+                this.CommandHandlerTools.CurrentUserContext.DataManager.ResetCurrentDomain(DTODomain);
+            }
 
             this.InformationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
@@ -865,7 +919,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
                 IQueryable<ResultExercise> resultsExercisesForExcel = sharedCH.GetAllUserResultsExercises();
 
-                if (resultsExercisesForExcel.Count() < 1)
+                if (!resultsExercisesForExcel.Any())
                 {
                     responseConverter = new ResponseTextConverter("Отсутствуют результаты для экспорта", 
                         "Выберите интересующую настройку");

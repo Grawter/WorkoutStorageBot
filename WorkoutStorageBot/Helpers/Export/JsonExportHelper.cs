@@ -7,6 +7,8 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Text.Unicode;
+using WorkoutStorageBot.Helpers.Converters;
+using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.Model.Entities.BusinessLogic;
 
 #endregion
@@ -15,9 +17,9 @@ namespace WorkoutStorageBot.Helpers.Export
 {
     internal static class JsonExportHelper
     {
-        internal static RecyclableMemoryStream GetJSONFile(List<Cycle> cycles, IQueryable<ResultExercise> resultsExercises, int monthFilterPeriod)
+        internal static RecyclableMemoryStream GetJSONFile(List<DTOCycle> allUserCycles, IQueryable<ResultExercise> allUserResultsExercises, int monthFilterPeriod)
         {
-            string json = GetJSONFileStr(cycles, resultsExercises, monthFilterPeriod);
+            string json = GetJSONFileStr(allUserCycles, allUserResultsExercises, monthFilterPeriod);
 
             byte[] byteJson = new UTF8Encoding(true).GetBytes(json);
 
@@ -31,13 +33,13 @@ namespace WorkoutStorageBot.Helpers.Export
             return recyclableMemoryStream;
         }
 
-        internal static string GetJSONFileStr(List<Cycle> cycles, IQueryable<ResultExercise> resultsExercises, int monthFilterPeriod)
+        internal static string GetJSONFileStr(List<DTOCycle> allUserCycles, IQueryable<ResultExercise> allUserResultsExercises, int monthFilterPeriod)
         {
-            ArgumentNullException.ThrowIfNull(cycles);
-            ArgumentNullException.ThrowIfNull(resultsExercises);
+            ArgumentNullException.ThrowIfNull(allUserCycles);
+            ArgumentNullException.ThrowIfNull(allUserResultsExercises);
 
-            DateTime filterDateTime = CommonExportHelper.GetFilterDateTime(monthFilterPeriod, resultsExercises);
-            CommonExportHelper.LoadDBDataToDBContextForFilterDate(resultsExercises, filterDateTime);
+            DateTime filterDateTime = CommonExportHelper.GetFilterDateTime(monthFilterPeriod, allUserResultsExercises);
+            IQueryable<ResultExercise> resultExercisesByFilterData = CommonExportHelper.GetResultExercisesByFilterDate(allUserResultsExercises, filterDateTime);
 
             JsonSerializerOptions starterJsonSerializerOptions = new JsonSerializerOptions()
             {
@@ -45,7 +47,16 @@ namespace WorkoutStorageBot.Helpers.Export
                 ReferenceHandler = ReferenceHandler.IgnoreCycles,
             };
 
-            JsonNode rootNode = JsonNode.Parse(JsonSerializer.Serialize(cycles, starterJsonSerializerOptions))
+            IEnumerable<DTOExercise> allUserExercises = allUserCycles.SelectMany(x => x.Days).SelectMany(y => y.Exercises);
+
+            foreach (DTOExercise userExercise in allUserExercises)
+            {
+                userExercise.ResultsExercise = resultExercisesByFilterData.Where(x => x.ExerciseId == userExercise.Id)
+                                                                          .Select(y => EntityConverter.ToDTOResultExercise(y))
+                                                                          .ToList();
+            }
+
+            JsonNode rootNode = JsonNode.Parse(JsonSerializer.Serialize(allUserCycles, starterJsonSerializerOptions))
                 ?? throw new InvalidOperationException("Не удалось получить json rootNode");
 
             RemoveAdminInfo(rootNode);
@@ -53,7 +64,7 @@ namespace WorkoutStorageBot.Helpers.Export
             // Нельзя изменять уже используемую настройку (starterJsonSerializerOptions)
             JsonSerializerOptions finalJsonSerializerOptions = new JsonSerializerOptions(starterJsonSerializerOptions) 
             {
-                WriteIndented = true, // форматированный сериалзиация с табуляцией
+                WriteIndented = true, // форматированная сериализация с табуляцией
                 Encoder = JavaScriptEncoder.Create(UnicodeRanges.All), // Чтобы кириллические (или возможные другие) символы не экранировались
             };
 

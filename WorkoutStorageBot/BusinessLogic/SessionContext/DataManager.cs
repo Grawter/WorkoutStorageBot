@@ -2,7 +2,7 @@
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.Extenions;
 using WorkoutStorageBot.Helpers.Common;
-using WorkoutStorageBot.Model.Entities.BusinessLogic;
+using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.Model.Interfaces;
 #endregion
 
@@ -10,30 +10,30 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
 {
     internal class DataManager
     {
-        internal Cycle? CurrentCycle { get; private set; }
-        internal Day? CurrentDay { get; private set; }
-        internal Exercise? CurrentExercise { get; private set; }
+        internal DTOCycle? CurrentCycle { get; private set; }
+        internal DTODay? CurrentDay { get; private set; }
+        internal DTOExercise? CurrentExercise { get; private set; }
 
-        internal List<Exercise>? Exercises { get; private set; }
-        internal List<ResultExercise>? ResultsExercise { get; private set; }
+        internal List<DTOExercise>? TempExercises { get; private set; }
+        internal List<DTOResultExercise>? TempResultsExercise { get; private set; }
 
         internal DateTime ExerciseTimer { get; private set; }
 
-        internal Cycle SetCurrentCycle(string nameCycle, bool isActive, int userInformationId)
+        internal DTOCycle SetCurrentCycle(string nameCycle, bool isActive, DTOUserInformation userInformation)
         {
-            CurrentCycle = new() { Name = nameCycle, IsActive = isActive, UserInformationId = userInformationId };
+            CurrentCycle = new() { Name = nameCycle, IsActive = isActive, UserInformation = userInformation, UserInformationId = userInformation.Id };
 
             return CurrentCycle;
         }
 
-        private void SetCurrentCycle(Cycle cycle)
+        private void SetCurrentCycle(DTOCycle cycle)
         {
             CurrentCycle = cycle;
         }
 
-        internal Day SetCurrentDay(string nameDay)
+        internal DTODay SetCurrentDay(string nameDay)
         {
-            CurrentDay = new() { Name = nameDay, CycleId = CurrentCycle.Id };
+            CurrentDay = new() { Name = nameDay, Cycle = CurrentCycle, CycleId = CurrentCycle.Id };
 
             return CurrentDay;
         }
@@ -43,29 +43,29 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
             ExerciseTimer = DateTime.Now;
         }
 
-        private void SetCurrentDay(Day day)
+        private void SetCurrentDay(DTODay day)
         {
             CurrentDay = day;
         }
 
-        private void SetCurrentExercise(Exercise exercise)
+        private void SetCurrentExercise(DTOExercise exercise)
         {
             CurrentExercise = exercise;
         }
 
-        internal bool TryAddExercise(List<Exercise> exercises, out string existingExerciseName)
+        internal bool TryAddTempExercises(List<DTOExercise> exercises, out string existingExerciseName)
         {
             if (!exercises.HasItemsInCollection())
                 throw new InvalidOperationException($"Получена пустая коллеция {nameof(exercises)}");
 
-            if (Exercises == null)
-                Exercises = new();
+            if (TempExercises == null)
+                TempExercises = new();
 
             existingExerciseName = string.Empty;    
 
-            foreach (Exercise exercise in exercises)
+            foreach (DTOExercise exercise in exercises)
             {
-                if (Exercises.Any(e => e.Name == exercise.Name))
+                if (TempExercises.Any(e => e.Name == exercise.Name))
                 {
                     existingExerciseName = exercise.Name;
 
@@ -74,24 +74,24 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
 
                 exercise.DayId = CurrentDay.Id;
 
-                Exercises.Add(exercise);
+                TempExercises.Add(exercise);
             }
 
             return true;
         }
 
-        internal void AddResultsExercise(List<ResultExercise> resultsExercise)
+        internal void AddTempResultsExercise(List<DTOResultExercise> resultsExercise)
         {
             if (!resultsExercise.HasItemsInCollection())
                 throw new InvalidOperationException($"Получена пустая коллеция {nameof(resultsExercise)}");
 
-            if (ResultsExercise == null)
-                ResultsExercise = new();
+            if (TempResultsExercise == null)
+                TempResultsExercise = new();
 
-            foreach (ResultExercise result in resultsExercise)
+            foreach (DTOResultExercise result in resultsExercise)
             {
                 result.ExerciseId = CurrentExercise.Id;
-                ResultsExercise.Add(result);
+                TempResultsExercise.Add(result);
             }
         }
 
@@ -110,14 +110,14 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
             CurrentExercise = null;
         }
 
-        internal void ResetExercises()
+        internal void ResetTempExercises()
         {
-            Exercises = null;
+            TempExercises = null;
         }
 
-        internal void ResetResultsExercise()
+        internal void ResetTempResultsExercise()
         {
-            ResultsExercise = null;
+            TempResultsExercise = null;
         }
 
         internal void ResetExerciseTimer()
@@ -125,23 +125,23 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
             ExerciseTimer = DateTime.MinValue;
         }
 
-        private void ResetChildDomains(IDomain domain)
+        private void ResetChildDomains(IDTODomain domain)
         {
             switch (domain)
             {
-                case Cycle:
+                case DTOCycle:
                     ResetCurrentDay();
                     ResetCurrentExercise();
-                    ResetResultsExercise();
+                    ResetTempResultsExercise();
                     break;
 
-                case Day:
+                case DTODay:
                     ResetCurrentExercise();
-                    ResetResultsExercise();
+                    ResetTempResultsExercise();
                     break;
 
-                case Exercise:
-                    ResetResultsExercise();
+                case DTOExercise:
+                    ResetTempResultsExercise();
                     break;
 
                 default:
@@ -154,24 +154,24 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
             ResetCurrentCycle();
             ResetCurrentDay();
             ResetCurrentExercise();
-            ResetExercises();
-            ResetResultsExercise();
+            ResetTempExercises();
+            ResetTempResultsExercise();
             ResetExerciseTimer();
         }
 
-        internal void ResetCurrentDomain(IDomain domain)
+        internal void ResetCurrentDomain(IDTODomain domain)
         {
             switch (domain)
             {
-                case Cycle:
+                case DTOCycle:
                     ResetCurrentCycle();
                     break;
 
-                case Day:
+                case DTODay:
                     ResetCurrentDay();
                     break;
 
-                case Exercise:
+                case DTOExercise:
                     ResetCurrentExercise();
                     break;
 
@@ -180,19 +180,19 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
             }
         }
 
-        internal void SetCurrentDomain(IDomain domain)
+        internal void SetCurrentDomain(IDTODomain domain)
         {
             switch (domain)
             {
-                case Cycle cycle:
+                case DTOCycle cycle:
                     SetCurrentCycle(cycle);
                     break;
 
-                case Day day:
+                case DTODay day:
                     SetCurrentDay(day);
                     break;
 
-                case Exercise exercise:
+                case DTOExercise exercise:
                     SetCurrentExercise(exercise);
                     break;
 
@@ -203,18 +203,18 @@ namespace WorkoutStorageBot.BusinessLogic.SessionContext
             ResetChildDomains(domain);
         }
 
-        internal IDomain? GetRequiredCurrentDomain(DomainType domainType)
-            => GetRequiredCurrentDomain(domainType.ToString());
-
-        internal IDomain GetRequiredCurrentDomain(string domainType)
+        internal IDTODomain? GetRequiredCurrentDomain(DomainType domainType)
             => CommonHelper.GetIfNotNull(GetCurrentDomain(domainType));
 
-        internal IDomain? GetCurrentDomain(DomainType domainType)
+        internal IDTODomain GetRequiredCurrentDomain(string domainType)
+            => CommonHelper.GetIfNotNull(GetCurrentDomain(domainType));
+
+        internal IDTODomain? GetCurrentDomain(DomainType domainType)
             => GetCurrentDomain(domainType.ToString());
 
-        internal IDomain? GetCurrentDomain(string domainType)
+        internal IDTODomain? GetCurrentDomain(string domainType)
         {
-            IDomain? domain = domainType switch
+            IDTODomain? domain = domainType switch
             {
                 Consts.CommonConsts.DomainsAndEntities.Cycle
                     => CurrentCycle,

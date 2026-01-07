@@ -1,0 +1,20 @@
+﻿#region using
+
+using WorkoutStorageBot.Model.Interfaces;
+
+#endregion
+
+namespace WorkoutStorageBot.Model.DTO.BusinessLogic
+{
+    internal record class DTOResultExercise : IDTOByEntity
+    {
+        public int Id { get; set; }
+        public int? Count { get; set; }
+        public float? Weight { get; set; }
+        public string? FreeResult { get; set; }
+        public DateTime DateTime { get; set; }
+
+        public int ExerciseId { get; set; }
+        public DTOExercise? Exercise { get; set; }
+    }
+}

@@ -8,6 +8,8 @@ using WorkoutStorageBot.Helpers.BusinessLogicHelpers;
 using WorkoutStorageBot.Helpers.Converters;
 using WorkoutStorageBot.Model.Entities.BusinessLogic;
 using WorkoutStorageBot.Model.DTO.HandlerData;
+using Microsoft.EntityFrameworkCore;
+using WorkoutStorageBot.Model.DTO.BusinessLogic;
 #endregion
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommandHandler
@@ -36,13 +38,13 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommand
 
         internal IEnumerable<int> GetAllUserExercisesIds()
         {
-            List<Cycle> cycles = this.CommandHandlerTools.CurrentUserContext.UserInformation.Cycles;
+            List<DTOCycle> cycles = this.CommandHandlerTools.CurrentUserContext.UserInformation.Cycles;
 
-            foreach (Cycle cycle in cycles)
+            foreach (DTOCycle cycle in cycles)
             {
-                foreach (Day day in cycle.Days)
+                foreach (DTODay day in cycle.Days)
                 {
-                    foreach (Exercise exercise in day.Exercises)
+                    foreach (DTOExercise exercise in day.Exercises)
                     {
                         yield return exercise.Id;
                     }
@@ -54,7 +56,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommand
         {
             IEnumerable<int> userExercisesIds = GetAllUserExercisesIds();
 
-            IQueryable<ResultExercise> resultsExercises = this.CommandHandlerTools.Db.ResultsExercises.Where(x => userExercisesIds.Contains(x.ExerciseId));
+            IQueryable<ResultExercise> resultsExercises = this.CommandHandlerTools.Db.ResultsExercises.AsNoTracking()
+                                                                                                      .Where(x => userExercisesIds.Contains(x.ExerciseId));
 
             return resultsExercises;
         }
@@ -105,8 +108,10 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommand
                                                                         .Select(e => e.Id);
                 }
 
-                IQueryable<ResultExercise> resultLastTraining = this.CommandHandlerTools.Db.ResultsExercises.Where(re => exercisesIDs.Contains(re.ExerciseId)
-                                                                                                                   && re.DateTime.Date == dateTime);
+                IQueryable<ResultExercise> resultLastTraining = this.CommandHandlerTools.Db.ResultsExercises.AsNoTracking()
+                                                                                                            .Where(re => exercisesIDs.Contains(re.ExerciseId)
+                                                                                                                   && re.DateTime.Date == dateTime)
+                                                                                                            .Include(e => e.Exercise);
                 if (resultLastTraining.HasItemsInCollection())
                 {
                     this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
@@ -121,13 +126,15 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommand
                 }
                 else
                 {
-                    DateTime trainingDateLessThanFindedDate = this.CommandHandlerTools.Db.ResultsExercises.Where(re =>
+                    DateTime trainingDateLessThanFindedDate = this.CommandHandlerTools.Db.ResultsExercises.AsNoTracking()
+                                                                                                          .Where(re =>
                                                                                                                     exercisesIDs.Contains(re.ExerciseId)
                                                                                                                     && re.DateTime.Date < dateTime)
                                                                                                           .OrderByDescending(re => re.DateTime)
                                                                                                           .FirstOrDefault()?.DateTime ?? DateTime.MinValue;
 
-                    DateTime trainingDateGreaterThanFindedDate = this.CommandHandlerTools.Db.ResultsExercises.Where(re =>
+                    DateTime trainingDateGreaterThanFindedDate = this.CommandHandlerTools.Db.ResultsExercises.AsNoTracking()
+                                                                                                             .Where(re =>
                                                                                                                         exercisesIDs.Contains(re.ExerciseId)
                                                                                                                         && re.DateTime.Date > dateTime)
                                                                                                              .OrderBy(re => re.DateTime)

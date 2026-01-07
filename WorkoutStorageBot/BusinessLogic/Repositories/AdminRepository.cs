@@ -7,6 +7,7 @@ using WorkoutStorageBot.Application.Configuration;
 using WorkoutStorageBot.Core.Abstraction;
 using WorkoutStorageBot.Core.Manager;
 using WorkoutStorageBot.Helpers.Common;
+using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.Model.DTO.HandlerData;
 using WorkoutStorageBot.Model.Entities.BusinessLogic;
 
@@ -74,25 +75,27 @@ namespace WorkoutStorageBot.BusinessLogic.Repositories
         internal UserInformation GetRequiredUserInformation(long userId)
             => GetUserInformation(userId) ?? throw new InvalidOperationException($"Пользователь с UserId = {userId} не найден!");
         
-        internal UserInformation? GetUserInformation(long userId, bool throwNotFoundEx = false)
+        internal UserInformation? GetUserInformation(long userId)
             => CoreTools.Db.UsersInformation.FirstOrDefault(u => u.UserId == userId);
 
         internal UserInformation GetRequiredUserInformation(string userName)
             => GetUserInformation(userName) ?? throw new InvalidOperationException($"Пользователь с Username = {userName} не найден!");
 
-        internal UserInformation? GetUserInformation(string userName, bool throwNotFoundEx = false)
+        internal UserInformation? GetUserInformation(string userName)
             => CoreTools.Db.UsersInformation.FirstOrDefault(u => u.Username == userName);
 
         internal UserInformation? GetFullUserInformation(long userID)
         {
-            IQueryable<UserInformation> userInformation = CoreTools.Db.UsersInformation.Where(u => u.UserId == userID);
+            IQueryable<UserInformation> userInformation = CoreTools.Db.UsersInformation.AsNoTracking()
+                                                                                       .Where(u => u.UserId == userID);
 
             return IncludeWorkoutTables(userInformation);
         }
 
         internal UserInformation? GetFullUserInformation(string userName)
         {
-            IQueryable<UserInformation> userInformation = CoreTools.Db.UsersInformation.Where(u => u.Username == userName);
+            IQueryable<UserInformation> userInformation = CoreTools.Db.UsersInformation.AsNoTracking()
+                                                                                       .Where(u => u.Username == userName);
 
             return IncludeWorkoutTables(userInformation);
         }
@@ -100,8 +103,8 @@ namespace WorkoutStorageBot.BusinessLogic.Repositories
         private UserInformation? IncludeWorkoutTables(IQueryable<UserInformation> userInformation)
         {
             return userInformation.Include(u => u.Cycles)
-                                     .ThenInclude(c => c.Days)
-                                         .ThenInclude(d => d.Exercises)
+                                    .ThenInclude(c => c.Days)
+                                        .ThenInclude(d => d.Exercises)
                                   .AsSplitQuery() // Разделение запросов, для оптимизации
                                   .FirstOrDefault();
         }
@@ -120,12 +123,15 @@ namespace WorkoutStorageBot.BusinessLogic.Repositories
                 return default;
         }
 
+        internal bool UserHasAccess(DTOUserInformation user)
+            => UserHasAccess(new UserInformation() { UserId = user.UserId, BlackList = user.BlackList, WhiteList = user.WhiteList });
+
         internal bool UserHasAccess(UserInformation user)
         {
             if (user == null)
                 return false;
 
-            if (UserIsOwner(user))
+            if (UserIsOwner(user.UserId))
                 return true;
 
             if (user.BlackList)

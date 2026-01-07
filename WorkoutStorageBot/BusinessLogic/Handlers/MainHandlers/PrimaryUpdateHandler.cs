@@ -19,6 +19,8 @@ using WorkoutStorageBot.Model.DTO.HandlerData;
 using WorkoutStorageBot.Model.DTO.HandlerData.Results;
 using WorkoutStorageBot.Model.DTO.HandlerData.Results.UpdateInfo;
 using WorkoutStorageBot.Model.Entities.BusinessLogic;
+using WorkoutStorageBot.Model.DTO.BusinessLogic;
+using WorkoutStorageBot.BusinessLogic.GlobalContext;
 
 #endregion
 
@@ -103,7 +105,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
             {
                 Roles currentRoles = GetUserRoles(currentUser, AdminRepository);
 
-                primaryHandledData.CurrentUserContext = new UserContext(currentUser, currentRoles, CoreTools.ConfigurationData.Bot.IsNeedLimits);
+                DTOUserInformation DTOCurrentUser = EntityConverter.ToDTOUserInformation(currentUser);
+
+                primaryHandledData.CurrentUserContext = new UserContext(DTOCurrentUser, currentRoles, CoreTools.ConfigurationData.Bot.IsNeedLimits);
                 ContextKeeper.AddContext(primaryHandledData.ShortUpdateInfo.User.Id, primaryHandledData.CurrentUserContext);
             }
 

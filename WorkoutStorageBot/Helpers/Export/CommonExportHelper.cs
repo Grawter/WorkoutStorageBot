@@ -26,13 +26,11 @@ namespace WorkoutStorageBot.Helpers.Export
 
         }
 
-        internal static void LoadDBDataToDBContextForFilterDate (IQueryable<ResultExercise> sourceDBData, DateTime filterDate)
-        {
-            sourceDBData.Where(re => 
-                                filterDate > DateTime.MinValue
-                                    ? re.DateTime >= filterDate
-                                    : true)
-                        .ToList();
-        }
+        internal static IQueryable<ResultExercise> GetResultExercisesByFilterDate (IQueryable<ResultExercise> sourceDBData, DateTime filterDate)
+            => sourceDBData.Where(re =>
+                                    filterDate > DateTime.MinValue
+                                        ? re.DateTime >= filterDate
+                                        : true);
+        
     }
 }

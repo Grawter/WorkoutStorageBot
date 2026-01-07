@@ -19,35 +19,6 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
         internal override IInformationSet GetData()
         {
-            foreach (HandlerAction handlerAction in this.HandlerActions)
-            {
-                if (this.Domain == null && handlerAction != HandlerAction.None && handlerAction != HandlerAction.Save)
-                    throw new NullReferenceException($"{nameof(this.Domain)} is null!");
-                
-                switch (handlerAction)
-                {
-                    case HandlerAction.None:
-                        break;
-                    case HandlerAction.Update:
-                        CommandHandlerTools.Db.Update(this.Domain);
-                        break;
-                    case HandlerAction.Add:
-                        CommandHandlerTools.Db.Add(this.Domain);
-                        break;
-                    case HandlerAction.Remove:
-                        CommandHandlerTools.Db.Remove(this.Domain);
-                        break;
-                    case HandlerAction.Save:
-                        CommandHandlerTools.Db.SaveChanges();
-                        break;
-                    default:
-                        throw new NotImplementedException($"Неожиданный {nameof(handlerAction)}: {handlerAction}");
-                }
-
-            }
-
-            this.Domain = null;
-
             if (this.InformationSet == null)
                 throw new InvalidOperationException($"Операция '{callbackQueryParser.Direction}|{callbackQueryParser.SubDirection}' вернула пустой {nameof(this.InformationSet)}");
 

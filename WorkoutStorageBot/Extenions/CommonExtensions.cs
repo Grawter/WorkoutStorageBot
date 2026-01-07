@@ -11,7 +11,7 @@ namespace WorkoutStorageBot.Extenions
             => collection != null && collection.Count > 0;
 
         internal static bool HasItemsInCollection<T>(this IEnumerable<T>? collection)
-            => collection != null && collection.Count() > 0;
+            => collection != null && collection.Any();
 
         internal static string AddBold(this string text)
             => $"<b>{text}</b>";

@@ -9,6 +9,8 @@ using WorkoutStorageBot.Helpers.CallbackQueryParser;
 using WorkoutStorageBot.Helpers.Converters;
 using WorkoutStorageBot.Model.Entities.BusinessLogic;
 using WorkoutStorageBot.Model.DTO.HandlerData;
+using WorkoutStorageBot.Model.DTO.BusinessLogic;
+using Microsoft.EntityFrameworkCore;
 #endregion
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackCommandHandler.Context
@@ -53,7 +55,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                                                                                                           .Select(e => e.Id);
 
                     var resultLastTraining = this.CommandHandlerTools.Db.ResultsExercises
+                                                                .AsNoTracking()
                                                                 .Where(re => activeExercisesIDsInActiveDays.Contains(re.ExerciseId))
+                                                                .Include(e => e.Exercise)
                                                                 .GroupBy(re => re.DateTime.Date)
                                                                 .Select(g => new
                                                                 {
@@ -73,22 +77,27 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     IEnumerable<int> exercisesIDs = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Exercises.Where(e => !e.IsArchive)
                                                                                                                                 .Select(d => d.Id);
 
-                    IEnumerable<IGrouping<DateTime, ResultExercise>> lastDateForExercises = this.CommandHandlerTools.Db.ResultsExercises.Where(re => exercisesIDs.Contains(re.ExerciseId))
+                    IEnumerable<IGrouping<DateTime, ResultExercise>> lastDateForExercises = this.CommandHandlerTools.Db.ResultsExercises
+                                                .AsNoTracking()
+                                                .Where(re => exercisesIDs.Contains(re.ExerciseId))
                                                 .GroupBy(re => re.ExerciseId)
                                                 //order Data in group and get first (older) element for get lastDate
                                                 .Select(reGROUP => reGROUP.OrderByDescending(re => re.DateTime.Date).First())
                                                 .ToList()
                                                 .GroupBy(re => re.DateTime.Date);
 
-                    IQueryable<ResultExercise> lastResultsExercisesInCurrentDay = this.CommandHandlerTools.Db.ResultsExercises.Where(e => false);
+                    IQueryable<ResultExercise> lastResultsExercisesInCurrentDay = this.CommandHandlerTools.Db.ResultsExercises.AsNoTracking()
+                                                                                                                              .Where(e => false);
                     
                     foreach (IGrouping<DateTime, ResultExercise> resultExercise in lastDateForExercises)
                     {
-                        List<int> groupExercisesIDs = resultExercise.Select(x => x.ExerciseId).ToList();
+                        IEnumerable<int> groupExercisesIDs = resultExercise.Select(x => x.ExerciseId);
 
-                        lastResultsExercisesInCurrentDay = lastResultsExercisesInCurrentDay.Union(this.CommandHandlerTools.Db.ResultsExercises.Where(re => 
-                                                                                                            groupExercisesIDs.Contains(re.ExerciseId) &&
-                                                                                                            re.DateTime.Date == resultExercise.Key));
+                        lastResultsExercisesInCurrentDay = lastResultsExercisesInCurrentDay.Union(this.CommandHandlerTools.Db.ResultsExercises.AsNoTracking()
+                                                                                                                                              .Where(re => 
+                                                                                                                        groupExercisesIDs.Contains(re.ExerciseId) &&
+                                                                                                                        re.DateTime.Date == resultExercise.Key))
+                                                                                                                                              .Include(e => e.Exercise);
                     }
 
                     information = WorkoutDataHelper.GetInformationAboutLastDay(lastResultsExercisesInCurrentDay);
@@ -168,9 +177,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
         {
             string timerValue = GetTimerValue();
 
-            ResultExercise resultExercise = new ResultExercise() { FreeResult = timerValue, DateTime = DateTime.Now};
+            DTOResultExercise resultExercise = new DTOResultExercise() { FreeResult = timerValue, DateTime = DateTime.Now};
 
-            this.CommandHandlerTools.CurrentUserContext.DataManager.AddResultsExercise([resultExercise]);
+            this.CommandHandlerTools.CurrentUserContext.DataManager.AddTempResultsExercise([resultExercise]);
 
             this.CommandHandlerTools.CurrentUserContext.DataManager.ResetExerciseTimer();
 
@@ -189,7 +198,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
         {
             this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
-            this.CommandHandlerTools.CurrentUserContext.DataManager.ResetResultsExercise();
+            this.CommandHandlerTools.CurrentUserContext.DataManager.ResetTempResultsExercise();
 
             ResponseTextConverter responseConverter = new ResponseTextConverter($"Результат упражнения '{this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldAndQuotes()}' был сброшен", 
                 "Выберите упражнение");
@@ -202,9 +211,14 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
         internal WorkoutCH SaveResultsExerciseCommand()
         {
-            this.CommandHandlerTools.Db.ResultsExercises.AddRange(this.CommandHandlerTools.CurrentUserContext.DataManager.ResultsExercise);
+            foreach (DTOResultExercise tempResultsExercise in this.CommandHandlerTools.CurrentUserContext.DataManager.TempResultsExercise)
+            {
+                tempResultsExercise.Exercise = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise;
+                this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.ResultsExercise.Add(tempResultsExercise);
+            }
+            this.CommandHandlerTools.Db.AddEntities(this.CommandHandlerTools.CurrentUserContext.DataManager.TempResultsExercise);
 
-            this.CommandHandlerTools.CurrentUserContext.DataManager.ResetResultsExercise();
+            this.CommandHandlerTools.CurrentUserContext.DataManager.ResetTempResultsExercise();
 
             this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
