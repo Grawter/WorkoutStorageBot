@@ -1,6 +1,4 @@
-﻿#region using
-using System.Security.Cryptography;
-#endregion
+﻿using System.Security.Cryptography;
 
 namespace WorkoutStorageBot.Helpers.Crypto
 {

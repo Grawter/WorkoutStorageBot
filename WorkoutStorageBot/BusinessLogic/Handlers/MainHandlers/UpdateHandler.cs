@@ -1,6 +1,4 @@
-﻿#region using
-
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using Telegram.Bot.Types.Enums;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Enums;
@@ -15,8 +13,6 @@ using WorkoutStorageBot.Helpers.Converters;
 using WorkoutStorageBot.Model.DTO.HandlerData;
 using WorkoutStorageBot.Model.DTO.HandlerData.Results;
 using WorkoutStorageBot.Model.DTO.HandlerData.Results.UpdateInfo;
-
-#endregion
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
 {

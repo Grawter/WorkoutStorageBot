@@ -1,10 +1,8 @@
-﻿#region using
-using WorkoutStorageBot.BusinessLogic.Enums;
+﻿using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.Extenions;
 using WorkoutStorageBot.Helpers.Common;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.Model.Interfaces;
-#endregion
 
 namespace WorkoutStorageBot.BusinessLogic.Context.Session
 {

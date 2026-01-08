@@ -1,8 +1,4 @@
-﻿#region using
-
-using WorkoutStorageBot.BusinessLogic.Enums;
-
-#endregion
+﻿using WorkoutStorageBot.BusinessLogic.Enums;
 
 namespace WorkoutStorageBot.BusinessLogic.Context.StepStore
 {
@@ -23,7 +19,7 @@ namespace WorkoutStorageBot.BusinessLogic.Context.StepStore
                 #endregion
 
                 #region settings area
-                
+
                 new StepInformation(QueryFrom.Settings, "Выберите интересующие настройки", ButtonsSet.Settings, ButtonsSet.Main),
 
                 new StepInformation(QueryFrom.Settings, "Выберите интересующие настройки для циклов", ButtonsSet.SettingCycles, ButtonsSet.Settings),
@@ -47,7 +43,7 @@ namespace WorkoutStorageBot.BusinessLogic.Context.StepStore
                 new StepInformation(QueryFrom.NoMatter, "Выберите интересующее действие", ButtonsSet.Admin, ButtonsSet.Main),
                 new StepInformation(QueryFrom.NoMatter, "Выберите интересующее действие", ButtonsSet.AdminLogs, ButtonsSet.Admin),
 
-                #endregion         
+                #endregion 
             };
         }
 

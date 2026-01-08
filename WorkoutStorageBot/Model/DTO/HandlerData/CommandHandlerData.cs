@@ -1,10 +1,6 @@
-﻿#region using
-
-using WorkoutStorageBot.BusinessLogic.Context.Session;
+﻿using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.Core.Abstraction;
 using WorkoutStorageBot.Model.AppContext;
-
-#endregion
 
 namespace WorkoutStorageBot.Model.DTO.HandlerData
 {

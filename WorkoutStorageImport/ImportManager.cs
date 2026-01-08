@@ -1,14 +1,10 @@
-﻿#region using
-
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using WorkoutStorageBot.Helpers.Common;
 using WorkoutStorageBot.Model.AppContext;
 using WorkoutStorageBot.Model.Entities.BusinessLogic;
 using WorkoutStorageBot.Model.Entities.Import;
 using WorkoutStorageBot.Model.Interfaces;
-
-#endregion
 
 namespace WorkoutStorageImport
 {

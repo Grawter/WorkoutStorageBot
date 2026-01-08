@@ -1,10 +1,6 @@
-﻿#region using
-
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using WorkoutStorageBot.Model.AppContext;
 using WorkoutStorageBot.Model.Entities.BusinessLogic;
-
-#endregion
 
 namespace WorkoutStorageImport
 {

@@ -1,14 +1,10 @@
-﻿#region using
-
-using WorkoutStorageBot.BusinessLogic.Consts;
+﻿using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.Helpers.Converters;
 using WorkoutStorageBot.Model.AppContext;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.Model.Entities.BusinessLogic;
 using WorkoutStorageBot.Model.Interfaces;
-
-#endregion
 
 namespace WorkoutStorageBot.Extenions
 {

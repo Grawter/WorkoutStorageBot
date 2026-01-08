@@ -1,10 +1,6 @@
-﻿#region using
-
-using Telegram.Bot.Types;
+﻿using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using WorkoutStorageBot.Model.DTO.HandlerData.Results.UpdateInfo;
-
-#endregion
 
 namespace WorkoutStorageBot.Helpers.Updates
 {

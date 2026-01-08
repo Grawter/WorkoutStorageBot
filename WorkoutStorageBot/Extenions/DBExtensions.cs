@@ -1,9 +1,5 @@
-﻿#region using
-
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using WorkoutStorageBot.Model.AppContext;
-
-#endregion
 
 namespace WorkoutStorageBot.Extenions
 {

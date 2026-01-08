@@ -1,10 +1,6 @@
-﻿#region using
-
-using WorkoutStorageBot.Core.Manager;
+﻿using WorkoutStorageBot.Core.Manager;
 using WorkoutStorageBot.Helpers.Common;
 using WorkoutStorageBot.Model.DTO.HandlerData;
-
-#endregion
 
 namespace WorkoutStorageBot.Core.Abstraction
 {

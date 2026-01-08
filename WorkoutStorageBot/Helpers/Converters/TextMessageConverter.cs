@@ -1,12 +1,8 @@
-﻿#region using
-
-using System.Text;
+﻿using System.Text;
 using WorkoutStorageBot.BusinessLogic.Exceptions;
 using WorkoutStorageBot.Extenions;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.Model.Entities.BusinessLogic;
-
-#endregion
 
 namespace WorkoutStorageBot.Helpers.Converters
 {

@@ -1,9 +1,6 @@
-﻿#region using
-
-using WorkoutStorageBot.Model.Entities.BusinessLogic;
+﻿using WorkoutStorageBot.Model.Entities.BusinessLogic;
 using Microsoft.IO;
 
-#endregion
 namespace WorkoutStorageBot.Helpers.Export
 {
     internal static class CommonExportHelper

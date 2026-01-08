@@ -1,6 +1,4 @@
-﻿
-
-namespace WorkoutStorageImport
+﻿namespace WorkoutStorageImport
 {
     internal class ExpectedException : Exception
     {

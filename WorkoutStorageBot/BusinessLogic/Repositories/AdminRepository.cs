@@ -1,6 +1,4 @@
-﻿#region using
-
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot.Types;
 using WorkoutStorageBot.Application.Configuration;
@@ -10,8 +8,6 @@ using WorkoutStorageBot.Helpers.Common;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.Model.DTO.HandlerData;
 using WorkoutStorageBot.Model.Entities.BusinessLogic;
-
-#endregion
 
 namespace WorkoutStorageBot.BusinessLogic.Repositories
 {

@@ -1,8 +1,4 @@
-﻿#region using
-
-#endregion
-
-namespace WorkoutStorageBot.Model.Interfaces
+﻿namespace WorkoutStorageBot.Model.Interfaces
 {
     public interface IDomain : IEntity
     {

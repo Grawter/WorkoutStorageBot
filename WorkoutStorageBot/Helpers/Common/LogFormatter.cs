@@ -1,10 +1,6 @@
-﻿#region using
-
-using Telegram.Bot.Exceptions;
+﻿using Telegram.Bot.Exceptions;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.Model.Entities.Logging;
-
-#endregion
 
 namespace WorkoutStorageBot.Helpers.Common
 {

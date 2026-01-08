@@ -1,9 +1,5 @@
-﻿#region using
-
-using WorkoutStorageBot.BusinessLogic.Context.Session;
+﻿using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
-
-#endregion
 
 namespace WorkoutStorageBot.Application.BotTools.Sender
 {

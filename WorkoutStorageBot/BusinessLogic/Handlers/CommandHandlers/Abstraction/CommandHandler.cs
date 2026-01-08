@@ -1,8 +1,6 @@
-﻿#region using
-using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
+﻿using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.Helpers.Common;
 using WorkoutStorageBot.Model.DTO.HandlerData;
-#endregion
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.Abstraction
 {

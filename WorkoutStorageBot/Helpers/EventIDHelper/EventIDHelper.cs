@@ -1,8 +1,4 @@
-﻿#region using
-
-using Microsoft.Extensions.Logging;
-
-#endregion
+﻿using Microsoft.Extensions.Logging;
 
 namespace WorkoutStorageBot.Helpers.EventIDHelper
 {

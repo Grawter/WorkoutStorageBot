@@ -1,7 +1,5 @@
-﻿#region using
-using WorkoutStorageBot.BusinessLogic.Enums;
+﻿using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.Helpers.Common;
-#endregion
 
 namespace WorkoutStorageBot.BusinessLogic.InformationSetForSend
 {

@@ -1,6 +1,4 @@
-﻿#region using
-
-using Microsoft.IO;
+﻿using Microsoft.IO;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using System.Drawing;
@@ -8,8 +6,6 @@ using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.Helpers.Converters;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.Model.Entities.BusinessLogic;
-
-#endregion
 
 namespace WorkoutStorageBot.Helpers.Export
 {

@@ -1,6 +1,4 @@
-﻿#region using
-
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
@@ -15,8 +13,6 @@ using WorkoutStorageBot.Core.Manager;
 using WorkoutStorageBot.Helpers.Common;
 using WorkoutStorageBot.Helpers.EventIDHelper;
 using WorkoutStorageBot.Model.AppContext;
-
-#endregion
 
 namespace WorkoutStorageBot.Application.BotTools.Listener
 {

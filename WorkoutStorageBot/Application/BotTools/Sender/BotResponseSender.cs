@@ -1,6 +1,4 @@
-﻿#region using
-
-using Telegram.Bot;
+﻿using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -9,8 +7,6 @@ using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.Helpers.Buttons;
 using WorkoutStorageBot.Helpers.Common;
-
-#endregion
 
 namespace WorkoutStorageBot.Application.BotTools.Sender
 {

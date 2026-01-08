@@ -1,9 +1,5 @@
-﻿#region using
-
-using WorkoutStorageBot.Model.DTO.BusinessLogic;
+﻿using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.Model.Entities.BusinessLogic;
-
-#endregion
 
 namespace WorkoutStorageBot.Helpers.Converters
 {

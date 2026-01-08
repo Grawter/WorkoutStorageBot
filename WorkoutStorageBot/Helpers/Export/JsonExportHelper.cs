@@ -1,6 +1,4 @@
-﻿#region using
-
-using Microsoft.IO;
+﻿using Microsoft.IO;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -10,8 +8,6 @@ using System.Text.Unicode;
 using WorkoutStorageBot.Helpers.Converters;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.Model.Entities.BusinessLogic;
-
-#endregion
 
 namespace WorkoutStorageBot.Helpers.Export
 {

@@ -1,8 +1,4 @@
-﻿#region using
-
-using WorkoutStorageBot.BusinessLogic.Context.Session;
-
-#endregion
+﻿using WorkoutStorageBot.BusinessLogic.Context.Session;
 
 namespace WorkoutStorageBot.BusinessLogic.Context.Global
 {

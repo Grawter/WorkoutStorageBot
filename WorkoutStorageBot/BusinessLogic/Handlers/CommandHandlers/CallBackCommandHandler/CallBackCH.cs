@@ -1,8 +1,6 @@
-﻿#region using
-using WorkoutStorageBot.Helpers.CallbackQueryParser;
+﻿using WorkoutStorageBot.Helpers.CallbackQueryParser;
 using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.Abstraction;
 using WorkoutStorageBot.Model.DTO.HandlerData;
-#endregion
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackCommandHandler
 {

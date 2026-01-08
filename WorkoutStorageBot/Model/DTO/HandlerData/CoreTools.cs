@@ -1,10 +1,6 @@
-﻿#region using
-
-using WorkoutStorageBot.Application.BotTools.Logging;
+﻿using WorkoutStorageBot.Application.BotTools.Logging;
 using WorkoutStorageBot.Application.Configuration;
 using WorkoutStorageBot.Model.AppContext;
-
-#endregion
 
 namespace WorkoutStorageBot.Model.DTO.HandlerData
 {

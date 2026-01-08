@@ -1,11 +1,7 @@
-﻿#region using
-
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using System.Text.Json;
 using WorkoutStorageBot.Extenions;
 using WorkoutStorageBot.Helpers.Common;
-
-#endregion
 
 namespace WorkoutStorageBot.Application.Configuration
 {

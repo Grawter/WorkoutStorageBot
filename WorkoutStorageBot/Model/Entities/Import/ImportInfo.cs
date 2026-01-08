@@ -1,8 +1,4 @@
-﻿#region using
-
-using WorkoutStorageBot.Model.Interfaces;
-
-#endregion
+﻿using WorkoutStorageBot.Model.Interfaces;
 
 namespace WorkoutStorageBot.Model.Entities.Import
 {

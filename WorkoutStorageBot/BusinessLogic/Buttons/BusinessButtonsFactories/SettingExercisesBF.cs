@@ -1,10 +1,6 @@
-﻿#region using
-
-using WorkoutStorageBot.BusinessLogic.Buttons.Abstraction;
+﻿using WorkoutStorageBot.BusinessLogic.Buttons.Abstraction;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
-
-#endregion
 
 namespace WorkoutStorageBot.BusinessLogic.Buttons.BusinessButtonsFactories
 {

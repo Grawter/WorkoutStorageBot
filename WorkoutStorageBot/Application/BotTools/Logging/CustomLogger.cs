@@ -1,14 +1,10 @@
-﻿#region using
-
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using WorkoutStorageBot.Application.Configuration;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.Extenions;
 using WorkoutStorageBot.Helpers.Common;
 using WorkoutStorageBot.Model.AppContext;
 using WorkoutStorageBot.Model.Entities.Logging;
-
-#endregion
 
 namespace WorkoutStorageBot.Application.BotTools.Logging
 {

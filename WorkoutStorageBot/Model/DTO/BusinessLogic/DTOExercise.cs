@@ -1,9 +1,5 @@
-﻿#region using
-
-using WorkoutStorageBot.Model.Entities.BusinessLogic;
+﻿using WorkoutStorageBot.Model.Entities.BusinessLogic;
 using WorkoutStorageBot.Model.Interfaces;
-
-#endregion
 
 namespace WorkoutStorageBot.Model.DTO.BusinessLogic
 {

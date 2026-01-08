@@ -1,9 +1,5 @@
-﻿#region using
-
-using Microsoft.Extensions.Caching.Memory;
+﻿using Microsoft.Extensions.Caching.Memory;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
-
-#endregion
 
 namespace WorkoutStorageBot.BusinessLogic.Context.Global
 {

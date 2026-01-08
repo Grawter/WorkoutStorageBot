@@ -1,8 +1,4 @@
-﻿#region using
-
-using System.Text;
-
-#endregion
+﻿using System.Text;
 
 namespace WorkoutStorageBot.Helpers.Converters
 {

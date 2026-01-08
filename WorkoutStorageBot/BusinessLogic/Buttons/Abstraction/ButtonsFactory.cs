@@ -1,6 +1,4 @@
-﻿#region using
-
-using Telegram.Bot.Types.ReplyMarkups;
+﻿using Telegram.Bot.Types.ReplyMarkups;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Enums;
@@ -8,8 +6,6 @@ using WorkoutStorageBot.Extenions;
 using WorkoutStorageBot.Helpers.Common;
 using WorkoutStorageBot.Helpers.Crypto;
 using WorkoutStorageBot.Model.Interfaces;
-
-#endregion
 
 namespace WorkoutStorageBot.BusinessLogic.Buttons.Abstraction
 {

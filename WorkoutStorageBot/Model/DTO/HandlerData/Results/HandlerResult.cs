@@ -1,11 +1,7 @@
-﻿#region
-
-using Telegram.Bot.Types;
+﻿using Telegram.Bot.Types;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.Model.DTO.HandlerData.Results.UpdateInfo;
-
-#endregion
 
 namespace WorkoutStorageBot.Model.DTO.HandlerData.Results
 {

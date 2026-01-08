@@ -1,6 +1,4 @@
-﻿#region using
-
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using WorkoutStorageBot.BusinessLogic.Enums;
@@ -13,8 +11,6 @@ using WorkoutStorageBot.Helpers.Common;
 using WorkoutStorageBot.Helpers.Converters;
 using WorkoutStorageBot.Model.DTO.HandlerData;
 using WorkoutStorageBot.Model.Entities.Logging;
-
-#endregion
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackCommandHandler.Context
 {

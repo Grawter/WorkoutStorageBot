@@ -1,12 +1,10 @@
-﻿#region using
-using WorkoutStorageBot.BusinessLogic.Context.StepStore;
+﻿using WorkoutStorageBot.BusinessLogic.Context.StepStore;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.Extenions;
 using WorkoutStorageBot.Helpers.CallbackQueryParser;
 using WorkoutStorageBot.Helpers.Converters;
 using WorkoutStorageBot.Model.DTO.HandlerData;
-#endregion
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackCommandHandler.Context
 {

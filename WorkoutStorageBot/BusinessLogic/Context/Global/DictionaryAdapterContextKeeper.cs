@@ -1,9 +1,5 @@
-﻿#region using
-
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
-
-#endregion
 
 namespace WorkoutStorageBot.BusinessLogic.Context.Global
 {
