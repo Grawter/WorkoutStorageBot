@@ -18,7 +18,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.BusinessButtonsFactories
         {
             foreach (DTOCycle cycle in CurrentUserContext.UserInformation.Cycles.Where(c => !c.IsArchive))
             {
-                GetDomainsInButtons(cycle.Days.Where(c => !c.IsArchive), "ReplaceTo");
+                GetDomainsInButtons(cycle.Days.Where(c => !c.IsArchive), "ReplaceTo", true);
             }
         }
     }

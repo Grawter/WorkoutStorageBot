@@ -66,13 +66,16 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.Abstraction
             return callBackDataWithoutId;
         }
 
-        protected void GetDomainsInButtons(IEnumerable<IDTODomain> source, string subDirection)
+        protected void GetDomainsInButtons(IEnumerable<IDTODomain> source, string subDirection, bool isNeedShowID = false)
         {
             if (source.HasItemsInCollection())
             {
                 foreach (IDTODomain domain in source)
                 {
-                    AddInlineButton(domain.Name, $"2|{subDirection}|{domain.GetType().Name.Replace("DTO", "")}|{domain.Id}");
+                    if (isNeedShowID)
+                        AddInlineButton($"{domain.Name}[Id:{domain.Id}]", $"2|{subDirection}|{domain.GetType().Name.Replace("DTO", "")}|{domain.Id}");
+                    else
+                        AddInlineButton(domain.Name, $"2|{subDirection}|{domain.GetType().Name.Replace("DTO", "")}|{domain.Id}");
                 }
             }
         }
