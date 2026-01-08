@@ -108,7 +108,10 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                                                                 .FirstOrDefault();
 
 
-                    information = WorkoutDataHelper.GetInformationAboutLastExercises(resultLastTraining?.Data);
+                    if (resultLastTraining == null)
+                        throw new InvalidOperationException("Не удалось получить результаты последней тренировки");
+
+                    information = WorkoutDataHelper.GetInformationAboutLastExercises(resultLastTraining.Date, resultLastTraining.Data);
                     responseConverter = new ResponseTextConverter("Последняя тренировка:", information, "Выберите тренировочный день");
                     buttonsSets = (ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main);
                     break;

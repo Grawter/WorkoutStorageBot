@@ -9,18 +9,16 @@ namespace WorkoutStorageBot.Helpers.BusinessLogicHelpers
 {
     internal static class WorkoutDataHelper
     {
-        internal static string GetInformationAboutLastExercises(IEnumerable<ResultExercise>? resultsExercises)
+        internal static string GetInformationAboutLastExercises(DateTime filterDateTime, IEnumerable<ResultExercise>? resultsExercises)
         {
             if (!resultsExercises.HasItemsInCollection())
                 return "Нет информации для данного цикла";
 
             StringBuilder sb = new StringBuilder();
 
-            ResultExercise firstResultExercise = resultsExercises.First();
+            sb.AppendLine($"Дата: {filterDateTime.ToString(CommonConsts.Common.DateFormat)}");
 
             IEnumerable<IGrouping<int, ResultExercise>> groupsResultsExercise = resultsExercises.GroupBy(x => x.ExerciseId);
-
-            sb.AppendLine($"Дата: {firstResultExercise.DateTime.ToString(CommonConsts.Common.DateFormat)}");
 
             foreach (IGrouping<int, ResultExercise> groupResultExercise in groupsResultsExercise)
             {

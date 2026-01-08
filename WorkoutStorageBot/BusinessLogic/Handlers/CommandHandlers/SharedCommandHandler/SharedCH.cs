@@ -108,7 +108,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommand
                 {
                     this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
-                    string information = WorkoutDataHelper.GetInformationAboutLastExercises(resultLastTraining);
+                    string information = WorkoutDataHelper.GetInformationAboutLastExercises(dateTime, resultLastTraining);
 
                     responseConverter = new ResponseTextConverter($"Найденная тренировка:", information, "Выберите тренировочный день");
                     
