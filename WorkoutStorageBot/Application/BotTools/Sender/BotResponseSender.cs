@@ -1,12 +1,14 @@
 ﻿#region using
 
-using Telegram.Bot.Types;
 using Telegram.Bot;
-using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
-using WorkoutStorageBot.BusinessLogic.Context.Session;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using WorkoutStorageBot.Helpers.Common;
+using Telegram.Bot.Types.ReplyMarkups;
+using WorkoutStorageBot.BusinessLogic.Consts;
+using WorkoutStorageBot.BusinessLogic.Context.Session;
+using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.Helpers.Buttons;
+using WorkoutStorageBot.Helpers.Common;
 
 #endregion
 
@@ -26,7 +28,10 @@ namespace WorkoutStorageBot.Application.BotTools.Sender
             ArgumentNullException.ThrowIfNull(messageInformationSetting);
             ArgumentNullException.ThrowIfNull(currentUserContext);
 
-            InlineButtonsHelper buttons = new InlineButtonsHelper(currentUserContext);
+            InlineButtonsHelper buttonsHelper = new InlineButtonsHelper(currentUserContext);
+            ReplyMarkup buttons = buttonsHelper.GetInlineButtons(messageInformationSetting.ButtonsSets, messageInformationSetting.AdditionalParameters);
+
+            string resultText = GetResultText(messageInformationSetting.Message, buttonsHelper.AllVerticalButtonsDisplayed, buttonsHelper.AllHorizontalButtonsDisplayed);
 
             // Не обязательно. Чтобы не было анимации "зависание кнопки" в ТГ боте
             if (messageInformationSetting.AdditionalParameters.TryGetValue("BotCallBackID", out string callbackQueryID))
@@ -35,18 +40,18 @@ namespace WorkoutStorageBot.Application.BotTools.Sender
             switch (messageInformationSetting)
             {
                 case MessageInformationSet MISet:
-                    await botClient.SendMessage(chatId,
-                                            messageInformationSetting.Message,
-                                            ParseMode.Html,
-                                            replyMarkup: buttons.GetInlineButtons(messageInformationSetting.ButtonsSets, messageInformationSetting.AdditionalParameters));
+                    await botClient.SendMessage(chatId: chatId,
+                                                text: resultText,
+                                                parseMode: ParseMode.Html,
+                                                replyMarkup: buttons);
                     break;
 
                 case FileInformationSet FISet:
-                    await botClient.SendDocument(chatId,
-                                            document: InputFile.FromStream(stream: FISet.Stream, fileName: FISet.FileName),
-                                            caption: FISet.Message,
-                                            ParseMode.Html,
-                                            replyMarkup: buttons.GetInlineButtons(messageInformationSetting.ButtonsSets, messageInformationSetting.AdditionalParameters));
+                    await botClient.SendDocument(chatId: chatId,
+                                                 document: InputFile.FromStream(stream: FISet.Stream, fileName: FISet.FileName),
+                                                 caption: resultText,
+                                                 parseMode: ParseMode.Html,
+                                                 replyMarkup: buttons);
 
                     FISet.Stream.Dispose();
                     break;
@@ -83,5 +88,21 @@ namespace WorkoutStorageBot.Application.BotTools.Sender
         /// </summary>
         private async Task AnswerCallbackQuery(string callbackQueryID)
             =>  await botClient.AnswerCallbackQuery(callbackQueryID);
+
+        private string GetResultText(string originalText, bool allVerticalButtonsDisplayed, bool allHorizontalButtonsDisplayed)
+        {
+            if (!allVerticalButtonsDisplayed)
+            {
+                if (!allHorizontalButtonsDisplayed)
+                    return $"{originalText}{Environment.NewLine}(Были отображены первые {CommonConsts.Buttons.MaxVerticalButtonsCount} кнопок по вертикали и {CommonConsts.Buttons.MaxHorizontalButtonsCount} по горизонтали)";
+                else
+                    return $"{originalText}{Environment.NewLine}(Были отображены первые {CommonConsts.Buttons.MaxVerticalButtonsCount} кнопок по вертикали)";
+            }
+
+            if (!allHorizontalButtonsDisplayed)
+                return $"{originalText}{Environment.NewLine}(Были отображены первые {CommonConsts.Buttons.MaxHorizontalButtonsCount} кнопки по горизонтали)";
+
+            return originalText;
+        }
     }
 }

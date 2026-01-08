@@ -1,6 +1,7 @@
 ﻿#region using
 
 using Telegram.Bot.Types.ReplyMarkups;
+using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.Extenions;
@@ -15,7 +16,13 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.Abstraction
     internal abstract class ButtonsFactory
     {
         private List<List<InlineKeyboardButton>> inlineKeyboardButtonsMain;
-        private List<InlineKeyboardButton> inlineKeyboardButtons;
+        private List<InlineKeyboardButton>? inlineKeyboardButtons;
+        
+        private int horizontalButtonsCounter = 0;
+        private int verticalButtonsCounter = 0;
+
+        internal bool AllVerticalButtonsDisplayed { get; private set; } = true;
+        internal bool AllHorizontalButtonsDisplayed { get; private set; } = true;
 
         protected UserContext CurrentUserContext { get; }
 
@@ -28,12 +35,15 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.Abstraction
             inlineKeyboardButtonsMain = new();
         }
 
-        internal IEnumerable<IEnumerable<InlineKeyboardButton>> Create(ButtonsSet backButtonsSet = ButtonsSet.None, Dictionary<string, string>? additionalParameters = null)
+        internal IEnumerable<IEnumerable<InlineKeyboardButton>> CreateButtons(ButtonsSet backButtonsSet = ButtonsSet.None, Dictionary<string, string>? additionalParameters = null)
         {
             AddBusinessButtons(additionalParameters);
 
             if (backButtonsSet != ButtonsSet.None)
                 AddInlineButton("Назад", $"0|Back||{backButtonsSet}");
+
+            if (inlineKeyboardButtons.HasItemsInCollection())
+                inlineKeyboardButtonsMain.Add(inlineKeyboardButtons);
 
             return inlineKeyboardButtonsMain;
         }
@@ -46,12 +56,28 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.Abstraction
 
             if (onNewLine)
             {
-                inlineKeyboardButtons = new() { InlineKeyboardButton.WithCallbackData(titleButton, callBackData) };
+                ++verticalButtonsCounter;
 
-                inlineKeyboardButtonsMain.Add(inlineKeyboardButtons);
+                if (verticalButtonsCounter > CommonConsts.Buttons.MaxVerticalButtonsCount)
+                {
+                    AllVerticalButtonsDisplayed = false;
+                    return;
+                }
+
+                List<InlineKeyboardButton> oneLineKeyboardButton = new() { InlineKeyboardButton.WithCallbackData(titleButton, callBackData) };
+
+                inlineKeyboardButtonsMain.Add(oneLineKeyboardButton);
             }
             else
             {
+                ++horizontalButtonsCounter;
+
+                if (horizontalButtonsCounter > CommonConsts.Buttons.MaxHorizontalButtonsCount)
+                {
+                    AllHorizontalButtonsDisplayed = false;
+                    return;
+                }
+
                 if (inlineKeyboardButtons is null)
                     inlineKeyboardButtons = new();
 

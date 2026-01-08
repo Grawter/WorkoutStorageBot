@@ -14,26 +14,34 @@ namespace WorkoutStorageBot.Helpers.Buttons
     {
         private UserContext CurrentUserContext { get; }
 
+        internal bool AllVerticalButtonsDisplayed { get; private set; }
+        internal bool AllHorizontalButtonsDisplayed { get; private set; }
+
         internal InlineButtonsHelper(UserContext userContext)
         {
             CurrentUserContext = userContext;
         }
 
-        internal ReplyMarkup GetInlineButtons(ButtonsSet buttonsSet, Dictionary<string, string> additionalParameters = null)
+        internal ReplyMarkup GetInlineButtons(ButtonsSet buttonsSet, Dictionary<string, string>? additionalParameters = null)
         {
             return new InlineKeyboardMarkup(GetButtons(buttonsSet, ButtonsSet.None, additionalParameters));
         }
 
-        internal ReplyMarkup GetInlineButtons((ButtonsSet buttonsSet, ButtonsSet backButtonsSet) buttonsSets, Dictionary<string, string> additionalParameters = null)
+        internal ReplyMarkup GetInlineButtons((ButtonsSet buttonsSet, ButtonsSet backButtonsSet) buttonsSets, Dictionary<string, string>? additionalParameters = null)
         {
             return new InlineKeyboardMarkup(GetButtons(buttonsSets.buttonsSet, buttonsSets.backButtonsSet, additionalParameters));
         }
 
-        private IEnumerable<IEnumerable<InlineKeyboardButton>> GetButtons(ButtonsSet buttonsSet, ButtonsSet backButtonsSet, Dictionary<string, string> additionalParameters)
+        private IEnumerable<IEnumerable<InlineKeyboardButton>> GetButtons(ButtonsSet buttonsSet, ButtonsSet backButtonsSet, Dictionary<string, string>? additionalParameters)
         {
             ButtonsFactory buttonsFactory = GetButtonsFactory(buttonsSet);
 
-            return buttonsFactory.Create(backButtonsSet, additionalParameters);
+            IEnumerable<IEnumerable<InlineKeyboardButton>> buttons = buttonsFactory.CreateButtons(backButtonsSet, additionalParameters);
+
+            this.AllVerticalButtonsDisplayed = buttonsFactory.AllVerticalButtonsDisplayed;
+            this.AllHorizontalButtonsDisplayed = buttonsFactory.AllHorizontalButtonsDisplayed;
+
+            return buttons;
         }
 
         private ButtonsFactory GetButtonsFactory(ButtonsSet buttonsSet)

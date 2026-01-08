@@ -16,6 +16,12 @@ namespace WorkoutStorageBot.BusinessLogic.Consts
             internal const string ResultsExercise = "ResultsExercise";
         }
 
+        public class Buttons
+        {
+            internal const int MaxHorizontalButtonsCount = 3;
+            internal const int MaxVerticalButtonsCount = 15;
+        }
+
         public class EventNames
         {
             internal const string StartingBot = "StartingBot";
