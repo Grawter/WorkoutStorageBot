@@ -1,4 +1,5 @@
-﻿using WorkoutStorageBot.Core.Abstraction;
+﻿using Microsoft.EntityFrameworkCore;
+using WorkoutStorageBot.Core.Abstraction;
 using WorkoutStorageBot.Core.Manager;
 using WorkoutStorageBot.Model.DTO.HandlerData;
 using WorkoutStorageBot.Model.Entities.Logging;
@@ -12,27 +13,31 @@ namespace WorkoutStorageBot.BusinessLogic.Repositories
 
         internal IQueryable<Log> GetLogs(int count)
         {
-            return CoreTools.Db.Logs.OrderByDescending(x => x.Id)
-                                         .Take(count);
+            return CoreTools.Db.Logs.AsNoTracking()
+                                    .OrderByDescending(x => x.Id)
+                                    .Take(count);
         }
 
         internal IQueryable<Log> GetLogs(string logLevel, int count)
         {
-            IQueryable<Log> predResult = CoreTools.Db.Logs.Where(x => x.LogLevel == logLevel);
+            IQueryable<Log> predResult = CoreTools.Db.Logs.AsNoTracking()
+                                                          .Where(x => x.LogLevel == logLevel);
 
             return GetLogs(predResult, count);
         }
 
         internal IQueryable<Log> GetLogs(int eventID, int count)
         {
-            IQueryable<Log> predResult = CoreTools.Db.Logs.Where(x => x.EventID == eventID);
+            IQueryable<Log> predResult = CoreTools.Db.Logs.AsNoTracking()
+                                                          .Where(x => x.EventID == eventID);
 
             return GetLogs(predResult, count);
         }
 
         internal IQueryable<Log> GetLogsById(int id, int count)
         {
-            IQueryable<Log> predResult = CoreTools.Db.Logs.Where(x => x.Id == id);
+            IQueryable<Log> predResult = CoreTools.Db.Logs.AsNoTracking()
+                                                          .Where(x => x.Id == id);
 
             return GetLogs(predResult, count);
         }
