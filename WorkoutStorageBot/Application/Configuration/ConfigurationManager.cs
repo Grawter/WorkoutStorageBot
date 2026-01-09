@@ -39,6 +39,7 @@ namespace WorkoutStorageBot.Application.Configuration
         {
             IConfigurationSection DBSection = configuration.GetRequiredSection("DB");
 
+            settings.EnsureCreated = bool.Parse(DBSection["EnsureCreated"] ?? "false");
             settings.Server = DBSection["Server"];
             settings.Database = GetRequiredValue(DBSection["Database"], "Не удалось получить название БД");
             settings.UserName = DBSection["UserName"];

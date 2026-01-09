@@ -55,6 +55,9 @@ namespace WorkoutStorageBot.Application.BotTools.Listener
 
             User bot = await botClient.GetMe();
 
+            if (configurationData.DB.EnsureCreated)
+                EnsureCreatedDB(scope);
+
             logger.LogInformation(EventIDHelper.GetNextEventId(CommonConsts.EventNames.StartingBot), $"Телеграм бот @{bot.Username} запущен");
 
             ReceiverOptions receiverOptions = new ReceiverOptions()
@@ -115,6 +118,12 @@ namespace WorkoutStorageBot.Application.BotTools.Listener
             ILogger logger = loggerFactory.CreateLogger<BotListener>();
 
             return logger;
+        }
+
+        private void EnsureCreatedDB(IServiceScope scope)
+        {
+            EntityContext db = scope.ServiceProvider.GetRequiredService<EntityContext>();
+            db.Database.EnsureCreated();
         }
     }
 }

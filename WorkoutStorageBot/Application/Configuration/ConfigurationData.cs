@@ -14,6 +14,7 @@ namespace WorkoutStorageBot.Application.Configuration
 
     public class DbSettings
     {
+        public bool EnsureCreated { get; set; }
         public string Server { get; set; }
         public string Database { get; set; }
         public string UserName { get; set; }

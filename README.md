@@ -35,6 +35,7 @@ nano appsettings.json
 ```
 {
   "DB": {
+    "EnsureCreated": "true",
     "Server": "",
     "Database": "test.db",
     "UserName": "",
@@ -89,6 +90,7 @@ dotnet run
   По-умолчанию, используется SQLite, в случае необходимости можно поменять DBProvider: Program -> GetEntityContext.
   В случае необходимости можно написать свою реализацию строки подключения: ConfigurationData -> DbSettings -> ConnectionString.
 
+  EnsureCreated - Требуется ли первичная инициализация БД при старте приложения (Database.EnsureCreated()) [Необязательно]
   Server - Сервер DB [Необязательно]
   Database - Название DB [Обязательно]
   UserName - УЗ для подключения к DB [Необязательно]
@@ -97,6 +99,7 @@ dotnet run
   После инициализации всех зависимостей значения UserName и Password будут затёрты из переменных. Подробнее: ConfigurationManager -> SetCensorToDBSettings.
   */
   "DB": {
+    "EnsureCreated": "false",
     "Server": "",
     "Database": "test.db",
     "UserName": "",
