@@ -49,7 +49,9 @@ namespace WorkoutStorageBot.Application.BotTools.Listener
         {
             this.cancellationTokenSource = CommonHelper.GetIfNotNull(cancellationTokenSource);
 
-            ILogger logger = GetLoggerOnScope();
+            using IServiceScope scope = scopeFactory.CreateScope();
+
+            ILogger logger = GetLoggerOnScope(scope);
 
             User bot = await botClient.GetMe();
 
@@ -83,7 +85,9 @@ namespace WorkoutStorageBot.Application.BotTools.Listener
         {
             try
             {
-                ILogger logger = GetLoggerOnScope();
+                using IServiceScope scope = scopeFactory.CreateScope();
+
+                ILogger logger = GetLoggerOnScope(scope);
 
                 EventId eventId = EventIDHelper.GetNextEventIdThreadSave(CommonConsts.EventNames.Critical);
 
@@ -105,11 +109,8 @@ namespace WorkoutStorageBot.Application.BotTools.Listener
             }
         }
 
-        private ILogger GetLoggerOnScope()
+        private ILogger GetLoggerOnScope(IServiceScope scope)
         {
-            using IServiceScope scope = scopeFactory.CreateScope();
-
-            EntityContext dbOnScope = scope.ServiceProvider.GetRequiredService<EntityContext>();
             ICustomLoggerFactory loggerFactory = scope.ServiceProvider.GetRequiredService<ICustomLoggerFactory>();
             ILogger logger = loggerFactory.CreateLogger<BotListener>();
 
