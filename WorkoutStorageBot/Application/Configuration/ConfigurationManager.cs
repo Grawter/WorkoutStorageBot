@@ -29,6 +29,8 @@ namespace WorkoutStorageBot.Application.Configuration
 
             FillLogSettings(configurationData.LogInfo, configuration);
 
+            CreateVolumeDirectory(configurationData.DB.Database);
+
             return configurationData;
         }
 
@@ -100,6 +102,13 @@ namespace WorkoutStorageBot.Application.Configuration
 
                 settings.CustomRulesLog = CustomRulesLog.ToArray();
             }
+        }
+
+        private static void CreateVolumeDirectory(string path)
+        {
+            string? directory = Path.GetDirectoryName(path);
+            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+                Directory.CreateDirectory(directory);
         }
 
         internal static void SetCensorToDBSettings(ConfigurationData configurationData)

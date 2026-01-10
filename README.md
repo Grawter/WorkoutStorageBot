@@ -37,7 +37,7 @@ nano appsettings.json
   "DB": {
     "EnsureCreated": "true",
     "Server": "",
-    "Database": "test.db",
+    "Database": "data/test.db",
     "UserName": "",
     "Password": ""
   },
@@ -68,8 +68,7 @@ nano appsettings.json
 
 ```
 cd ../..
-dotnet build
-dotnet run
+docker-compose up -d
 ```
 
 ### 4. Создайте свой первый тренировочный цикл
@@ -92,7 +91,7 @@ dotnet run
 
   EnsureCreated - Требуется ли первичная инициализация БД при старте приложения (Database.EnsureCreated()) [Необязательно]
   Server - Сервер DB [Необязательно]
-  Database - Название DB [Обязательно]
+  Database - Название DB. data обязательно, т.к. в этой папке будет volume [Обязательно]
   UserName - УЗ для подключения к DB [Необязательно]
   Password - для от УЗ для подключения к DB [Необязательно]
   
@@ -101,7 +100,7 @@ dotnet run
   "DB": {
     "EnsureCreated": "false",
     "Server": "",
-    "Database": "test.db",
+    "Database": "data/<someName>.db",
     "UserName": "",
     "Password": ""
   },

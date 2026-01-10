@@ -1,0 +1,23 @@
+{
+  "profiles": {
+    "WorkoutStorageBot": {
+      "commandName": "Project"
+    },
+    "Docker": {
+      "commandName": "Executable",
+      "executablePath": "docker-compose",
+      "commandLineArgs": "up -d",
+      "workingDirectory": "."
+    },
+    "DockerBuild": {
+      "commandName": "Executable",
+      "executablePath": "docker-compose",
+      "commandLineArgs": "up -d --build",
+      "workingDirectory": "."
+    },
+    "WSL": {
+      "commandName": "WSL2",
+      "distributionName": ""
+    }
+  }
+}

@@ -8,7 +8,7 @@
 
   EnsureCreated - Требуется ли первичная инициализация БД при старте приложения (Database.EnsureCreated()) [Необязательно]
   Server - Сервер DB [Необязательно]
-  Database - Название DB [Обязательно]
+  Database - Название DB. data обязательно, т.к. в этой папке будет volume [Обязательно]
   UserName - УЗ для подключения к DB [Необязательно]
   Password - для от УЗ для подключения к DB [Необязательно]
   
@@ -17,7 +17,7 @@
   "DB": {
     "EnsureCreated": "false",
     "Server": "",
-    "Database": "test.db",
+    "Database": "data/test.db",
     "UserName": "",
     "Password": ""
   },
