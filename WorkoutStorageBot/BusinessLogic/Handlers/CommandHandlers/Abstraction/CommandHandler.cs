@@ -13,12 +13,6 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.Abstraction
             this.CommandHandlerTools = CommonHelper.GetIfNotNull(commandHandlerTools);
         }
 
-        protected void CheckInformationSet(IInformationSet informationSet)
-        {
-            if (informationSet == null)
-                throw new InvalidOperationException($"Операция '{this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget}' вернула пустой {nameof(informationSet)}");
-        }
-
         internal abstract IInformationSet GetInformationSet();
     }
 }
