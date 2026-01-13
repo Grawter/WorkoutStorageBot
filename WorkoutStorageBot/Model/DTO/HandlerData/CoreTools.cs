@@ -1,5 +1,5 @@
-﻿using WorkoutStorageBot.Application.BotTools.Logging;
-using WorkoutStorageBot.Application.Configuration;
+﻿using WorkoutStorageBot.Application.Configuration;
+using WorkoutStorageBot.Core.Logging;
 using WorkoutStorageBot.Model.AppContext;
 
 namespace WorkoutStorageBot.Model.DTO.HandlerData

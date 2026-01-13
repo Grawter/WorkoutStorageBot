@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using System.Text.Json;
-using WorkoutStorageBot.Extenions;
-using WorkoutStorageBot.Helpers.Common;
+using WorkoutStorageBot.Core.Extensions;
+using WorkoutStorageBot.Core.Helpers;
 
 namespace WorkoutStorageBot.Application.Configuration
 {

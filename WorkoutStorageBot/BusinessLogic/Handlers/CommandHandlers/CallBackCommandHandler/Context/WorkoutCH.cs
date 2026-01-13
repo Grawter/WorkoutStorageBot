@@ -2,14 +2,14 @@
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommandHandler;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
-using WorkoutStorageBot.Extenions;
-using WorkoutStorageBot.Helpers.BusinessLogicHelpers;
-using WorkoutStorageBot.Helpers.CallbackQueryParser;
-using WorkoutStorageBot.Helpers.Converters;
 using WorkoutStorageBot.Model.Entities.BusinessLogic;
 using WorkoutStorageBot.Model.DTO.HandlerData;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using Microsoft.EntityFrameworkCore;
+using WorkoutStorageBot.Core.Extensions;
+using WorkoutStorageBot.BusinessLogic.Helpers.CallbackQueryParser;
+using WorkoutStorageBot.BusinessLogic.Helpers.Converters;
+using WorkoutStorageBot.BusinessLogic.Extensions;
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackCommandHandler.Context
 {
@@ -109,7 +109,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     if (resultLastTraining == null)
                         throw new InvalidOperationException("Не удалось получить результаты последней тренировки");
 
-                    information = WorkoutDataHelper.GetInformationAboutLastExercises(resultLastTraining.Date, resultLastTraining.Data);
+                    information = SharedCH.GetInformationAboutLastExercises(resultLastTraining.Date, resultLastTraining.Data);
                     responseConverter = new ResponseTextConverter("Последняя тренировка:", information, "Выберите тренировочный день");
                     buttonsSets = (ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main);
                     break;
@@ -142,7 +142,7 @@ AND date(re.DateTime) = last.MaxDate";
                                                                                                                                      .Include(r => r.Exercise)
                                                                                                                                      .ToListAsync();
 
-                    information = WorkoutDataHelper.GetInformationAboutLastDay(lastResultsExercisesInCurrentDay);
+                    information = SharedCH.GetInformationAboutLastDay(lastResultsExercisesInCurrentDay);
                     responseConverter = new ResponseTextConverter("Последние результаты упражнений из этого дня:", information, "Выберите упражнение");
                     buttonsSets = (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout);
                     break;

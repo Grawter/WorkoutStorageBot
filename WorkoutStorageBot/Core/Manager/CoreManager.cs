@@ -1,16 +1,11 @@
 ﻿using Microsoft.Extensions.Logging;
 using Telegram.Bot.Types;
-using WorkoutStorageBot.Application.BotTools.Logging;
-using WorkoutStorageBot.Application.BotTools.Sender;
 using WorkoutStorageBot.Application.Configuration;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Repositories;
 using WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.Core.Abstraction;
-using WorkoutStorageBot.Helpers.Common;
-using WorkoutStorageBot.Helpers.EventIDHelper;
-using WorkoutStorageBot.Helpers.Updates;
 using WorkoutStorageBot.Model.AppContext;
 using WorkoutStorageBot.Model.Entities.BusinessLogic;
 using WorkoutStorageBot.Model.DTO.HandlerData;
@@ -18,6 +13,10 @@ using WorkoutStorageBot.Model.DTO.HandlerData.Results;
 using WorkoutStorageBot.Model.DTO.HandlerData.Results.UpdateInfo;
 using WorkoutStorageBot.BusinessLogic.Context.Global;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
+using WorkoutStorageBot.Core.Helpers;
+using WorkoutStorageBot.BusinessLogic.Helpers.Updates;
+using WorkoutStorageBot.Core.Logging;
+using WorkoutStorageBot.Core.Sender;
 
 namespace WorkoutStorageBot.Core.Manager
 {

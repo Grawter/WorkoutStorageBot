@@ -1,5 +1,5 @@
 ﻿using WorkoutStorageBot.BusinessLogic.Enums;
-using WorkoutStorageBot.Helpers.Common;
+using WorkoutStorageBot.Core.Helpers;
 
 namespace WorkoutStorageBot.BusinessLogic.InformationSetForSend
 {

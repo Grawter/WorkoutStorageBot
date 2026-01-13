@@ -1,5 +1,5 @@
-﻿using WorkoutStorageBot.Core.Manager;
-using WorkoutStorageBot.Helpers.Common;
+﻿using WorkoutStorageBot.Core.Helpers;
+using WorkoutStorageBot.Core.Manager;
 using WorkoutStorageBot.Model.DTO.HandlerData;
 
 namespace WorkoutStorageBot.Core.Abstraction

@@ -3,11 +3,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
-using WorkoutStorageBot.Application.BotTools.Listener;
-using WorkoutStorageBot.Application.BotTools.Logging;
-using WorkoutStorageBot.Application.BotTools.Sender;
 using WorkoutStorageBot.Application.Configuration;
 using WorkoutStorageBot.BusinessLogic.Context.Global;
+using WorkoutStorageBot.Core.BotTools.Listener;
+using WorkoutStorageBot.Core.Logging;
+using WorkoutStorageBot.Core.Sender;
 using WorkoutStorageBot.Model.AppContext;
 
 namespace WorkoutStorageBot.Application

@@ -1,6 +1,6 @@
 ﻿using WorkoutStorageBot.BusinessLogic.Buttons.Abstraction;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
-using WorkoutStorageBot.Helpers.Common;
+using WorkoutStorageBot.Core.Helpers;
 
 namespace WorkoutStorageBot.BusinessLogic.Buttons.BusinessButtonsFactories
 {

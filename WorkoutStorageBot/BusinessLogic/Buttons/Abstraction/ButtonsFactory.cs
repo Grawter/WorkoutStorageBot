@@ -2,9 +2,9 @@
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Enums;
-using WorkoutStorageBot.Extenions;
-using WorkoutStorageBot.Helpers.Common;
-using WorkoutStorageBot.Helpers.Crypto;
+using WorkoutStorageBot.BusinessLogic.Helpers.Crypto;
+using WorkoutStorageBot.Core.Extensions;
+using WorkoutStorageBot.Core.Helpers;
 using WorkoutStorageBot.Model.Interfaces;
 
 namespace WorkoutStorageBot.BusinessLogic.Buttons.Abstraction

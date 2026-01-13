@@ -1,11 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Text;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Enums;
+using WorkoutStorageBot.BusinessLogic.Extensions;
 using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.Abstraction;
+using WorkoutStorageBot.BusinessLogic.Helpers.Converters;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
-using WorkoutStorageBot.Extenions;
-using WorkoutStorageBot.Helpers.BusinessLogicHelpers;
-using WorkoutStorageBot.Helpers.Converters;
+using WorkoutStorageBot.Core.Extensions;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.Model.DTO.HandlerData;
 using WorkoutStorageBot.Model.Entities.BusinessLogic;
@@ -105,7 +106,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommand
                 {
                     this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
-                    string information = WorkoutDataHelper.GetInformationAboutLastExercises(dateTime, resultLastTraining);
+                    string information = GetInformationAboutLastExercises(dateTime, resultLastTraining);
 
                     responseConverter = new ResponseTextConverter($"Найденная тренировка:", information, "Выберите тренировочный день");
                     
@@ -165,6 +166,75 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommand
             IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets, additionalParameters);
 
             return informationSet;
+        }
+
+        internal static string GetInformationAboutLastExercises(DateTime filterDateTime, IEnumerable<ResultExercise>? resultsExercises)
+        {
+            if (!resultsExercises.HasItemsInCollection())
+                return "Нет информации для данного цикла";
+
+            StringBuilder sb = new StringBuilder();
+
+            sb.AppendLine($"Дата: {filterDateTime.ToString(CommonConsts.Common.DateFormat)}");
+
+            IEnumerable<IGrouping<int, ResultExercise>> groupsResultsExercise = resultsExercises.GroupBy(x => x.ExerciseId);
+
+            foreach (IGrouping<int, ResultExercise> groupResultExercise in groupsResultsExercise)
+            {
+                ResultExercise firstGroupResultExercise = groupResultExercise.First();
+
+                sb.AppendLine($"Упражнение: {firstGroupResultExercise.Exercise.Name.AddBoldAndQuotes()}");
+
+                foreach (ResultExercise resultExercise in groupResultExercise)
+                {
+                    string resultExerciseStr = ConvertResultExerciseToString(resultExercise);
+
+                    sb.AppendLine(resultExerciseStr);
+                }
+            }
+
+            return sb.ToString().Trim();
+        }
+
+        internal static string GetInformationAboutLastDay(IEnumerable<ResultExercise>? resultsExercises)
+        {
+            if (!resultsExercises.HasItemsInCollection())
+                return "Нет информации для данного дня";
+
+            StringBuilder sb = new StringBuilder();
+
+            IEnumerable<IGrouping<int, ResultExercise>> groupsResultsExercise = resultsExercises.GroupBy(x => x.ExerciseId);
+
+            foreach (IGrouping<int, ResultExercise> groupResultExercise in groupsResultsExercise)
+            {
+                ResultExercise firstResultExercise = groupResultExercise.First();
+
+                sb.AppendLine($"Упражнение: {firstResultExercise.Exercise.Name.AddBoldAndQuotes()} | Дата: {firstResultExercise.DateTime.ToString(CommonConsts.Common.DateFormat).AddBoldAndQuotes()}");
+
+                foreach (ResultExercise resultExercise in groupResultExercise)
+                {
+                    string resultExerciseStr = ConvertResultExerciseToString(resultExercise);
+
+                    sb.AppendLine(resultExerciseStr);
+                }
+            }
+
+            return sb.ToString().Trim();
+        }
+
+        internal static string ConvertResultExerciseToString(ResultExercise resultExercise)
+        {
+            if (!string.IsNullOrWhiteSpace(resultExercise.FreeResult))
+                return $"=> {resultExercise.FreeResult}";
+            else if (resultExercise.Count.HasValue)
+            {
+                if (resultExercise.Weight.HasValue)
+                    return $"Повторения: ({resultExercise.Count}) => Вес: ({resultExercise.Weight})";
+                else
+                    return $"Повторения: ({resultExercise.Count})";
+            }
+            else
+                throw new InvalidOperationException($"Не удалось отобразить данные для результата упражнения с ID: {resultExercise.Id}, ID упражнения: {resultExercise.ExerciseId}, тип упражнения: {resultExercise.Exercise.Mode.ToString().AddQuotes()}");
         }
     }
 }

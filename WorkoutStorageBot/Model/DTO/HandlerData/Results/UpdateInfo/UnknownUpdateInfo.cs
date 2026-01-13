@@ -1,6 +1,6 @@
 ﻿using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using WorkoutStorageBot.Helpers.Common;
+using WorkoutStorageBot.Core.Helpers;
 
 namespace WorkoutStorageBot.Model.DTO.HandlerData.Results.UpdateInfo
 {
