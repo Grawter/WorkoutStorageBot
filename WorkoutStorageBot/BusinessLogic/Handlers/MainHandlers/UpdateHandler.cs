@@ -23,7 +23,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
         internal UpdateHandler(CoreTools coreTools, CoreManager coreManager) : base(coreTools, coreManager, nameof(PrimaryUpdateHandler))
         { }
 
-        internal override UpdateHandlerResult Process(HandlerResult handlerResult)
+        internal override async Task<HandlerResult> Process(HandlerResult handlerResult)
         {
             UpdateHandlerResult updateHandlerResult = InitHandlerResult(handlerResult);
             CurrentUserContext = updateHandlerResult.CurrentUserContext;
@@ -31,10 +31,10 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
             switch (updateHandlerResult.ShortUpdateInfo.UpdateType)
             {
                 case UpdateType.Message:
-                    updateHandlerResult.InformationSet = ProcessMessage(updateHandlerResult.ShortUpdateInfo);
+                    updateHandlerResult.InformationSet = await ProcessMessage(updateHandlerResult.ShortUpdateInfo);
                     break;
                 case UpdateType.CallbackQuery:
-                    updateHandlerResult.InformationSet = ProcessCallbackQuery(updateHandlerResult.ShortUpdateInfo);
+                    updateHandlerResult.InformationSet = await ProcessCallbackQuery(updateHandlerResult.ShortUpdateInfo);
                     break;
                 default:
                     throw new NotImplementedException($"Неожиданный update.type: {updateHandlerResult.ShortUpdateInfo.UpdateType}");
@@ -64,7 +64,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
             ArgumentNullException.ThrowIfNull(handlerResult.CurrentUserContext);
         }
 
-        private IInformationSet ProcessMessage(ShortUpdateInfo updateInfo)
+        private async Task<IInformationSet> ProcessMessage(ShortUpdateInfo updateInfo)
         {
             CommandHandlerData commandHandlerData = new CommandHandlerData()
             {
@@ -77,10 +77,10 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
 
             TextMessageCH commandHandler = new TextMessageCH(commandHandlerData, requestConverter);
 
-            return commandHandler.GetInformationSet();
+            return await commandHandler.GetInformationSet();
         }
 
-        private IInformationSet ProcessCallbackQuery(ShortUpdateInfo updateInfo)
+        private async Task<IInformationSet> ProcessCallbackQuery(ShortUpdateInfo updateInfo)
         {
             CallbackQueryParser callbackQueryParser = new CallbackQueryParser(updateInfo.Data);
 
@@ -95,7 +95,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
 
                 CallBackCH commandHandler = GetCallBackCH(commandHandlerData, callbackQueryParser);
 
-                informationSet = commandHandler.GetInformationSet();
+                informationSet = await commandHandler.GetInformationSet();
             }
 
             // Не обязательно. Чтобы не было анимации "зависание кнопки" в ТГ боте

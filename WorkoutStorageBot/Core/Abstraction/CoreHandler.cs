@@ -18,7 +18,7 @@ namespace WorkoutStorageBot.Core.Abstraction
             Logger = CoreTools.LoggerFactory.CreateLogger<CoreHandler>();
         }
 
-        internal abstract HandlerResult Process(HandlerResult handlerResult);
+        internal abstract Task<HandlerResult> Process(HandlerResult handlerResult);
 
         protected abstract HandlerResult InitHandlerResult(HandlerResult handlerResult);
 

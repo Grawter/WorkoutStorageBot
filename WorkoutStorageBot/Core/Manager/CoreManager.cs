@@ -103,7 +103,7 @@ namespace WorkoutStorageBot.Core.Manager
             {
                 if (handlerResult.HasAccess)
                 {
-                    handlerResult = handler.Process(handlerResult);
+                    handlerResult = await handler.Process(handlerResult);
 
                     // Перепроверяем доступ, т.к. во время работы очередного обработчика доступ мог быть отозван
                     if (handlerResult.InformationSet != null && handlerResult.HasAccess)
@@ -150,7 +150,7 @@ namespace WorkoutStorageBot.Core.Manager
                 {
                     // не отправлять EventID, если нет доступа у пользователя
                     // выглядит излишне, но пускай будет
-                    // if(IsNeedSendEventIdToUser(userId))
+                    // if(await IsNeedSendEventIdToUser(userId))
 
                     await BotResponseSender.SimpleNotification(shortUpdateInfo.ChatId, $"Ошибка обработки. EventId: {eventId.Id}");
                 }
@@ -163,14 +163,14 @@ namespace WorkoutStorageBot.Core.Manager
                            LogFormatter.EmptyFormatter);
         }
 
-        private bool IsNeedSendEventIdToUser(long? userId)
+        private async Task<bool> IsNeedSendEventIdToUser(long? userId)
         {
             if (userId == null)
                 return false;
 
             AdminRepository adminRepository = GetRequiredRepository<AdminRepository>();
 
-            UserInformation? userInformation = adminRepository.GetUserInformation(userId.Value);
+            UserInformation? userInformation = await adminRepository.GetUserInformationWithoutTracking(userId.Value);
 
             return userInformation != null && adminRepository.UserHasAccess(userInformation);
         }

@@ -12,40 +12,24 @@ namespace WorkoutStorageBot.BusinessLogic.Repositories
         {}
 
         internal IQueryable<Log> GetLogs(int count)
-        {
-            return CoreTools.Db.Logs.AsNoTracking()
-                                    .OrderByDescending(x => x.Id)
-                                    .Take(count);
-        }
+            => CoreTools.Db.Logs.AsNoTracking()
+                                .OrderByDescending(x => x.Id)
+                                .Take(count);
 
         internal IQueryable<Log> GetLogs(string logLevel, int count)
-        {
-            IQueryable<Log> predResult = CoreTools.Db.Logs.AsNoTracking()
-                                                          .Where(x => x.LogLevel == logLevel);
-
-            return GetLogs(predResult, count);
-        }
+            => CoreTools.Db.Logs.AsNoTracking()
+                                .Where(x => x.LogLevel == logLevel)
+                                .OrderByDescending(x => x.Id)
+                                .Take(count);
 
         internal IQueryable<Log> GetLogs(int eventID, int count)
-        {
-            IQueryable<Log> predResult = CoreTools.Db.Logs.AsNoTracking()
-                                                          .Where(x => x.EventID == eventID);
+            => CoreTools.Db.Logs.AsNoTracking()
+                                .Where(x => x.EventID == eventID)
+                                .OrderByDescending(x => x.Id)
+                                .Take(count);
 
-            return GetLogs(predResult, count);
-        }
-
-        internal IQueryable<Log> GetLogsById(int id, int count)
-        {
-            IQueryable<Log> predResult = CoreTools.Db.Logs.AsNoTracking()
-                                                          .Where(x => x.Id == id);
-
-            return GetLogs(predResult, count);
-        }
-
-        private IQueryable<Log> GetLogs(IQueryable<Log> predResult, int count)
-        {
-            return predResult.OrderByDescending(x => x.Id)
-                             .Take(count);
-        }
+        internal async Task<Log?> GetLogById(int id, int count)
+            => await CoreTools.Db.Logs.AsNoTracking()
+                                      .FirstOrDefaultAsync();
     }
 }

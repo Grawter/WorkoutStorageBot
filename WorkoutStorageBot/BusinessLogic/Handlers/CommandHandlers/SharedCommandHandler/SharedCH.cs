@@ -21,7 +21,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommand
         {
         }
 
-        internal override IInformationSet GetInformationSet()
+        internal override Task<IInformationSet> GetInformationSet()
         {
             throw new NotImplementedException();
         }
@@ -61,7 +61,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommand
             return new MessageInformationSet(responseConverter.Convert(), buttonsSets);
         }
 
-        internal IInformationSet FindResultByDateCommand(string findedDate, bool isNeedFindByCurrentDay)
+        internal async Task<IInformationSet> FindResultByDateCommand(string findedDate, bool isNeedFindByCurrentDay)
         {
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
@@ -81,27 +81,26 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommand
             else
             {
 
-                IQueryable<int> exercisesIDs;
+                IEnumerable<int> exercisesIDs;
 
                 if (isNeedFindByCurrentDay)
                 {
                     exercisesIDs = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Exercises.Where(e => !e.IsArchive)
-                                                                                                               .Select(d => d.Id)
-                                                                                                               .AsQueryable();
+                                                                                                               .Select(d => d.Id);
                 }
                 else
                 {
-                    IEnumerable<int> activeDayIDs = this.CommandHandlerTools.CurrentUserContext.ActiveCycle.Days.Where(d => !d.IsArchive)
-                                                                                                                .Select(d => d.Id);
-
-                    exercisesIDs = this.CommandHandlerTools.Db.Exercises.Where(e => !e.IsArchive && activeDayIDs.Contains(e.DayId))
-                                                                        .Select(e => e.Id);
+                    exercisesIDs = this.CommandHandlerTools.CurrentUserContext.ActiveCycle.Days.Where(d => !d.IsArchive)
+                                                                                               .SelectMany(d => d.Exercises)
+                                                                                               .Where(e => !e.IsArchive)
+                                                                                               .Select(e => e.Id);
                 }
 
-                IQueryable<ResultExercise> resultLastTraining = this.CommandHandlerTools.Db.ResultsExercises.AsNoTracking()
+                IEnumerable<ResultExercise> resultLastTraining = await this.CommandHandlerTools.Db.ResultsExercises.AsNoTracking()
                                                                                                             .Where(re => exercisesIDs.Contains(re.ExerciseId)
                                                                                                                    && re.DateTime.Date == dateTime)
-                                                                                                            .Include(e => e.Exercise);
+                                                                                                            .Include(e => e.Exercise)
+                                                                                                            .ToListAsync();
                 if (resultLastTraining.HasItemsInCollection())
                 {
                     this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
@@ -116,19 +115,23 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommand
                 }
                 else
                 {
-                    DateTime trainingDateLessThanFindedDate = this.CommandHandlerTools.Db.ResultsExercises.AsNoTracking()
+                    ResultExercise? resultLessThanFindedDate = await this.CommandHandlerTools.Db.ResultsExercises.AsNoTracking()
                                                                                                           .Where(re =>
                                                                                                                     exercisesIDs.Contains(re.ExerciseId)
                                                                                                                     && re.DateTime.Date < dateTime)
                                                                                                           .OrderByDescending(re => re.DateTime)
-                                                                                                          .FirstOrDefault()?.DateTime ?? DateTime.MinValue;
+                                                                                                          .FirstOrDefaultAsync();
 
-                    DateTime trainingDateGreaterThanFindedDate = this.CommandHandlerTools.Db.ResultsExercises.AsNoTracking()
+                    DateTime trainingDateLessThanFindedDate = resultLessThanFindedDate?.DateTime ?? DateTime.MinValue;
+
+                    ResultExercise? resultDateGreaterThanFindedDate = await this.CommandHandlerTools.Db.ResultsExercises.AsNoTracking()
                                                                                                              .Where(re =>
                                                                                                                         exercisesIDs.Contains(re.ExerciseId)
                                                                                                                         && re.DateTime.Date > dateTime)
                                                                                                              .OrderBy(re => re.DateTime)
-                                                                                                             .FirstOrDefault()?.DateTime ?? DateTime.MinValue;
+                                                                                                             .FirstOrDefaultAsync();
+
+                    DateTime trainingDateGreaterThanFindedDate = resultDateGreaterThanFindedDate?.DateTime ?? DateTime.MinValue;
 
                     bool hasClosestByDateTrainings = false;
 

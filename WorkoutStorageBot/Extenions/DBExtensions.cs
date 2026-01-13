@@ -8,7 +8,7 @@ namespace WorkoutStorageBot.Extenions
         internal static string GetDBProvider(this EntityContext db)
             => db.Database.ProviderName;
 
-        internal static int ExecuteSQL(this EntityContext db, string sql)
-            => db.Database.ExecuteSqlRaw(sql);
+        internal static async Task<int> ExecuteSQL(this EntityContext db, string sql)
+            => await db.Database.ExecuteSqlRawAsync(sql);
     }
 }

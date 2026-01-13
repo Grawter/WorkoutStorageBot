@@ -13,7 +13,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
         internal CommonCH(CommandHandlerData commandHandlerTools, CallbackQueryParser callbackQueryParser) : base(commandHandlerTools, callbackQueryParser)
         { }
 
-        internal override IInformationSet GetInformationSet()
+        internal override Task<IInformationSet> GetInformationSet()
         {
             IInformationSet informationSet;
 
@@ -32,7 +32,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
             CheckInformationSet(informationSet);
 
-            return informationSet;
+            return Task.FromResult<IInformationSet>(informationSet);
         }
 
         private IInformationSet BackCommand()

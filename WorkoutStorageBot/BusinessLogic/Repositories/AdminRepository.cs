@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Linq.Expressions;
 using Telegram.Bot.Types;
 using WorkoutStorageBot.Application.Configuration;
 using WorkoutStorageBot.Core.Abstraction;
@@ -40,78 +41,73 @@ namespace WorkoutStorageBot.BusinessLogic.Repositories
             AddLogAction($"Глобальный режим белого списка установлен в: {WhiteListIsEnable}");
         }
 
-        internal void ChangeBlackListByUser(UserInformation user)
+        internal async Task ChangeBlackListByUser(UserInformation user)
         {
             user.BlackList = !user.BlackList;
 
             CoreTools.Db.UsersInformation.Update(user);
-            CoreTools.Db.SaveChanges();
+            await CoreTools.Db.SaveChangesAsync();
 
             AddLogAction($"Режим чёрного списка для пользователя {user.Id} ({user.Username}-{user.UserId}) установлен в: {user.BlackList}");
         }
 
-        internal void ChangeWhiteListByUser(UserInformation user)
+        internal async Task ChangeWhiteListByUser(UserInformation user)
         {
             user.WhiteList = !user.WhiteList;
 
             CoreTools.Db.UsersInformation.Update(user);
-            CoreTools.Db.SaveChanges();
+            await CoreTools.Db.SaveChangesAsync();
 
             AddLogAction($"Режим белого списка для пользователя {user.Id} ({user.Username}-{user.UserId}) установлен в: {user.WhiteList}");
         }
 
-        internal void DeleteAccount(UserInformation user)
+        internal async Task DeleteAccount(UserInformation user)
         {
             CoreTools.Db.UsersInformation.Remove(user);
-            CoreTools.Db.SaveChanges();
+            await CoreTools.Db.SaveChangesAsync();
 
             AddLogAction($"Пользователь {user.Id} ({user.Username}-{user.UserId}) удалён");
         }
 
-        internal UserInformation GetRequiredUserInformation(long userId)
-            => GetUserInformation(userId) ?? throw new InvalidOperationException($"Пользователь с UserId = {userId} не найден!");
-        
-        internal UserInformation? GetUserInformation(long userId)
-            => CoreTools.Db.UsersInformation.FirstOrDefault(u => u.UserId == userId);
+        internal async Task<UserInformation?> GetUserInformationWithoutTracking(long userId)
+            => await CoreTools.Db.UsersInformation.AsNoTracking().FirstOrDefaultAsync(u => u.UserId == userId);
 
-        internal UserInformation GetRequiredUserInformation(string userName)
-            => GetUserInformation(userName) ?? throw new InvalidOperationException($"Пользователь с Username = {userName} не найден!");
+        internal async Task<UserInformation> GetRequiredUserInformation(long userId)
+            => await GetUserInformation(userId) ?? throw new InvalidOperationException($"Пользователь с UserId = {userId} не найден!");
 
-        internal UserInformation? GetUserInformation(string userName)
-            => CoreTools.Db.UsersInformation.FirstOrDefault(u => u.Username == userName);
+        internal async Task<UserInformation?> GetUserInformation(long userId)
+            => await CoreTools.Db.UsersInformation.FirstOrDefaultAsync(u => u.UserId == userId);
 
-        internal UserInformation? GetFullUserInformation(long userID)
+        internal async Task<UserInformation> GetRequiredUserInformation(string userName)
+            => await GetUserInformation(userName) ?? throw new InvalidOperationException($"Пользователь с Username = {userName} не найден!");
+
+        internal async Task<UserInformation?> GetUserInformation(string userName)
+            => await CoreTools.Db.UsersInformation.FirstOrDefaultAsync(u => u.Username == userName);
+
+        internal async Task<UserInformation?> GetFullUserInformationWithoutTracking(long userId)
+             => await GetFullUserInformationWithoutTracking(u => u.UserId == userId);
+
+        internal async Task<UserInformation?> GetFullUserInformationWithoutTracking(string userName)
+            => await GetFullUserInformationWithoutTracking(u => u.Username == userName);
+
+        private async Task<UserInformation?> GetFullUserInformationWithoutTracking(Expression<Func<UserInformation, bool>> predicate)
         {
-            IQueryable<UserInformation> userInformation = CoreTools.Db.UsersInformation.AsNoTracking()
-                                                                                       .Where(u => u.UserId == userID);
-
-            return IncludeWorkoutTables(userInformation);
+            return await CoreTools.Db.UsersInformation.AsNoTracking()
+                                                      .Where(predicate)
+                                                      .Include(u => u.Cycles)
+                                                        .ThenInclude(c => c.Days)
+                                                            .ThenInclude(d => d.Exercises)
+                                                      .AsSplitQuery() // Разделение запросов, для оптимизации
+                                                      .FirstOrDefaultAsync();
         }
 
-        internal UserInformation? GetFullUserInformation(string userName)
-        {
-            IQueryable<UserInformation> userInformation = CoreTools.Db.UsersInformation.AsNoTracking()
-                                                                                       .Where(u => u.Username == userName);
-
-            return IncludeWorkoutTables(userInformation);
-        }
-
-        private UserInformation? IncludeWorkoutTables(IQueryable<UserInformation> userInformation)
-        {
-            return userInformation.Include(u => u.Cycles)
-                                    .ThenInclude(c => c.Days)
-                                        .ThenInclude(d => d.Exercises)
-                                  .AsSplitQuery() // Разделение запросов, для оптимизации
-                                  .FirstOrDefault();
-        }
-
-        internal UserInformation CreateNewUser(User user)
+        internal async Task<UserInformation?> CreateNewUser(User user)
         {
             if (!WhiteListIsEnable)
             {
                 UserInformation newUser = new UserInformation { UserId = user.Id, Firstname = user.FirstName, Username = "@" + user.Username, WhiteList = false, BlackList = false };
-                CoreTools.Db.UsersInformation.Add(newUser);
-                CoreTools.Db.SaveChanges();
+                await CoreTools.Db.UsersInformation.AddAsync(newUser);
+                await CoreTools.Db.SaveChangesAsync();
 
                 return newUser;
             }
@@ -122,7 +118,7 @@ namespace WorkoutStorageBot.BusinessLogic.Repositories
         internal bool UserHasAccess(DTOUserInformation user)
             => UserHasAccess(new UserInformation() { UserId = user.UserId, BlackList = user.BlackList, WhiteList = user.WhiteList });
 
-        internal bool UserHasAccess(UserInformation user)
+        internal bool UserHasAccess(UserInformation? user)
         {
             if (user == null)
                 return false;

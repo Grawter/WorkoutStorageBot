@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using WorkoutStorageBot.BusinessLogic.Enums;
@@ -28,7 +29,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             Logger = CommonHelper.GetIfNotNull(commandHandlerTools.ParentHandler.CoreTools.LoggerFactory).CreateLogger<AdminCH>();
         }
 
-        internal override IInformationSet GetInformationSet()
+        internal override async Task<IInformationSet> GetInformationSet()
         {
             IInformationSet informationSet;
 
@@ -43,11 +44,11 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     break;
 
                 case "ShowLastLog":
-                    informationSet = ShowLastLogCommand();
+                    informationSet = await ShowLastLogCommand();
                     break;
 
                 case "ShowLastExceptionLogs":
-                    informationSet = ShowLastExceptionLogsCommand();
+                    informationSet = await ShowLastExceptionLogsCommand();
                     break;
 
                 case "FindLogByID":
@@ -116,7 +117,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             return informationSet;
         }
 
-        private IInformationSet ShowLastLogCommand()
+        private async Task<IInformationSet> ShowLastLogCommand()
         {
             if (AccessDenied(out IInformationSet? informationSet))
                 return informationSet;
@@ -124,7 +125,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.AdminLogs, ButtonsSet.Admin);
 
-            Log? lastLog = LogsRepository.GetLogs(1).FirstOrDefault();
+            Log? lastLog = await LogsRepository.GetLogs(1).FirstOrDefaultAsync();
 
             if (lastLog == null)
                 responseConverter = new ResponseTextConverter("Логов не найдено", "Выберите интересующее действие");
@@ -140,13 +141,13 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             return informationSet;
         }
 
-        private IInformationSet ShowLastExceptionLogsCommand()
+        private async Task<IInformationSet> ShowLastExceptionLogsCommand()
         {
             if (AccessDenied(out IInformationSet? informationSet))
                 return informationSet;
 
-            Log? lastErrorLog = LogsRepository.GetLogs(LogLevel.Error.ToString(), 1).FirstOrDefault();
-            Log? lastCriticalLog = LogsRepository.GetLogs(LogLevel.Critical.ToString(), 1).FirstOrDefault();
+            Log? lastErrorLog = await LogsRepository.GetLogs(LogLevel.Error.ToString(), 1).FirstOrDefaultAsync();
+            Log? lastCriticalLog = await LogsRepository.GetLogs(LogLevel.Critical.ToString(), 1).FirstOrDefaultAsync();
 
             List<Log?> exceptionLogs = new List<Log?>() { lastErrorLog, lastCriticalLog };
 

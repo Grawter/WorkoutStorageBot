@@ -39,7 +39,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
             this.AdminRepository = CoreManager.GetRequiredRepository<AdminRepository>();
         }
 
-        internal override PrimaryHandlerResult Process(HandlerResult handlerResult)
+        internal override async Task<HandlerResult> Process(HandlerResult handlerResult)
         {
             PrimaryHandlerResult primaryHandlerResult = InitHandlerResult(handlerResult);
             
@@ -53,7 +53,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
             {
                 primaryHandlerResult.ShortUpdateInfo = shortUpdateInfo;
 
-                TryGetContextAndAccess(primaryHandlerResult);
+                await TryGetContextAndAccess(primaryHandlerResult);
 
                 if (primaryHandlerResult.ShortUpdateInfo.IsExpectedType)
                     ProcessExpectedUpdateType(primaryHandlerResult);
@@ -80,20 +80,20 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
         private void ProcessUnknownUpdateType(UnknownUpdateInfo unknownUpdateInfo)
             =>Logger.LogWarning($"Получен неизвестный update c типом {unknownUpdateInfo.UpdateType.ToString()}");
 
-        private void TryGetContextAndAccess(PrimaryHandlerResult primaryHandledData)
+        private async Task TryGetContextAndAccess(PrimaryHandlerResult primaryHandledData)
         {
             User user = primaryHandledData.ShortUpdateInfo.User;
 
             if (!ContextKeeper.HasContext(user.Id))
-                AddNewContext(primaryHandledData);
+                await AddNewContext(primaryHandledData);
             else
                 SetExistingContext(primaryHandledData, user.Id);
         }
 
-        private void AddNewContext(PrimaryHandlerResult primaryHandledData)
+        private async Task AddNewContext(PrimaryHandlerResult primaryHandledData)
         {
-            UserInformation currentUser = AdminRepository.GetFullUserInformation(primaryHandledData.ShortUpdateInfo.User.Id)
-                ?? AdminRepository.CreateNewUser(primaryHandledData.ShortUpdateInfo.User);
+            UserInformation? currentUser = await AdminRepository.GetFullUserInformationWithoutTracking(primaryHandledData.ShortUpdateInfo.User.Id)
+                ?? await AdminRepository.CreateNewUser(primaryHandledData.ShortUpdateInfo.User);
 
             primaryHandledData.HasAccess = AdminRepository.UserHasAccess(currentUser);
 

@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using Microsoft.EntityFrameworkCore;
+using System.Diagnostics.CodeAnalysis;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Enums;
@@ -22,7 +23,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
         internal TextMessageCH(CommandHandlerData commandHandlerTools, TextMessageConverter requestConverter) : base(commandHandlerTools, requestConverter)
         { }
 
-        internal override IInformationSet GetInformationSet()
+        internal override async Task<IInformationSet> GetInformationSet()
         {
             IInformationSet informationSet;
 
@@ -34,12 +35,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                     break;
 
                 case MessageNavigationTarget.AddCycle:
-                    informationSet = AddCycleCommand();
+                    informationSet = await AddCycleCommand();
 
                     break;
 
                 case MessageNavigationTarget.AddDays:
-                    informationSet = AddDaysCommand();
+                    informationSet = await AddDaysCommand();
 
                     break;
 
@@ -54,55 +55,55 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                     break;
 
                 case MessageNavigationTarget.AddCommentForExerciseTimer:
-                    informationSet = AddCommentForExerciseTimerCommand();
+                    informationSet = await AddCommentForExerciseTimerCommand();
 
                     break;
 
                 case MessageNavigationTarget.ChangeNameCycle:
-                    informationSet = ChangeNameCommand(CommonConsts.DomainsAndEntities.Cycle);
+                    informationSet = await ChangeNameCommand(CommonConsts.DomainsAndEntities.Cycle);
 
                     break;
 
                 case MessageNavigationTarget.ChangeNameDay:
-                    informationSet = ChangeNameCommand(CommonConsts.DomainsAndEntities.Day);
+                    informationSet = await ChangeNameCommand(CommonConsts.DomainsAndEntities.Day);
 
                     break;
 
                 case MessageNavigationTarget.ChangeNameExercise:
-                    informationSet = ChangeNameCommand(CommonConsts.DomainsAndEntities.Exercise);
+                    informationSet = await ChangeNameCommand(CommonConsts.DomainsAndEntities.Exercise);
 
                     break;
 
                 case MessageNavigationTarget.FindResultsByDate:
-                    informationSet = FindResultByDateCommand(false);
+                    informationSet = await FindResultByDateCommand(false);
                     break;
 
                 case MessageNavigationTarget.FindResultsByDateInDay:
-                    informationSet = FindResultByDateCommand(true);
+                    informationSet = await FindResultByDateCommand(true);
                     break;
 
                 case MessageNavigationTarget.FindLogByID:
-                    informationSet = FindLogByIDCommand(isEventID: false);
+                    informationSet = await FindLogByIDCommand(isEventID: false);
 
                     break;
 
                 case MessageNavigationTarget.FindLogByEventID:
-                    informationSet = FindLogByIDCommand(isEventID: true);
+                    informationSet = await FindLogByIDCommand(isEventID: true);
 
                     break;
 
                 case MessageNavigationTarget.ChangeUserState:
-                    informationSet = ChangeUserStateCommand();
+                    informationSet = await ChangeUserStateCommand();
 
                     break;
 
                 case MessageNavigationTarget.DeleteUser:
-                    informationSet = DeleteUserCommand();
+                    informationSet = await DeleteUserCommand();
 
                     break;
 
                 case MessageNavigationTarget.DeleteResultsExercise:
-                    informationSet = DeleteResultsExerciseCommand();
+                    informationSet = await DeleteResultsExerciseCommand();
 
                     break;
 
@@ -149,7 +150,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             return informationSet;
         }
 
-        private IInformationSet AddCycleCommand()
+        private async Task<IInformationSet> AddCycleCommand()
         {
             requestConverter.RemoveCompletely().WithoutServiceSymbol();
 
@@ -177,7 +178,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 this.CommandHandlerTools.CurrentUserContext.UdpateActiveCycleForce(currentCycle);
 
             this.CommandHandlerTools.CurrentUserContext.UserInformation.Cycles.Add(currentCycle);
-            this.CommandHandlerTools.Db.AddEntity(currentCycle);
+            await this.CommandHandlerTools.Db.AddEntity(currentCycle);
 
             switch (this.CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom)
             {
@@ -206,7 +207,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             return informationSet;
         }
 
-        private IInformationSet AddDaysCommand()
+        private async Task<IInformationSet> AddDaysCommand()
         {
             requestConverter.RemoveCompletely().WithoutServiceSymbol();
 
@@ -231,7 +232,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             DTODay currentDay = this.CommandHandlerTools.CurrentUserContext.DataManager.SetCurrentDay(domainName);
 
             this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Days.Add(currentDay);
-            this.CommandHandlerTools.Db.AddEntity(currentDay);
+            await this.CommandHandlerTools.Db.AddEntity(currentDay);
 
             switch (this.CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom)
             {
@@ -381,7 +382,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             return informationSet;
         }
 
-        private IInformationSet AddCommentForExerciseTimerCommand()
+        private async Task<IInformationSet> AddCommentForExerciseTimerCommand()
         {
             string comment = requestConverter.RemoveCompletely(50).WithoutServiceSymbol().Convert();
 
@@ -390,7 +391,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             resultExercise.Exercise = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise;
             this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.ResultsExercise.Add(resultExercise);
-            this.CommandHandlerTools.Db.AddEntity(resultExercise);
+            await this.CommandHandlerTools.Db.AddEntity(resultExercise);
 
             this.CommandHandlerTools.CurrentUserContext.DataManager.ResetTempResultsExercise();
 
@@ -404,7 +405,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             return informationSet;
         }
 
-        private IInformationSet ChangeNameCommand(string domainType)
+        private async Task<IInformationSet> ChangeNameCommand(string domainType)
         {
             requestConverter.RemoveCompletely(25).WithoutServiceSymbol();
 
@@ -473,7 +474,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             IDTODomain DTODomain = this.CommandHandlerTools.CurrentUserContext.DataManager.GetRequiredCurrentDomain(domainType);
             DTODomain.Name = domainName;
 
-            this.CommandHandlerTools.Db.UpdateEntity(DTODomain);
+            await this.CommandHandlerTools.Db.UpdateEntity(DTODomain);
 
             informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
@@ -515,18 +516,18 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             }
         }
 
-        private IInformationSet FindResultByDateCommand(bool isNeedFindByCurrentDay)
+        private async Task<IInformationSet> FindResultByDateCommand(bool isNeedFindByCurrentDay)
         {
             SharedCH sharedCH = new SharedCH(this.CommandHandlerTools);
 
             string findedDate = requestConverter.RemoveCompletely(10).Convert();
 
-            IInformationSet informationSet = sharedCH.FindResultByDateCommand(findedDate, isNeedFindByCurrentDay);
+            IInformationSet informationSet = await sharedCH.FindResultByDateCommand(findedDate, isNeedFindByCurrentDay);
 
             return informationSet;
         }
 
-        private IInformationSet FindLogByIDCommand(bool isEventID)
+        private async Task<IInformationSet> FindLogByIDCommand(bool isEventID)
         {
             this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
@@ -556,9 +557,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             Log? log;
 
             if (isEventID)
-                log = logsRepository.GetLogs(Id, 1).FirstOrDefault();
+                log = await logsRepository.GetLogs(Id, 1).FirstOrDefaultAsync();
             else
-                log = logsRepository.GetLogsById(Id, 1).FirstOrDefault();
+                log = await logsRepository.GetLogById(Id, 1);
 
             if (log == null)
                 responseConverter = new ResponseTextConverter($"Не удалось найти лог с {identifierType}: {Id.ToString().AddBoldAndQuotes()}", "Выберите интересующее действие");
@@ -574,7 +575,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             return informationSet;
         }
 
-        private IInformationSet ChangeUserStateCommand()
+        private async Task<IInformationSet> ChangeUserStateCommand()
         {
             this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
@@ -602,7 +603,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 string userIdentity = parameters[0];
                 string list = parameters[1];
 
-                UserInformation? user = adminRepository.GetUserInformation(userIdentity);
+                UserInformation? user;
+
+                if (long.TryParse(userIdentity, out long userID))
+                    user = await adminRepository.GetUserInformation(userID);
+                else
+                    user = await adminRepository.GetUserInformation(userIdentity);
 
                 if (user == null)
                     responseConverter = new ResponseTextConverter($"Пользователь '{userIdentity.AddBoldAndQuotes()}' не найден!", "Выберите интересующее действие");
@@ -617,7 +623,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                             if (userContext != null)
                                 userContext.UserInformation.WhiteList = !userContext.UserInformation.WhiteList;
 
-                            adminRepository.ChangeWhiteListByUser(user);
+                            await adminRepository.ChangeWhiteListByUser(user);
 
                             responseConverter = new ResponseTextConverter($"WhiteList для {user.Username.AddBoldAndQuotes()} ({user.UserId}) установлен в: {user.WhiteList.ToString().AddBold()}",
                                 "Выберите интересующее действие");
@@ -628,7 +634,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                             if (userContext != null)
                                 userContext.UserInformation.BlackList = !userContext.UserInformation.BlackList;
 
-                            adminRepository.ChangeBlackListByUser(user);
+                            await adminRepository.ChangeBlackListByUser(user);
 
                             responseConverter = new ResponseTextConverter($"BlackList для {user.Username.AddBoldAndQuotes()} ({user.UserId}) установлен в: {user.BlackList.ToString().AddBold()}",
                                 "Выберите интересующее действие");
@@ -645,7 +651,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             return informationSet;
         }
 
-        private IInformationSet DeleteUserCommand()
+        private async Task<IInformationSet> DeleteUserCommand()
         {
             this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
@@ -662,7 +668,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             if (string.IsNullOrWhiteSpace(userIdentity))
                 throw new NotImplementedException("Некорректные параметры для изменения состояния пользователя");
 
-            UserInformation? user = adminRepository.GetUserInformation(userIdentity);
+            UserInformation? user;
+
+            if (long.TryParse(userIdentity, out long userID))
+                user = await adminRepository.GetUserInformation(userID);
+            else
+                user = await adminRepository.GetUserInformation(userIdentity);
 
             if (user == null)
                 responseConverter = new ResponseTextConverter($"Пользователь '{userIdentity.AddBoldAndQuotes()}' не найден!", "Выберите интересующее действие");
@@ -670,7 +681,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             {
                 this.CommandHandlerTools.ParentHandler.CoreManager.ContextKeeper.RemoveContext(user.UserId);
 
-                adminRepository.DeleteAccount(user);
+                await adminRepository.DeleteAccount(user);
                 responseConverter = new ResponseTextConverter($"Пользователь {user.Username.AddBoldAndQuotes()} ({user.UserId}) был успешно удалён", "Выберите интересующее действие");
             }
 
@@ -681,7 +692,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             return informationSet;
         }
 
-        private IInformationSet DeleteResultsExerciseCommand()
+        private async Task<IInformationSet> DeleteResultsExerciseCommand()
         {
             string countToDeleteStr = requestConverter.RemoveCompletely(35).WithoutServiceSymbol().Convert();
 
@@ -713,7 +724,7 @@ WHERE Id IN (
     LIMIT {countToDelete}
 )";
 
-                    int numberOfRowsAffected = this.CommandHandlerTools.Db.ExecuteSQL(sqlQuery);
+                    int numberOfRowsAffected = await this.CommandHandlerTools.Db.ExecuteSQL(sqlQuery);
 
                     responseConverter = new ResponseTextConverter($"Было удалено {numberOfRowsAffected} строк",
                         $"Выберите интересуюущую настройку для упражения {currentExercise.Name.AddBoldAndQuotes()}");

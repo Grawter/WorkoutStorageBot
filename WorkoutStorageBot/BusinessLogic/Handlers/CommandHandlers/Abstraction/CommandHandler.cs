@@ -13,6 +13,6 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.Abstraction
             this.CommandHandlerTools = CommonHelper.GetIfNotNull(commandHandlerTools);
         }
 
-        internal abstract IInformationSet GetInformationSet();
+          internal abstract Task<IInformationSet> GetInformationSet();
     }
 }

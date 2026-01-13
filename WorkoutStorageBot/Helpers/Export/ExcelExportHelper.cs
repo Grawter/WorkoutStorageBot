@@ -11,7 +11,7 @@ namespace WorkoutStorageBot.Helpers.Export
 {
     internal static class ExcelExportHelper
     {
-        internal static RecyclableMemoryStream GetExcelFile(List<DTOCycle> allUserCycles, IQueryable<ResultExercise> allUserResultsExercises, int monthFilterPeriod)
+        internal static async Task<RecyclableMemoryStream> GetExcelFile(List<DTOCycle> allUserCycles, IQueryable<ResultExercise> allUserResultsExercises, int monthFilterPeriod)
         {
             SetLicense();
 
@@ -135,7 +135,7 @@ namespace WorkoutStorageBot.Helpers.Export
 
                 mainSheet.Cells.AutoFitColumns();
 
-                package.SaveAs(recyclableMemoryStream);
+                await package.SaveAsAsync(recyclableMemoryStream);
 
                 return recyclableMemoryStream;
             }

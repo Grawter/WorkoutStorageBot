@@ -18,7 +18,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
         internal WorkoutCH(CommandHandlerData commandHandlerTools, CallbackQueryParser callbackQueryParser) : base(commandHandlerTools, callbackQueryParser)
         { }
 
-        internal override IInformationSet GetInformationSet()
+        internal override async Task<IInformationSet> GetInformationSet()
         {
             IInformationSet informationSet;
 
@@ -29,7 +29,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     break;
 
                 case "LastResults":
-                    informationSet = LastResultsCommand();
+                    informationSet = await LastResultsCommand();
                     break;
 
                 case "StartFindResultsByDate":
@@ -37,7 +37,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     break;
 
                 case "FindResultsByDate":
-                    informationSet = FindResultsByDateCommand();
+                    informationSet = await FindResultsByDateCommand();
                     break;
 
                 case "StartExerciseTimer":
@@ -53,7 +53,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     break;
 
                 case "SaveResultsExercise":
-                    informationSet = SaveResultsExerciseCommand();                     
+                    informationSet = await SaveResultsExerciseCommand();                     
                     break;
 
                 default:
@@ -77,7 +77,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             return informationSet;
         }
 
-        private IInformationSet LastResultsCommand()
+        private async Task<IInformationSet> LastResultsCommand()
         {
             ResponseTextConverter responseConverter;
             string information;
@@ -92,7 +92,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     IQueryable<int> activeExercisesIDsInActiveDays = this.CommandHandlerTools.Db.Exercises.Where(e => !e.IsArchive && activeDayIDs.Contains(e.DayId))
                                                                                                           .Select(e => e.Id);
 
-                    var resultLastTraining = this.CommandHandlerTools.Db.ResultsExercises
+                    var resultLastTraining = await this.CommandHandlerTools.Db.ResultsExercises
                                                                 .AsNoTracking()
                                                                 .Where(re => activeExercisesIDsInActiveDays.Contains(re.ExerciseId))
                                                                 .Include(e => e.Exercise)
@@ -103,7 +103,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                                                                     Data = g.Select(x => x),
                                                                 })
                                                                 .OrderByDescending(x => x.Date)
-                                                                .FirstOrDefault();
+                                                                .FirstOrDefaultAsync();
 
 
                     if (resultLastTraining == null)
@@ -117,29 +117,30 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                 case CommonConsts.DomainsAndEntities.Day:
                     IEnumerable<int> exercisesIDs = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Exercises.Where(e => !e.IsArchive)
                                                                                                                                 .Select(d => d.Id);
+                    string dbProvider = this.CommandHandlerTools.Db.GetDBProvider();
 
-                    IEnumerable<IGrouping<DateTime, ResultExercise>> lastDateForExercises = this.CommandHandlerTools.Db.ResultsExercises
-                                                .AsNoTracking()
-                                                .Where(re => exercisesIDs.Contains(re.ExerciseId))
-                                                .GroupBy(re => re.ExerciseId)
-                                                //order Data in group and get first (older) element for get lastDate
-                                                .Select(reGROUP => reGROUP.OrderByDescending(re => re.DateTime.Date).First())
-                                                .ToList()
-                                                .GroupBy(re => re.DateTime.Date);
+                    string query;
 
-                    IQueryable<ResultExercise> lastResultsExercisesInCurrentDay = this.CommandHandlerTools.Db.ResultsExercises.AsNoTracking()
-                                                                                                                              .Where(e => false);
-                    
-                    foreach (IGrouping<DateTime, ResultExercise> resultExercise in lastDateForExercises)
+                    if (dbProvider == "Microsoft.EntityFrameworkCore.Sqlite")
                     {
-                        IEnumerable<int> groupExercisesIDs = resultExercise.Select(x => x.ExerciseId);
-
-                        lastResultsExercisesInCurrentDay = lastResultsExercisesInCurrentDay.Union(this.CommandHandlerTools.Db.ResultsExercises.AsNoTracking()
-                                                                                                                                              .Where(re => 
-                                                                                                                        groupExercisesIDs.Contains(re.ExerciseId) &&
-                                                                                                                        re.DateTime.Date == resultExercise.Key))
-                                                                                                                                              .Include(e => e.Exercise);
+                        query = $@"
+SELECT re.*
+FROM [ResultsExercises] AS re
+JOIN (
+    SELECT ExerciseId, date(MAX(DateTime)) AS MaxDate
+    FROM [ResultsExercises]
+    WHERE ExerciseId IN ({string.Join(',', exercisesIDs)})
+    GROUP BY ExerciseId
+) last
+ON last.ExerciseId = re.ExerciseId
+AND date(re.DateTime) = last.MaxDate";
                     }
+                    else
+                        throw new NotImplementedException($"Операция не поддерживается для DBProvider {dbProvider}");
+
+                    IEnumerable<ResultExercise> lastResultsExercisesInCurrentDay = await this.CommandHandlerTools.Db.ResultsExercises.FromSqlRaw(query)
+                                                                                                                                     .Include(r => r.Exercise)
+                                                                                                                                     .ToListAsync();
 
                     information = WorkoutDataHelper.GetInformationAboutLastDay(lastResultsExercisesInCurrentDay);
                     responseConverter = new ResponseTextConverter("Последние результаты упражнений из этого дня:", information, "Выберите упражнение");
@@ -187,7 +188,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             return informationSet;
         }
 
-        private IInformationSet FindResultsByDateCommand()
+        private async Task<IInformationSet> FindResultsByDateCommand()
         {
             SharedCH sharedCH = new SharedCH(this.CommandHandlerTools);
 
@@ -195,7 +196,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
             bool isNeedFindByCurrentDay = callbackQueryParser.DomainType == CommonConsts.DomainsAndEntities.Exercise;
 
-            IInformationSet informationSet = sharedCH.FindResultByDateCommand(findedDate, isNeedFindByCurrentDay);
+            IInformationSet informationSet = await sharedCH.FindResultByDateCommand(findedDate, isNeedFindByCurrentDay);
 
             return informationSet;
         }
@@ -248,14 +249,14 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             return informationSet;
         }
 
-        private IInformationSet SaveResultsExerciseCommand()
+        private async Task<IInformationSet> SaveResultsExerciseCommand()
         {
             foreach (DTOResultExercise tempResultsExercise in this.CommandHandlerTools.CurrentUserContext.DataManager.TempResultsExercise)
             {
                 tempResultsExercise.Exercise = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise;
                 this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.ResultsExercise.Add(tempResultsExercise);
             }
-            this.CommandHandlerTools.Db.AddEntities(this.CommandHandlerTools.CurrentUserContext.DataManager.TempResultsExercise);
+            await this.CommandHandlerTools.Db.AddEntities(this.CommandHandlerTools.CurrentUserContext.DataManager.TempResultsExercise);
 
             this.CommandHandlerTools.CurrentUserContext.DataManager.ResetTempResultsExercise();
 

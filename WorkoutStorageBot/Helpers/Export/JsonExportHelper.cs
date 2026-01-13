@@ -1,5 +1,4 @@
 ﻿using Microsoft.IO;
-using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -13,35 +12,52 @@ namespace WorkoutStorageBot.Helpers.Export
 {
     internal static class JsonExportHelper
     {
-        internal static RecyclableMemoryStream GetJSONFile(List<DTOCycle> allUserCycles, IQueryable<ResultExercise> allUserResultsExercises, int monthFilterPeriod)
+        private static JsonSerializerOptions starterOptions = new JsonSerializerOptions
         {
-            string json = GetJSONFileStr(allUserCycles, allUserResultsExercises, monthFilterPeriod);
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, // игнорирования сериализации для null свойств
+            ReferenceHandler = ReferenceHandler.IgnoreCycles, // игнорировать зацикленность
+        };
 
-            byte[] byteJson = new UTF8Encoding(true).GetBytes(json);
+        private static JsonSerializerOptions finalOptions = new JsonSerializerOptions(starterOptions)
+        {
+            WriteIndented = true, // форматированная сериализация с табуляцией
+            Encoder = JavaScriptEncoder.Create(UnicodeRanges.All), // Чтобы кириллические (или возможные другие) символы не экранировались
+        };
+
+        internal static async Task<RecyclableMemoryStream> GetJSONFile(List<DTOCycle> allUserCycles, IQueryable<ResultExercise> allUserResultsExercises, int monthFilterPeriod)
+        {
+            UnionExercisesAndResults(allUserCycles, allUserResultsExercises, monthFilterPeriod);
+
+            JsonNode rootNode = await GetFinalRootNode(allUserCycles);
 
             RecyclableMemoryStream recyclableMemoryStream = CommonExportHelper.RecyclableMSManager.GetStream();
-
-            using (StreamWriter writer = new StreamWriter(recyclableMemoryStream, Encoding.UTF8, leaveOpen: true))
-            {
-                writer.Write(json);
-            }
+            await JsonSerializer.SerializeAsync(recyclableMemoryStream, rootNode, finalOptions);
 
             return recyclableMemoryStream;
         }
 
-        internal static string GetJSONFileStr(List<DTOCycle> allUserCycles, IQueryable<ResultExercise> allUserResultsExercises, int monthFilterPeriod)
+        private static async Task<JsonNode> GetFinalRootNode(List<DTOCycle> allUserCycles)
+        {
+            using RecyclableMemoryStream tempStream = CommonExportHelper.RecyclableMSManager.GetStream();
+            
+            await JsonSerializer.SerializeAsync(tempStream, allUserCycles, starterOptions);
+            tempStream.Position = 0;
+
+            JsonNode rootNode = await JsonNode.ParseAsync(tempStream)
+                ?? throw new InvalidOperationException("Не удалось получить json rootNode");
+            
+            RemoveAdminInfo(rootNode);
+
+            return rootNode;
+        }
+
+        private static void UnionExercisesAndResults(List<DTOCycle> allUserCycles, IQueryable<ResultExercise> allUserResultsExercises, int monthFilterPeriod)
         {
             ArgumentNullException.ThrowIfNull(allUserCycles);
             ArgumentNullException.ThrowIfNull(allUserResultsExercises);
 
             DateTime filterDateTime = CommonExportHelper.GetFilterDateTime(monthFilterPeriod, allUserResultsExercises);
             IQueryable<ResultExercise> resultExercisesByFilterData = CommonExportHelper.GetResultExercisesByFilterDate(allUserResultsExercises, filterDateTime);
-
-            JsonSerializerOptions starterJsonSerializerOptions = new JsonSerializerOptions()
-            {
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                ReferenceHandler = ReferenceHandler.IgnoreCycles,
-            };
 
             IEnumerable<DTOExercise> allUserExercises = allUserCycles.SelectMany(x => x.Days).SelectMany(y => y.Exercises);
 
@@ -51,20 +67,6 @@ namespace WorkoutStorageBot.Helpers.Export
                                                                           .Select(y => EntityConverter.ToDTOResultExercise(y))
                                                                           .ToList();
             }
-
-            JsonNode rootNode = JsonNode.Parse(JsonSerializer.Serialize(allUserCycles, starterJsonSerializerOptions))
-                ?? throw new InvalidOperationException("Не удалось получить json rootNode");
-
-            RemoveAdminInfo(rootNode);
-
-            // Нельзя изменять уже используемую настройку (starterJsonSerializerOptions)
-            JsonSerializerOptions finalJsonSerializerOptions = new JsonSerializerOptions(starterJsonSerializerOptions) 
-            {
-                WriteIndented = true, // форматированная сериализация с табуляцией
-                Encoder = JavaScriptEncoder.Create(UnicodeRanges.All), // Чтобы кириллические (или возможные другие) символы не экранировались
-            };
-
-            return rootNode.ToJsonString(finalJsonSerializerOptions);
         }
 
         private static void RemoveAdminInfo(JsonNode rootNode)
