@@ -224,11 +224,6 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
             }
 
             primaryHandledData.InformationSet = new MessageInformationSet(message, (buttonsSet, ButtonsSet.None));
-
-            // Не обязательно. Чтобы не было анимации "зависание кнопки" в ТГ боте
-            if (primaryHandledData.ShortUpdateInfo.UpdateType == UpdateType.CallbackQuery)
-                primaryHandledData.InformationSet.AdditionalParameters.Add("BotCallBackID", primaryHandledData.Update.CallbackQuery.Id);
-
             primaryHandledData.IsNeedContinue = false;
         }
     }

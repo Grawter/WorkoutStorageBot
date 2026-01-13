@@ -98,9 +98,6 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
                 informationSet = await commandHandler.GetInformationSet();
             }
 
-            // Не обязательно. Чтобы не было анимации "зависание кнопки" в ТГ боте
-            informationSet.AdditionalParameters.Add("BotCallBackID", updateInfo.Update.CallbackQuery.Id);
-
             return informationSet;
         }
 

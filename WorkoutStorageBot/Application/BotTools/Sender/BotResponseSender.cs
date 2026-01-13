@@ -29,10 +29,6 @@ namespace WorkoutStorageBot.Application.BotTools.Sender
 
             string resultText = GetResultText(messageInformationSetting.Message, buttonsHelper.AllVerticalButtonsDisplayed, buttonsHelper.AllHorizontalButtonsDisplayed);
 
-            // Не обязательно. Чтобы не было анимации "зависание кнопки" в ТГ боте
-            if (messageInformationSetting.AdditionalParameters.TryGetValue("BotCallBackID", out string callbackQueryID))
-                await AnswerCallbackQuery(callbackQueryID);
-
             switch (messageInformationSetting)
             {
                 case MessageInformationSet MISet:
@@ -78,12 +74,6 @@ namespace WorkoutStorageBot.Application.BotTools.Sender
 
         public async Task SimpleNotification(long chatID, string message)
             => await botClient.SendMessage(chatID, message);
-
-        /// <summary>
-        /// Не обязательно. Чтобы не было анимации "зависание кнопки" в ТГ боте
-        /// </summary>
-        private async Task AnswerCallbackQuery(string callbackQueryID)
-            =>  await botClient.AnswerCallbackQuery(callbackQueryID);
 
         private string GetResultText(string originalText, bool allVerticalButtonsDisplayed, bool allHorizontalButtonsDisplayed)
         {
