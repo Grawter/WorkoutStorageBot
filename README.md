@@ -67,7 +67,7 @@ nano appsettings.json
 ### 3. Соберите и запустите бота
 
 ```
-cd ../..
+cd ../../..
 docker-compose up -d
 ```
 
