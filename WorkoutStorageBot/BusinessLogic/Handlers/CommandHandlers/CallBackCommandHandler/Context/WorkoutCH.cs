@@ -2,7 +2,6 @@
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommandHandler;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
-using WorkoutStorageBot.Model.Entities.BusinessLogic;
 using WorkoutStorageBot.Model.DTO.HandlerData;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +9,7 @@ using WorkoutStorageBot.Core.Extensions;
 using WorkoutStorageBot.BusinessLogic.Helpers.CallbackQueryParser;
 using WorkoutStorageBot.BusinessLogic.Helpers.Converters;
 using WorkoutStorageBot.BusinessLogic.Extensions;
+using WorkoutStorageModels.Entities.BusinessLogic;
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackCommandHandler.Context
 {

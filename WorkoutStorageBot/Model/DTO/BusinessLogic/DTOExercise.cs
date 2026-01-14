@@ -1,5 +1,5 @@
-﻿using WorkoutStorageBot.Model.Entities.BusinessLogic;
-using WorkoutStorageBot.Model.Interfaces;
+﻿using WorkoutStorageBot.Model.Interfaces;
+using WorkoutStorageModels.Entities.BusinessLogic;
 
 namespace WorkoutStorageBot.Model.DTO.BusinessLogic
 {

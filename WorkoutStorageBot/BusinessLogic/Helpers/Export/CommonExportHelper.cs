@@ -1,4 +1,4 @@
-﻿using WorkoutStorageBot.Model.Entities.BusinessLogic;
+﻿using WorkoutStorageModels.Entities.BusinessLogic;
 using Microsoft.IO;
 
 namespace WorkoutStorageBot.BusinessLogic.Helpers.Export

@@ -9,7 +9,7 @@ using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.Core.Extensions;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.Model.DTO.HandlerData;
-using WorkoutStorageBot.Model.Entities.BusinessLogic;
+using WorkoutStorageModels.Entities.BusinessLogic;
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommandHandler
 {

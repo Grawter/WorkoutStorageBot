@@ -1,9 +1,8 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
-using WorkoutStorageBot.Model.AppContext;
-using WorkoutStorageBot.Model.Entities.BusinessLogic;
-using WorkoutStorageBot.Model.Entities.Import;
-using WorkoutStorageBot.Model.Interfaces;
+using WorkoutStorageModels.Entities.BusinessLogic;
+using WorkoutStorageModels.Entities.Import;
+using WorkoutStorageModels.Interfaces;
 
 namespace WorkoutStorageImport
 {

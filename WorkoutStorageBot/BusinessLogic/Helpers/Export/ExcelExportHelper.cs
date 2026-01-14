@@ -5,7 +5,7 @@ using System.Drawing;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Helpers.Converters;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
-using WorkoutStorageBot.Model.Entities.BusinessLogic;
+using WorkoutStorageModels.Entities.BusinessLogic;
 
 namespace WorkoutStorageBot.BusinessLogic.Helpers.Export
 {

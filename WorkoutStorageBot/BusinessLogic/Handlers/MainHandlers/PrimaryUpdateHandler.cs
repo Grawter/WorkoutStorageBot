@@ -10,7 +10,7 @@ using WorkoutStorageBot.Core.Manager;
 using WorkoutStorageBot.Model.DTO.HandlerData;
 using WorkoutStorageBot.Model.DTO.HandlerData.Results;
 using WorkoutStorageBot.Model.DTO.HandlerData.Results.UpdateInfo;
-using WorkoutStorageBot.Model.Entities.BusinessLogic;
+using WorkoutStorageModels.Entities.BusinessLogic;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.BusinessLogic.Context.Global;
 using WorkoutStorageBot.BusinessLogic.Context.Session;

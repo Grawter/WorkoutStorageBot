@@ -4,7 +4,7 @@ using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.Core.Extensions;
 using WorkoutStorageBot.Core.Helpers;
 using WorkoutStorageBot.Model.AppContext;
-using WorkoutStorageBot.Model.Entities.Logging;
+using WorkoutStorageModels.Entities.Core.Logging;
 
 namespace WorkoutStorageBot.Core.Logging
 {

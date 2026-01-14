@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using WorkoutStorageBot.Model.AppContext;
-using WorkoutStorageBot.Model.Entities.BusinessLogic;
+using WorkoutStorageModels.Entities.BusinessLogic;
 
 namespace WorkoutStorageImport
 {

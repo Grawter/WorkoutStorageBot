@@ -8,7 +8,7 @@ using WorkoutStorageBot.Core.Helpers;
 using WorkoutStorageBot.Core.Manager;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.Model.DTO.HandlerData;
-using WorkoutStorageBot.Model.Entities.BusinessLogic;
+using WorkoutStorageModels.Entities.BusinessLogic;
 
 namespace WorkoutStorageBot.BusinessLogic.Repositories
 {

@@ -1,6 +1,6 @@
 ﻿using Telegram.Bot.Exceptions;
 using WorkoutStorageBot.BusinessLogic.Consts;
-using WorkoutStorageBot.Model.Entities.Logging;
+using WorkoutStorageModels.Entities.Core.Logging;
 
 namespace WorkoutStorageBot.Core.Helpers
 {

@@ -1,6 +1,8 @@
 services:
   workoutstoragebot:
-    build: .
+    build: 
+      context: .
+      dockerfile: WorkoutStorageBot/Dockerfile
     image: workoutstoragebot:latest 
     container_name: workoutstoragebot_container
     volumes:

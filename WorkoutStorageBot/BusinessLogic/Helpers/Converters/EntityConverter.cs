@@ -1,5 +1,5 @@
 ﻿using WorkoutStorageBot.Model.DTO.BusinessLogic;
-using WorkoutStorageBot.Model.Entities.BusinessLogic;
+using WorkoutStorageModels.Entities.BusinessLogic;
 
 namespace WorkoutStorageBot.BusinessLogic.Helpers.Converters
 {

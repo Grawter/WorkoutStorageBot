@@ -13,9 +13,9 @@ using WorkoutStorageBot.Core.Extensions;
 using WorkoutStorageBot.Core.Helpers;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.Model.DTO.HandlerData;
-using WorkoutStorageBot.Model.Entities.BusinessLogic;
-using WorkoutStorageBot.Model.Entities.Logging;
 using WorkoutStorageBot.Model.Interfaces;
+using WorkoutStorageModels.Entities.BusinessLogic;
+using WorkoutStorageModels.Entities.Core.Logging;
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageCommandHandler.Context
 {

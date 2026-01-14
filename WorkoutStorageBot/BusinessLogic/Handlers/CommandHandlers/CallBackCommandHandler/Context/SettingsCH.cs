@@ -10,7 +10,7 @@ using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.BusinessLogic.Repositories;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.Model.DTO.HandlerData;
-using WorkoutStorageBot.Model.Entities.BusinessLogic;
+using WorkoutStorageModels.Entities.BusinessLogic;
 using WorkoutStorageBot.Model.Interfaces;
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackCommandHandler.Context

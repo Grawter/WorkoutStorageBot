@@ -11,7 +11,7 @@ using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.BusinessLogic.Repositories;
 using WorkoutStorageBot.Core.Helpers;
 using WorkoutStorageBot.Model.DTO.HandlerData;
-using WorkoutStorageBot.Model.Entities.Logging;
+using WorkoutStorageModels.Entities.Core.Logging;
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackCommandHandler.Context
 {

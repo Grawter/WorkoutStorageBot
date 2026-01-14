@@ -3,7 +3,7 @@ using WorkoutStorageModels.Entities.BusinessLogic;
 using WorkoutStorageModels.Entities.Core.Logging;
 using WorkoutStorageModels.Entities.Import;
 
-namespace WorkoutStorageBot.Model.AppContext
+namespace WorkoutStorageImport
 {
     public class EntityContext : DbContext
     {
@@ -16,6 +16,8 @@ namespace WorkoutStorageBot.Model.AppContext
         public DbSet<ImportInfo> ImportInfo => Set<ImportInfo>();
 
         public EntityContext(DbContextOptions<EntityContext> options) : base(options)
-        { }
+        {
+            Database.EnsureCreated();
+        }
     }
 }

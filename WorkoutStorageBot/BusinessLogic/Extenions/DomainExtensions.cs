@@ -4,8 +4,9 @@ using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.Helpers.Converters;
 using WorkoutStorageBot.Model.AppContext;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
-using WorkoutStorageBot.Model.Entities.BusinessLogic;
 using WorkoutStorageBot.Model.Interfaces;
+using WorkoutStorageModels.Entities.BusinessLogic;
+using WorkoutStorageModels.Interfaces;
 
 namespace WorkoutStorageBot.BusinessLogic.Extensions
 {

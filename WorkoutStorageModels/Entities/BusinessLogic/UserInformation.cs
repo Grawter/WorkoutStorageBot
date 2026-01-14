@@ -1,6 +1,6 @@
-﻿using WorkoutStorageBot.Model.Interfaces;
+﻿using WorkoutStorageModels.Interfaces;
 
-namespace WorkoutStorageBot.Model.Entities.BusinessLogic
+namespace WorkoutStorageModels.Entities.BusinessLogic
 {
     public class UserInformation : IEntity
     {

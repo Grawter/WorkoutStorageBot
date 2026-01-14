@@ -1,6 +1,6 @@
-﻿using WorkoutStorageBot.Model.Interfaces;
+﻿using WorkoutStorageModels.Interfaces;
 
-namespace WorkoutStorageBot.Model.Entities.Import
+namespace WorkoutStorageModels.Entities.Import
 {
     public class ImportInfo : IEntity
     {

@@ -1,4 +1,4 @@
-﻿namespace WorkoutStorageBot.Model.Interfaces
+﻿namespace WorkoutStorageModels.Interfaces
 {
     public interface IEntity
     {

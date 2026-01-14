@@ -1,6 +1,6 @@
-﻿using WorkoutStorageBot.Model.Interfaces;
+﻿using WorkoutStorageModels.Interfaces;
 
-namespace WorkoutStorageBot.Model.Entities.Logging
+namespace WorkoutStorageModels.Entities.Core.Logging
 {
     public class Log : IEntity
     {

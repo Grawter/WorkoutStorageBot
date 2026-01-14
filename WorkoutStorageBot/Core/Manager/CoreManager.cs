@@ -7,7 +7,6 @@ using WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.Core.Abstraction;
 using WorkoutStorageBot.Model.AppContext;
-using WorkoutStorageBot.Model.Entities.BusinessLogic;
 using WorkoutStorageBot.Model.DTO.HandlerData;
 using WorkoutStorageBot.Model.DTO.HandlerData.Results;
 using WorkoutStorageBot.Model.DTO.HandlerData.Results.UpdateInfo;
@@ -17,6 +16,7 @@ using WorkoutStorageBot.Core.Helpers;
 using WorkoutStorageBot.BusinessLogic.Helpers.Updates;
 using WorkoutStorageBot.Core.Logging;
 using WorkoutStorageBot.Core.Sender;
+using WorkoutStorageModels.Entities.BusinessLogic;
 
 namespace WorkoutStorageBot.Core.Manager
 {

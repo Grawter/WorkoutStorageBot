@@ -29,4 +29,8 @@
     <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
     <PackageReference Include="Telegram.Bot" Version="22.8.1" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WorkoutStorageModels\WorkoutStorageModels.csproj" />
+  </ItemGroup>
 </Project>

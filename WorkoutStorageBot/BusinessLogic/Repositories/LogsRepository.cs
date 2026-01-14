@@ -2,7 +2,7 @@
 using WorkoutStorageBot.Core.Abstraction;
 using WorkoutStorageBot.Core.Manager;
 using WorkoutStorageBot.Model.DTO.HandlerData;
-using WorkoutStorageBot.Model.Entities.Logging;
+using WorkoutStorageModels.Entities.Core.Logging;
 
 namespace WorkoutStorageBot.BusinessLogic.Repositories
 {
