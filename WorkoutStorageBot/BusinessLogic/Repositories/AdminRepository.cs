@@ -105,7 +105,15 @@ namespace WorkoutStorageBot.BusinessLogic.Repositories
         {
             if (!WhiteListIsEnable)
             {
-                UserInformation newUser = new UserInformation { UserId = user.Id, Firstname = user.FirstName, Username = "@" + user.Username, WhiteList = false, BlackList = false };
+                UserInformation newUser = new UserInformation 
+                { 
+                    UserId = user.Id, 
+                    Firstname = user.FirstName,
+                    Username = string.IsNullOrWhiteSpace(user.Username) ? "Empty" : $"@{user.Username}",
+                    WhiteList = false, 
+                    BlackList = false 
+                };
+
                 await CoreTools.Db.UsersInformation.AddAsync(newUser);
                 await CoreTools.Db.SaveChangesAsync();
 
@@ -116,7 +124,7 @@ namespace WorkoutStorageBot.BusinessLogic.Repositories
         }
 
         internal bool UserHasAccess(DTOUserInformation user)
-            => UserHasAccess(new UserInformation() { UserId = user.UserId, BlackList = user.BlackList, WhiteList = user.WhiteList });
+            => UserHasAccess(new UserInformation() { UserId = user.UserId, Firstname = user.Firstname, BlackList = user.BlackList, WhiteList = user.WhiteList });
 
         internal bool UserHasAccess(UserInformation? user)
         {

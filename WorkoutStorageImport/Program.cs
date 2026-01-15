@@ -80,7 +80,7 @@ namespace WorkoutStorageImport
             }
         }
 
-        private static EntityContext GetEntityContext(string connectionString, params object[] additionParam)
+        private static EntityContext GetEntityContext(string connectionString, params object[] additionalParams)
         {
             DbContextOptionsBuilder<EntityContext> optionsBuilder = new DbContextOptionsBuilder<EntityContext>();
             DbContextOptions<EntityContext> options = optionsBuilder.UseSqlite(connectionString).Options;
@@ -89,7 +89,7 @@ namespace WorkoutStorageImport
             return db;
         }
 
-        private static string GetWorkoutStr(string pathToFileWithWorkout, params object[] additionParasm)
+        private static string GetWorkoutStr(string pathToFileWithWorkout, params object[] additionalParams)
         {
             if (!Path.Exists(pathToFileWithWorkout))
                 throw new ExpectedException($"Не удалось найти файл по пути '{pathToFileWithWorkout}'");
@@ -106,7 +106,7 @@ namespace WorkoutStorageImport
             return workoutStr;
         }
 
-        private static int GetTypeID(string typeIDStr, object additionParam)
+        private static int GetTypeID(string typeIDStr, params object[] additionalParams)
         {
             if (!int.TryParse(typeIDStr, out int typeID))
                 throw new ExpectedException($"Не удалось распарсить в int значение '{typeIDStr}'");
@@ -117,11 +117,11 @@ namespace WorkoutStorageImport
             return typeID;
         }
 
-        private static UserInformation GetUserInformation(string userCondition, params object[] additionParam)
+        private static UserInformation GetUserInformation(string userCondition, params object[] additionalParams)
         {
-            int typeCondition = Convert.ToInt32(additionParam[0]);
+            int typeCondition = Convert.ToInt32(additionalParams[0]);
 
-            EntityContext entityContext = additionParam[1] as EntityContext;
+            EntityContext entityContext = (EntityContext)additionalParams[1];
 
             UserInformation? userInformation = null;
 
