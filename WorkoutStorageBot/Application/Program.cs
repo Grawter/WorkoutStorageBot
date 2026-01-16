@@ -16,8 +16,6 @@ namespace WorkoutStorageBot.Application
     {
         private static async Task Main(string[] args)
         {
-            using CancellationTokenSource cancellationToken = new CancellationTokenSource();
-
             IHost host = Host.CreateDefaultBuilder()
                 .ConfigureServices((context, serviceCollection) =>
                 {
@@ -48,9 +46,9 @@ namespace WorkoutStorageBot.Application
 
             BotListener botListener = host.Services.GetRequiredService<BotListener>();
 
-            await botListener.StartListen(cancellationToken);
+            await botListener.StartListen();
 
-            await host.RunAsync(cancellationToken.Token);
+            await host.RunAsync(botListener.CancellationToken);
         }
 
         private static ConfigurationData GetConfigurationData()

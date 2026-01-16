@@ -15,7 +15,7 @@ using WorkoutStorageBot.Model.AppContext;
 
 namespace WorkoutStorageBot.Core.BotTools.Listener
 {
-    internal class BotListener
+    internal class BotListener : IDisposable
     {
         private readonly IServiceScopeFactory scopeFactory;
 
@@ -27,7 +27,9 @@ namespace WorkoutStorageBot.Core.BotTools.Listener
 
         private readonly ConfigurationData configurationData;
 
-        private CancellationTokenSource cancellationTokenSource;
+        private readonly CancellationTokenSource cancellationTokenSource;
+
+        internal CancellationToken CancellationToken => cancellationTokenSource.Token;
 
         public BotListener(IServiceScopeFactory scopeFactory,
                            IContextKeeper contextKeeper,
@@ -42,12 +44,12 @@ namespace WorkoutStorageBot.Core.BotTools.Listener
 
             this.configurationData = CommonHelper.GetIfNotNull(configurationData);
             ConfigurationManager.SetCensorToDBSettings(this.configurationData);
+
+            cancellationTokenSource = new CancellationTokenSource();
         }
 
-        internal async Task StartListen(CancellationTokenSource cancellationTokenSource)
+        internal async Task StartListen()
         {
-            this.cancellationTokenSource = CommonHelper.GetIfNotNull(cancellationTokenSource);
-
             using IServiceScope scope = scopeFactory.CreateScope();
 
             ILogger logger = GetLoggerOnScope(scope);
@@ -123,6 +125,11 @@ namespace WorkoutStorageBot.Core.BotTools.Listener
         {
             EntityContext db = scope.ServiceProvider.GetRequiredService<EntityContext>();
             db.Database.EnsureCreated();
+        }
+
+        public void Dispose()
+        {
+            cancellationTokenSource.Dispose();
         }
     }
 }
