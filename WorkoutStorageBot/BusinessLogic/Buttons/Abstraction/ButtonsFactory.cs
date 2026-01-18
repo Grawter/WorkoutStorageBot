@@ -94,9 +94,9 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.Abstraction
                 foreach (IDTODomain domain in source)
                 {
                     if (isNeedShowID)
-                        AddInlineButton($"{domain.Name}[Id:{domain.Id}]", $"2|{subDirection}|{domain.GetType().Name.Replace("DTO", "")}|{domain.Id}");
+                        AddInlineButton($"{domain.Name}[Id:{domain.Id}]", $"2|{subDirection}|{domain.GetType().Name.Replace("DTO", string.Empty)}|{domain.Id}");
                     else
-                        AddInlineButton(domain.Name, $"2|{subDirection}|{domain.GetType().Name.Replace("DTO", "")}|{domain.Id}");
+                        AddInlineButton(domain.Name, $"2|{subDirection}|{domain.GetType().Name.Replace("DTO", string.Empty)}|{domain.Id}");
                 }
             }
         }

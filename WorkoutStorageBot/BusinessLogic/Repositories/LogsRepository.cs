@@ -8,7 +8,7 @@ namespace WorkoutStorageBot.BusinessLogic.Repositories
 {
     internal class LogsRepository : CoreRepository
     {
-        internal LogsRepository(CoreTools coreTools, CoreManager coreManager) : base(coreTools, coreManager, nameof(AdminRepository))
+        internal LogsRepository(CoreTools coreTools, CoreManager coreManager) : base(coreTools, coreManager, nameof(LogsRepository))
         {}
 
         internal IQueryable<Log> GetLogs(int count)

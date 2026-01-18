@@ -15,9 +15,9 @@ namespace WorkoutStorageBot.BusinessLogic.Repositories
     {
         internal AdminRepository(CoreTools coreTools, CoreManager coreManager) : base(coreTools, coreManager, nameof(AdminRepository))
         {
-            ConfigurationData configurationData = coreTools.ConfigurationData;
+            ConfigurationData configurationData = CoreTools.ConfigurationData;
 
-            Logger = coreTools.LoggerFactory.CreateLogger<AdminRepository>();
+            Logger = CoreTools.LoggerFactory.CreateLogger<AdminRepository>();
 
             WhiteListIsEnable = configurationData.Bot.WhiteListIsEnable;
             OwnersChatIDs = configurationData.Bot.OwnersChatIDs;

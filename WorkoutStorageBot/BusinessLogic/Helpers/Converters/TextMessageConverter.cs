@@ -83,7 +83,7 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Converters
             {
                 ExercisesMods.Count => " ",
                 ExercisesMods.WeightCount => ";",
-                _ => ""
+                _ => string.Empty
             };
 
             string text = sb.ToString();
