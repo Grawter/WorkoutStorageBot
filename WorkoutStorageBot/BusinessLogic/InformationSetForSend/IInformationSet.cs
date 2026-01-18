@@ -6,6 +6,6 @@ namespace WorkoutStorageBot.BusinessLogic.InformationSetForSend
     {
         string Message { get; }
         (ButtonsSet buttonsSet, ButtonsSet backButtonsSet) ButtonsSets { get; }
-        Dictionary<string, string> AdditionalParameters { get; }
+        Dictionary<string, string>? AdditionalParameters { get; }
     }
 }

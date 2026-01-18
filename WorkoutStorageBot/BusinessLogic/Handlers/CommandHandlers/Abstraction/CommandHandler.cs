@@ -1,5 +1,4 @@
 ﻿using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
-using WorkoutStorageBot.Core.Helpers;
 using WorkoutStorageBot.Model.DTO.HandlerData;
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.Abstraction
@@ -10,9 +9,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.Abstraction
 
         internal CommandHandler(CommandHandlerData commandHandlerTools)
         {
-            this.CommandHandlerTools = CommonHelper.GetIfNotNull(commandHandlerTools);
+            this.CommandHandlerTools = commandHandlerTools;
         }
 
-          internal abstract Task<IInformationSet> GetInformationSet();
+        internal abstract Task<IInformationSet> GetInformationSet();
     }
 }

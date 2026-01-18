@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using WorkoutStorageBot.Core.Helpers;
 using WorkoutStorageBot.Core.Manager;
 using WorkoutStorageBot.Model.DTO.HandlerData;
 using WorkoutStorageBot.Model.DTO.HandlerData.Results;
@@ -14,20 +13,10 @@ namespace WorkoutStorageBot.Core.Abstraction
 
         protected CoreHandler(CoreTools coreTools, CoreManager coreManager, string handlerName) : base(coreTools, coreManager)
         {
-            HandlerName = CommonHelper.GetIfNotNullOrWhiteSpace(handlerName);
+            HandlerName = handlerName;
             Logger = CoreTools.LoggerFactory.CreateLogger<CoreHandler>();
         }
 
         internal abstract Task<HandlerResult> Process(HandlerResult handlerResult);
-
-        protected abstract HandlerResult InitHandlerResult(HandlerResult handlerResult);
-
-        protected virtual void ValidateHandlerResult(HandlerResult handlerResult)
-        {
-            ArgumentNullException.ThrowIfNull(handlerResult);
-
-            if (handlerResult.Update == null)
-                throw new InvalidOperationException($"Получен пустой {nameof(handlerResult.Update)}");
-        }
     }
 }

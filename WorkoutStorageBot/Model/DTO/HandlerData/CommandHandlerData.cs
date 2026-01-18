@@ -6,8 +6,8 @@ namespace WorkoutStorageBot.Model.DTO.HandlerData
 {
     internal class CommandHandlerData
     {
-        internal EntityContext Db { get; init; }
-        internal CoreData ParentHandler { get; init; }
-        internal UserContext CurrentUserContext { get; init; }
+        internal required EntityContext Db { get; init; }
+        internal required CoreData ParentHandler { get; init; }
+        internal required UserContext CurrentUserContext { get; init; }
     }
 }

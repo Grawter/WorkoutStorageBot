@@ -29,17 +29,17 @@ namespace WorkoutStorageBot.Core.Manager
                              ICustomLoggerFactory loggerFactory,
                              CancellationTokenSource cancellationTokenSource)
         {
-            this.ConfigurationData = CommonHelper.GetIfNotNull(configurationData);
+            this.ConfigurationData = configurationData;
 
-            this.loggerFactory = CommonHelper.GetIfNotNull(loggerFactory);
+            this.loggerFactory = loggerFactory;
 
             this.logger = this.loggerFactory.CreateLogger<CoreManager>();
 
-            this.ContextKeeper = CommonHelper.GetIfNotNull(contextKeeper);
+            this.ContextKeeper = contextKeeper;
 
-            this.BotResponseSender = CommonHelper.GetIfNotNull(botResponseSender);
+            this.BotResponseSender = botResponseSender;
 
-            this.cancellationTokenSource = CommonHelper.GetIfNotNull(cancellationTokenSource);
+            this.cancellationTokenSource = cancellationTokenSource;
 
             CoreTools coreTools = new CoreTools()
             {
@@ -105,9 +105,9 @@ namespace WorkoutStorageBot.Core.Manager
                     handlerResult = await handler.Process(handlerResult);
 
                     // Перепроверяем доступ, т.к. во время работы очередного обработчика доступ мог быть отозван
-                    if (handlerResult.InformationSet != null && handlerResult.HasAccess)
+                    if (handlerResult is AuthorizedHandlerResult authorizedHandlerResult && authorizedHandlerResult.InformationSet != null && handlerResult.HasAccess)
                     {
-                        await SendResponse(handlerResult.ShortUpdateInfo.ChatId, handlerResult.InformationSet, handlerResult.CurrentUserContext);
+                        await SendResponse(authorizedHandlerResult.ShortUpdateInfo.ChatId, authorizedHandlerResult.InformationSet, authorizedHandlerResult.CurrentUserContext);
 
                         if (!handlerResult.IsNeedContinue)
                             return;
@@ -120,7 +120,7 @@ namespace WorkoutStorageBot.Core.Manager
         {
             IUpdateInfo updateInfo = UpdatesHelper.GetUpdateInfo(update);
 
-            EventId eventId = EventIDHelper.GetNextEventIdThreadSave(CommonConsts.EventNames.RuntimeError);
+            EventId eventId = EventIDHelper.GetNextEventIdThreadSafe(CommonConsts.EventNames.RuntimeError);
 
             await LogRuntimeError(updateInfo, eventId, ex);
 
@@ -134,7 +134,7 @@ namespace WorkoutStorageBot.Core.Manager
         {
             if (updateInfo is ShortUpdateInfo shortUpdateInfo)
             {
-                long? userId = shortUpdateInfo.User?.Id;
+                long userId = shortUpdateInfo.User.Id;
 
                 logger.Log(LogLevel.Error,
                            eventId,
@@ -162,14 +162,11 @@ namespace WorkoutStorageBot.Core.Manager
                            LogFormatter.EmptyFormatter);
         }
 
-        private async Task<bool> IsNeedSendEventIdToUser(long? userId)
+        private async Task<bool> IsNeedSendEventIdToUser(long userId)
         {
-            if (userId == null)
-                return false;
-
             AdminRepository adminRepository = GetRequiredRepository<AdminRepository>();
 
-            UserInformation? userInformation = await adminRepository.GetUserInformationWithoutTracking(userId.Value);
+            UserInformation? userInformation = await adminRepository.GetUserInformationWithoutTracking(userId);
 
             return userInformation != null && adminRepository.UserHasAccess(userInformation);
         }

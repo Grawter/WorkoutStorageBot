@@ -14,7 +14,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.BusinessButtonsFactories
         {
             AddInlineButton("Последние результаты выбранного дня", $"1|LastResults|{CommonConsts.DomainsAndEntities.Day}");
             AddInlineButton("Найти тренировку этого дня по дате", $"1|StartFindResultsByDate|{CommonConsts.DomainsAndEntities.Day}");
-            GetDomainsInButtons(CurrentUserContext.DataManager.CurrentDay.Exercises.Where(e => !e.IsArchive), "Selected");
+            GetDomainsInButtons(CurrentUserContext.DataManager.CurrentDay?.Exercises.Where(e => !e.IsArchive), "Selected");
         }
     }
 }

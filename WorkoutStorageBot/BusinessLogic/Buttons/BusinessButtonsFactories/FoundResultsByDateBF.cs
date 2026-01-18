@@ -1,6 +1,6 @@
 ﻿using WorkoutStorageBot.BusinessLogic.Buttons.Abstraction;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
-using WorkoutStorageBot.Core.Helpers;
+using WorkoutStorageBot.Core.Extensions;
 
 namespace WorkoutStorageBot.BusinessLogic.Buttons.BusinessButtonsFactories
 {
@@ -14,12 +14,12 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.BusinessButtonsFactories
         {
             if (additionalParameters != null)
             {
-                string domainTypeForFind = CommonHelper.GetIfNotNullOrWhiteSpace(additionalParameters.GetValueOrDefault("domainTypeForFind"));
+                string domainTypeForFind = (additionalParameters?["domainTypeForFind"]).ThrowIfNullOrWhiteSpace();
 
-                if (additionalParameters.TryGetValue("trainingDateLessThanFindedDate", out string dateLessThanFindedDate))
+                if (additionalParameters.TryGetValue("trainingDateLessThanFindedDate", out string? dateLessThanFindedDate))
                     AddInlineButton($"Показать результаты тренировки за {dateLessThanFindedDate}", $"1|FindResultsByDate|{domainTypeForFind}|{dateLessThanFindedDate}");
 
-                if (additionalParameters.TryGetValue("trainingDateGreaterThanFindedDate", out string dateGreaterThanFindedDate))
+                if (additionalParameters.TryGetValue("trainingDateGreaterThanFindedDate", out string? dateGreaterThanFindedDate))
                     AddInlineButton($"Показать результаты тренировки за {dateGreaterThanFindedDate}", $"1|FindResultsByDate|{domainTypeForFind}|{dateGreaterThanFindedDate}");
             }
         }

@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using WorkoutStorageBot.Application.Configuration;
-using WorkoutStorageBot.Core.Helpers;
+using WorkoutStorageBot.Core.Extensions;
 using WorkoutStorageBot.Model.AppContext;
 
 namespace WorkoutStorageBot.Core.Logging
@@ -12,12 +12,12 @@ namespace WorkoutStorageBot.Core.Logging
 
         public CustomLoggerFactory(EntityContext entityContext, ConfigurationData configurationData)
         {
-            db = CommonHelper.GetIfNotNull(entityContext);
-            this.configurationData = CommonHelper.GetIfNotNull(configurationData);
+            this.db = entityContext;
+            this.configurationData = configurationData;
         }
 
         public ILogger CreateLogger<T>()
-            => new CustomLogger(typeof(T).FullName, db, configurationData);
+            => new CustomLogger(typeof(T).FullName.ThrowIfNullOrWhiteSpace(), db, configurationData);
 
         public ILogger CreateLogger(string categoryName)
             => new CustomLogger(categoryName, db, configurationData);

@@ -86,15 +86,15 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommand
 
                 if (isNeedFindByCurrentDay)
                 {
-                    exercisesIDs = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Exercises.Where(e => !e.IsArchive)
-                                                                                                               .Select(d => d.Id);
+                    exercisesIDs = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Exercises.Where(e => !e.IsArchive)
+                                                                                                                             .Select(d => d.Id);
                 }
                 else
                 {
-                    exercisesIDs = this.CommandHandlerTools.CurrentUserContext.ActiveCycle.Days.Where(d => !d.IsArchive)
-                                                                                               .SelectMany(d => d.Exercises)
-                                                                                               .Where(e => !e.IsArchive)
-                                                                                               .Select(e => e.Id);
+                    exercisesIDs = this.CommandHandlerTools.CurrentUserContext.ActiveCycle.ThrowIfNull().Days.Where(d => !d.IsArchive)
+                                                                                                             .SelectMany(d => d.Exercises)
+                                                                                                             .Where(e => !e.IsArchive)
+                                                                                                             .Select(e => e.Id);
                 }
 
                 IEnumerable<ResultExercise> resultLastTraining = await this.CommandHandlerTools.Db.ResultsExercises.AsNoTracking()
@@ -183,7 +183,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommand
             {
                 ResultExercise firstGroupResultExercise = groupResultExercise.First();
 
-                sb.AppendLine($"Упражнение: {firstGroupResultExercise.Exercise.Name.AddBoldAndQuotes()}");
+                sb.AppendLine($"Упражнение: {firstGroupResultExercise.Exercise.ThrowIfNull().Name.AddBoldAndQuotes()}");
 
                 foreach (ResultExercise resultExercise in groupResultExercise)
                 {
@@ -209,7 +209,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommand
             {
                 ResultExercise firstResultExercise = groupResultExercise.First();
 
-                sb.AppendLine($"Упражнение: {firstResultExercise.Exercise.Name.AddBoldAndQuotes()} | Дата: {firstResultExercise.DateTime.ToString(CommonConsts.Common.DateFormat).AddBoldAndQuotes()}");
+                sb.AppendLine($"Упражнение: {firstResultExercise.Exercise.ThrowIfNull().Name.AddBoldAndQuotes()} | Дата: {firstResultExercise.DateTime.ToString(CommonConsts.Common.DateFormat).AddBoldAndQuotes()}");
 
                 foreach (ResultExercise resultExercise in groupResultExercise)
                 {
@@ -234,7 +234,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommand
                     return $"Повторения: ({resultExercise.Count})";
             }
             else
-                throw new InvalidOperationException($"Не удалось отобразить данные для результата упражнения с ID: {resultExercise.Id}, ID упражнения: {resultExercise.ExerciseId}, тип упражнения: {resultExercise.Exercise.Mode.ToString().AddQuotes()}");
+                throw new InvalidOperationException($"Не удалось отобразить данные для результата упражнения с ID: {resultExercise.Id}, ID упражнения: {resultExercise.ExerciseId}, тип упражнения: {resultExercise.Exercise.ThrowIfNull().Mode.ToString().AddQuotes()}");
         }
     }
 }

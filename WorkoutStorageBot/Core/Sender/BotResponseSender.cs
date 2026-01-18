@@ -6,7 +6,6 @@ using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Helpers.Buttons;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
-using WorkoutStorageBot.Core.Helpers;
 
 namespace WorkoutStorageBot.Core.Sender
 {
@@ -14,7 +13,7 @@ namespace WorkoutStorageBot.Core.Sender
     {
         public BotResponseSender(ITelegramBotClient telegramBotClient)
         {
-            botClient = CommonHelper.GetIfNotNull(telegramBotClient);
+            botClient = telegramBotClient;
         }
 
         private readonly ITelegramBotClient botClient;
@@ -53,7 +52,7 @@ namespace WorkoutStorageBot.Core.Sender
             }
         }
 
-        public async Task SendSimpleMassiveResponse(string[] chatIDs, string message)
+        public async Task SendSimpleMassiveResponse(IEnumerable<string> chatIDs, string message)
         {
             foreach (string ownerChatId in chatIDs)
             {

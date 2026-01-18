@@ -6,8 +6,8 @@ namespace WorkoutStorageBot.Model.DTO.HandlerData
 {
     internal class CoreTools
     {
-        internal EntityContext Db { get; init; }
-        internal ICustomLoggerFactory LoggerFactory { get; init; }
-        internal ConfigurationData ConfigurationData { get; init; }
+        internal required EntityContext Db { get; init; }
+        internal required ICustomLoggerFactory LoggerFactory { get; init; }
+        internal required ConfigurationData ConfigurationData { get; init; }
     }
 }

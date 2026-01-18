@@ -1,6 +1,5 @@
 ﻿using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using WorkoutStorageBot.Core.Helpers;
 
 namespace WorkoutStorageBot.Model.DTO.HandlerData.Results.UpdateInfo
 {
@@ -8,7 +7,7 @@ namespace WorkoutStorageBot.Model.DTO.HandlerData.Results.UpdateInfo
     {
         internal UnknownUpdateInfo(Update update, UpdateType updateType)
         {
-            Update = CommonHelper.GetIfNotNull(update);
+            Update = update;
             UpdateType = updateType;
             IsExpectedType = false;
         }

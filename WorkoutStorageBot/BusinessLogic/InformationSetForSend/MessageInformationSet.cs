@@ -1,5 +1,5 @@
 ﻿using WorkoutStorageBot.BusinessLogic.Enums;
-using WorkoutStorageBot.Core.Helpers;
+using WorkoutStorageBot.Core.Extensions;
 
 namespace WorkoutStorageBot.BusinessLogic.InformationSetForSend
 {
@@ -7,7 +7,7 @@ namespace WorkoutStorageBot.BusinessLogic.InformationSetForSend
     {
         internal MessageInformationSet(string message)
         {
-            Message = message;
+            Message = message.ThrowIfNullOrWhiteSpace();
         }
 
         internal MessageInformationSet(string message, (ButtonsSet buttonsSet, ButtonsSet backButtonsSet) buttonsSets) : this(message)
@@ -19,11 +19,11 @@ namespace WorkoutStorageBot.BusinessLogic.InformationSetForSend
                                       (ButtonsSet buttonsSet, ButtonsSet backButtonsSet) buttonsSets,
                                       Dictionary<string, string> additionalParameters) : this(message, buttonsSets)
         {
-            AdditionalParameters = CommonHelper.GetIfNotNull(additionalParameters);
+            AdditionalParameters = additionalParameters;
         }
 
         public string Message { get; }
         public (ButtonsSet buttonsSet, ButtonsSet backButtonsSet) ButtonsSets { get; }
-        public Dictionary<string, string> AdditionalParameters { get; } = new Dictionary<string, string>();
+        public Dictionary<string, string>? AdditionalParameters { get; }
     }
 }

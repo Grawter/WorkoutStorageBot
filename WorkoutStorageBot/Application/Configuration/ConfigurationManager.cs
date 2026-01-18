@@ -57,10 +57,10 @@ namespace WorkoutStorageBot.Application.Configuration
             settings.IsNeedCacheContext = bool.Parse(GetRequiredValue(botSection["IsNeedCacheContext"], "Не удалось получить флаг кэширования глобального контекста"));
             settings.IsNeedLimits = bool.Parse(GetValueOrDefault(botSection["IsNeedLimits"], "True"));
 
-            string?[] ownersChatIDs = GetChildrenArray(botSection, "OwnersChatIDs");
+            IEnumerable<string> ownersChatIDs = GetChildrenCollection(botSection, "OwnersChatIDs");
 
             if (ownersChatIDs.HasItemsInCollection())
-                settings.OwnersChatIDs = ownersChatIDs!;
+                settings.OwnersChatIDs = ownersChatIDs;
             else
                 throw new InvalidOperationException("Не удалось получить идентификаторы владельцев");
         }
@@ -79,8 +79,8 @@ namespace WorkoutStorageBot.Application.Configuration
         {
             IConfigurationSection mainRuleLog = configuration.GetRequiredSection("LogInfo:MainRuleLog");
 
-            settings.MainRuleLog.DBLogLevels = GetChildrenArray(mainRuleLog, "DBLogLevels", false);
-            settings.MainRuleLog.ConsoleLogLevels = GetChildrenArray(mainRuleLog, "ConsoleLogLevels", false);
+            settings.MainRuleLog.DBLogLevels = GetChildrenCollection(mainRuleLog, "DBLogLevels", false);
+            settings.MainRuleLog.ConsoleLogLevels = GetChildrenCollection(mainRuleLog, "ConsoleLogLevels", false);
 
             IConfigurationSection customRulesLog = configuration.GetSection("LogInfo:CustomRulesLog");
 
@@ -93,8 +93,8 @@ namespace WorkoutStorageBot.Application.Configuration
                     CustomRuleLog customRuleLog = new CustomRuleLog()
                     {
                         FullClassName = GetRequiredValue(customRuleSection["FullClassName"], "Не указано название класса для кастомного правила логгирования"),
-                        DBLogLevels = GetChildrenArray(customRuleSection, "DBLogLevels", false),
-                        ConsoleLogLevels = GetChildrenArray(customRuleSection, "ConsoleLogLevels", false),
+                        DBLogLevels = GetChildrenCollection(customRuleSection, "DBLogLevels", false),
+                        ConsoleLogLevels = GetChildrenCollection(customRuleSection, "ConsoleLogLevels", false),
                     };
 
                     CustomRulesLog.Add(customRuleLog);
@@ -154,7 +154,7 @@ namespace WorkoutStorageBot.Application.Configuration
                                                                                      .ToArray();
         }
 
-        private static string[] GetChildrenArray(IConfigurationSection configurationSection, string sectionPath, bool isRequiredSection = true)
+        private static IEnumerable<string> GetChildrenCollection(IConfigurationSection configurationSection, string sectionPath, bool isRequiredSection = true)
         {
             IConfigurationSection targerConfigurationSection = isRequiredSection 
                                                                ? configurationSection.GetRequiredSection(sectionPath)
@@ -162,8 +162,8 @@ namespace WorkoutStorageBot.Application.Configuration
 
            return targerConfigurationSection.GetChildren()
                                             .Where(x => !string.IsNullOrWhiteSpace(x.Value))
-                                            .Select(c => c.Value)!
-                                            .ToArray();
+                                            .Select(c => c.Value!)
+                                            .ToList();
         }
 
         private static string GetRequiredValue(string? value, string emptyOrNullErrorMessage)

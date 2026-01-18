@@ -1,5 +1,4 @@
 ﻿using WorkoutStorageBot.BusinessLogic.Enums;
-using WorkoutStorageBot.Core.Helpers;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 
 namespace WorkoutStorageBot.BusinessLogic.Context.Session
@@ -18,11 +17,11 @@ namespace WorkoutStorageBot.BusinessLogic.Context.Session
 
         internal LimitsManager LimitsManager { get; }
 
-        internal string CallBackId { get; set; }
+        internal string? CallBackId { get; set; }
 
         internal UserContext(DTOUserInformation userInformation, Roles currentRoles = Roles.User, bool isEnableLimit = true)
         {
-            UserInformation = CommonHelper.GetIfNotNull(userInformation);
+            UserInformation = userInformation;
 
             Roles = currentRoles;
 

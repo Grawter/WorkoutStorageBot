@@ -4,35 +4,30 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Converters
 {
     internal class ResponseTextConverter : IStringConverter
     {
-        private StringBuilder? sb;
         private string? title;
         private string? content;
         private string target;
-        private string? separator;
-        private bool onlyTarget;
+        private readonly string? separator;
+        private readonly bool onlyTarget;
 
         internal ResponseTextConverter(string target)
         {
             this.target = target;
 
-            onlyTarget = true;
+            this.onlyTarget = true;
         }
 
         internal ResponseTextConverter(string content, string target)
         {
-            sb = new StringBuilder();
-
             this.content = content;
 
             this.target = target;
 
-            separator = "======================";
+            this.separator = "======================";
         }
 
         internal ResponseTextConverter(string title, string content, string target, string? separator = null)
         {
-            sb = new StringBuilder();
-
             this.title = title;
 
             this.content = content;
@@ -64,6 +59,8 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Converters
         {
             if (onlyTarget)
                 return target;
+
+            StringBuilder sb = new StringBuilder();
 
             if (!string.IsNullOrWhiteSpace(title))
             {

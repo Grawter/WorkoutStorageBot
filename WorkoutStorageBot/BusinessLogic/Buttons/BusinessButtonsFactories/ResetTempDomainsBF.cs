@@ -1,6 +1,7 @@
 ﻿using WorkoutStorageBot.BusinessLogic.Buttons.Abstraction;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
+using WorkoutStorageBot.Core.Extensions;
 
 namespace WorkoutStorageBot.BusinessLogic.Buttons.BusinessButtonsFactories
 {
@@ -12,7 +13,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.BusinessButtonsFactories
 
         internal override void AddBusinessButtons(Dictionary<string, string>? additionalParameters = null)
         {
-            string domainType = additionalParameters["type"];
+            string domainType = (additionalParameters?["type"]).ThrowIfNullOrWhiteSpace();
 
             switch (domainType)
             {

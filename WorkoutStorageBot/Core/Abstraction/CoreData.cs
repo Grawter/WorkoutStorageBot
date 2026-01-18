@@ -1,5 +1,4 @@
-﻿using WorkoutStorageBot.Core.Helpers;
-using WorkoutStorageBot.Core.Manager;
+﻿using WorkoutStorageBot.Core.Manager;
 using WorkoutStorageBot.Model.DTO.HandlerData;
 
 namespace WorkoutStorageBot.Core.Abstraction
@@ -12,8 +11,8 @@ namespace WorkoutStorageBot.Core.Abstraction
 
         protected CoreData(CoreTools coreTools, CoreManager coreManager)
         {
-            this.CoreManager = CommonHelper.GetIfNotNull(coreManager);
-            this.CoreTools = CommonHelper.GetIfNotNull(coreTools);
+            this.CoreManager = coreManager;
+            this.CoreTools = coreTools;
         }
     }
 }

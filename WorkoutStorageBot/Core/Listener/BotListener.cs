@@ -37,12 +37,12 @@ namespace WorkoutStorageBot.Core.BotTools.Listener
                            IBotResponseSender botSender,
                            ConfigurationData configurationData)
         {
-            this.scopeFactory = CommonHelper.GetIfNotNull(scopeFactory);
-            this.contextKeeper = CommonHelper.GetIfNotNull(contextKeeper);
-            this.botClient = CommonHelper.GetIfNotNull(botClient);
-            this.botSender = CommonHelper.GetIfNotNull(botSender);
+            this.scopeFactory = scopeFactory;
+            this.contextKeeper = contextKeeper;
+            this.botClient = botClient;
+            this.botSender = botSender;
 
-            this.configurationData = CommonHelper.GetIfNotNull(configurationData);
+            this.configurationData = configurationData;
             ConfigurationManager.SetCensorToDBSettings(this.configurationData);
 
             cancellationTokenSource = new CancellationTokenSource();
@@ -93,7 +93,7 @@ namespace WorkoutStorageBot.Core.BotTools.Listener
 
                 ILogger logger = GetLoggerOnScope(scope);
 
-                EventId eventId = EventIDHelper.GetNextEventIdThreadSave(CommonConsts.EventNames.Critical);
+                EventId eventId = EventIDHelper.GetNextEventIdThreadSafe(CommonConsts.EventNames.Critical);
 
                 logger.Log(LogLevel.Critical,
                            eventId,

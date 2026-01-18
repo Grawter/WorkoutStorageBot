@@ -1,5 +1,6 @@
 ﻿using WorkoutStorageBot.BusinessLogic.Buttons.Abstraction;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
+using WorkoutStorageBot.Core.Extensions;
 
 namespace WorkoutStorageBot.BusinessLogic.Buttons.BusinessButtonsFactories
 {
@@ -11,7 +12,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.BusinessButtonsFactories
 
         internal override void AddBusinessButtons(Dictionary<string, string>? additionalParameters = null)
         {
-            string actionName = additionalParameters["Act"];
+            string actionName = (additionalParameters?["Act"]).ThrowIfNullOrWhiteSpace();
 
             AddInlineButton("Месяц", $"2|Period||{actionName}|1");
             AddInlineButton("Квартал", $"2|Period||{actionName}|3");

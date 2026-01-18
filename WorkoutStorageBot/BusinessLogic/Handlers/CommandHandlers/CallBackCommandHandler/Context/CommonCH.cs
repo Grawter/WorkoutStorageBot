@@ -4,6 +4,7 @@ using WorkoutStorageBot.BusinessLogic.Extensions;
 using WorkoutStorageBot.BusinessLogic.Helpers.CallbackQueryParser;
 using WorkoutStorageBot.BusinessLogic.Helpers.Converters;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
+using WorkoutStorageBot.Core.Extensions;
 using WorkoutStorageBot.Model.DTO.HandlerData;
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackCommandHandler.Context
@@ -47,11 +48,11 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             ResponseTextConverter responseConverter = new ResponseTextConverter(previousStep.ButtonsSet switch // optional additional information
             {
                 ButtonsSet.SettingCycle
-                    => $"{previousStep.Message} {CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()}",
+                    => $"{previousStep.Message} {CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}",
                 ButtonsSet.SettingDay
-                    => $"{previousStep.Message} {CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldAndQuotes()}",
+                    => $"{previousStep.Message} {CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()}",
                 ButtonsSet.SettingExercise
-                    => $"{previousStep.Message} {CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldAndQuotes()}",
+                    => $"{previousStep.Message} {CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().Name.AddBoldAndQuotes()}",
                 _ => previousStep.Message
             });
 

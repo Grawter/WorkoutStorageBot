@@ -17,12 +17,15 @@ namespace WorkoutStorageBot.Core.Logging
 
         public CustomLogger(string categoryName, EntityContext db, ConfigurationData configurationData) 
         { 
-            this.categoryName = CommonHelper.GetIfNotNullOrWhiteSpace(categoryName);
-            this.db = CommonHelper.GetIfNotNull(db);
-            this.configurationData = CommonHelper.GetIfNotNull(configurationData);
+            this.categoryName = categoryName;
+            this.db = db;
+            this.configurationData = configurationData;
         }
 
-        public IDisposable BeginScope<TState>(TState state) => default!;
+        public IDisposable BeginScope<TState>(TState state) where TState : notnull
+		{
+			return Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance.BeginScope(state);
+		}
 
         public bool IsEnabled(LogLevel logLevel)
         {
@@ -159,7 +162,7 @@ CallStack: {Environment.StackTrace}");
             };
         }
 
-        private bool TryWriteLogToConsole(string[] permittedLogLevels,
+        private bool TryWriteLogToConsole(IEnumerable<string> permittedLogLevels,
                                      string currentLogLevelStr,
                                      EventId eventId,
                                      DateTime dateTime,
@@ -202,7 +205,7 @@ CallStack: {Environment.StackTrace}");
             return true;
         }
 
-        private async Task<bool> TryWriteLogToDB(string[] permittedLogLevels,
+        private bool TryWriteLogToDB(IEnumerable<string> permittedLogLevels,
                                      string currentLogLevelStr,
                                      EventId eventId,
                                      DateTime dateTime,
@@ -213,8 +216,12 @@ CallStack: {Environment.StackTrace}");
             if (!CurrentLogLevelIsEnable(currentLogLevelStr, permittedLogLevels))
                 return false;
 
-            string message = logData["Message"].ToString();
-            CommonHelper.TryConvertToLong(logData.GetValueOrDefault("TelegaramUserId"), out long? telegaramUserId);
+            string? message = logData["Message"].ToString();
+
+            if (string.IsNullOrWhiteSpace(message))
+				return false;
+
+			CommonHelper.TryConvertToLong(logData.GetValueOrDefault("TelegaramUserId"), out long? telegaramUserId);
 
             Log log = new Log()
             {
@@ -234,10 +241,10 @@ CallStack: {Environment.StackTrace}");
             return true;
         }
 
-        private bool CurrentLogLevelIsEnable(LogLevel logLevel, string[] permittedLogLevels)
+        private bool CurrentLogLevelIsEnable(LogLevel logLevel, IEnumerable<string> permittedLogLevels)
             => CurrentLogLevelIsEnable(logLevel.ToString(), permittedLogLevels);
 
-        private bool CurrentLogLevelIsEnable(string logLevelStr, string[] permittedLogLevels)
+        private bool CurrentLogLevelIsEnable(string logLevelStr, IEnumerable<string> permittedLogLevels)
             => permittedLogLevels.Contains("All") || permittedLogLevels.Contains(logLevelStr);
     }
 }

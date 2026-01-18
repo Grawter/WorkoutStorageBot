@@ -4,25 +4,6 @@ namespace WorkoutStorageBot.Core.Helpers
 {
     public class CommonHelper
     {
-        [return: NotNull]
-        public static T GetIfNotNull<T>([NotNull] T source)
-        {
-            ArgumentNullException.ThrowIfNull(source);
-
-            return source;
-        }
-
-        [return: NotNull]
-        public static T GetIfNotNullOrWhiteSpace<T>([NotNull] T source)
-        {
-            if (source is string sourceString)
-                ArgumentException.ThrowIfNullOrWhiteSpace(sourceString);
-            else
-                ArgumentNullException.ThrowIfNull(source);
-
-            return source;
-        }
-
         internal static string GetCensorValue(string text, int countShowLastSymbols)
         {
             if (string.IsNullOrWhiteSpace(text) || text.Length <= countShowLastSymbols)
@@ -37,7 +18,7 @@ namespace WorkoutStorageBot.Core.Helpers
             return masked;
         }
 
-        internal static bool TryConvertToLong(object obj, out long? result)
+        internal static bool TryConvertToLong(object? obj, [NotNullWhen(true)] out long? result)
         {
             result = null;
 

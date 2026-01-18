@@ -36,7 +36,7 @@ namespace WorkoutStorageBot.Core.Helpers
 
             string from = "Null";
 
-            if (log?.TelegaramUserId > 0)
+            if (log.TelegaramUserId > 0)
                 from = log.TelegaramUserId.ToString()!;
 
             string logStr = 

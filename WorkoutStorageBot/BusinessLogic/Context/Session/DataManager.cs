@@ -1,6 +1,5 @@
 ﻿using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.Core.Extensions;
-using WorkoutStorageBot.Core.Helpers;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.Model.Interfaces;
 
@@ -31,7 +30,7 @@ namespace WorkoutStorageBot.BusinessLogic.Context.Session
 
         internal DTODay SetCurrentDay(string nameDay)
         {
-            CurrentDay = new() { Name = nameDay, Cycle = CurrentCycle, CycleId = CurrentCycle.Id };
+            CurrentDay = new() { Name = nameDay, Cycle = CurrentCycle, CycleId = CurrentCycle.ThrowIfNull().Id };
 
             return CurrentDay;
         }
@@ -59,7 +58,9 @@ namespace WorkoutStorageBot.BusinessLogic.Context.Session
             if (TempExercises == null)
                 TempExercises = new();
 
-            existingExerciseName = string.Empty;    
+            existingExerciseName = string.Empty;
+
+            CurrentDay.ThrowIfNull();
 
             foreach (DTOExercise exercise in exercises)
             {
@@ -85,6 +86,8 @@ namespace WorkoutStorageBot.BusinessLogic.Context.Session
 
             if (TempResultsExercise == null)
                 TempResultsExercise = new();
+
+            CurrentExercise.ThrowIfNull();
 
             foreach (DTOResultExercise result in resultsExercise)
             {
@@ -202,10 +205,10 @@ namespace WorkoutStorageBot.BusinessLogic.Context.Session
         }
 
         internal IDTODomain? GetRequiredCurrentDomain(DomainType domainType)
-            => CommonHelper.GetIfNotNull(GetCurrentDomain(domainType));
+            => GetCurrentDomain(domainType).ThrowIfNull();
 
         internal IDTODomain GetRequiredCurrentDomain(string domainType)
-            => CommonHelper.GetIfNotNull(GetCurrentDomain(domainType));
+            => GetCurrentDomain(domainType).ThrowIfNull();
 
         internal IDTODomain? GetCurrentDomain(DomainType domainType)
             => GetCurrentDomain(domainType.ToString());

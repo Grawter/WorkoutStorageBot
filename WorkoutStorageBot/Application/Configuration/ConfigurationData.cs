@@ -1,24 +1,22 @@
-﻿
-
-namespace WorkoutStorageBot.Application.Configuration
+﻿namespace WorkoutStorageBot.Application.Configuration
 {
     public class ConfigurationData
     {
-        public DbSettings DB { get; set; } = new DbSettings();
-        public BotSettings Bot { get; set; } = new BotSettings();
+        public DbSettings DB { get; set; } = new DbSettings() { Database = string.Empty };
+        public BotSettings Bot { get; set; } = new BotSettings() { Token = string.Empty };
         public NotificationsSettings Notifications { get; set; } = new NotificationsSettings();
         public LogSettings LogInfo { get; set; } = new LogSettings();
 
-        public string AboutBotText { get; set; } = string.Empty;
+        public string? AboutBotText { get; set; }
     }
 
     public class DbSettings
     {
         public bool EnsureCreated { get; set; }
-        public string Server { get; set; }
-        public string Database { get; set; }
-        public string UserName { get; set; }
-        public string Password { get; set; }
+        public string? Server { get; set; }
+        public required string Database { get; set; }
+        public string? UserName { get; set; }
+        public string? Password { get; set; }
 
         public string ConnectionString { 
             get
@@ -33,9 +31,9 @@ namespace WorkoutStorageBot.Application.Configuration
 
     public class BotSettings
     {
-        public string Token { get; set; }
+        public required string Token { get; set; }
         public bool WhiteListIsEnable { get; set; }
-        public string[] OwnersChatIDs { get; set; } = [];
+        public IEnumerable<string> OwnersChatIDs { get; set; } = [];
         public bool IsNeedCacheContext { get; set; }
         public bool IsNeedLimits { get; set; }
     }
@@ -56,12 +54,12 @@ namespace WorkoutStorageBot.Application.Configuration
 
     public class RuleLog
     {
-        public string[] DBLogLevels { get; set; } = [];
-        public string[] ConsoleLogLevels { get; set; } = [];
+        public IEnumerable<string> DBLogLevels { get; set; } = [];
+        public IEnumerable<string> ConsoleLogLevels { get; set; } = [];
     }
 
     public class CustomRuleLog : RuleLog
     {
-        public string FullClassName { get; set; }
+        public required string FullClassName { get; set; }
     }
 }

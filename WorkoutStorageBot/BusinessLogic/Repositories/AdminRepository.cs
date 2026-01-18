@@ -4,7 +4,6 @@ using System.Linq.Expressions;
 using Telegram.Bot.Types;
 using WorkoutStorageBot.Application.Configuration;
 using WorkoutStorageBot.Core.Abstraction;
-using WorkoutStorageBot.Core.Helpers;
 using WorkoutStorageBot.Core.Manager;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.Model.DTO.HandlerData;
@@ -16,9 +15,9 @@ namespace WorkoutStorageBot.BusinessLogic.Repositories
     {
         internal AdminRepository(CoreTools coreTools, CoreManager coreManager) : base(coreTools, coreManager, nameof(AdminRepository))
         {
-            ConfigurationData configurationData = CommonHelper.GetIfNotNull(coreTools.ConfigurationData);
+            ConfigurationData configurationData = coreTools.ConfigurationData;
 
-            Logger = CommonHelper.GetIfNotNull(coreTools.LoggerFactory).CreateLogger<AdminRepository>();
+            Logger = coreTools.LoggerFactory.CreateLogger<AdminRepository>();
 
             WhiteListIsEnable = configurationData.Bot.WhiteListIsEnable;
             OwnersChatIDs = configurationData.Bot.OwnersChatIDs;
@@ -28,7 +27,7 @@ namespace WorkoutStorageBot.BusinessLogic.Repositories
 
         internal bool WhiteListIsEnable { get; private set; }
 
-        private string[] OwnersChatIDs { get; }
+        private IEnumerable<string> OwnersChatIDs { get; }
 
         internal string SaveConfigurationData { get;} 
 
@@ -101,17 +100,17 @@ namespace WorkoutStorageBot.BusinessLogic.Repositories
                                                       .FirstOrDefaultAsync();
         }
 
-        internal async Task<UserInformation?> CreateNewUser(User user)
+        internal async Task<UserInformation?> TryCreateNewUserInformation(User user)
         {
             if (!WhiteListIsEnable)
             {
-                UserInformation newUser = new UserInformation 
-                { 
-                    UserId = user.Id, 
+                UserInformation newUser = new UserInformation
+                {
+                    UserId = user.Id,
                     Firstname = user.FirstName,
                     Username = string.IsNullOrWhiteSpace(user.Username) ? "Empty" : $"@{user.Username}",
-                    WhiteList = false, 
-                    BlackList = false 
+                    WhiteList = false,
+                    BlackList = false
                 };
 
                 await CoreTools.Db.UsersInformation.AddAsync(newUser);
@@ -124,13 +123,10 @@ namespace WorkoutStorageBot.BusinessLogic.Repositories
         }
 
         internal bool UserHasAccess(DTOUserInformation user)
-            => UserHasAccess(new UserInformation() { UserId = user.UserId, Firstname = user.Firstname, BlackList = user.BlackList, WhiteList = user.WhiteList });
+            => UserHasAccess(new UserInformation() { UserId = user.UserId, Firstname = user.Firstname, Username = user.Username, BlackList = user.BlackList, WhiteList = user.WhiteList });
 
-        internal bool UserHasAccess(UserInformation? user)
+        internal bool UserHasAccess(UserInformation user)
         {
-            if (user == null)
-                return false;
-
             if (UserIsOwner(user.UserId))
                 return true;
 

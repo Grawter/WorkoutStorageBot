@@ -7,7 +7,7 @@ namespace WorkoutStorageModels.Entities.BusinessLogic
         public int Id { get; set; }
         public long UserId { get; set; }
         public required string Firstname { get; set; }
-        public string? Username { get; set; }
+        public required string Username { get; set; }
         public List<Cycle> Cycles { get; set; } = new();
         public bool WhiteList { get; set; }
         public bool BlackList { get; set; }

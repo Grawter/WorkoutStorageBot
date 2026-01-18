@@ -1,0 +1,15 @@
+﻿using WorkoutStorageBot.BusinessLogic.Context.Session;
+using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
+using WorkoutStorageBot.Model.DTO.HandlerData.Results.UpdateInfo;
+
+namespace WorkoutStorageBot.Model.DTO.HandlerData.Results
+{
+    internal class AuthorizedHandlerResult : HandlerResult
+    {
+        internal required ShortUpdateInfo ShortUpdateInfo { get; init; }
+
+        internal required UserContext CurrentUserContext { get; init; }
+
+        internal IInformationSet? InformationSet { get; set; }
+    }
+}

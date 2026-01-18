@@ -33,89 +33,82 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
         {
             this.Logger = CoreTools.LoggerFactory.CreateLogger<PrimaryUpdateHandler>();
 
-            this.ContextKeeper = coreManager.ContextKeeper;
+            this.ContextKeeper = CoreManager.ContextKeeper;
 
             this.AdminRepository = CoreManager.GetRequiredRepository<AdminRepository>();
         }
 
         internal override async Task<HandlerResult> Process(HandlerResult handlerResult)
         {
-            PrimaryHandlerResult primaryHandlerResult = InitHandlerResult(handlerResult);
-            
             IUpdateInfo updateInfo = UpdatesHelper.GetUpdateInfo(handlerResult.Update);
 
             if (updateInfo is UnknownUpdateInfo unknownUpdateInfo)
             {
                 ProcessUnknownUpdateType(unknownUpdateInfo);
+                return handlerResult;
             }
             else if (updateInfo is ShortUpdateInfo shortUpdateInfo)
             {
-                primaryHandlerResult.ShortUpdateInfo = shortUpdateInfo;
+                (UserContext? userContext, bool isNewContext) = await GetOrCreateContext(shortUpdateInfo.User);
 
-                await TryGetContextAndAccess(primaryHandlerResult);
+                if (userContext == null)
+                    return handlerResult;
+
+                PrimaryHandlerResult primaryHandlerResult = CreatePrimaryHandlerResult(shortUpdateInfo, userContext, isNewContext);
 
                 if (primaryHandlerResult.ShortUpdateInfo.IsExpectedType)
                     ProcessExpectedUpdateType(primaryHandlerResult);
                 else
                     ProcessUnexpectedUpdateType(primaryHandlerResult);
+
+                return primaryHandlerResult;
             }
-
-            return primaryHandlerResult;
+            else
+                throw new InvalidOperationException($"Неожиданный тип IUpdateInfo: {updateInfo.GetType().Name}");
         }
-
-        protected override PrimaryHandlerResult InitHandlerResult(HandlerResult handlerResult)
-        {
-            ValidateHandlerResult(handlerResult);
-
-            return new PrimaryHandlerResult()
-            {
-                Update = handlerResult.Update,
-            };
-        }
-
-        protected override void ValidateHandlerResult(HandlerResult handlerResult)
-                => base.ValidateHandlerResult(handlerResult);
 
         private void ProcessUnknownUpdateType(UnknownUpdateInfo unknownUpdateInfo)
-            =>Logger.LogWarning($"Получен неизвестный update c типом {unknownUpdateInfo.UpdateType.ToString()}");
+            => Logger.LogWarning($"Получен неизвестный update c типом {unknownUpdateInfo.UpdateType.ToString()}");
 
-        private async Task TryGetContextAndAccess(PrimaryHandlerResult primaryHandledData)
+        private async Task<(UserContext? userContext, bool isNewContext)> GetOrCreateContext(User user)
         {
-            User user = primaryHandledData.ShortUpdateInfo.User;
+            UserContext? userContext = GetExistingContext(user);
 
-            if (!ContextKeeper.HasContext(user.Id))
-                await AddNewContext(primaryHandledData);
-            else
-                SetExistingContext(primaryHandledData, user.Id);
+            if (userContext == null)
+                return (await CreateNewContext(user), true);
+
+            if (AdminRepository.UserHasAccess(userContext.UserInformation))
+                return (userContext, false);
+
+            return (null, false);
         }
 
-        private async Task AddNewContext(PrimaryHandlerResult primaryHandledData)
+        private UserContext? GetExistingContext(User user)
+            => ContextKeeper.HasContext(user.Id)
+                ? ContextKeeper.GetContext(user.Id)
+                : null;
+
+        private async Task<UserContext?> CreateNewContext(User user)
         {
-            UserInformation? currentUser = await AdminRepository.GetFullUserInformationWithoutTracking(primaryHandledData.ShortUpdateInfo.User.Id)
-                ?? await AdminRepository.CreateNewUser(primaryHandledData.ShortUpdateInfo.User);
+            UserInformation? userInformation = await GetOrCreateNewUserInformation(user);
 
-            primaryHandledData.HasAccess = AdminRepository.UserHasAccess(currentUser);
+            if (userInformation == null || !AdminRepository.UserHasAccess(userInformation))
+                return null;
 
-            if (primaryHandledData.HasAccess)
-            {
-                Roles currentRoles = GetUserRoles(currentUser, AdminRepository);
+            Roles currentRoles = GetUserRoles(userInformation, AdminRepository);
 
-                DTOUserInformation DTOCurrentUser = EntityConverter.ToDTOUserInformation(currentUser);
+            DTOUserInformation DTOCurrentUser = EntityConverter.ToDTOUserInformation(userInformation);
 
-                primaryHandledData.CurrentUserContext = new UserContext(DTOCurrentUser, currentRoles, CoreTools.ConfigurationData.Bot.IsNeedLimits);
-                ContextKeeper.AddContext(primaryHandledData.ShortUpdateInfo.User.Id, primaryHandledData.CurrentUserContext);
-            }
+            UserContext userContext = new UserContext(DTOCurrentUser, currentRoles, CoreTools.ConfigurationData.Bot.IsNeedLimits);
 
-            primaryHandledData.IsNewContext = true;
+            ContextKeeper.AddContext(user.Id, userContext);
+
+            return userContext;
         }
 
-        private void SetExistingContext(PrimaryHandlerResult primaryHandledData, long userID)
-        {
-            primaryHandledData.CurrentUserContext = ContextKeeper.GetContext(userID)
-                    ?? throw new InvalidOperationException($"Аномалия: Не удалось найти userContext с userID: '{userID}'");
-            primaryHandledData.HasAccess = AdminRepository.UserHasAccess(primaryHandledData.CurrentUserContext.UserInformation);
-            primaryHandledData.IsNewContext = false;
-        }
+        private async Task<UserInformation?> GetOrCreateNewUserInformation(User user)
+            => await AdminRepository.GetFullUserInformationWithoutTracking(user.Id) 
+                ?? await AdminRepository.TryCreateNewUserInformation(user);
 
         private Roles GetUserRoles(UserInformation currentUser, AdminRepository adminRepository)
         {
@@ -126,11 +119,23 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
             return currentRoles;
         }
 
+        private PrimaryHandlerResult CreatePrimaryHandlerResult(ShortUpdateInfo shortUpdateInfo, UserContext userContext, bool isNewContext)
+        {
+            return new PrimaryHandlerResult()
+            {
+                Update = shortUpdateInfo.Update,
+                ShortUpdateInfo = shortUpdateInfo,
+                CurrentUserContext = userContext,
+                HasAccess = true,
+                IsNewContext = isNewContext
+            };
+        }
+
         private void ProcessExpectedUpdateType(PrimaryHandlerResult primaryHandledData)
         {
             LoggingExpectedUpdateType(primaryHandledData.ShortUpdateInfo.User, primaryHandledData.ShortUpdateInfo.Data, primaryHandledData.ShortUpdateInfo.UpdateType);
 
-            if (primaryHandledData.IsNewContext && primaryHandledData.HasAccess)
+            if (primaryHandledData.IsNewContext)
                 SetInformationSetForNewContext(primaryHandledData);
             else 
                 primaryHandledData.IsNeedContinue = true;
@@ -143,13 +148,13 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
             string textUpdateType;
 
             if (shortUpdateInfo.UpdateType == UpdateType.Message)
-                textUpdateType = primaryHandledData.Update.Message.Type.ToString();
+                textUpdateType = shortUpdateInfo.Data;
             else
                 textUpdateType = shortUpdateInfo.UpdateType.ToString();
 
             string message = $"Неподдерживаемый тип сообщения: {textUpdateType}";
 
-            EventId eventId = EventIDHelper.GetNextEventIdThreadSave(CommonConsts.EventNames.NotSupportedUpdateType);
+            EventId eventId = EventIDHelper.GetNextEventIdThreadSafe(CommonConsts.EventNames.NotSupportedUpdateType);
 
             primaryHandledData.InformationSet = new MessageInformationSet($"{message} | EventId: {eventId.Id}");
             primaryHandledData.IsNeedContinue = false;
@@ -188,7 +193,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
                     break;
             }
 
-            EventId eventId = EventIDHelper.GetNextEventIdThreadSave(CommonConsts.EventNames.ExpectedUpdateType);
+            EventId eventId = EventIDHelper.GetNextEventIdThreadSafe(CommonConsts.EventNames.ExpectedUpdateType);
 
             Logger.Log(logLevel,
                        eventId,

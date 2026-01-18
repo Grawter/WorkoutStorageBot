@@ -1,7 +1,7 @@
 ﻿namespace WorkoutStorageBot.Model.DTO.HandlerData.Results
 {
-    internal class PrimaryHandlerResult : HandlerResult
+    internal class PrimaryHandlerResult : AuthorizedHandlerResult
     {
-        internal bool IsNewContext { get; set; }
+        internal required bool IsNewContext { get; set; }
     }
 }

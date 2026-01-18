@@ -7,7 +7,7 @@ namespace WorkoutStorageBot.Core.Sender
     {
         Task SendResponse(long chatId, IInformationSet messageInformationSetting, UserContext currentUserContext);
 
-        Task SendSimpleMassiveResponse(string[] chatIDs, string message);
+        Task SendSimpleMassiveResponse(IEnumerable<string> chatIDs, string message);
 
 
         Task SendSimpleMassiveResponse(long[] chatIDs, string message);

@@ -73,7 +73,7 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Export
         {
             if (rootNode is JsonArray array)
             {
-                foreach (JsonNode subRootNode in array)
+                foreach (JsonNode? subRootNode in array)
                 {
                     if (subRootNode is JsonObject obj)
                     {

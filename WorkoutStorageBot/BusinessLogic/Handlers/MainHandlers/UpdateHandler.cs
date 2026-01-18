@@ -12,29 +12,25 @@ using WorkoutStorageBot.Core.Abstraction;
 using WorkoutStorageBot.Core.Manager;
 using WorkoutStorageBot.Model.DTO.HandlerData;
 using WorkoutStorageBot.Model.DTO.HandlerData.Results;
-using WorkoutStorageBot.Model.DTO.HandlerData.Results.UpdateInfo;
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
 {
     internal class UpdateHandler : CoreHandler
     {
-        private UserContext CurrentUserContext { get; set; }
-
         internal UpdateHandler(CoreTools coreTools, CoreManager coreManager) : base(coreTools, coreManager, nameof(PrimaryUpdateHandler))
         { }
 
         internal override async Task<HandlerResult> Process(HandlerResult handlerResult)
         {
-            UpdateHandlerResult updateHandlerResult = InitHandlerResult(handlerResult);
-            CurrentUserContext = updateHandlerResult.CurrentUserContext;
+            UpdateHandlerResult updateHandlerResult = CreateUpdateHandlerResult((AuthorizedHandlerResult)handlerResult);
 
             switch (updateHandlerResult.ShortUpdateInfo.UpdateType)
             {
                 case UpdateType.Message:
-                    updateHandlerResult.InformationSet = await ProcessMessage(updateHandlerResult.ShortUpdateInfo);
+                    updateHandlerResult.InformationSet = await ProcessMessage(updateHandlerResult);
                     break;
                 case UpdateType.CallbackQuery:
-                    updateHandlerResult.InformationSet = await ProcessCallbackQuery(updateHandlerResult.ShortUpdateInfo);
+                    updateHandlerResult.InformationSet = await ProcessCallbackQuery(updateHandlerResult);
                     break;
                 default:
                     throw new NotImplementedException($"Неожиданный update.type: {updateHandlerResult.ShortUpdateInfo.UpdateType}");
@@ -43,54 +39,44 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
             return updateHandlerResult;
         }
 
-        protected override UpdateHandlerResult InitHandlerResult(HandlerResult handlerResult)
+        private UpdateHandlerResult CreateUpdateHandlerResult(AuthorizedHandlerResult authorizedHandlerResult)
         {
-            ValidateHandlerResult(handlerResult);
-
             return new UpdateHandlerResult()
             {
-                Update = handlerResult.Update,
-                ShortUpdateInfo = handlerResult.ShortUpdateInfo,
-                CurrentUserContext = handlerResult.CurrentUserContext,
-                HasAccess = handlerResult.HasAccess,
+                Update = authorizedHandlerResult.Update,
+                CurrentUserContext = authorizedHandlerResult.CurrentUserContext,
+                ShortUpdateInfo = authorizedHandlerResult.ShortUpdateInfo,
+                HasAccess = true,
             };
         }
 
-        protected override void ValidateHandlerResult(HandlerResult handlerResult)
-        {
-            base.ValidateHandlerResult(handlerResult);
-
-            ArgumentNullException.ThrowIfNull(handlerResult.ShortUpdateInfo);
-            ArgumentNullException.ThrowIfNull(handlerResult.CurrentUserContext);
-        }
-
-        private async Task<IInformationSet> ProcessMessage(ShortUpdateInfo updateInfo)
+        private async Task<IInformationSet> ProcessMessage(UpdateHandlerResult updateHandlerResult)
         {
             CommandHandlerData commandHandlerData = new CommandHandlerData()
             {
                 Db = CoreTools.Db,
                 ParentHandler = this,
-                CurrentUserContext = CurrentUserContext,
+                CurrentUserContext = updateHandlerResult.CurrentUserContext,
             };
 
-            TextMessageConverter requestConverter = new TextMessageConverter(updateInfo.Data);
+            TextMessageConverter requestConverter = new TextMessageConverter(updateHandlerResult.ShortUpdateInfo.Data);
 
             TextMessageCH commandHandler = new TextMessageCH(commandHandlerData, requestConverter);
 
             return await commandHandler.GetInformationSet();
         }
 
-        private async Task<IInformationSet> ProcessCallbackQuery(ShortUpdateInfo updateInfo)
+        private async Task<IInformationSet> ProcessCallbackQuery(UpdateHandlerResult updateHandlerResult)
         {
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser(updateInfo.Data);
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser(updateHandlerResult.ShortUpdateInfo.Data);
 
-            if (CheckingComplianceCallBackId(callbackQueryParser.CallBackId, out IInformationSet? informationSet))
+            if (CheckingComplianceCallBackId(updateHandlerResult.CurrentUserContext, callbackQueryParser.CallBackId, out IInformationSet? informationSet))
             {
                 CommandHandlerData commandHandlerData = new CommandHandlerData()
                 {
                     Db = CoreTools.Db,
                     ParentHandler = this,
-                    CurrentUserContext = CurrentUserContext,
+                    CurrentUserContext = updateHandlerResult.CurrentUserContext,
                 };
 
                 CallBackCH commandHandler = GetCallBackCH(commandHandlerData, callbackQueryParser);
@@ -126,9 +112,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
             return commandHandler;
         }
 
-        private bool CheckingComplianceCallBackId(string currentCallBackId, [NotNullWhen(false)] out IInformationSet? informationSet)
+        private bool CheckingComplianceCallBackId(UserContext currentUserContext, string currentCallBackId, [NotNullWhen(false)] out IInformationSet? informationSet)
         {
-            if (CurrentUserContext.CallBackId == currentCallBackId)
+            if (currentUserContext.CallBackId == currentCallBackId)
             {
                 informationSet = null;
 
@@ -138,7 +124,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
-            if (CurrentUserContext.ActiveCycle == null)
+            if (currentUserContext.ActiveCycle == null)
             {
                 responseConverter = new ResponseTextConverter("Начнём");
                 buttonsSets = (ButtonsSet.AddCycle, ButtonsSet.None);
@@ -149,12 +135,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
                         "Для продолжения работы используйте действия, предложенные ниже");
                 buttonsSets = (ButtonsSet.Main, ButtonsSet.None);
 
-                CurrentUserContext.Navigation.ResetNavigation();
+                currentUserContext.Navigation.ResetNavigation();
             }
 
             informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
-            CurrentUserContext.DataManager.ResetAll();
+            currentUserContext.DataManager.ResetAll();
 
             return false;
         }

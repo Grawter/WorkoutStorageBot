@@ -26,7 +26,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             AdminRepository = this.CommandHandlerTools.ParentHandler.CoreManager.GetRequiredRepository<AdminRepository>();
             LogsRepository = this.CommandHandlerTools.ParentHandler.CoreManager.GetRequiredRepository<LogsRepository>();
 
-            Logger = CommonHelper.GetIfNotNull(commandHandlerTools.ParentHandler.CoreTools.LoggerFactory).CreateLogger<AdminCH>();
+            Logger = commandHandlerTools.ParentHandler.CoreTools.LoggerFactory.CreateLogger<AdminCH>();
         }
 
         internal override async Task<IInformationSet> GetInformationSet()
@@ -153,7 +153,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
             bool isNotFirstStr = false;
             StringBuilder sb = new StringBuilder();
-            foreach (Log exceptionLog in exceptionLogs)
+            foreach (Log? exceptionLog in exceptionLogs)
             {
                 if (exceptionLog != null)
                 {

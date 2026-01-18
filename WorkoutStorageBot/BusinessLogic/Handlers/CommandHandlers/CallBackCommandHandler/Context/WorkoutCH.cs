@@ -86,8 +86,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             switch (callbackQueryParser.DomainType)
             {
                 case CommonConsts.DomainsAndEntities.Exercises:
-                    IEnumerable<int> activeDayIDs = this.CommandHandlerTools.CurrentUserContext.ActiveCycle.Days.Where(d => !d.IsArchive)
-                                                                                                                .Select(d => d.Id);
+                    IEnumerable<int> activeDayIDs = this.CommandHandlerTools.CurrentUserContext.ActiveCycle.ThrowIfNull().Days.Where(d => !d.IsArchive)
+                                                                                                                              .Select(d => d.Id);
 
                     IQueryable<int> activeExercisesIDsInActiveDays = this.CommandHandlerTools.Db.Exercises.Where(e => !e.IsArchive && activeDayIDs.Contains(e.DayId))
                                                                                                           .Select(e => e.Id);
@@ -107,16 +107,17 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
 
                     if (resultLastTraining == null)
-                        throw new InvalidOperationException("Не удалось получить результаты последней тренировки");
+                        information = "Не удалось получить результаты последней тренировки";
+                    else
+                        information = SharedCH.GetInformationAboutLastExercises(resultLastTraining.Date, resultLastTraining.Data);
 
-                    information = SharedCH.GetInformationAboutLastExercises(resultLastTraining.Date, resultLastTraining.Data);
                     responseConverter = new ResponseTextConverter("Последняя тренировка:", information, "Выберите тренировочный день");
                     buttonsSets = (ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main);
                     break;
 
                 case CommonConsts.DomainsAndEntities.Day:
-                    IEnumerable<int> exercisesIDs = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Exercises.Where(e => !e.IsArchive)
-                                                                                                                                .Select(d => d.Id);
+                    IEnumerable<int> exercisesIDs = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Exercises.Where(e => !e.IsArchive)
+                                                                                                                                              .Select(d => d.Id);
                     string dbProvider = this.CommandHandlerTools.Db.GetDBProvider();
 
                     string query;
@@ -158,7 +159,6 @@ AND date(re.DateTime) = last.MaxDate";
         private IInformationSet StartFindResultsByDateCommand()
         {
             ResponseTextConverter responseConverter = new ResponseTextConverter($"Введите дату искомой тренировки", CommonConsts.Exercise.FindResultsByDateFormat);
-            string information;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
             switch (callbackQueryParser.DomainType)
@@ -240,7 +240,7 @@ AND date(re.DateTime) = last.MaxDate";
 
             this.CommandHandlerTools.CurrentUserContext.DataManager.ResetTempResultsExercise();
 
-            ResponseTextConverter responseConverter = new ResponseTextConverter($"Результат упражнения '{this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldAndQuotes()}' был сброшен", 
+            ResponseTextConverter responseConverter = new ResponseTextConverter($"Результат упражнения '{this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().Name.AddBoldAndQuotes()}' был сброшен", 
                 "Выберите упражнение");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout);
 
@@ -251,10 +251,10 @@ AND date(re.DateTime) = last.MaxDate";
 
         private async Task<IInformationSet> SaveResultsExerciseCommand()
         {
-            foreach (DTOResultExercise tempResultsExercise in this.CommandHandlerTools.CurrentUserContext.DataManager.TempResultsExercise)
+            foreach (DTOResultExercise tempResultsExercise in this.CommandHandlerTools.CurrentUserContext.DataManager.TempResultsExercise.ThrowIfNull())
             {
                 tempResultsExercise.Exercise = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise;
-                this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.ResultsExercise.Add(tempResultsExercise);
+                this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().ResultsExercise.Add(tempResultsExercise);
             }
             await this.CommandHandlerTools.Db.AddEntities(this.CommandHandlerTools.CurrentUserContext.DataManager.TempResultsExercise);
 

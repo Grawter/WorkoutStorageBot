@@ -4,7 +4,6 @@ using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.Helpers.Crypto;
 using WorkoutStorageBot.Core.Extensions;
-using WorkoutStorageBot.Core.Helpers;
 using WorkoutStorageBot.Model.Interfaces;
 
 namespace WorkoutStorageBot.BusinessLogic.Buttons.Abstraction
@@ -24,7 +23,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.Abstraction
 
         internal ButtonsFactory(UserContext userContext)
         {
-            CurrentUserContext = CommonHelper.GetIfNotNull(userContext);
+            CurrentUserContext = userContext;
 
             CurrentUserContext.CallBackId = CryptographyHelper.CreateRandomCallBackQueryId();
 
@@ -88,7 +87,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.Abstraction
             return callBackDataWithoutId;
         }
 
-        protected void GetDomainsInButtons(IEnumerable<IDTODomain> source, string subDirection, bool isNeedShowID = false)
+        protected void GetDomainsInButtons(IEnumerable<IDTODomain>? source, string subDirection, bool isNeedShowID = false)
         {
             if (source.HasItemsInCollection())
             {
