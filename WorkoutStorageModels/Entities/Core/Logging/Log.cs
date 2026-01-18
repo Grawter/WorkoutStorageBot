@@ -18,6 +18,6 @@ namespace WorkoutStorageModels.Entities.Core.Logging
 
         public required string SourceContext { get; set; }
 
-        public long? TelegaramUserId { get; set; }
+        public long? TelegramUserId { get; set; }
     }
 }

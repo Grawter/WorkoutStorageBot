@@ -36,8 +36,8 @@ namespace WorkoutStorageBot.Core.Helpers
 
             string from = "Null";
 
-            if (log.TelegaramUserId > 0)
-                from = log.TelegaramUserId.ToString()!;
+            if (log.TelegramUserId > 0)
+                from = log.TelegramUserId.ToString()!;
 
             string logStr = 
                 @$"[{log.Id}] [{log.LogLevel}] [{log.EventID}] [{log.DateTime.ToString(CommonConsts.Common.DateTimeFormatDateFirst)}] [{from}] [{lastContext}]:

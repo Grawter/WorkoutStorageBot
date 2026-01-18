@@ -140,7 +140,7 @@ namespace WorkoutStorageBot.Core.Manager
                            eventId,
                            new Dictionary<string, object>()
                            {
-                               { "TelegaramUserId", userId },
+                               { "TelegramUserId", userId },
                            },
                            ex,
                            LogFormatter.EmptyFormatter);

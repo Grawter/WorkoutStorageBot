@@ -106,7 +106,7 @@ namespace WorkoutStorageBot.BusinessLogic.Repositories
                 UserInformation newUser = new UserInformation
                 {
                     UserId = user.Id,
-                    Firstname = user.FirstName,
+                    FirstName = user.FirstName,
                     Username = string.IsNullOrWhiteSpace(user.Username) ? "Empty" : $"@{user.Username}",
                     WhiteList = false,
                     BlackList = false
@@ -122,7 +122,7 @@ namespace WorkoutStorageBot.BusinessLogic.Repositories
         }
 
         internal bool UserHasAccess(DTOUserInformation user)
-            => UserHasAccess(new UserInformation() { UserId = user.UserId, Firstname = user.Firstname, Username = user.Username, BlackList = user.BlackList, WhiteList = user.WhiteList });
+            => UserHasAccess(new UserInformation() { UserId = user.UserId, FirstName = user.FirstName, Username = user.Username, BlackList = user.BlackList, WhiteList = user.WhiteList });
 
         internal bool UserHasAccess(UserInformation user)
         {

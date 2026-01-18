@@ -6,7 +6,7 @@ namespace WorkoutStorageBot.Model.DTO.BusinessLogic
     {
         public int Id { get; set; }
         public long UserId { get; set; }
-        public required string Firstname { get; set; }
+        public required string FirstName { get; set; }
         public required string Username { get; set; }
         public List<DTOCycle> Cycles { get; set; } = new();
         public bool WhiteList { get; set; }

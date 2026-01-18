@@ -164,7 +164,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
                        new Dictionary<string, object>()
                        {
                            { "Message", message },
-                           { "TelegaramUserId", shortUpdateInfo.User.Id },
+                           { "TelegramUserId", shortUpdateInfo.User.Id },
                        },
                        null,
                        LogFormatter.EmptyFormatter);
@@ -200,7 +200,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
                        new Dictionary<string, object>()
                        {
                            { "Message", message },
-                           { "TelegaramUserId", user.Id },
+                           { "TelegramUserId", user.Id },
                        },
                        null,
                        LogFormatter.EmptyFormatter);

@@ -13,7 +13,7 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Converters
             {
                 Id = userInformation.Id,
                 UserId = userInformation.UserId,
-                Firstname = userInformation.Firstname,
+                FirstName = userInformation.FirstName,
                 Username = userInformation.Username,
                 WhiteList = userInformation.WhiteList,
                 BlackList = userInformation.BlackList,
@@ -148,7 +148,7 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Converters
             {
                 Id = userInformation.Id,
                 UserId = userInformation.UserId,
-                Firstname = userInformation.Firstname,
+                FirstName = userInformation.FirstName,
                 Username = userInformation.Username,
                 WhiteList = userInformation.WhiteList,
                 BlackList = userInformation.BlackList,
