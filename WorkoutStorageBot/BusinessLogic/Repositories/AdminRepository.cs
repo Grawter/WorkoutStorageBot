@@ -21,17 +21,16 @@ namespace WorkoutStorageBot.BusinessLogic.Repositories
 
             WhiteListIsEnable = configurationData.Bot.WhiteListIsEnable;
             OwnersChatIDs = configurationData.Bot.OwnersChatIDs;
-
-            SaveConfigurationData = ConfigurationManager.GetSerializedSaveDeepCopy(configurationData);
         }
 
         internal bool WhiteListIsEnable { get; private set; }
 
         private IEnumerable<string> OwnersChatIDs { get; }
 
-        internal string SaveConfigurationData { get;} 
-
         private ILogger Logger { get; }
+
+        internal string GetSafeConfigurationData()
+            => ConfigurationManager.GetSerializedSafeDeepCopy(CoreTools.ConfigurationData);
 
         internal void ChangeWhiteListMode()
         {

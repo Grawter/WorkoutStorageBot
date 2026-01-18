@@ -206,7 +206,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                 return informationSet;
 
             ResponseTextConverter responseConverter = new ResponseTextConverter(@$"Текущая настройка:
-{AdminRepository.SaveConfigurationData}", "Выберите интересующее действие");
+{AdminRepository.GetSafeConfigurationData()}", "Выберите интересующее действие");
 
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.Admin, ButtonsSet.Main);
 

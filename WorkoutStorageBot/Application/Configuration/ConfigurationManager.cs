@@ -117,19 +117,19 @@ namespace WorkoutStorageBot.Application.Configuration
             configurationData.DB.Password = "******";
         }
 
-        internal static string GetSerializedSaveDeepCopy(ConfigurationData configurationData)
+        internal static string GetSerializedSafeDeepCopy(ConfigurationData configurationData)
         {
-            ConfigurationData saveDeepCopy = GetSaveDeepCopy(configurationData);
+            ConfigurationData safeDeepCopy = GetSafeDeepCopy(configurationData);
 
             JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions
             {
                 WriteIndented = true
             };
 
-            return JsonSerializer.Serialize(saveDeepCopy, jsonSerializerOptions);
+            return JsonSerializer.Serialize(safeDeepCopy, jsonSerializerOptions);
         }
 
-        private static ConfigurationData GetSaveDeepCopy(ConfigurationData configurationData)
+        private static ConfigurationData GetSafeDeepCopy(ConfigurationData configurationData)
         {
             ConfigurationData deepCopy = GetDeepCopy(configurationData);
             SetCensorToConfigurationData(deepCopy);
@@ -139,9 +139,8 @@ namespace WorkoutStorageBot.Application.Configuration
 
         private static ConfigurationData GetDeepCopy(ConfigurationData configurationData)
         {
-            return JsonSerializer.Deserialize<ConfigurationData>(
-                JsonSerializer.Serialize(configurationData))
-                    ?? throw new InvalidOperationException("Десериализация вернула null");
+            return JsonSerializer.Deserialize<ConfigurationData>(JsonSerializer.Serialize(configurationData))
+                    ?? throw new InvalidOperationException("Десериализация configurationData вернула null");
         }
 
         private static void SetCensorToConfigurationData(ConfigurationData configurationData)
