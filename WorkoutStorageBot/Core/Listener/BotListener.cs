@@ -103,9 +103,15 @@ namespace WorkoutStorageBot.Core.BotTools.Listener
 
                 logger.LogWarning("Отключение бота после необработанной ошибки");
 
+                string exMessage = exception.ToString();
+
+                if (exMessage.Length > LogFormatter.MaxCharactersCount)
+                    exMessage = $"{exMessage.Substring(0, LogFormatter.MaxCharactersCount)}...";
+
                 if (configurationData.Notifications.NotifyOwnersAboutCriticalErrors)
                     await botSender.SendSimpleMassiveResponse(configurationData.Bot.OwnersChatIDs, @$"!!!Необработанная ошибка!!!:
-{exception.ToString()}");
+======================
+{exMessage}");
             }
             finally
             {

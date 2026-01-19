@@ -124,10 +124,15 @@ namespace WorkoutStorageBot.Core.Manager
 
             await LogRuntimeError(updateInfo, eventId, ex);
 
+            string exMessage = ex.ToString();
+
+            if (exMessage.Length > LogFormatter.MaxCharactersCount)
+                exMessage = $"{exMessage.Substring(0, LogFormatter.MaxCharactersCount)}...";
+
             if (ConfigurationData.Notifications.NotifyOwnersAboutRuntimeErrors)
                 await BotResponseSender.SendSimpleMassiveResponse(ConfigurationData.Bot.OwnersChatIDs, @$"Ошибка во время исполнения. EventID: {eventId.Id}
-{ex.ToString()}");
-
+======================
+{exMessage}");
         }
 
         private async Task LogRuntimeError(IUpdateInfo updateInfo, EventId eventId, Exception ex)

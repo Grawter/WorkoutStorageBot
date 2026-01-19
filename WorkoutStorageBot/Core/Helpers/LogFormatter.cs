@@ -6,6 +6,8 @@ namespace WorkoutStorageBot.Core.Helpers
 {
     internal static class LogFormatter
     {
+        internal const int MaxCharactersCount = 1500;
+
         internal static string EmptyFormatter<TState>(TState state, Exception? exception)
             => string.Empty;
 
@@ -26,7 +28,7 @@ namespace WorkoutStorageBot.Core.Helpers
             return errorMessage;
         }
 
-        internal static string ConvertLogToStr(Log log)
+        internal static string ConvertLogToStr(Log log, int maxLength = 0)
         {
             string[] partsOfContext = log.SourceContext.Split(['.'], StringSplitOptions.RemoveEmptyEntries);
             string lastContext = string.Empty; 
@@ -39,9 +41,14 @@ namespace WorkoutStorageBot.Core.Helpers
             if (log.TelegramUserId > 0)
                 from = log.TelegramUserId.ToString()!;
 
+            if (maxLength == 0)
+                maxLength = MaxCharactersCount;
+
+            string logMessage = log.Message.Length > maxLength ? $"{log.Message.Substring(0, maxLength)}..." : log.Message;
+
             string logStr = 
                 @$"[{log.Id}] [{log.LogLevel}] [{log.EventID}] [{log.DateTime.ToString(CommonConsts.Common.DateTimeFormatDateFirst)}] [{from}] [{lastContext}]:
-[{log.Message}]";
+{logMessage}";
             return logStr;
         }
     }

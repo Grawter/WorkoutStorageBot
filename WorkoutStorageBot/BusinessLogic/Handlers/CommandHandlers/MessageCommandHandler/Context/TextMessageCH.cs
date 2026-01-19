@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Diagnostics.CodeAnalysis;
+using Telegram.Bot.Types.Enums;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Enums;
@@ -578,7 +579,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 responseConverter = new ResponseTextConverter("Найденный лог:", logStr, "Выберите интересующее действие");
             }
 
-            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets, ParseMode.None);
 
             return informationSet;
         }

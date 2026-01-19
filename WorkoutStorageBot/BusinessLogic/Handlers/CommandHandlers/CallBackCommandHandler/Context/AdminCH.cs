@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
+using Telegram.Bot.Types.Enums;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.Extensions;
 using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommandHandler;
@@ -136,7 +137,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                 responseConverter = new ResponseTextConverter("Последний лог:", logStr, "Выберите интересующее действие");
             }
 
-            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets, ParseMode.None);
 
             return informationSet;
         }
@@ -160,7 +161,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     if (isNotFirstStr)
                         sb.AppendLine("======================");
 
-                    string logStr = LogFormatter.ConvertLogToStr(exceptionLog);
+                    string logStr = LogFormatter.ConvertLogToStr(exceptionLog, 1000);
 
                     sb.AppendLine(logStr);
 
@@ -174,7 +175,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             ResponseTextConverter responseConverter = new ResponseTextConverter("Последние ошибочные логи:", sb.ToString(), "Выберите интересующее действие");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.AdminLogs, ButtonsSet.Admin);
 
-            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets, ParseMode.None);
 
             return informationSet;
         }
