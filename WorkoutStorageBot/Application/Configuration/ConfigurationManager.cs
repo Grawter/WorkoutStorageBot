@@ -41,7 +41,7 @@ namespace WorkoutStorageBot.Application.Configuration
         {
             IConfigurationSection DBSection = configuration.GetRequiredSection("DB");
 
-            settings.EnsureCreated = bool.Parse(DBSection["EnsureCreated"] ?? "false");
+            settings.EnsureCreated = bool.Parse(GetValueOrDefault(DBSection["EnsureCreated"], "False"));
             settings.Server = DBSection["Server"];
             settings.Database = GetRequiredValue(DBSection["Database"], "Не удалось получить название БД");
             settings.UserName = DBSection["UserName"];
@@ -56,6 +56,7 @@ namespace WorkoutStorageBot.Application.Configuration
             settings.WhiteListIsEnable = bool.Parse(GetRequiredValue(botSection["WhiteListIsEnable"], "Не удалось получить флаг белого списка"));
             settings.IsNeedCacheContext = bool.Parse(GetRequiredValue(botSection["IsNeedCacheContext"], "Не удалось получить флаг кэширования глобального контекста"));
             settings.IsNeedLimits = bool.Parse(GetValueOrDefault(botSection["IsNeedLimits"], "True"));
+            settings.IsSupportOnlyKnownTypes = bool.Parse(GetValueOrDefault(botSection["IsSupportOnlyKnownTypes"], "True"));
 
             IEnumerable<string> ownersChatIDs = GetChildrenCollection(botSection, "OwnersChatIDs");
 

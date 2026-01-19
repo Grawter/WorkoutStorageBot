@@ -63,7 +63,9 @@ namespace WorkoutStorageBot.Core.BotTools.Listener
 
             ReceiverOptions receiverOptions = new ReceiverOptions()
             {
-                AllowedUpdates = Array.Empty<UpdateType>(), // receive all update types except ChatMember related updates
+                AllowedUpdates = configurationData.Bot.IsSupportOnlyKnownTypes 
+                    ? [UpdateType.Message, UpdateType.CallbackQuery]
+                    : Array.Empty<UpdateType>(), // receive all update types except ChatMember related updates
                 DropPendingUpdates = true,
             };
 

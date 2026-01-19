@@ -36,6 +36,7 @@
         public IEnumerable<string> OwnersChatIDs { get; set; } = [];
         public bool IsNeedCacheContext { get; set; }
         public bool IsNeedLimits { get; set; }
+        public bool IsSupportOnlyKnownTypes { get; set; }
     }
 
     public class NotificationsSettings
