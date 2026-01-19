@@ -1,6 +1,5 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
@@ -33,7 +32,7 @@ namespace WorkoutStorageBot.Core.Sender
                 case MessageInformationSet MISet:
                     await botClient.SendMessage(chatId: chatId,
                                                 text: resultText,
-                                                parseMode: ParseMode.Html,
+                                                parseMode: messageInformationSetting.ParseMode,
                                                 replyMarkup: buttons);
                     break;
 
@@ -41,7 +40,7 @@ namespace WorkoutStorageBot.Core.Sender
                     await botClient.SendDocument(chatId: chatId,
                                                  document: InputFile.FromStream(stream: FISet.Stream, fileName: FISet.FileName),
                                                  caption: resultText,
-                                                 parseMode: ParseMode.Html,
+                                                 parseMode: messageInformationSetting.ParseMode,
                                                  replyMarkup: buttons);
 
                     FISet.Stream.Dispose();
