@@ -11,6 +11,7 @@ namespace WorkoutStorageBot.BusinessLogic.InformationSetForSend
             Stream = stream;
             FileName = fileName;
             Message = message.ThrowIfNullOrWhiteSpace();
+            ParseMode = parseMode;
         }
 
         internal FileInformationSet(Stream stream, string fileName, string message, (ButtonsSet buttonsSet, ButtonsSet backButtonsSet) buttonsSets, ParseMode parseMode = ParseMode.Html) 

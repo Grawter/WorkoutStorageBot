@@ -51,26 +51,26 @@ namespace WorkoutStorageBot.Core.Sender
             }
         }
 
-        public async Task SendSimpleMassiveResponse(IEnumerable<string> chatIDs, string message)
+        public async Task SendSimpleMassiveNotification(IEnumerable<string> chatIDs, string message)
         {
             foreach (string ownerChatId in chatIDs)
             {
-                await SimpleNotification(ownerChatId, message);
+                await SendSimpleNotification(ownerChatId, message);
             }
         }
 
-        public async Task SendSimpleMassiveResponse(long[] chatIDs, string message)
+        public async Task SendSimpleMassiveNotification(IEnumerable<long> chatIDs, string message)
         {
             foreach (long ownerChatId in chatIDs)
             {
-                await SimpleNotification(ownerChatId, message);
+                await SendSimpleNotification(ownerChatId, message);
             }
         }
 
-        public async Task SimpleNotification(string chatID, string message)
+        public async Task SendSimpleNotification(string chatID, string message)
            => await botClient.SendMessage(chatID, message);
 
-        public async Task SimpleNotification(long chatID, string message)
+        public async Task SendSimpleNotification(long chatID, string message)
             => await botClient.SendMessage(chatID, message);
 
         private string GetResultText(string originalText, bool allVerticalButtonsDisplayed, bool allHorizontalButtonsDisplayed)

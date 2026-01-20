@@ -130,7 +130,7 @@ namespace WorkoutStorageBot.Core.Manager
                 exMessage = $"{exMessage.Substring(0, LogFormatter.MaxCharactersCount)}...";
 
             if (ConfigurationData.Notifications.NotifyOwnersAboutRuntimeErrors)
-                await BotResponseSender.SendSimpleMassiveResponse(ConfigurationData.Bot.OwnersChatIDs, @$"Ошибка во время исполнения. EventID: {eventId.Id}
+                await BotResponseSender.SendSimpleMassiveNotification(ConfigurationData.Bot.OwnersChatIDs, @$"Ошибка во время исполнения. EventID: {eventId.Id}
 ======================
 {exMessage}");
         }
@@ -156,7 +156,7 @@ namespace WorkoutStorageBot.Core.Manager
                     // выглядит излишне, но пускай будет
                     // if(await IsNeedSendEventIdToUser(userId))
 
-                    await BotResponseSender.SimpleNotification(shortUpdateInfo.ChatId, $"Ошибка обработки. EventId: {eventId.Id}");
+                    await BotResponseSender.SendSimpleNotification(shortUpdateInfo.ChatId, $"Ошибка обработки. EventId: {eventId.Id}");
                 }
             }
             else

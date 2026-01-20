@@ -111,7 +111,7 @@ namespace WorkoutStorageBot.Core.BotTools.Listener
                     exMessage = $"{exMessage.Substring(0, LogFormatter.MaxCharactersCount)}...";
 
                 if (configurationData.Notifications.NotifyOwnersAboutCriticalErrors)
-                    await botSender.SendSimpleMassiveResponse(configurationData.Bot.OwnersChatIDs, @$"!!!Необработанная ошибка!!!:
+                    await botSender.SendSimpleMassiveNotification(configurationData.Bot.OwnersChatIDs, @$"!!!Необработанная ошибка!!!:
 ======================
 {exMessage}");
             }

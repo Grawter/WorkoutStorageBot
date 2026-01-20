@@ -7,14 +7,14 @@ namespace WorkoutStorageBot.Core.Sender
     {
         Task SendResponse(long chatId, IInformationSet messageInformationSetting, UserContext currentUserContext);
 
-        Task SendSimpleMassiveResponse(IEnumerable<string> chatIDs, string message);
+        Task SendSimpleMassiveNotification(IEnumerable<string> chatIDs, string message);
 
 
-        Task SendSimpleMassiveResponse(long[] chatIDs, string message);
+        Task SendSimpleMassiveNotification(IEnumerable<long> chatIDs, string message);
 
 
-        Task SimpleNotification(string chatID, string message);
+        Task SendSimpleNotification(string chatID, string message);
 
-        Task SimpleNotification(long chatID, string message);
+        Task SendSimpleNotification(long chatID, string message);
     }
 }

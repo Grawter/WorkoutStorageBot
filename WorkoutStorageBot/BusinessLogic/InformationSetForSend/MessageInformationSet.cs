@@ -9,6 +9,7 @@ namespace WorkoutStorageBot.BusinessLogic.InformationSetForSend
         internal MessageInformationSet(string message, ParseMode parseMode = ParseMode.Html)
         {
             Message = message.ThrowIfNullOrWhiteSpace();
+            ParseMode = parseMode;
         }
 
         internal MessageInformationSet(string message, (ButtonsSet buttonsSet, ButtonsSet backButtonsSet) buttonsSets, ParseMode parseMode = ParseMode.Html) : this(message, parseMode)
