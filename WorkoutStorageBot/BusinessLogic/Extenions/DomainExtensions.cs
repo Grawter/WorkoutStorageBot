@@ -34,7 +34,8 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
             ArgumentNullException.ThrowIfNull(db);
             ArgumentNullException.ThrowIfNull(DTOExercises);
 
-            var pairs = DTOExercises.Select(x => new { DTO = x, Entity = EntityConverter.ToExercise(x) });
+            var pairs = DTOExercises.Select(x => new { DTO = x, Entity = EntityConverter.ToExercise(x) })
+                                    .ToList();
 
             await db.Exercises.AddRangeAsync(pairs.Select(p => p.Entity));
 
@@ -54,7 +55,8 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
             ArgumentNullException.ThrowIfNull(db);
             ArgumentNullException.ThrowIfNull(DTOResultExercise);
 
-            var pairs = DTOResultExercise.Select(x => new { DTO = x, Entity = EntityConverter.ToResultExercise(x) });
+            var pairs = DTOResultExercise.Select(x => new { DTO = x, Entity = EntityConverter.ToResultExercise(x) })
+                                         .ToList();
 
             await db.ResultsExercises.AddRangeAsync(pairs.Select(p => p.Entity));
 
@@ -149,7 +151,7 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
                 await db.SaveChangesAsync();
         }
 
-        internal static async Task UpdateEntities(this EntityContext db, ICollection<IDTOByEntity> DTOByEntities, bool isNeedSave = true)
+        internal static async Task UpdateEntities(this EntityContext db, IEnumerable<IDTOByEntity> DTOByEntities, bool isNeedSave = true)
         {
             ArgumentNullException.ThrowIfNull(DTOByEntities);
 
@@ -175,7 +177,7 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
                 await db.SaveChangesAsync();
         }
 
-        internal static async Task RemoveEntities(this EntityContext db, ICollection<IDTOByEntity> DTOByEntities, bool isNeedSave = true)
+        internal static async Task RemoveEntities(this EntityContext db, IEnumerable<IDTOByEntity> DTOByEntities, bool isNeedSave = true)
         {
             ArgumentNullException.ThrowIfNull(DTOByEntities);
 
