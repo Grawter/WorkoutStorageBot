@@ -16,5 +16,7 @@ namespace WorkoutStorageBot.Core.Sender
         Task SendSimpleNotification(string chatID, string message);
 
         Task SendSimpleNotification(long chatID, string message);
+
+        Task AnswerCallbackQuery(string callbackQueryID);
     }
 }

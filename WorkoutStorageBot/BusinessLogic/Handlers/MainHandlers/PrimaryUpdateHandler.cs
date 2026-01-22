@@ -57,7 +57,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
                 PrimaryHandlerResult primaryHandlerResult = CreatePrimaryHandlerResult(shortUpdateInfo, userContext, isNewContext);
 
                 if (primaryHandlerResult.ShortUpdateInfo.IsExpectedType)
-                    ProcessExpectedUpdateType(primaryHandlerResult);
+                    await ProcessExpectedUpdateType(primaryHandlerResult);
                 else
                     ProcessUnexpectedUpdateType(primaryHandlerResult);
 
@@ -131,9 +131,13 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
             };
         }
 
-        private void ProcessExpectedUpdateType(PrimaryHandlerResult primaryHandledData)
+        private async Task ProcessExpectedUpdateType(PrimaryHandlerResult primaryHandledData)
         {
             LoggingExpectedUpdateType(primaryHandledData.ShortUpdateInfo.User, primaryHandledData.ShortUpdateInfo.Data, primaryHandledData.ShortUpdateInfo.UpdateType);
+
+            // Не обязательно. Чтобы не было анимации "зависание кнопки" в ТГ боте
+            if (primaryHandledData.ShortUpdateInfo.UpdateType == UpdateType.CallbackQuery)
+                await this.CoreManager.AnswerCallbackQuery(primaryHandledData.Update.CallbackQuery!.Id);
 
             if (primaryHandledData.IsNewContext)
                 SetInformationSetForNewContext(primaryHandledData);

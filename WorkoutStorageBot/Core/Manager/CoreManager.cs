@@ -185,6 +185,9 @@ namespace WorkoutStorageBot.Core.Manager
         internal async Task SendSimpleMassiveNotification(IEnumerable<long> chatId, string message)
             => await BotResponseSender.SendSimpleMassiveNotification(chatId, message);
 
+        internal async Task AnswerCallbackQuery(string callbackQueryID)
+            => await BotResponseSender.AnswerCallbackQuery(callbackQueryID);
+
         internal T GetRequiredHandler<T>() where T : CoreHandler
         {
             T? handler = GetHandler<T>();
