@@ -28,5 +28,10 @@ namespace WorkoutStorageBot.BusinessLogic.Context.Global
 
         void IContextKeeper.RemoveContext(long userID)
             => contextStore.Remove(userID, out UserContext? removedContext);
+
+        int IContextKeeper.Count => contextStore.Count;
+
+        IEnumerable<long> IContextKeeper.GetAllKeys()
+            => contextStore.Keys;
     }
 }

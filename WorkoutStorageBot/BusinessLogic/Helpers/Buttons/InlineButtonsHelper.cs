@@ -215,6 +215,10 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Buttons
                     buttonsFactory = new AdminLogsBF(CurrentUserContext);
                     break;
 
+                case ButtonsSet.AdminUsers:
+                    buttonsFactory = new AdminUsersBF(CurrentUserContext);
+                    break;
+
                 #endregion
 
                 case ButtonsSet.None:

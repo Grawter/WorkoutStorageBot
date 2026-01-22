@@ -67,6 +67,9 @@ namespace WorkoutStorageBot.BusinessLogic.Repositories
             AddLogAction($"Пользователь {user.Id} ({user.Username}-{user.UserId}) удалён");
         }
 
+        internal async Task<UserInformation?> GetUserInformationWithoutTracking(string userName)
+            => await CoreTools.Db.UsersInformation.AsNoTracking().FirstOrDefaultAsync(u => u.Username == userName);
+
         internal async Task<UserInformation?> GetUserInformationWithoutTracking(long userId)
             => await CoreTools.Db.UsersInformation.AsNoTracking().FirstOrDefaultAsync(u => u.UserId == userId);
 

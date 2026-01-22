@@ -78,10 +78,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
                 case MessageNavigationTarget.FindResultsByDate:
                     informationSet = await FindResultByDateCommand(false);
+
                     break;
 
                 case MessageNavigationTarget.FindResultsByDateInDay:
                     informationSet = await FindResultByDateCommand(true);
+
                     break;
 
                 case MessageNavigationTarget.FindLogByID:
@@ -91,6 +93,21 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
                 case MessageNavigationTarget.FindLogByEventID:
                     informationSet = await FindLogByIDCommand(isEventID: true);
+
+                    break;
+
+                case MessageNavigationTarget.SendMessageToUser:
+                    informationSet = await SendMessageToUserCommand();
+
+                    break;
+
+                case MessageNavigationTarget.SendMessagesToActiveUsers:
+                    informationSet = await MassiveSendMessagesToUsers(false);
+
+                    break;
+
+                case MessageNavigationTarget.SendMessagesToAllUsers:
+                    informationSet = await MassiveSendMessagesToUsers(true);
 
                     break;
 
@@ -580,6 +597,87 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             }
 
             informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets, ParseMode.None);
+
+            return informationSet;
+        }
+
+        private async Task<IInformationSet> SendMessageToUserCommand()
+        {
+            if (AccessDenied(out IInformationSet? informationSet))
+                return informationSet;
+
+            ResponseTextConverter responseConverter;
+            (ButtonsSet, ButtonsSet) buttonsSets;
+
+            requestConverter.RemoveCompletely(300).WithoutServiceSymbol();
+
+            string[] parameters = requestConverter.Convert().Split("-", StringSplitOptions.RemoveEmptyEntries);
+
+            bool isInvalidParameters = parameters.Length != 2 || string.IsNullOrWhiteSpace(parameters[0]) || string.IsNullOrWhiteSpace(parameters[1]);
+
+            if (isInvalidParameters)
+            {
+                responseConverter = new ResponseTextConverter("Некорректные параметры для отправки сообщения пользователю", "Пример: @TestUser-Тест",
+                    "Введите параметры повторно");
+                buttonsSets = (ButtonsSet.None, ButtonsSet.AdminUsers);
+                informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+                return informationSet;
+            }
+
+            string userIdentity = parameters[0];
+            string text = parameters[1];
+
+            UserInformation? user;
+
+            AdminRepository adminRepository = this.CommandHandlerTools.ParentHandler.CoreManager.GetRequiredRepository<AdminRepository>();
+
+            if (long.TryParse(userIdentity, out long userID))
+                user = await adminRepository.GetUserInformation(userID);
+            else
+                user = await adminRepository.GetUserInformation(userIdentity);
+
+            if (user == null)
+            {
+                responseConverter = new ResponseTextConverter($"Пользователь '{userIdentity.AddBoldAndQuotes()}' не найден!", 
+                    "Введите параметры для поиска другого пользователя");
+                buttonsSets = (ButtonsSet.None, ButtonsSet.AdminUsers);
+
+                informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+                return informationSet;
+            }
+
+            await this.CommandHandlerTools.ParentHandler.CoreManager.SimpleSendNotification(user.UserId, text);
+
+            responseConverter = new ResponseTextConverter($"Сообщение отправлено пользователю {userIdentity.AddBoldAndQuotes()}",
+                    "Выберите интересующее действие");
+            buttonsSets = (ButtonsSet.AdminUsers, ButtonsSet.Admin);
+
+            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+
+            return informationSet;
+        }
+
+        private async Task<IInformationSet> MassiveSendMessagesToUsers(bool isNeedFromDB)
+        {
+            if (AccessDenied(out IInformationSet? informationSet))
+                return informationSet;
+
+            string text = requestConverter.RemoveCompletely(300).WithoutServiceSymbol().Convert();
+
+            int counter = 0;
+            foreach (var userID in isNeedFromDB 
+                ? this.CommandHandlerTools.Db.UsersInformation.AsNoTracking().Select(x => x.UserId)
+                : this.CommandHandlerTools.ParentHandler.CoreManager.ContextKeeper.GetAllKeys())
+            {
+                await this.CommandHandlerTools.ParentHandler.CoreManager.SimpleSendNotification(userID, text);
+                ++counter;
+            }
+
+            ResponseTextConverter responseConverter = new ResponseTextConverter(@$"Сообщение отправлено {counter} пользователям",
+                "Выберите интересующее действие");
+            (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.AdminUsers, ButtonsSet.Admin);
+
+                informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
             return informationSet;
         }

@@ -1,6 +1,4 @@
-﻿
-
-namespace WorkoutStorageBot.BusinessLogic.Enums
+﻿namespace WorkoutStorageBot.BusinessLogic.Enums
 {
     internal enum ButtonsSet
     {
@@ -46,5 +44,6 @@ namespace WorkoutStorageBot.BusinessLogic.Enums
         
         Admin,
             AdminLogs,
+            AdminUsers,
     }
 }

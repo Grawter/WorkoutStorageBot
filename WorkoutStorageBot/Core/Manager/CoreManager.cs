@@ -179,6 +179,12 @@ namespace WorkoutStorageBot.Core.Manager
         private async Task SendResponse(long chatId, IInformationSet messageInformationSetting, UserContext currentUserContext)
             => await BotResponseSender.SendResponse(chatId, messageInformationSetting, currentUserContext);
 
+        internal async Task SimpleSendNotification(long chatId, string message)
+            => await BotResponseSender.SendSimpleNotification(chatId, message);
+
+        internal async Task SendSimpleMassiveNotification(IEnumerable<long> chatId, string message)
+            => await BotResponseSender.SendSimpleMassiveNotification(chatId, message);
+
         internal T GetRequiredHandler<T>() where T : CoreHandler
         {
             T? handler = GetHandler<T>();

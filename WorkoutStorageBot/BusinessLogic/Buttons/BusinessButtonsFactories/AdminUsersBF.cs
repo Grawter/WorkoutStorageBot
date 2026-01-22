@@ -1,0 +1,24 @@
+﻿using WorkoutStorageBot.BusinessLogic.Buttons.Abstraction;
+using WorkoutStorageBot.BusinessLogic.Context.Session;
+using WorkoutStorageBot.BusinessLogic.Enums;
+
+namespace WorkoutStorageBot.BusinessLogic.Buttons.BusinessButtonsFactories
+{
+    internal class AdminUsersBF : ButtonsFactory
+    {
+        public AdminUsersBF(UserContext userContext) : base(userContext)
+        {
+        }
+
+        internal override void AddBusinessButtons(Dictionary<string, string>? additionalParameters = null)
+        {
+            if (CurrentUserContext.Roles == Roles.Admin)
+            {
+                AddInlineButton("Показать кол-во активных сессий", "3|ShowCountActiveSessions");
+                AddInlineButton("Отослать сообщение пользователю", "3|SendMessageToUser");
+                AddInlineButton("Разослать сообщение по активным сессиям", "3|SendMessagesToActiveUsers");
+                AddInlineButton("Разослать сообщение всем пользователям", "3|SendMessagesToAllUsers");
+            }
+        }
+    }
+}

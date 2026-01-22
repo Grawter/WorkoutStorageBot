@@ -42,6 +42,7 @@ namespace WorkoutStorageBot.BusinessLogic.Context.StepStore
 
                 new StepInformation(QueryFrom.NoMatter, "Выберите интересующее действие", ButtonsSet.Admin, ButtonsSet.Main),
                 new StepInformation(QueryFrom.NoMatter, "Выберите интересующее действие", ButtonsSet.AdminLogs, ButtonsSet.Admin),
+                new StepInformation(QueryFrom.NoMatter, "Выберите интересующее действие", ButtonsSet.AdminUsers, ButtonsSet.Admin),
 
                 #endregion 
             };

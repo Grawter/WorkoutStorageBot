@@ -72,6 +72,26 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     informationSet = ChangeWhiteListModeCommand();
                     break;
 
+                case "AdminUsers":
+                    informationSet = AdminUsersCommand();
+                    break;
+
+                case "ShowCountActiveSessions":
+                    informationSet = ShowCountActiveSessionsCommand();
+                    break;
+
+                case "SendMessageToUser":
+                    informationSet = SendMessageToUsersCommand(1);
+                    break;
+
+                case "SendMessagesToActiveUsers":
+                    informationSet = SendMessageToUsersCommand(2);
+                    break;
+
+                case "SendMessagesToAllUsers":
+                    informationSet =  SendMessageToUsersCommand(3);
+                    break;
+
                 case "ChangeUserState":
                     informationSet = ChangeUserStateCommand();
                     break;
@@ -245,6 +265,75 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             ResponseTextConverter responseConverter = new ResponseTextConverter($"Белый список включён: {AdminRepository.WhiteListIsEnable.ToString().AddBold()}",
                 "Выберите интересующее действие");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.Admin, ButtonsSet.Main);
+
+            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+
+            return informationSet;
+        }
+
+        private IInformationSet AdminUsersCommand()
+        {
+            if (AccessDenied(out IInformationSet? informationSet))
+                return informationSet;
+
+            ResponseTextConverter responseConverter = new ResponseTextConverter("Выберите интересующее действие");
+            (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.AdminUsers, ButtonsSet.Admin);
+
+            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+
+            return informationSet;
+        }
+
+        private IInformationSet ShowCountActiveSessionsCommand()
+        {
+            if (AccessDenied(out IInformationSet? informationSet))
+                return informationSet;
+
+            int countActiveUserContext = this.CommandHandlerTools.ParentHandler.CoreManager.ContextKeeper.Count;
+
+            ResponseTextConverter responseConverter = 
+                new ResponseTextConverter(@$"[{DateTime.Now.ToString(Consts.CommonConsts.Common.DateTimeFormatHoursFirst)}]: {countActiveUserContext.ToString().AddBold()}",
+                "Выберите интересующее действие");
+            (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.AdminUsers, ButtonsSet.Admin);
+
+            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+
+            return informationSet;
+        }
+
+        private IInformationSet SendMessageToUsersCommand(int mode)
+        {
+            if (AccessDenied(out IInformationSet? informationSet))
+                return informationSet;
+
+            ResponseTextConverter responseConverter;
+
+            MessageNavigationTarget messageNavigationTarget;
+
+            switch (mode)
+            {
+                case 1:
+                    messageNavigationTarget = MessageNavigationTarget.SendMessageToUser;
+                    responseConverter = new ResponseTextConverter($"Введите [UserId/@userLogin]-[Сообщение] для отправки сообщения пользователю", "Пример: @TestUser-Тест");
+                    break;
+
+                case 2:
+                    messageNavigationTarget = MessageNavigationTarget.SendMessagesToActiveUsers;
+                    responseConverter = new ResponseTextConverter($"Введите сообщение для отправки его всем пользователям с активной сессией");
+                    break;
+
+                case 3:
+                    messageNavigationTarget = MessageNavigationTarget.SendMessagesToAllUsers;
+                    responseConverter = new ResponseTextConverter($"Введите сообщение для отправки его всем пользователям из БД");
+                    break;
+
+                default:
+                    throw new NotImplementedException($"Неожиданный тип отправки сообщения из админки: {mode}");
+            }
+
+            this.CommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(messageNavigationTarget);
+
+            (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.None, ButtonsSet.AdminUsers);
 
             informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 

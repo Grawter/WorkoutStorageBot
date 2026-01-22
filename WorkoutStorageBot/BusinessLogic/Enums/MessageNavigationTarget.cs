@@ -1,6 +1,4 @@
-﻿
-
-namespace WorkoutStorageBot.BusinessLogic.Enums
+﻿namespace WorkoutStorageBot.BusinessLogic.Enums
 {
     internal enum MessageNavigationTarget
     {
@@ -22,6 +20,9 @@ namespace WorkoutStorageBot.BusinessLogic.Enums
 
         FindLogByID,
         FindLogByEventID,
+        SendMessageToUser,
+        SendMessagesToActiveUsers,
+        SendMessagesToAllUsers,
         ChangeUserState,
         DeleteUser,
     }

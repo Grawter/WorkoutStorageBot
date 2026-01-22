@@ -11,5 +11,9 @@ namespace WorkoutStorageBot.BusinessLogic.Context.Global
         internal void AddContext(long userID, UserContext userContext);
 
         internal void RemoveContext(long userID);
+
+        internal int Count { get; }
+
+        internal IEnumerable<long> GetAllKeys();
     }
 }

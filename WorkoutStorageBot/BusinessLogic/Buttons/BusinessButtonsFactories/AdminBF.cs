@@ -20,6 +20,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.BusinessButtonsFactories
                 AddInlineButton("Сменить режим белого списка", "3|ChangeWhiteListMode");
                 AddInlineButton("Сменить white/black list у пользователя", "3|ChangeUserState");
                 AddInlineButton("Удалить пользователя", "3|RemoveUser");
+                AddInlineButton("Администрирование пользователей", "3|AdminUsers");
                 AddInlineButton("Выключить бота", "3|DisableBot");
             }
         }
