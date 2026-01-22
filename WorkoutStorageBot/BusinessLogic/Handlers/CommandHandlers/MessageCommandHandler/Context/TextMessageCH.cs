@@ -620,6 +620,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 responseConverter = new ResponseTextConverter("Некорректные параметры для отправки сообщения пользователю", "Пример: @TestUser-Тест",
                     "Введите параметры повторно");
                 buttonsSets = (ButtonsSet.None, ButtonsSet.AdminUsers);
+                
                 informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
                 return informationSet;
             }
@@ -638,7 +639,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             if (user == null)
             {
-                responseConverter = new ResponseTextConverter($"Пользователь '{userIdentity.AddBoldAndQuotes()}' не найден!", 
+                responseConverter = new ResponseTextConverter($"Пользователь {userIdentity.AddBoldAndQuotes()} не найден!", 
                     "Введите параметры для поиска другого пользователя");
                 buttonsSets = (ButtonsSet.None, ButtonsSet.AdminUsers);
 
@@ -677,19 +678,15 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 "Выберите интересующее действие");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.AdminUsers, ButtonsSet.Admin);
 
-                informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
             return informationSet;
         }
 
         private async Task<IInformationSet> ChangeUserStateCommand()
         {
-            this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
-
             if (AccessDenied(out IInformationSet? informationSet))
                 return informationSet;
-
-            AdminRepository adminRepository = this.CommandHandlerTools.ParentHandler.CoreManager.GetRequiredRepository<AdminRepository>();
 
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
@@ -701,55 +698,65 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             bool isInvalidParameters = parameters.Length != 2 || string.IsNullOrWhiteSpace(parameters[0]) || string.IsNullOrWhiteSpace(parameters[1]);
 
             if (isInvalidParameters)
-                responseConverter = new ResponseTextConverter("Некорректные параметры для изменения состояния пользователя", "Выберите интересующее действие");
-            else
             {
-                string userIdentity = parameters[0];
-                string list = parameters[1];
-
-                UserInformation? user;
-
-                if (long.TryParse(userIdentity, out long userID))
-                    user = await adminRepository.GetUserInformation(userID);
-                else
-                    user = await adminRepository.GetUserInformation(userIdentity);
-
-                if (user == null)
-                    responseConverter = new ResponseTextConverter($"Пользователь '{userIdentity.AddBoldAndQuotes()}' не найден!", "Выберите интересующее действие");
-                else
-                {
-                    UserContext? userContext = this.CommandHandlerTools.ParentHandler.CoreManager.ContextKeeper.GetContext(user.UserId);
-
-                    switch (list)
-                    {
-                        case "wl":
-
-                            if (userContext != null)
-                                userContext.UserInformation.WhiteList = !userContext.UserInformation.WhiteList;
-
-                            await adminRepository.ChangeWhiteListByUser(user);
-
-                            responseConverter = new ResponseTextConverter($"WhiteList для {user.Username.AddBoldAndQuotes()} ({user.UserId}) установлен в: {user.WhiteList.ToString().AddBold()}",
-                                "Выберите интересующее действие");
-
-                            break;
-                        case "bl":
-
-                            if (userContext != null)
-                                userContext.UserInformation.BlackList = !userContext.UserInformation.BlackList;
-
-                            await adminRepository.ChangeBlackListByUser(user);
-
-                            responseConverter = new ResponseTextConverter($"BlackList для {user.Username.AddBoldAndQuotes()} ({user.UserId}) установлен в: {user.BlackList.ToString().AddBold()}",
-                                "Выберите интересующее действие");
-                            break;
-                        default:
-                            throw new InvalidOperationException($"Неизвестный для изменения список: {list}");
-                    }
-                }
+                responseConverter = new ResponseTextConverter("Некорректные параметры для изменения состояния пользователя", "Введите параметры повторно");
+                buttonsSets = (ButtonsSet.None, ButtonsSet.AdminUsers);
+                
+                informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+                return informationSet;
             }
 
-            buttonsSets = (ButtonsSet.Admin, ButtonsSet.Main);
+            string userIdentity = parameters[0];
+            string list = parameters[1];
+
+            UserInformation? user;
+
+            AdminRepository adminRepository = this.CommandHandlerTools.ParentHandler.CoreManager.GetRequiredRepository<AdminRepository>();
+
+            if (long.TryParse(userIdentity, out long userID))
+                user = await adminRepository.GetUserInformation(userID);
+            else
+                user = await adminRepository.GetUserInformation(userIdentity);
+
+            if (user == null)
+            {
+                responseConverter = new ResponseTextConverter($"Пользователь {userIdentity.AddBoldAndQuotes()} не найден!", "Введите параметры для поиска другого пользователя");
+                buttonsSets = (ButtonsSet.None, ButtonsSet.AdminUsers);
+
+                informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+                return informationSet;
+            }
+
+            UserContext? userContext = this.CommandHandlerTools.ParentHandler.CoreManager.ContextKeeper.GetContext(user.UserId);
+
+            switch (list)
+            {
+                case "wl":
+
+                    if (userContext != null)
+                        userContext.UserInformation.WhiteList = !userContext.UserInformation.WhiteList;
+
+                    await adminRepository.ChangeWhiteListByUser(user);
+
+                    responseConverter = new ResponseTextConverter($"WhiteList для {user.Username.AddBoldAndQuotes()} ({user.UserId}) установлен в: {user.WhiteList.ToString().AddBold()}",
+                        "Выберите интересующее действие");
+
+                    break;
+                case "bl":
+
+                    if (userContext != null)
+                        userContext.UserInformation.BlackList = !userContext.UserInformation.BlackList;
+
+                    await adminRepository.ChangeBlackListByUser(user);
+
+                    responseConverter = new ResponseTextConverter($"BlackList для {user.Username.AddBoldAndQuotes()} ({user.UserId}) установлен в: {user.BlackList.ToString().AddBold()}",
+                        "Выберите интересующее действие");
+                    break;
+                default:
+                    throw new InvalidOperationException($"Неизвестный для изменения список: {list}");
+            }
+
+            buttonsSets = (ButtonsSet.AdminUsers, ButtonsSet.Admin);
             informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
             return informationSet;
@@ -757,12 +764,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
         private async Task<IInformationSet> DeleteUserCommand()
         {
-            this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
-
             if (AccessDenied(out IInformationSet? informationSet))
                 return informationSet;
-
-            AdminRepository adminRepository = this.CommandHandlerTools.ParentHandler.CoreManager.GetRequiredRepository<AdminRepository>();
 
             ResponseTextConverter responseConverter;
             (ButtonsSet, ButtonsSet) buttonsSets;
@@ -774,22 +777,28 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             UserInformation? user;
 
+            AdminRepository adminRepository = this.CommandHandlerTools.ParentHandler.CoreManager.GetRequiredRepository<AdminRepository>();
+
             if (long.TryParse(userIdentity, out long userID))
                 user = await adminRepository.GetUserInformation(userID);
             else
                 user = await adminRepository.GetUserInformation(userIdentity);
 
             if (user == null)
-                responseConverter = new ResponseTextConverter($"Пользователь '{userIdentity.AddBoldAndQuotes()}' не найден!", "Выберите интересующее действие");
-            else
             {
-                this.CommandHandlerTools.ParentHandler.CoreManager.ContextKeeper.RemoveContext(user.UserId);
+                responseConverter = new ResponseTextConverter($"Пользователь {userIdentity.AddBoldAndQuotes()} не найден!", "Введите параметры для поиска другого пользователя");
+                buttonsSets = (ButtonsSet.None, ButtonsSet.AdminUsers);
 
-                await adminRepository.DeleteAccount(user);
-                responseConverter = new ResponseTextConverter($"Пользователь {user.Username.AddBoldAndQuotes()} ({user.UserId}) был успешно удалён", "Выберите интересующее действие");
+                informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+                return informationSet;
             }
 
-            buttonsSets = (ButtonsSet.Admin, ButtonsSet.Main);
+            this.CommandHandlerTools.ParentHandler.CoreManager.ContextKeeper.RemoveContext(user.UserId);
+
+            await adminRepository.DeleteAccount(user);
+            responseConverter = new ResponseTextConverter($"Пользователь {user.Username.AddBoldAndQuotes()} ({user.UserId}) был успешно удалён", "Выберите интересующее действие");
+
+            buttonsSets = (ButtonsSet.AdminUsers, ButtonsSet.Admin);
 
             informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 
