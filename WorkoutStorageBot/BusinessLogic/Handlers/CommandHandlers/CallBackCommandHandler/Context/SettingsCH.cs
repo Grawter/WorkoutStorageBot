@@ -508,7 +508,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
                     this.CommandHandlerTools.CurrentUserContext.DataManager.SetCurrentDomain(currentExercise);
 
-                    string currentExerciseName = currentExercise.Name.AddBoldAndQuotes();
+                    string currentExerciseNameBoldAndQuotes = currentExercise.Name.AddBoldAndQuotes();
 
                     string inputFormatExerciseResult = currentExercise.Mode switch
                     {
@@ -524,14 +524,14 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                         case QueryFrom.NoMatter:
                             if (currentExercise.Mode == ExercisesMods.Timer)
                             {
-                                responseConverter = new ResponseTextConverter($"Включение таймера для упражнения {currentExerciseName.AddBoldAndQuotes()}");
+                                responseConverter = new ResponseTextConverter($"Включение таймера для упражнения {currentExerciseNameBoldAndQuotes}");
                                 buttonsSets = (ButtonsSet.EnableExerciseTimer, ButtonsSet.ExercisesListWithLastWorkoutForDay);
                             }
                             else
                             {
                                 this.CommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.AddResultForExercise);
 
-                                responseConverter = new ResponseTextConverter($"Фиксирование результатов упражнения {currentExerciseName.AddBoldAndQuotes()}",
+                                responseConverter = new ResponseTextConverter($"Фиксирование результатов упражнения {currentExerciseNameBoldAndQuotes}",
                                     inputFormatExerciseResult,
                                     $"Введите результат(ы) подхода(ов)");
                                 buttonsSets = (ButtonsSet.None, ButtonsSet.ExercisesListWithLastWorkoutForDay);
@@ -540,7 +540,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                             break;
 
                         case QueryFrom.Settings:
-                            responseConverter = new ResponseTextConverter($"Выберите интересующую настройку для упражнения {currentExerciseName.AddBoldAndQuotes()}");
+                            responseConverter = new ResponseTextConverter($"Выберите интересующую настройку для упражнения {currentExerciseNameBoldAndQuotes}");
                             buttonsSets = (ButtonsSet.SettingExercise, ButtonsSet.ExercisesList);
                             break;
                         default:

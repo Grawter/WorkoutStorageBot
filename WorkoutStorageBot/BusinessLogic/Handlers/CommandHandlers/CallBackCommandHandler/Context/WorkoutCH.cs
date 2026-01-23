@@ -48,6 +48,10 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     informationSet = StopExerciseTimerCommand();
                     break;
 
+                case "ShowExerciseTimer":
+                    informationSet = ShowExerciseTimerCommand();
+                    break;
+
                 case "ResetResultsExercise":
                     informationSet = ResetResultsExerciseCommand();
                     break;
@@ -228,6 +232,19 @@ AND date(re.DateTime) = last.MaxDate";
             ResponseTextConverter responseConverter = new ResponseTextConverter($"Результат: {timerValue.AddBold()}", 
                 "Если требуется, введите комментарий к результату или выберите интересующее действие");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.SaveResultsExercise, ButtonsSet.None);
+
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+
+            return informationSet;
+        }
+
+        private IInformationSet ShowExerciseTimerCommand()
+        {
+            string timerValue = GetTimerValue();
+
+            ResponseTextConverter responseConverter = new ResponseTextConverter($"С момента запуска таймера прошло: {timerValue.AddBold()}",
+                "Выберите интересующее действие");
+            (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.FixExerciseTimer, ButtonsSet.None);
 
             IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
 

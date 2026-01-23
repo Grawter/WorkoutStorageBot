@@ -12,6 +12,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.BusinessButtonsFactories
         internal override void AddBusinessButtons(Dictionary<string, string>? additionalParameters = null)
         {
             AddInlineButton("Остановить таймер", $"1|StopExerciseTimer");
+            AddInlineButton("Показать прошедшее время с момента запуска", $"1|ShowExerciseTimer");
         }
     }
 }
