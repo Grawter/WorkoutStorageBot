@@ -4,7 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Text.Unicode;
-using WorkoutStorageBot.BusinessLogic.Helpers.Converters;
+using WorkoutStorageBot.BusinessLogic.Extenions;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageModels.Entities.BusinessLogic;
 
@@ -64,7 +64,7 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Export
             foreach (DTOExercise userExercise in allUserExercises)
             {
                 userExercise.ResultsExercise = resultExercisesByFilterData.Where(x => x.ExerciseId == userExercise.Id)
-                                                                          .Select(y => EntityConverter.ToDTOResultExercise(y))
+                                                                          .Select(y => y.ToDTOResultExercise())
                                                                           .ToList();
             }
         }

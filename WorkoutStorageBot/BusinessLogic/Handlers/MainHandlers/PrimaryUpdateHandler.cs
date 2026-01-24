@@ -18,6 +18,7 @@ using WorkoutStorageBot.BusinessLogic.Context.StepStore;
 using WorkoutStorageBot.Core.Helpers;
 using WorkoutStorageBot.BusinessLogic.Helpers.Converters;
 using WorkoutStorageBot.BusinessLogic.Helpers.Updates;
+using WorkoutStorageBot.BusinessLogic.Extenions;
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
 {
@@ -97,7 +98,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
 
             Roles currentRoles = GetUserRoles(userInformation, AdminRepository);
 
-            DTOUserInformation DTOCurrentUser = EntityConverter.ToDTOUserInformation(userInformation);
+            DTOUserInformation DTOCurrentUser = userInformation.ToDTOUserInformation();
 
             UserContext userContext = new UserContext(DTOCurrentUser, currentRoles, CoreTools.ConfigurationData.Bot.IsNeedLimits);
 

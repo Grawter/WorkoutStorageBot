@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Enums;
-using WorkoutStorageBot.BusinessLogic.Helpers.Converters;
+using WorkoutStorageBot.BusinessLogic.Extenions;
 using WorkoutStorageBot.Model.AppContext;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.Model.Interfaces;
@@ -10,7 +10,7 @@ using WorkoutStorageModels.Interfaces;
 
 namespace WorkoutStorageBot.BusinessLogic.Extensions
 {
-    internal static class DomainExtensions
+    internal static class EntityContextExtensions
     {
         internal static async Task AddEntity(this EntityContext db, IDTOByEntity DTOByEntity, bool isNeedSave = true)
         {
@@ -34,7 +34,7 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
             ArgumentNullException.ThrowIfNull(db);
             ArgumentNullException.ThrowIfNull(DTOExercises);
 
-            var pairs = DTOExercises.Select(x => new { DTO = x, Entity = EntityConverter.ToExercise(x) })
+            var pairs = DTOExercises.Select(x => new { DTO = x, Entity = x.ToExercise() })
                                     .ToList();
 
             await db.Exercises.AddRangeAsync(pairs.Select(p => p.Entity));
@@ -55,7 +55,7 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
             ArgumentNullException.ThrowIfNull(db);
             ArgumentNullException.ThrowIfNull(DTOResultExercise);
 
-            var pairs = DTOResultExercise.Select(x => new { DTO = x, Entity = EntityConverter.ToResultExercise(x) })
+            var pairs = DTOResultExercise.Select(x => new { DTO = x, Entity = x.ToResultExercise() })
                                          .ToList();
 
             await db.ResultsExercises.AddRangeAsync(pairs.Select(p => p.Entity));
@@ -231,13 +231,13 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
             return DTOByEntity switch
             {
                 DTOCycle DTOCycle
-                    => EntityConverter.ToCycle(DTOCycle),
+                    => DTOCycle.ToCycle(),
                 DTODay DTODay
-                    => EntityConverter.ToDay(DTODay),
+                    => DTODay.ToDay(),
                 DTOExercise DTOExercise
-                    => EntityConverter.ToExercise(DTOExercise),
+                    => DTOExercise.ToExercise(),
                 DTOResultExercise DTOResultExercise
-                    => EntityConverter.ToResultExercise(DTOResultExercise),
+                    => DTOResultExercise.ToResultExercise(),
                 _ => throw new NotSupportedException($"Неподдерживаемый тип IDTOByEntity: {DTOByEntity.GetType().Name}")
             };
         }

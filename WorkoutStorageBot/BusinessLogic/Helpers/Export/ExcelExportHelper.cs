@@ -3,7 +3,7 @@ using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using System.Drawing;
 using WorkoutStorageBot.BusinessLogic.Consts;
-using WorkoutStorageBot.BusinessLogic.Helpers.Converters;
+using WorkoutStorageBot.BusinessLogic.Extenions;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageModels.Entities.BusinessLogic;
 
@@ -68,7 +68,7 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Export
                             DateTime tempDate = DateTime.MinValue;
 
                             exercise.ResultsExercise = resultExercisesByFilterData.Where(x => x.ExerciseId == exercise.Id)
-                                                                                  .Select(y => EntityConverter.ToDTOResultExercise(y))
+                                                                                  .Select(y => y.ToDTOResultExercise())
                                                                                   .ToList();
 
                             foreach (DTOResultExercise resultExercise in exercise.ResultsExercise)

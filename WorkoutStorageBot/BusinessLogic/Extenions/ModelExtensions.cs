@@ -1,11 +1,11 @@
 ﻿using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageModels.Entities.BusinessLogic;
 
-namespace WorkoutStorageBot.BusinessLogic.Helpers.Converters
+namespace WorkoutStorageBot.BusinessLogic.Extenions
 {
-    internal static class EntityConverter
+    internal static class ModelExtensions
     {
-        internal static DTOUserInformation ToDTOUserInformation(UserInformation userInformation)
+        internal static DTOUserInformation ToDTOUserInformation(this UserInformation userInformation)
         {
             ArgumentNullException.ThrowIfNull(userInformation);
 
@@ -20,23 +20,23 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Converters
             };
 
             newDTOUserInformation.Cycles = userInformation.Cycles.Count > 0
-                ? userInformation.Cycles.Select(x => ToDTOCycle(x, newDTOUserInformation)).ToList()
+                ? userInformation.Cycles.Select(x => x.ToDTOCycle(newDTOUserInformation)).ToList()
                 : new List<DTOCycle>();
 
             return newDTOUserInformation;
         }
 
-        internal static DTOCycle ToDTOCycle(Cycle cycle, DTOUserInformation userInformation)
+        internal static DTOCycle ToDTOCycle(this Cycle cycle, DTOUserInformation userInformation)
         {
             ArgumentNullException.ThrowIfNull(userInformation);
 
-            DTOCycle newDTOCycle = ToDTOCycle(cycle);
+            DTOCycle newDTOCycle = cycle.ToDTOCycle();
             newDTOCycle.UserInformation = userInformation;
 
             return newDTOCycle;
         }
 
-        internal static DTOCycle ToDTOCycle(Cycle cycle)
+        internal static DTOCycle ToDTOCycle(this Cycle cycle)
         {
             ArgumentNullException.ThrowIfNull(cycle);
 
@@ -50,23 +50,23 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Converters
             };
 
             newDTOCycle.Days = cycle.Days.Count > 0
-                ? cycle.Days.Select(x => ToDTODay(x, newDTOCycle)).ToList()
+                ? cycle.Days.Select(x => x.ToDTODay(newDTOCycle)).ToList()
                 : new List<DTODay>();
 
             return newDTOCycle;
         }
 
-        internal static DTODay ToDTODay(Day day, DTOCycle cycle)
+        internal static DTODay ToDTODay(this Day day, DTOCycle cycle)
         {
             ArgumentNullException.ThrowIfNull(cycle);
 
-            DTODay newDTODay = ToDTODay(day);
+            DTODay newDTODay = day.ToDTODay();
             newDTODay.Cycle = cycle;
 
             return newDTODay;
         }
 
-        internal static DTODay ToDTODay(Day day)
+        internal static DTODay ToDTODay(this Day day)
         {
             ArgumentNullException.ThrowIfNull(day);
 
@@ -79,23 +79,23 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Converters
             };
 
             newDTODay.Exercises = day.Exercises.Count > 0
-                ? day.Exercises.Select(x => ToDTOExercise(x, newDTODay)).ToList()
+                ? day.Exercises.Select(x => x.ToDTOExercise(newDTODay)).ToList()
                 : new List<DTOExercise>();
 
             return newDTODay;
         }
 
-        internal static DTOExercise ToDTOExercise(Exercise exercise, DTODay day)
+        internal static DTOExercise ToDTOExercise(this Exercise exercise, DTODay day)
         {
             ArgumentNullException.ThrowIfNull(day);
 
-            DTOExercise newDTOExercise = ToDTOExercise(exercise);
+            DTOExercise newDTOExercise = exercise.ToDTOExercise();
             newDTOExercise.Day = day;
 
             return newDTOExercise;
         }
 
-        internal static DTOExercise ToDTOExercise(Exercise exercise)
+        internal static DTOExercise ToDTOExercise(this Exercise exercise)
         {
             ArgumentNullException.ThrowIfNull(exercise);
 
@@ -109,23 +109,23 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Converters
             };
 
             newDTOExercise.ResultsExercise = exercise.ResultsExercise.Count > 0
-                ? exercise.ResultsExercise.Select(x => ToDTOResultExercise(x, newDTOExercise)).ToList()
+                ? exercise.ResultsExercise.Select(x => x.ToDTOResultExercise(newDTOExercise)).ToList()
                 : new List<DTOResultExercise>();
 
             return newDTOExercise;
         }
 
-        internal static DTOResultExercise ToDTOResultExercise(ResultExercise resultExercise, DTOExercise exercise)
+        internal static DTOResultExercise ToDTOResultExercise(this ResultExercise resultExercise, DTOExercise exercise)
         {
             ArgumentNullException.ThrowIfNull(exercise);
 
-            DTOResultExercise newDTOResultExercise = ToDTOResultExercise(resultExercise);
+            DTOResultExercise newDTOResultExercise = resultExercise.ToDTOResultExercise();
             newDTOResultExercise.Exercise = exercise;
 
             return newDTOResultExercise;
         }
 
-        internal static DTOResultExercise ToDTOResultExercise(ResultExercise resultExercise)
+        internal static DTOResultExercise ToDTOResultExercise(this ResultExercise resultExercise)
         {
             ArgumentNullException.ThrowIfNull(resultExercise);
 
@@ -140,7 +140,7 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Converters
             };
         }
 
-        internal static UserInformation ToUserInformation(DTOUserInformation userInformation)
+        internal static UserInformation ToUserInformation(this DTOUserInformation userInformation)
         {
             ArgumentNullException.ThrowIfNull(userInformation);
 
@@ -155,23 +155,23 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Converters
             };
 
             newUserInformation.Cycles = userInformation.Cycles.Count > 0
-                ? userInformation.Cycles.Select(x => ToCycle(x, newUserInformation)).ToList()
+                ? userInformation.Cycles.Select(x => x.ToCycle(newUserInformation)).ToList()
                 : new List<Cycle>();
 
             return newUserInformation;
         }
 
-        internal static Cycle ToCycle(DTOCycle cycle, UserInformation userInformation)
+        internal static Cycle ToCycle(this DTOCycle cycle, UserInformation userInformation)
         {
             ArgumentNullException.ThrowIfNull(userInformation);
 
-            Cycle newCycle = ToCycle(cycle);
+            Cycle newCycle = cycle.ToCycle();
             newCycle.UserInformation = userInformation;
 
             return newCycle;
         }
 
-        internal static Cycle ToCycle(DTOCycle cycle)
+        internal static Cycle ToCycle(this DTOCycle cycle)
         {
             ArgumentNullException.ThrowIfNull(cycle);
 
@@ -185,23 +185,23 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Converters
             };
 
             newCycle.Days = cycle.Days.Count > 0
-                ? cycle.Days.Select(x => ToDay(x, newCycle)).ToList()
+                ? cycle.Days.Select(x => x.ToDay(newCycle)).ToList()
                 : new List<Day>();
 
             return newCycle;
         }
 
-        internal static Day ToDay(DTODay day, Cycle cycle)
+        internal static Day ToDay(this DTODay day, Cycle cycle)
         {
             ArgumentNullException.ThrowIfNull(cycle);
 
-            Day newDay = ToDay(day);
+            Day newDay = day.ToDay();
             newDay.Cycle = cycle;
 
             return newDay;
         }
 
-        internal static Day ToDay(DTODay day)
+        internal static Day ToDay(this DTODay day)
         {
             ArgumentNullException.ThrowIfNull(day);
 
@@ -214,23 +214,23 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Converters
             };
 
             newDay.Exercises = day.Exercises.Count > 0
-                ? day.Exercises.Select(x => ToExercise(x, newDay)).ToList()
+                ? day.Exercises.Select(x => x.ToExercise(newDay)).ToList()
                 : new List<Exercise>();
 
             return newDay;
         }
 
-        internal static Exercise ToExercise(DTOExercise exercise, Day day)
+        internal static Exercise ToExercise(this DTOExercise exercise, Day day)
         {
             ArgumentNullException.ThrowIfNull(day);
 
-            Exercise newExercise = ToExercise(exercise);
+            Exercise newExercise = exercise.ToExercise();
             newExercise.Day = day;
 
             return newExercise;
         }
 
-        internal static Exercise ToExercise(DTOExercise exercise)
+        internal static Exercise ToExercise(this DTOExercise exercise)
         {
             ArgumentNullException.ThrowIfNull(exercise);
 
@@ -244,23 +244,23 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Converters
             };
 
             newExercise.ResultsExercise = exercise.ResultsExercise.Count > 0
-                ? exercise.ResultsExercise.Select(x => ToResultExercise(x, newExercise)).ToList()
+                ? exercise.ResultsExercise.Select(x => x.ToResultExercise(newExercise)).ToList()
                 : new List<ResultExercise>();
 
             return newExercise;
         }
 
-        internal static ResultExercise ToResultExercise(DTOResultExercise resultExercise, Exercise exercise)
+        internal static ResultExercise ToResultExercise(this DTOResultExercise resultExercise, Exercise exercise)
         {
             ArgumentNullException.ThrowIfNull(exercise);
 
-            ResultExercise newResultExercise = ToResultExercise(resultExercise);
+            ResultExercise newResultExercise = resultExercise.ToResultExercise();
             newResultExercise.Exercise = exercise;
 
             return newResultExercise;
         }
 
-        internal static ResultExercise ToResultExercise(DTOResultExercise resultExercise)
+        internal static ResultExercise ToResultExercise(this DTOResultExercise resultExercise)
         {
             ArgumentNullException.ThrowIfNull(resultExercise);
 
