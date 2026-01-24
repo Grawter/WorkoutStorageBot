@@ -18,7 +18,6 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 {
     internal class AdminCH : CallBackCH
     {
-        private ILogger Logger { get; }
         private AdminRepository AdminRepository { get; }
         private LogsRepository LogsRepository { get; }
 
@@ -26,8 +25,6 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
         {
             AdminRepository = this.CommandHandlerTools.ParentHandler.CoreManager.GetRequiredRepository<AdminRepository>();
             LogsRepository = this.CommandHandlerTools.ParentHandler.CoreManager.GetRequiredRepository<LogsRepository>();
-
-            Logger = commandHandlerTools.ParentHandler.CoreTools.LoggerFactory.CreateLogger<AdminCH>();
         }
 
         internal override async Task<IInformationSet> GetInformationSet()
@@ -242,7 +239,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             if (AccessDenied(out IInformationSet? informationSet))
                 return informationSet;
 
-            this.CommandHandlerTools.CurrentUserContext.LimitsManager.ChangeLimitsMode();
+            ILogger logger = this.CreateLogger<AdminCH>();
+
+            this.CurrentUserContext.LimitsManager.ChangeLimitsMode(logger);
 
             ResponseTextConverter responseConverter =
                 new ResponseTextConverter($"Режим использования лимитов переключён в: {this.CommandHandlerTools.CurrentUserContext.LimitsManager.IsEnableLimit.ToString().AddBold()}",
@@ -250,8 +249,6 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.Admin, ButtonsSet.Main);
 
             informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
-
-            Logger.LogWarning($"Режим использования лимитов переключён в: {this.CommandHandlerTools.CurrentUserContext.LimitsManager.IsEnableLimit.ToString()}");
 
             return informationSet;
         }

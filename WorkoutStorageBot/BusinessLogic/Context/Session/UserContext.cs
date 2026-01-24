@@ -1,4 +1,5 @@
 ﻿using WorkoutStorageBot.BusinessLogic.Enums;
+using WorkoutStorageBot.BusinessLogic.Helpers.Crypto;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 
 namespace WorkoutStorageBot.BusinessLogic.Context.Session
@@ -17,7 +18,7 @@ namespace WorkoutStorageBot.BusinessLogic.Context.Session
 
         internal LimitsManager LimitsManager { get; }
 
-        internal string? CallBackId { get; set; }
+        internal string CallBackId { get; private set; } = string.Empty;
 
         internal UserContext(DTOUserInformation userInformation, Roles currentRoles = Roles.User, bool isEnableLimit = true)
         {
@@ -34,10 +35,15 @@ namespace WorkoutStorageBot.BusinessLogic.Context.Session
             LimitsManager = new(isEnableLimit);
         }
 
-        internal void UdpateActiveCycleForce(DTOCycle cycle)
+        internal void UpdateActiveCycleForce(DTOCycle cycle)
         {
             ActiveCycle = cycle;
             ActiveCycle.IsActive = true;
+        }
+
+        internal void GenerateNewCallBackId()
+        {
+            CallBackId = CryptographyHelper.CreateRandomCallBackQueryId();
         }
     }
 }

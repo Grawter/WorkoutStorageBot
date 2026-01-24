@@ -1,4 +1,7 @@
-﻿namespace WorkoutStorageBot.BusinessLogic.Context.Session
+﻿using Microsoft.Extensions.Logging;
+using System.Collections.Concurrent;
+
+namespace WorkoutStorageBot.BusinessLogic.Context.Session
 {
     internal class LimitsManager
     {
@@ -6,10 +9,10 @@
         {
             IsEnableLimit = isNeedLimits;
 
-            timeLimits = new Dictionary<string, DateTime>();
+            timeLimits = new ConcurrentDictionary<string, DateTime>();
         }
 
-        private readonly Dictionary<string, DateTime> timeLimits;
+        private readonly ConcurrentDictionary<string, DateTime> timeLimits;
 
         internal bool IsEnableLimit { get; set; }
 
@@ -35,17 +38,16 @@
             if (!IsEnableLimit) 
                 return false;
 
-            if (timeLimits.ContainsKey(limitName))
-                timeLimits[limitName] = newLimit;
-            else
-                timeLimits.Add(limitName, newLimit);
+            timeLimits.AddOrUpdate(limitName, newLimit, (_, _) => newLimit);
 
             return true;
         }
 
-        internal void ChangeLimitsMode()
+        internal void ChangeLimitsMode(ILogger logger)
         {
             IsEnableLimit = !IsEnableLimit;
+
+            logger.LogWarning($"Режим использования лимитов переключён в: {IsEnableLimit.ToString()}");
         }
     }
 }

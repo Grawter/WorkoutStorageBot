@@ -18,12 +18,12 @@ namespace WorkoutStorageBot.BusinessLogic.Context.Global
         UserContext? IContextKeeper.GetContext(long userID)
             => contextStore.GetValueOrDefault(userID);
 
-        void IContextKeeper.AddContext(long userID, UserContext userContext)
+        void IContextKeeper.SetContext(long userID, UserContext userContext)
         {
             if (userID < 1 || userContext == null)
                 throw new InvalidOperationException($"Аномалия: Попытка добавления некорректных данных в глобальный контекст!");
 
-            contextStore.GetOrAdd(userID, userContext);
+            contextStore.AddOrUpdate(userID, userContext, (_, _) => userContext);
         }
 
         void IContextKeeper.RemoveContext(long userID)

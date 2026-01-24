@@ -101,7 +101,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
 
             UserContext userContext = new UserContext(DTOCurrentUser, currentRoles, CoreTools.ConfigurationData.Bot.IsNeedLimits);
 
-            ContextKeeper.AddContext(user.Id, userContext);
+            ContextKeeper.SetContext(user.Id, userContext);
 
             return userContext;
         }

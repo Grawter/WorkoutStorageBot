@@ -2,7 +2,6 @@
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Enums;
-using WorkoutStorageBot.BusinessLogic.Helpers.Crypto;
 using WorkoutStorageBot.Core.Extensions;
 using WorkoutStorageBot.Model.Interfaces;
 
@@ -25,7 +24,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.Abstraction
         {
             CurrentUserContext = userContext;
 
-            CurrentUserContext.CallBackId = CryptographyHelper.CreateRandomCallBackQueryId();
+            CurrentUserContext.GenerateNewCallBackId();
 
             inlineKeyboardButtonsMain = new();
         }

@@ -8,7 +8,7 @@ namespace WorkoutStorageBot.BusinessLogic.Context.Global
 
         internal UserContext? GetContext(long userID);
 
-        internal void AddContext(long userID, UserContext userContext);
+        internal void SetContext(long userID, UserContext userContext);
 
         internal void RemoveContext(long userID);
 
