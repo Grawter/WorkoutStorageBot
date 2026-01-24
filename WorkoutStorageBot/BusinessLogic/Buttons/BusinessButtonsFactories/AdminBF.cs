@@ -15,10 +15,10 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.BusinessButtonsFactories
             if (CurrentUserContext.Roles == Roles.Admin)
             {
                 AddInlineButton("Логи", "3|Logs");
+                AddInlineButton("Администрирование пользователей", "3|AdminUsers");
                 AddInlineButton("Показать стартовую настройку", "3|ShowStartConfiguration");
                 AddInlineButton("Сменить режим использования лимитов", "3|ChangeLimitsMods");
                 AddInlineButton("Сменить режим белого списка", "3|ChangeWhiteListMode");
-                AddInlineButton("Администрирование пользователей", "3|AdminUsers");
                 AddInlineButton("Выключить бота", "3|DisableBot");
             }
         }

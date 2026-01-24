@@ -29,7 +29,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
         internal override async Task<IInformationSet> GetInformationSet()
         {
-            IInformationSet informationSet;
+            if (AccessDenied(out IInformationSet? informationSet))
+                return informationSet;
 
             switch (callbackQueryParser.SubDirection)
             {
@@ -57,18 +58,6 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     informationSet = FindLogByIDCommand(isEventID: true);
                     break;
 
-                case "ShowStartConfiguration":
-                    informationSet = ShowStartConfigurationCommand();
-                    break;
-
-                case "ChangeLimitsMods":
-                    informationSet = ChangeLimitsModsCommand();
-                    break;
-
-                case "ChangeWhiteListMode":
-                    informationSet = ChangeWhiteListModeCommand();
-                    break;
-
                 case "AdminUsers":
                     informationSet = AdminUsersCommand();
                     break;
@@ -86,7 +75,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     break;
 
                 case "SendMessagesToAllUsers":
-                    informationSet =  SendMessageToUsersCommand(3);
+                    informationSet = SendMessageToUsersCommand(3);
                     break;
 
                 case "ChangeUserState":
@@ -95,6 +84,18 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
                 case "RemoveUser":
                     informationSet = RemoveUserCommand();
+                    break;
+
+                case "ShowStartConfiguration":
+                    informationSet = ShowStartConfigurationCommand();
+                    break;
+
+                case "ChangeLimitsMods":
+                    informationSet = ChangeLimitsModsCommand();
+                    break;
+
+                case "ChangeWhiteListMode":
+                    informationSet = ChangeWhiteListModeCommand();
                     break;
 
                 case "DisableBot":
@@ -112,35 +113,26 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
         private IInformationSet AdminCommand()
         {
-            if (AccessDenied(out IInformationSet? informationSet))
-                return informationSet;
-
             ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder("Выберите интересующее действие");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.Admin, ButtonsSet.Main);
 
-            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
 
         private IInformationSet LogsCommand()
         {
-            if (AccessDenied(out IInformationSet? informationSet))
-                return informationSet;
-
             ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder("Выберите интересующее действие");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.AdminLogs, ButtonsSet.Admin);
 
-            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
 
         private async Task<IInformationSet> ShowLastLogCommand()
         {
-            if (AccessDenied(out IInformationSet? informationSet))
-                return informationSet;
-
             ResponseTextBuilder responseTextBuilder;
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.AdminLogs, ButtonsSet.Admin);
 
@@ -155,16 +147,13 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                 responseTextBuilder = new ResponseTextBuilder("Последний лог:", logStr, "Выберите интересующее действие");
             }
 
-            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets, ParseMode.None);
+            IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets, ParseMode.None);
 
             return informationSet;
         }
 
         private async Task<IInformationSet> ShowLastExceptionLogsCommand()
         {
-            if (AccessDenied(out IInformationSet? informationSet))
-                return informationSet;
-
             Log? lastErrorLog = await LogsRepository.GetLogs(LogLevel.Error.ToString(), 1).FirstOrDefaultAsync();
             Log? lastCriticalLog = await LogsRepository.GetLogs(LogLevel.Critical.ToString(), 1).FirstOrDefaultAsync();
 
@@ -193,16 +182,13 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder("Последние ошибочные логи:", sb.ToString(), "Выберите интересующее действие");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.AdminLogs, ButtonsSet.Admin);
 
-            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets, ParseMode.None);
+            IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets, ParseMode.None);
 
             return informationSet;
         }
 
         private IInformationSet FindLogByIDCommand(bool isEventID)
         {
-            if (AccessDenied(out IInformationSet? informationSet))
-                return informationSet;
-
             string identifierType = isEventID
                              ? "eventId"
                              : "Id";
@@ -214,79 +200,23 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder($"Введите {identifierType} интересующего лога:");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.None, ButtonsSet.AdminLogs);
 
-            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
-
-            return informationSet;
-        }
-
-        private IInformationSet ShowStartConfigurationCommand()
-        {
-            if (AccessDenied(out IInformationSet? informationSet))
-                return informationSet;
-
-            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder(@$"Текущая настройка:
-{AdminRepository.GetSafeConfigurationData()}", "Выберите интересующее действие");
-
-            (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.Admin, ButtonsSet.Main);
-
-            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
-
-            return informationSet;
-        }
-
-        private IInformationSet ChangeLimitsModsCommand()
-        {
-            if (AccessDenied(out IInformationSet? informationSet))
-                return informationSet;
-
-            ILogger logger = this.CreateLogger<AdminCH>();
-
-            this.CurrentUserContext.LimitsManager.ChangeLimitsMode(logger);
-
-            ResponseTextBuilder responseTextBuilder =
-                new ResponseTextBuilder($"Режим использования лимитов переключён в: {this.CurrentUserContext.LimitsManager.IsEnableLimit.ToString().AddBold()}",
-                "Выберите интересующее действие");
-            (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.Admin, ButtonsSet.Main);
-
-            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
-
-            return informationSet;
-        }
-
-        private IInformationSet ChangeWhiteListModeCommand()
-        {
-            if (AccessDenied(out IInformationSet? informationSet))
-                return informationSet;
-
-            AdminRepository.ChangeWhiteListMode();
-
-            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder($"Белый список включён: {AdminRepository.WhiteListIsEnable.ToString().AddBold()}",
-                "Выберите интересующее действие");
-            (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.Admin, ButtonsSet.Main);
-
-            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
 
         private IInformationSet AdminUsersCommand()
         {
-            if (AccessDenied(out IInformationSet? informationSet))
-                return informationSet;
-
             ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder("Выберите интересующее действие");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.AdminUsers, ButtonsSet.Admin);
 
-            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
 
         private IInformationSet ShowCountActiveSessionsCommand()
         {
-            if (AccessDenied(out IInformationSet? informationSet))
-                return informationSet;
-
             int countActiveUserContext = this.ContextKeeper.Count;
 
             ResponseTextBuilder responseTextBuilder = 
@@ -294,16 +224,13 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                 "Выберите интересующее действие");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.AdminUsers, ButtonsSet.Admin);
 
-            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
 
         private IInformationSet SendMessageToUsersCommand(int mode)
         {
-            if (AccessDenied(out IInformationSet? informationSet))
-                return informationSet;
-
             ResponseTextBuilder responseTextBuilder;
 
             MessageNavigationTarget messageNavigationTarget;
@@ -333,47 +260,79 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.None, ButtonsSet.AdminUsers);
 
-            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
 
         private IInformationSet ChangeUserStateCommand()
         {
-            if (AccessDenied(out IInformationSet? informationSet))
-                return informationSet;
-
             this.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.ChangeUserState);
 
             ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder("Изменение black/white list у пользователя:", $"Введите [UserID/@TestUser] [bl/wl]");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.None, ButtonsSet.AdminUsers);
 
-            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
 
         private IInformationSet RemoveUserCommand()
         {
-            if (AccessDenied(out IInformationSet? informationSet))
-                return informationSet;
-
             this.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.DeleteUser);
 
             ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder("Удаление пользователя:", "Внимание, пользователь будет удалён без возможности восстановления!".AddBold(), $"Введите [UserID/@TestUser]");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.None, ButtonsSet.AdminUsers);
 
-            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
+
+            return informationSet;
+        }
+
+        private IInformationSet ShowStartConfigurationCommand()
+        {
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder(@$"Текущая настройка:
+{AdminRepository.GetSafeConfigurationData()}", "Выберите интересующее действие");
+
+            (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.Admin, ButtonsSet.Main);
+
+            IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
+
+            return informationSet;
+        }
+
+        private IInformationSet ChangeLimitsModsCommand()
+        {
+            ILogger logger = this.CreateLogger<AdminCH>();
+
+            this.CurrentUserContext.LimitsManager.ChangeLimitsMode(logger);
+
+            ResponseTextBuilder responseTextBuilder =
+                new ResponseTextBuilder($"Режим использования лимитов переключён в: {this.CurrentUserContext.LimitsManager.IsEnableLimit.ToString().AddBold()}",
+                "Выберите интересующее действие");
+            (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.Admin, ButtonsSet.Main);
+
+            IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
+
+            return informationSet;
+        }
+
+        private IInformationSet ChangeWhiteListModeCommand()
+        {
+            AdminRepository.ChangeWhiteListMode();
+
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder($"Белый список включён: {AdminRepository.WhiteListIsEnable.ToString().AddBold()}",
+                "Выберите интересующее действие");
+            (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.Admin, ButtonsSet.Main);
+
+            IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
 
         private IInformationSet DisableBotCommand()
         {
-            if (AccessDenied(out IInformationSet? informationSet))
-                return informationSet;
-
-            informationSet = new MessageInformationSet("Бот отключён");
+            IInformationSet informationSet = new MessageInformationSet("Бот отключён");
 
             Task.Run(() => this.CloseApp(TimeSpan.FromSeconds(2)));
 
