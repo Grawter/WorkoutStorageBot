@@ -11,7 +11,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 {
     internal class CommonCH : CallBackCH
     {
-        internal CommonCH(CommandHandlerData commandHandlerTools, CallbackQueryParser callbackQueryParser) : base(commandHandlerTools, callbackQueryParser)
+        internal CommonCH(CommandHandlerTools commandHandlerTools, CallbackQueryParser callbackQueryParser) : base(commandHandlerTools, callbackQueryParser)
         { }
 
         internal override Task<IInformationSet> GetInformationSet()
@@ -42,40 +42,40 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
             StepInformation previousStep = StepStorage.GetStep(buttonsSet);
 
-            this.CommandHandlerTools.CurrentUserContext.Navigation.SetQueryFrom(previousStep.QueryFrom);
-            this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
+            this.CurrentUserContext.Navigation.SetQueryFrom(previousStep.QueryFrom);
+            this.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
-            ResponseTextConverter responseConverter = new ResponseTextConverter(previousStep.ButtonsSet switch // optional additional information
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder(previousStep.ButtonsSet switch // optional additional information
             {
                 ButtonsSet.SettingCycle
-                    => $"{previousStep.Message} {CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}",
+                    => $"{previousStep.Message} {this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}",
                 ButtonsSet.SettingDay
-                    => $"{previousStep.Message} {CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()}",
+                    => $"{previousStep.Message} {this.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()}",
                 ButtonsSet.SettingExercise
-                    => $"{previousStep.Message} {CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().Name.AddBoldAndQuotes()}",
+                    => $"{previousStep.Message} {this.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().Name.AddBoldAndQuotes()}",
                 _ => previousStep.Message
             });
 
             (ButtonsSet, ButtonsSet) buttonsSets = (previousStep.ButtonsSet, previousStep.BackButtonsSet);
 
-            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
 
         private IInformationSet ToMainCommand()
         {
-            this.CommandHandlerTools.CurrentUserContext.DataManager.ResetAll();
+            this.CurrentUserContext.DataManager.ResetAll();
 
             StepInformation mainStep = StepStorage.GetMainStep();
 
-            this.CommandHandlerTools.CurrentUserContext.Navigation.SetQueryFrom(mainStep.QueryFrom);
-            this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
+            this.CurrentUserContext.Navigation.SetQueryFrom(mainStep.QueryFrom);
+            this.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
-            ResponseTextConverter responseConverter = new ResponseTextConverter(mainStep.Message);
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder(mainStep.Message);
             (ButtonsSet, ButtonsSet) buttonsSets = (mainStep.ButtonsSet, mainStep.BackButtonsSet);
 
-            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }

@@ -68,16 +68,29 @@ namespace WorkoutStorageBot.Core.Sender
         }
 
         public async Task SendSimpleNotification(string chatID, string message)
-           => await botClient.SendMessage(chatID, message);
+        {
+            ArgumentNullException.ThrowIfNullOrWhiteSpace(chatID);
+            ArgumentNullException.ThrowIfNullOrWhiteSpace(message);
+
+            await botClient.SendMessage(chatID, message);
+        }
 
         public async Task SendSimpleNotification(long chatID, string message)
-            => await botClient.SendMessage(chatID, message);
+        {
+            ArgumentNullException.ThrowIfNullOrWhiteSpace(message);
+
+            await botClient.SendMessage(chatID, message);
+        }
 
         /// <summary>
         /// Не обязательно. Чтобы не было анимации "зависание кнопки" в ТГ боте
         /// </summary>
         public async Task AnswerCallbackQuery(string callbackQueryID)
-            => await botClient.AnswerCallbackQuery(callbackQueryID);
+        {
+            ArgumentNullException.ThrowIfNullOrWhiteSpace(callbackQueryID);
+
+            await botClient.AnswerCallbackQuery(callbackQueryID);
+        }
 
         private string GetResultText(string originalText, bool allVerticalButtonsDisplayed, bool allHorizontalButtonsDisplayed)
         {

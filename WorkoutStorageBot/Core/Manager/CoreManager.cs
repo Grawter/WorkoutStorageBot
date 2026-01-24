@@ -215,7 +215,7 @@ namespace WorkoutStorageBot.Core.Manager
         internal T? GetRepository<T>() where T : CoreRepository
             => Repositories.OfType<T>().FirstOrDefault();
 
-        internal async Task StopManaging(TimeSpan timeSpan)
+        internal async Task CloseApp(TimeSpan timeSpan)
         {
             if (timeSpan.TotalSeconds < 2)
                 timeSpan = TimeSpan.FromSeconds(2);

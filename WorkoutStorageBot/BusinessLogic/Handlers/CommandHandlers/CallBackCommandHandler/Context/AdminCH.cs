@@ -5,9 +5,9 @@ using System.Text;
 using Telegram.Bot.Types.Enums;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.Extensions;
-using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommandHandler;
 using WorkoutStorageBot.BusinessLogic.Helpers.CallbackQueryParser;
 using WorkoutStorageBot.BusinessLogic.Helpers.Converters;
+using WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.BusinessLogic.Repositories;
 using WorkoutStorageBot.Core.Helpers;
@@ -21,10 +21,10 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
         private AdminRepository AdminRepository { get; }
         private LogsRepository LogsRepository { get; }
 
-        internal AdminCH(CommandHandlerData commandHandlerTools, CallbackQueryParser callbackQueryParser) : base(commandHandlerTools, callbackQueryParser)
+        internal AdminCH(CommandHandlerTools commandHandlerTools, CallbackQueryParser callbackQueryParser) : base(commandHandlerTools, callbackQueryParser)
         {
-            AdminRepository = this.CommandHandlerTools.ParentHandler.CoreManager.GetRequiredRepository<AdminRepository>();
-            LogsRepository = this.CommandHandlerTools.ParentHandler.CoreManager.GetRequiredRepository<LogsRepository>();
+            AdminRepository = GetRequiredRepository<AdminRepository>();
+            LogsRepository = GetRequiredRepository<LogsRepository>();
         }
 
         internal override async Task<IInformationSet> GetInformationSet()
@@ -115,10 +115,10 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             if (AccessDenied(out IInformationSet? informationSet))
                 return informationSet;
 
-            ResponseTextConverter responseConverter = new ResponseTextConverter("Выберите интересующее действие");
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder("Выберите интересующее действие");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.Admin, ButtonsSet.Main);
 
-            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
@@ -128,10 +128,10 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             if (AccessDenied(out IInformationSet? informationSet))
                 return informationSet;
 
-            ResponseTextConverter responseConverter = new ResponseTextConverter("Выберите интересующее действие");
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder("Выберите интересующее действие");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.AdminLogs, ButtonsSet.Admin);
 
-            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
@@ -141,21 +141,21 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             if (AccessDenied(out IInformationSet? informationSet))
                 return informationSet;
 
-            ResponseTextConverter responseConverter;
+            ResponseTextBuilder responseTextBuilder;
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.AdminLogs, ButtonsSet.Admin);
 
             Log? lastLog = await LogsRepository.GetLogs(1).FirstOrDefaultAsync();
 
             if (lastLog == null)
-                responseConverter = new ResponseTextConverter("Логов не найдено", "Выберите интересующее действие");
+                responseTextBuilder = new ResponseTextBuilder("Логов не найдено", "Выберите интересующее действие");
             else
             {
                 string logStr = LogFormatter.ConvertLogToStr(lastLog);
 
-                responseConverter = new ResponseTextConverter("Последний лог:", logStr, "Выберите интересующее действие");
+                responseTextBuilder = new ResponseTextBuilder("Последний лог:", logStr, "Выберите интересующее действие");
             }
 
-            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets, ParseMode.None);
+            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets, ParseMode.None);
 
             return informationSet;
         }
@@ -190,10 +190,10 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             if (sb.Length < 1)
                 sb.AppendLine("Логов не найдено");
 
-            ResponseTextConverter responseConverter = new ResponseTextConverter("Последние ошибочные логи:", sb.ToString(), "Выберите интересующее действие");
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder("Последние ошибочные логи:", sb.ToString(), "Выберите интересующее действие");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.AdminLogs, ButtonsSet.Admin);
 
-            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets, ParseMode.None);
+            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets, ParseMode.None);
 
             return informationSet;
         }
@@ -207,14 +207,14 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                              ? "eventId"
                              : "Id";
 
-            this.CommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(isEventID
-                                                                                             ? MessageNavigationTarget.FindLogByEventID
-                                                                                             : MessageNavigationTarget.FindLogByID);
+            this.CurrentUserContext.Navigation.SetMessageNavigationTarget(isEventID
+                                                                            ? MessageNavigationTarget.FindLogByEventID
+                                                                            : MessageNavigationTarget.FindLogByID);
 
-            ResponseTextConverter responseConverter = new ResponseTextConverter($"Введите {identifierType} интересующего лога:");
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder($"Введите {identifierType} интересующего лога:");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.None, ButtonsSet.AdminLogs);
 
-            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
@@ -224,12 +224,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             if (AccessDenied(out IInformationSet? informationSet))
                 return informationSet;
 
-            ResponseTextConverter responseConverter = new ResponseTextConverter(@$"Текущая настройка:
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder(@$"Текущая настройка:
 {AdminRepository.GetSafeConfigurationData()}", "Выберите интересующее действие");
 
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.Admin, ButtonsSet.Main);
 
-            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
@@ -243,12 +243,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
             this.CurrentUserContext.LimitsManager.ChangeLimitsMode(logger);
 
-            ResponseTextConverter responseConverter =
-                new ResponseTextConverter($"Режим использования лимитов переключён в: {this.CommandHandlerTools.CurrentUserContext.LimitsManager.IsEnableLimit.ToString().AddBold()}",
+            ResponseTextBuilder responseTextBuilder =
+                new ResponseTextBuilder($"Режим использования лимитов переключён в: {this.CurrentUserContext.LimitsManager.IsEnableLimit.ToString().AddBold()}",
                 "Выберите интересующее действие");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.Admin, ButtonsSet.Main);
 
-            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
@@ -260,11 +260,11 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
             AdminRepository.ChangeWhiteListMode();
 
-            ResponseTextConverter responseConverter = new ResponseTextConverter($"Белый список включён: {AdminRepository.WhiteListIsEnable.ToString().AddBold()}",
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder($"Белый список включён: {AdminRepository.WhiteListIsEnable.ToString().AddBold()}",
                 "Выберите интересующее действие");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.Admin, ButtonsSet.Main);
 
-            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
@@ -274,10 +274,10 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             if (AccessDenied(out IInformationSet? informationSet))
                 return informationSet;
 
-            ResponseTextConverter responseConverter = new ResponseTextConverter("Выберите интересующее действие");
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder("Выберите интересующее действие");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.AdminUsers, ButtonsSet.Admin);
 
-            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
@@ -287,14 +287,14 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             if (AccessDenied(out IInformationSet? informationSet))
                 return informationSet;
 
-            int countActiveUserContext = this.CommandHandlerTools.ParentHandler.CoreManager.ContextKeeper.Count;
+            int countActiveUserContext = this.ContextKeeper.Count;
 
-            ResponseTextConverter responseConverter = 
-                new ResponseTextConverter(@$"[{DateTime.Now.ToString(Consts.CommonConsts.Common.DateTimeFormatHoursFirst)}]: {countActiveUserContext.ToString().AddBold()}",
+            ResponseTextBuilder responseTextBuilder = 
+                new ResponseTextBuilder(@$"[{DateTime.Now.ToString(Consts.CommonConsts.Common.DateTimeFormatHoursFirst)}]: {countActiveUserContext.ToString().AddBold()}",
                 "Выберите интересующее действие");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.AdminUsers, ButtonsSet.Admin);
 
-            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
@@ -304,7 +304,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             if (AccessDenied(out IInformationSet? informationSet))
                 return informationSet;
 
-            ResponseTextConverter responseConverter;
+            ResponseTextBuilder responseTextBuilder;
 
             MessageNavigationTarget messageNavigationTarget;
 
@@ -312,28 +312,28 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             {
                 case 1:
                     messageNavigationTarget = MessageNavigationTarget.SendMessageToUser;
-                    responseConverter = new ResponseTextConverter($"Введите [UserId/@userLogin]-[Сообщение] для отправки сообщения пользователю", "Пример: @TestUser-Тест");
+                    responseTextBuilder = new ResponseTextBuilder($"Введите [UserId/@userLogin]-[Сообщение] для отправки сообщения пользователю", "Пример: @TestUser-Тест");
                     break;
 
                 case 2:
                     messageNavigationTarget = MessageNavigationTarget.SendMessagesToActiveUsers;
-                    responseConverter = new ResponseTextConverter($"Введите сообщение для отправки его всем пользователям с активной сессией");
+                    responseTextBuilder = new ResponseTextBuilder($"Введите сообщение для отправки его всем пользователям с активной сессией");
                     break;
 
                 case 3:
                     messageNavigationTarget = MessageNavigationTarget.SendMessagesToAllUsers;
-                    responseConverter = new ResponseTextConverter($"Введите сообщение для отправки его всем пользователям из БД");
+                    responseTextBuilder = new ResponseTextBuilder($"Введите сообщение для отправки его всем пользователям из БД");
                     break;
 
                 default:
                     throw new NotImplementedException($"Неожиданный тип отправки сообщения из админки: {mode}");
             }
 
-            this.CommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(messageNavigationTarget);
+            this.CurrentUserContext.Navigation.SetMessageNavigationTarget(messageNavigationTarget);
 
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.None, ButtonsSet.AdminUsers);
 
-            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
@@ -343,12 +343,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             if (AccessDenied(out IInformationSet? informationSet))
                 return informationSet;
 
-            this.CommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.ChangeUserState);
+            this.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.ChangeUserState);
 
-            ResponseTextConverter responseConverter = new ResponseTextConverter("Изменение black/white list у пользователя:", $"Введите [UserID/@TestUser] [bl/wl]");
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder("Изменение black/white list у пользователя:", $"Введите [UserID/@TestUser] [bl/wl]");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.None, ButtonsSet.AdminUsers);
 
-            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
@@ -358,12 +358,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             if (AccessDenied(out IInformationSet? informationSet))
                 return informationSet;
 
-            this.CommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.DeleteUser);
+            this.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.DeleteUser);
 
-            ResponseTextConverter responseConverter = new ResponseTextConverter("Удаление пользователя:", "Внимание, пользователь будет удалён без возможности восстановления!".AddBold(), $"Введите [UserID/@TestUser]");
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder("Удаление пользователя:", "Внимание, пользователь будет удалён без возможности восстановления!".AddBold(), $"Введите [UserID/@TestUser]");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.None, ButtonsSet.AdminUsers);
 
-            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
@@ -375,7 +375,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
             informationSet = new MessageInformationSet("Бот отключён");
 
-            Task.Run(() => this.CommandHandlerTools.ParentHandler.CoreManager.StopManaging(TimeSpan.FromSeconds(2)));
+            Task.Run(() => this.CloseApp(TimeSpan.FromSeconds(2)));
 
             return informationSet;
         }
@@ -384,11 +384,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
         {
             informationSet = null;
 
-            if (!this.CommandHandlerTools.CurrentUserContext.IsAdmin())
+            if (!this.CurrentUserContext.IsAdmin())
             {
-                SharedCH sharedCH = new SharedCH(this.CommandHandlerTools);
-
-                informationSet = sharedCH.GetAccessDeniedMessageInformationSet();
+                informationSet = SharedCommonLogicHelper.GetAccessDeniedMessageInformationSet();
 
                 return true;
             }

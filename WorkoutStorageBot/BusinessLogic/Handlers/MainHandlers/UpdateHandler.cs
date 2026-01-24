@@ -52,16 +52,15 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
 
         private async Task<IInformationSet> ProcessMessage(UpdateHandlerResult updateHandlerResult)
         {
-            CommandHandlerData commandHandlerData = new CommandHandlerData()
+            CommandHandlerTools commandHandlerData = new CommandHandlerTools()
             {
-                Db = CoreTools.Db,
                 ParentHandler = this,
                 CurrentUserContext = updateHandlerResult.CurrentUserContext,
             };
 
-            TextMessageConverter requestConverter = new TextMessageConverter(updateHandlerResult.ShortUpdateInfo.Data);
+            MessageTextBuilder requestTextBuilder = new MessageTextBuilder(updateHandlerResult.ShortUpdateInfo.Data);
 
-            TextMessageCH commandHandler = new TextMessageCH(commandHandlerData, requestConverter);
+            TextMessageCH commandHandler = new TextMessageCH(commandHandlerData, requestTextBuilder);
 
             return await commandHandler.GetInformationSet();
         }
@@ -72,9 +71,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
 
             if (CheckingComplianceCallBackId(updateHandlerResult.CurrentUserContext, callbackQueryParser.CallBackId, out IInformationSet? informationSet))
             {
-                CommandHandlerData commandHandlerData = new CommandHandlerData()
+                CommandHandlerTools commandHandlerData = new CommandHandlerTools()
                 {
-                    Db = CoreTools.Db,
                     ParentHandler = this,
                     CurrentUserContext = updateHandlerResult.CurrentUserContext,
                 };
@@ -87,7 +85,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
             return informationSet;
         }
 
-        private CallBackCH GetCallBackCH(CommandHandlerData commandHandlerData, CallbackQueryParser callbackQueryParser)
+        private CallBackCH GetCallBackCH(CommandHandlerTools commandHandlerData, CallbackQueryParser callbackQueryParser)
         {
             CallBackCH? commandHandler;
 
@@ -121,24 +119,24 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
                 return true;
             }
 
-            ResponseTextConverter responseConverter;
+            ResponseTextBuilder responseTextBuilder;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
             if (currentUserContext.ActiveCycle == null)
             {
-                responseConverter = new ResponseTextConverter("Начнём");
+                responseTextBuilder = new ResponseTextBuilder("Начнём");
                 buttonsSets = (ButtonsSet.AddCycle, ButtonsSet.None);
             }
             else
             {
-                responseConverter = new ResponseTextConverter("Действие не может быть выполнено, т.к. информация устарела",
+                responseTextBuilder = new ResponseTextBuilder("Действие не может быть выполнено, т.к. информация устарела",
                         "Для продолжения работы используйте действия, предложенные ниже");
                 buttonsSets = (ButtonsSet.Main, ButtonsSet.None);
 
                 currentUserContext.Navigation.ResetNavigation();
             }
 
-            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             currentUserContext.DataManager.ResetAll();
 

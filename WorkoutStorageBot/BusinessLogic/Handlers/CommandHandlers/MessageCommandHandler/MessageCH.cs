@@ -7,16 +7,16 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 {
     internal abstract class MessageCH : CommandHandler
     {
-        protected readonly TextMessageConverter requestConverter;
-        internal MessageCH(CommandHandlerData commandHandlerTools, TextMessageConverter requestConverter) : base(commandHandlerTools)
+        protected readonly MessageTextBuilder requestTextBuilder;
+        internal MessageCH(CommandHandlerTools commandHandlerTools, MessageTextBuilder requestTextBuilder) : base(commandHandlerTools)
         {
-            this.requestConverter = requestConverter;
+            this.requestTextBuilder = requestTextBuilder;
         }
 
         protected void CheckInformationSet(IInformationSet informationSet)
         {
             if (informationSet == null)
-                throw new InvalidOperationException($"Операция '{this.CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget}' вернула пустой {nameof(informationSet)}");
+                throw new InvalidOperationException($"Операция '{this.CurrentUserContext.Navigation.MessageNavigationTarget}' вернула пустой {nameof(informationSet)}");
         }
     }
 }

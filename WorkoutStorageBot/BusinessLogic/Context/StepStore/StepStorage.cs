@@ -4,11 +4,11 @@ namespace WorkoutStorageBot.BusinessLogic.Context.StepStore
 {
     internal static class StepStorage
     {
-        private static List<StepInformation> stepsInfrormation;
+        private readonly static List<StepInformation> stepsInformation;
 
         static StepStorage()
         {
-            stepsInfrormation = new() {
+            stepsInformation = new() {
 
                 #region workout area
 
@@ -50,12 +50,12 @@ namespace WorkoutStorageBot.BusinessLogic.Context.StepStore
 
         internal static StepInformation GetStep(string buttonsSet)
         {
-            return stepsInfrormation.FirstOrDefault(SI => SI.ButtonsSet.ToString() == buttonsSet) ?? GetMainStep();
+            return stepsInformation.FirstOrDefault(SI => SI.ButtonsSet.ToString() == buttonsSet) ?? GetMainStep();
         }
 
         internal static StepInformation GetMainStep()
         {
-            return stepsInfrormation.First();
+            return stepsInformation.First();
         }
     }
 }

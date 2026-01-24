@@ -8,8 +8,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
     internal abstract class CallBackCH : CommandHandler
     {
         protected readonly CallbackQueryParser callbackQueryParser;
-        internal CallBackCH(CommandHandlerData commandHandlerTools, CallbackQueryParser callbackQueryParser) 
-            : base(commandHandlerTools)
+        internal CallBackCH(CommandHandlerTools commandHandlerTools, CallbackQueryParser callbackQueryParser) : base(commandHandlerTools)
         {
             this.callbackQueryParser = callbackQueryParser;
         }

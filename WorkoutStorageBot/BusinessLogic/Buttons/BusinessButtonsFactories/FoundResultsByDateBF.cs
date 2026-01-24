@@ -16,10 +16,10 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.BusinessButtonsFactories
             {
                 string domainTypeForFind = (additionalParameters?["domainTypeForFind"]).ThrowIfNullOrWhiteSpace();
 
-                if (additionalParameters.TryGetValue("trainingDateLessThanFindedDate", out string? dateLessThanFindedDate))
+                if (additionalParameters.TryGetValue("trainingDateLessThanFinderDate", out string? dateLessThanFindedDate))
                     AddInlineButton($"Показать результаты тренировки за {dateLessThanFindedDate}", $"1|FindResultsByDate|{domainTypeForFind}|{dateLessThanFindedDate}");
 
-                if (additionalParameters.TryGetValue("trainingDateGreaterThanFindedDate", out string? dateGreaterThanFindedDate))
+                if (additionalParameters.TryGetValue("trainingDateGreaterThanFinderDate", out string? dateGreaterThanFindedDate))
                     AddInlineButton($"Показать результаты тренировки за {dateGreaterThanFindedDate}", $"1|FindResultsByDate|{domainTypeForFind}|{dateGreaterThanFindedDate}");
             }
         }

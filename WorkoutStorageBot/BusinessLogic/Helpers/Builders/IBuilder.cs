@@ -1,7 +1,7 @@
 ﻿namespace WorkoutStorageBot.BusinessLogic.Helpers.Converters
 {
-    public interface IStringConverter
+    public interface IBuilder
     {
-        string Convert();
+        string Build();
     }
 }

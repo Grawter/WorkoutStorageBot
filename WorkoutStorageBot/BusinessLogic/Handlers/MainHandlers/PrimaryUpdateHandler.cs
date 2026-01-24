@@ -221,7 +221,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
             if (hasCycle)
             {
                 StepInformation mainStep = StepStorage.GetMainStep();
-                message = new ResponseTextConverter("Информация о предыдущей сессии не была найдена", mainStep.Message).Convert();
+                message = new ResponseTextBuilder("Информация о предыдущей сессии не была найдена", mainStep.Message).Build();
                 buttonsSet = mainStep.ButtonsSet;
             }
             else

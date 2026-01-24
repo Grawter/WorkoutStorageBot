@@ -1,6 +1,5 @@
 ﻿using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Enums;
-using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommandHandler;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.Model.DTO.HandlerData;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
@@ -10,12 +9,13 @@ using WorkoutStorageBot.BusinessLogic.Helpers.CallbackQueryParser;
 using WorkoutStorageBot.BusinessLogic.Helpers.Converters;
 using WorkoutStorageBot.BusinessLogic.Extensions;
 using WorkoutStorageModels.Entities.BusinessLogic;
+using WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic;
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackCommandHandler.Context
 {
     internal class WorkoutCH : CallBackCH
     {
-        internal WorkoutCH(CommandHandlerData commandHandlerTools, CallbackQueryParser callbackQueryParser) : base(commandHandlerTools, callbackQueryParser)
+        internal WorkoutCH(CommandHandlerTools commandHandlerTools, CallbackQueryParser callbackQueryParser) : base(commandHandlerTools, callbackQueryParser)
         { }
 
         internal override async Task<IInformationSet> GetInformationSet()
@@ -71,32 +71,32 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
         private IInformationSet WorkoutCommand()
         {
-            this.CommandHandlerTools.CurrentUserContext.Navigation.ResetNavigation(); // not necessary, but just in case
+            this.CurrentUserContext.Navigation.ResetNavigation(); // not necessary, but just in case
             
-            ResponseTextConverter responseConverter = new ResponseTextConverter("Выберите тренировочный день");
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder("Выберите тренировочный день");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main);
 
-            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
 
         private async Task<IInformationSet> LastResultsCommand()
         {
-            ResponseTextConverter responseConverter;
+            ResponseTextBuilder responseTextBuilder;
             string information;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
             switch (callbackQueryParser.DomainType)
             {
                 case CommonConsts.DomainsAndEntities.Exercises:
-                    IEnumerable<int> activeDayIDs = this.CommandHandlerTools.CurrentUserContext.ActiveCycle.ThrowIfNull().Days.Where(d => !d.IsArchive)
-                                                                                                                              .Select(d => d.Id);
+                    IEnumerable<int> activeDayIDs = this.CurrentUserContext.ActiveCycle.ThrowIfNull().Days.Where(d => !d.IsArchive)
+                                                                                                          .Select(d => d.Id);
 
-                    IQueryable<int> activeExercisesIDsInActiveDays = this.CommandHandlerTools.Db.Exercises.Where(e => !e.IsArchive && activeDayIDs.Contains(e.DayId))
-                                                                                                          .Select(e => e.Id);
+                    IQueryable<int> activeExercisesIDsInActiveDays = this.Db.Exercises.Where(e => !e.IsArchive && activeDayIDs.Contains(e.DayId))
+                                                                                      .Select(e => e.Id);
 
-                    var resultLastTraining = await this.CommandHandlerTools.Db.ResultsExercises
+                    var resultLastTraining = await this.Db.ResultsExercises
                                                                 .AsNoTracking()
                                                                 .Where(re => activeExercisesIDsInActiveDays.Contains(re.ExerciseId))
                                                                 .Include(e => e.Exercise)
@@ -113,16 +113,16 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     if (resultLastTraining == null)
                         information = "Не удалось получить результаты последней тренировки";
                     else
-                        information = SharedCH.GetInformationAboutLastExercises(resultLastTraining.Date, resultLastTraining.Data);
+                        information = SharedExercisesAndResultsLogicHelper.GetInformationAboutLastExercises(resultLastTraining.Date, resultLastTraining.Data);
 
-                    responseConverter = new ResponseTextConverter("Последняя тренировка:", information, "Выберите тренировочный день");
+                    responseTextBuilder = new ResponseTextBuilder("Последняя тренировка:", information, "Выберите тренировочный день");
                     buttonsSets = (ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main);
                     break;
 
                 case CommonConsts.DomainsAndEntities.Day:
-                    IEnumerable<int> exercisesIDs = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Exercises.Where(e => !e.IsArchive)
-                                                                                                                                              .Select(d => d.Id);
-                    string dbProvider = this.CommandHandlerTools.Db.GetDBProvider();
+                    IEnumerable<int> exercisesIDs = this.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Exercises.Where(e => !e.IsArchive)
+                                                                                                                          .Select(d => d.Id);
+                    string dbProvider = this.Db.GetDBProvider();
 
                     string query;
 
@@ -143,33 +143,33 @@ AND date(re.DateTime) = last.MaxDate";
                     else
                         throw new NotImplementedException($"Операция не поддерживается для DBProvider {dbProvider}");
 
-                    IEnumerable<ResultExercise> lastResultsExercisesInCurrentDay = await this.CommandHandlerTools.Db.ResultsExercises.FromSqlRaw(query)
-                                                                                                                                     .Include(r => r.Exercise)
-                                                                                                                                     .ToListAsync();
+                    IEnumerable<ResultExercise> lastResultsExercisesInCurrentDay = await this.Db.ResultsExercises.FromSqlRaw(query)
+                                                                                                                 .Include(r => r.Exercise)
+                                                                                                                 .ToListAsync();
 
-                    information = SharedCH.GetInformationAboutLastDay(lastResultsExercisesInCurrentDay);
-                    responseConverter = new ResponseTextConverter("Последние результаты упражнений из этого дня:", information, "Выберите упражнение");
+                    information = SharedExercisesAndResultsLogicHelper.GetInformationAboutLastDay(lastResultsExercisesInCurrentDay);
+                    responseTextBuilder = new ResponseTextBuilder("Последние результаты упражнений из этого дня:", information, "Выберите упражнение");
                     buttonsSets = (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout);
                     break;
                 default:
                     throw new NotImplementedException($"Неожиданный CallbackQueryParser.DomainType: {callbackQueryParser.DomainType}");
             }
 
-            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
 
         private IInformationSet StartFindResultsByDateCommand()
         {
-            ResponseTextConverter responseConverter = new ResponseTextConverter($"Введите дату искомой тренировки", CommonConsts.Exercise.FindResultsByDateFormat);
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder($"Введите дату искомой тренировки", CommonConsts.Exercise.FindResultsByDateFormat);
             (ButtonsSet, ButtonsSet) buttonsSets;
 
             switch (callbackQueryParser.DomainType)
             {
                 case CommonConsts.DomainsAndEntities.Exercises:
 
-                    this.CommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.FindResultsByDate);
+                    this.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.FindResultsByDate);
 
                     buttonsSets = (ButtonsSet.None, ButtonsSet.DaysListWithLastWorkout); 
 
@@ -177,7 +177,7 @@ AND date(re.DateTime) = last.MaxDate";
 
                 case CommonConsts.DomainsAndEntities.Day:
 
-                    this.CommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.FindResultsByDateInDay);
+                    this.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.FindResultsByDateInDay);
 
                     buttonsSets = (ButtonsSet.None, ButtonsSet.ExercisesListWithLastWorkoutForDay);
 
@@ -187,32 +187,30 @@ AND date(re.DateTime) = last.MaxDate";
                     throw new NotImplementedException($"Неожиданный callbackQueryParser.DomainType: {callbackQueryParser.DomainType}");
             }
 
-            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
 
         private async Task<IInformationSet> FindResultsByDateCommand()
         {
-            SharedCH sharedCH = new SharedCH(this.CommandHandlerTools);
-
             string findedDate = callbackQueryParser.GetRequiredAdditionalParameter(0);
 
             bool isNeedFindByCurrentDay = callbackQueryParser.DomainType == CommonConsts.DomainsAndEntities.Exercise;
 
-            IInformationSet informationSet = await sharedCH.FindResultByDateCommand(findedDate, isNeedFindByCurrentDay);
+            IInformationSet informationSet = await SharedExercisesAndResultsLogicHelper.FindResultByDateCommand(this.Db, this.CurrentUserContext, findedDate, isNeedFindByCurrentDay);
 
             return informationSet;
         }
 
         private IInformationSet StartExerciseTimerCommand()
         {
-            this.CommandHandlerTools.CurrentUserContext.DataManager.StartExerciseTimer();
+            this.CurrentUserContext.DataManager.StartExerciseTimer();
 
-            ResponseTextConverter responseConverter = new ResponseTextConverter("Таймер запущен");
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder("Таймер запущен");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.FixExerciseTimer, ButtonsSet.None);
 
-            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
@@ -223,17 +221,17 @@ AND date(re.DateTime) = last.MaxDate";
 
             DTOResultExercise resultExercise = new DTOResultExercise() { FreeResult = timerValue, DateTime = DateTime.Now};
 
-            this.CommandHandlerTools.CurrentUserContext.DataManager.AddTempResultsExercise([resultExercise]);
+            this.CurrentUserContext.DataManager.AddTempResultsExercise([resultExercise]);
 
-            this.CommandHandlerTools.CurrentUserContext.DataManager.ResetExerciseTimer();
+            this.CurrentUserContext.DataManager.ResetExerciseTimer();
 
-            this.CommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.AddCommentForExerciseTimer);
+            this.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.AddCommentForExerciseTimer);
 
-            ResponseTextConverter responseConverter = new ResponseTextConverter($"Результат: {timerValue.AddBold()}", 
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder($"Результат: {timerValue.AddBold()}", 
                 "Если требуется, введите комментарий к результату или выберите интересующее действие");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.SaveResultsExercise, ButtonsSet.None);
 
-            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
@@ -242,47 +240,47 @@ AND date(re.DateTime) = last.MaxDate";
         {
             string timerValue = GetTimerValue();
 
-            ResponseTextConverter responseConverter = new ResponseTextConverter($"С момента запуска таймера прошло: {timerValue.AddBold()}",
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder($"С момента запуска таймера прошло: {timerValue.AddBold()}",
                 "Выберите интересующее действие");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.FixExerciseTimer, ButtonsSet.None);
 
-            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
 
         private IInformationSet ResetResultsExerciseCommand()
         {
-            this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
+            this.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
-            this.CommandHandlerTools.CurrentUserContext.DataManager.ResetTempResultsExercise();
+            this.CurrentUserContext.DataManager.ResetTempResultsExercise();
 
-            ResponseTextConverter responseConverter = new ResponseTextConverter($"Результат упражнения '{this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().Name.AddBoldAndQuotes()}' был сброшен", 
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder($"Результат упражнения '{this.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().Name.AddBoldAndQuotes()}' был сброшен", 
                 "Выберите упражнение");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout);
 
-            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
 
         private async Task<IInformationSet> SaveResultsExerciseCommand()
         {
-            foreach (DTOResultExercise tempResultsExercise in this.CommandHandlerTools.CurrentUserContext.DataManager.TempResultsExercise.ThrowIfNull())
+            foreach (DTOResultExercise tempResultsExercise in this.CurrentUserContext.DataManager.TempResultsExercise.ThrowIfNull())
             {
-                tempResultsExercise.Exercise = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise;
-                this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().ResultsExercise.Add(tempResultsExercise);
+                tempResultsExercise.Exercise = this.CurrentUserContext.DataManager.CurrentExercise;
+                this.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().ResultsExercise.Add(tempResultsExercise);
             }
-            await this.CommandHandlerTools.Db.AddEntities(this.CommandHandlerTools.CurrentUserContext.DataManager.TempResultsExercise);
+            await this.Db.AddEntities(this.CurrentUserContext.DataManager.TempResultsExercise);
 
-            this.CommandHandlerTools.CurrentUserContext.DataManager.ResetTempResultsExercise();
+            this.CurrentUserContext.DataManager.ResetTempResultsExercise();
 
-            this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
+            this.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
-            ResponseTextConverter responseConverter = new ResponseTextConverter("Введённые данные сохранены!", "Выберите упраженение");
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder("Введённые данные сохранены!", "Выберите упраженение");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout);
 
-            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
@@ -291,7 +289,7 @@ AND date(re.DateTime) = last.MaxDate";
         {
             DateTime currentTime = DateTime.Now;
 
-            TimeSpan timerResult = currentTime.Subtract(this.CommandHandlerTools.CurrentUserContext.DataManager.ExerciseTimer);
+            TimeSpan timerResult = currentTime.Subtract(this.CurrentUserContext.DataManager.ExerciseTimer);
 
             string timerResultStr = $"{timerResult.ToString(CommonConsts.Common.TimeFormatTimeSpan)}";
 

@@ -6,8 +6,8 @@ using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.Exceptions;
 using WorkoutStorageBot.BusinessLogic.Extensions;
-using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.SharedCommandHandler;
 using WorkoutStorageBot.BusinessLogic.Helpers.Converters;
+using WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.BusinessLogic.Repositories;
 using WorkoutStorageBot.Core.Extensions;
@@ -22,14 +22,14 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 {
     internal class TextMessageCH : MessageCH
     {
-        internal TextMessageCH(CommandHandlerData commandHandlerTools, TextMessageConverter requestConverter) : base(commandHandlerTools, requestConverter)
+        internal TextMessageCH(CommandHandlerTools commandHandlerTools, MessageTextBuilder requestTextBuilder) : base(commandHandlerTools, requestTextBuilder)
         { }
 
         internal override async Task<IInformationSet> GetInformationSet()
         {
             IInformationSet informationSet;
 
-            switch (CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget)
+            switch (this.CurrentUserContext.Navigation.MessageNavigationTarget)
             {
                 case MessageNavigationTarget.Default:
                     informationSet = DefaultCommand();
@@ -127,7 +127,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                     break;
 
                 default:
-                    throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.MessageNavigationTarget: {CommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget}!");
+                    throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.MessageNavigationTarget: {this.CurrentUserContext.Navigation.MessageNavigationTarget}!");
             }
 
             CheckInformationSet(informationSet);
@@ -137,162 +137,162 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
         private IInformationSet DefaultCommand()
         {
-            ResponseTextConverter responseConverter;
+            ResponseTextBuilder responseTextBuilder;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
-            switch (requestConverter.RemoveCompletely().Convert().ToLower())
+            switch (requestTextBuilder.RemoveCompletely().Build().ToLower())
             {
                 case "/start":
-                    if (this.CommandHandlerTools.CurrentUserContext.ActiveCycle != null)
+                    if (this.CurrentUserContext.ActiveCycle != null)
                     {
-                        responseConverter = new ResponseTextConverter("Выберите интересующий раздел");
+                        responseTextBuilder = new ResponseTextBuilder("Выберите интересующий раздел");
                         buttonsSets = (ButtonsSet.Main, ButtonsSet.None);
                     }
                     else
                     {
-                        this.CommandHandlerTools.CurrentUserContext.Navigation.SetQueryFrom(QueryFrom.Start);
+                        this.CurrentUserContext.Navigation.SetQueryFrom(QueryFrom.Start);
 
-                        responseConverter = new ResponseTextConverter("Начнём");
+                        responseTextBuilder = new ResponseTextBuilder("Начнём");
                         buttonsSets = (ButtonsSet.AddCycle, ButtonsSet.None);
                     }
                     break;
 
                 default:
-                    responseConverter = new ResponseTextConverter($"Неизвестная команда: {requestConverter.Convert().AddBoldAndQuotes()}", 
+                    responseTextBuilder = new ResponseTextBuilder($"Неизвестная команда: {requestTextBuilder.Build().AddBoldAndQuotes()}", 
                         $"Для получения разделов воспользуйтесь командой {"/Start".AddBoldAndQuotes()}");
                     buttonsSets = (ButtonsSet.None, ButtonsSet.None);
                     break;
             }
 
-            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
 
         private async Task<IInformationSet> AddCycleCommand()
         {
-            requestConverter.RemoveCompletely().WithoutServiceSymbol();
+            requestTextBuilder.RemoveCompletely().WithoutServiceSymbol();
 
-            string domainName = requestConverter.Convert();
+            string domainName = requestTextBuilder.Build();
 
-            ResponseTextConverter responseConverter;
+            ResponseTextBuilder responseTextBuilder;
             (ButtonsSet, ButtonsSet) buttonsSets;
             IInformationSet informationSet;
 
             if (AlreadyExistDomainWithName(domainName, DomainType.Cycle))
             {
-                responseConverter = new ResponseTextConverter("Ошибка при добавлении названия!", $"Цикл с названием {domainName.AddBoldAndQuotes()} уже существует",
+                responseTextBuilder = new ResponseTextBuilder("Ошибка при добавлении названия!", $"Цикл с названием {domainName.AddBoldAndQuotes()} уже существует",
                     "Ввведите другое название тренировочного цикла");
                 buttonsSets = (ButtonsSet.None, ButtonsSet.SettingCycles);
 
-                informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+                informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
                 return informationSet;
             }
 
-            bool hasActiveCycle = this.CommandHandlerTools.CurrentUserContext.ActiveCycle == null ? false : true;
-            DTOCycle currentCycle = this.CommandHandlerTools.CurrentUserContext.DataManager.SetCurrentCycle(requestConverter.Convert(), !hasActiveCycle, this.CommandHandlerTools.CurrentUserContext.UserInformation);
+            bool hasActiveCycle = this.CurrentUserContext.ActiveCycle == null ? false : true;
+            DTOCycle currentCycle = this.CurrentUserContext.DataManager.SetCurrentCycle(requestTextBuilder.Build(), !hasActiveCycle, this.CurrentUserContext.UserInformation);
 
             if (!hasActiveCycle)
-                this.CommandHandlerTools.CurrentUserContext.UdpateActiveCycleForce(currentCycle);
+                this.CurrentUserContext.UpdateActiveCycleForce(currentCycle);
 
-            this.CommandHandlerTools.CurrentUserContext.UserInformation.Cycles.Add(currentCycle);
-            await this.CommandHandlerTools.Db.AddEntity(currentCycle);
+            this.CurrentUserContext.UserInformation.Cycles.Add(currentCycle);
+            await this.Db.AddEntity(currentCycle);
 
-            this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull();
+            this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull();
 
-            switch (this.CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom)
+            switch (this.CurrentUserContext.Navigation.QueryFrom)
             {
                 case QueryFrom.Start:
-                    this.CommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.AddDays);
+                    this.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.AddDays);
 
-                    responseConverter = new ResponseTextConverter($"Цикл {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()} сохранён!",
-                        $"Введите название тренирочного дня для цикла {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()}");
+                    responseTextBuilder = new ResponseTextBuilder($"Цикл {this.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()} сохранён!",
+                        $"Введите название тренирочного дня для цикла {this.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()}");
                     buttonsSets = (ButtonsSet.None, ButtonsSet.None);
                     break;
 
                 case QueryFrom.Settings:
-                    this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
+                    this.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
-                    responseConverter = new ResponseTextConverter($"Цикл {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()} сохранён!",
+                    responseTextBuilder = new ResponseTextBuilder($"Цикл {this.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()} сохранён!",
                         "Выберите дальнейшие действия");
                     buttonsSets = (ButtonsSet.AddDays, ButtonsSet.SettingCycles);
 
                     break;
                 default:
-                    throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {this.CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom}");
+                    throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {this.CurrentUserContext.Navigation.QueryFrom}");
             }
 
-            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
 
         private async Task<IInformationSet> AddDaysCommand()
         {
-            requestConverter.RemoveCompletely().WithoutServiceSymbol();
+            requestTextBuilder.RemoveCompletely().WithoutServiceSymbol();
 
-            string domainName = requestConverter.Convert();
+            string domainName = requestTextBuilder.Build();
 
-            ResponseTextConverter responseConverter;
+            ResponseTextBuilder responseTextBuilder;
             (ButtonsSet, ButtonsSet) buttonsSets;
             IInformationSet informationSet;
 
-            this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull();
+            this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull();
 
             if (AlreadyExistDomainWithName(domainName, DomainType.Day))
             {
-                responseConverter = new ResponseTextConverter("Ошибка при сохранении!", $"В этом цикле уже существует день с названием {domainName.AddBoldAndQuotes()}",
-            $"Ввведите другое название дня для цикла {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()}");
+                responseTextBuilder = new ResponseTextBuilder("Ошибка при сохранении!", $"В этом цикле уже существует день с названием {domainName.AddBoldAndQuotes()}",
+            $"Ввведите другое название дня для цикла {this.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()}");
 
                 buttonsSets = GetButtonsSetIfFailedSaveNewDomainValue(ButtonsSet.SettingDays);
 
-                informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+                informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
                 return informationSet;
             }
 
-            DTODay currentDay = this.CommandHandlerTools.CurrentUserContext.DataManager.SetCurrentDay(domainName);
+            DTODay currentDay = this.CurrentUserContext.DataManager.SetCurrentDay(domainName);
 
-            this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Days.Add(currentDay);
+            this.CurrentUserContext.DataManager.CurrentCycle.Days.Add(currentDay);
 
-            await this.CommandHandlerTools.Db.AddEntity(currentDay);
+            await this.Db.AddEntity(currentDay);
 
-            switch (this.CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom)
+            switch (this.CurrentUserContext.Navigation.QueryFrom)
             {
                 case QueryFrom.Start:
-                    this.CommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.AddExercises);
+                    this.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.AddExercises);
 
-                    responseConverter = new ResponseTextConverter($"День {currentDay.Name.AddBoldAndQuotes()} сохранён!",
+                    responseTextBuilder = new ResponseTextBuilder($"День {currentDay.Name.AddBoldAndQuotes()} сохранён!",
                         $"Введите название упражения для этого дня.{Environment.NewLine}{CommonConsts.Exercise.ExamplesTypesExercise}", 
                         CommonConsts.Exercise.InputFormatExercise);
                     buttonsSets = (ButtonsSet.None, ButtonsSet.None);
                     break;
 
                 case QueryFrom.Settings:
-                    this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
+                    this.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
-                    responseConverter = new ResponseTextConverter($"День {currentDay.Name.AddBoldAndQuotes()} сохранён!");
+                    responseTextBuilder = new ResponseTextBuilder($"День {currentDay.Name.AddBoldAndQuotes()} сохранён!");
                     buttonsSets = (ButtonsSet.AddExercises, ButtonsSet.SettingDays);
 
                     break;
                 default:
-                    throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {this.CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom}");
+                    throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {this.CurrentUserContext.Navigation.QueryFrom}");
             }
 
-            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
 
         private IInformationSet AddExercisesCommand()
         {
-            ResponseTextConverter responseConverter;
+            ResponseTextBuilder responseTextBuilder;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
             Dictionary<string, string>? additionalParameters = new Dictionary<string, string>();
 
-            requestConverter.RemoveCompletely(80).WithoutServiceSymbol();
+            requestTextBuilder.RemoveCompletely(80).WithoutServiceSymbol();
 
             List<DTOExercise> exercises = new List<DTOExercise>();
 
@@ -300,7 +300,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             try
             {
-                exercises = requestConverter.GetExercises();
+                exercises = SharedExercisesAndResultsLogicHelper.GetExercisesFromText(requestTextBuilder.Build());
             }
             catch (CreateExerciseException ex)
             {
@@ -316,28 +316,28 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             if (string.IsNullOrWhiteSpace(exceptionMessage))
             {
-                if (!this.CommandHandlerTools.CurrentUserContext.DataManager.TryAddTempExercises(exercises, out string existingExerciseName))
+                if (!this.CurrentUserContext.DataManager.TryAddTempExercises(exercises, out string existingExerciseName))
                     exceptionMessage = $"В списке фиксаций уже существует упражнение с названием {existingExerciseName.AddBoldAndQuotes()}";
             }
 
-            this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull();
+            this.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull();
 
             if (string.IsNullOrWhiteSpace(exceptionMessage))
             {
-                responseConverter = new ResponseTextConverter("Упражнение(я) зафиксировано(ы)!",
-                    $"Введите след. упражнение(я) для дня {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldAndQuotes()} либо нажмите {"Сохранить".AddQuotes()} для сохранения зафиксированных упражнений");
+                responseTextBuilder = new ResponseTextBuilder("Упражнение(я) зафиксировано(ы)!",
+                    $"Введите след. упражнение(я) для дня {this.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldAndQuotes()} либо нажмите {"Сохранить".AddQuotes()} для сохранения зафиксированных упражнений");
                 buttonsSets = (ButtonsSet.SaveExercises, ButtonsSet.None);
             }
             else
             {
-                responseConverter = new ResponseTextConverter("Упражнение(я) не зафиксировано(ы)!",
+                responseTextBuilder = new ResponseTextBuilder("Упражнение(я) не зафиксировано(ы)!",
                     exceptionMessage, string.Empty);
 
-                switch (this.CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom)
+                switch (this.CurrentUserContext.Navigation.QueryFrom)
                 {
                     case QueryFrom.Start:
 
-                        responseConverter.ResetTarget(@$"Введите другое(ие) упражнение(й) для дня {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldAndQuotes()}
+                        responseTextBuilder.ResetTarget(@$"Введите другое(ие) упражнение(й) для дня {this.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldAndQuotes()}
 
 {CommonConsts.Exercise.InputFormatExercise}");
                         buttonsSets = (ButtonsSet.None, ButtonsSet.None);
@@ -346,7 +346,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
                     case QueryFrom.Settings:
 
-                        responseConverter.ResetTarget(@$"Сбросьте текущие упражнения, чтобы вернуться обратно или введите другое(ие) упражнение(й) для дня {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldAndQuotes()}
+                        responseTextBuilder.ResetTarget(@$"Сбросьте текущие упражнения, чтобы вернуться обратно или введите другое(ие) упражнение(й) для дня {this.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldAndQuotes()}
 
 {CommonConsts.Exercise.InputFormatExercise}");
                         buttonsSets = (ButtonsSet.ResetTempDomains, ButtonsSet.None);
@@ -356,32 +356,32 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                         break;
 
                     default:
-                        throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {this.CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom}");
+                        throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {this.CurrentUserContext.Navigation.QueryFrom}");
                 }
             }
 
-            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets, additionalParameters);
+            IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets, additionalParameters);
 
             return informationSet;
         }
 
         private IInformationSet AddResultForExerciseCommand()
         {
-            requestConverter.RemoveCompletely(80).WithoutServiceSymbol();
+            requestTextBuilder.RemoveCompletely(80).WithoutServiceSymbol();
 
-            DTOExercise currentExercise = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull();
+            DTOExercise currentExercise = this.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull();
 
-            ResponseTextConverter responseConverter;
+            ResponseTextBuilder responseTextBuilder;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
             try
             {
-                List<DTOResultExercise> resultsExercise = requestConverter.GetResultsExercise(currentExercise.Mode);
+                List<DTOResultExercise> resultsExercise = SharedExercisesAndResultsLogicHelper.GetResultsExerciseFromText(requestTextBuilder.Build(), currentExercise.Mode);
 
-                this.CommandHandlerTools.CurrentUserContext.DataManager.AddTempResultsExercise(resultsExercise);
+                this.CurrentUserContext.DataManager.AddTempResultsExercise(resultsExercise);
 
-                responseConverter = new ResponseTextConverter("Подход(ы) зафиксирован(ы)",
-                @$"Введите результат след. подхода для упражения {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldAndQuotes()} 
+                responseTextBuilder = new ResponseTextBuilder("Подход(ы) зафиксирован(ы)",
+                @$"Введите результат след. подхода для упражения {this.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldAndQuotes()} 
 либо нажмите {"Сохранить".AddQuotes()} для сохранения указанных подходов");
 
                 buttonsSets = (ButtonsSet.SaveResultsExercise, ButtonsSet.None);
@@ -397,82 +397,82 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                     _ => throw new NotImplementedException($"Неожиданный тип упражнения: {currentExercise.Mode.ToString()}")
                 };
 
-                responseConverter = new ResponseTextConverter(ex.Message,
+                responseTextBuilder = new ResponseTextBuilder(ex.Message,
                     inputFormatExerciseResult,
-                    $"Сбросьте текущие результаты, чтобы вернуться обратно или введите результат заново для упражения {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldAndQuotes()}");
+                    $"Сбросьте текущие результаты, чтобы вернуться обратно или введите результат заново для упражения {this.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldAndQuotes()}");
                 buttonsSets = (ButtonsSet.ResetResultsExercise, ButtonsSet.None);
             }
 
-            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
 
         private async Task<IInformationSet> AddCommentForExerciseTimerCommand()
         {
-            string comment = requestConverter.RemoveCompletely(50).WithoutServiceSymbol().Convert();
+            string comment = requestTextBuilder.RemoveCompletely(50).WithoutServiceSymbol().Build();
 
-            DTOResultExercise resultExercise = this.CommandHandlerTools.CurrentUserContext.DataManager.TempResultsExercise.ThrowIfNull().Single();
+            DTOResultExercise resultExercise = this.CurrentUserContext.DataManager.TempResultsExercise.ThrowIfNull().Single();
             resultExercise.FreeResult += $" / {comment}";
 
-            resultExercise.Exercise = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise;
-            this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().ResultsExercise.Add(resultExercise);
-            await this.CommandHandlerTools.Db.AddEntity(resultExercise);
+            resultExercise.Exercise = this.CurrentUserContext.DataManager.CurrentExercise;
+            this.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().ResultsExercise.Add(resultExercise);
+            await this.Db.AddEntity(resultExercise);
 
-            this.CommandHandlerTools.CurrentUserContext.DataManager.ResetTempResultsExercise();
+            this.CurrentUserContext.DataManager.ResetTempResultsExercise();
 
-            this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
+            this.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
-            ResponseTextConverter responseConverter = new ResponseTextConverter(resultExercise.FreeResult.AddBold(), "Введённые данные сохранены!", "Выберите упраженение");
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder(resultExercise.FreeResult.AddBold(), "Введённые данные сохранены!", "Выберите упраженение");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout);
 
-            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
 
         private async Task<IInformationSet> ChangeNameCommand(string domainType)
         {
-            requestConverter.RemoveCompletely(25).WithoutServiceSymbol();
+            requestTextBuilder.RemoveCompletely(25).WithoutServiceSymbol();
 
-            ResponseTextConverter responseConverter;
+            ResponseTextBuilder responseTextBuilder;
             (ButtonsSet, ButtonsSet) buttonsSets;
             IInformationSet informationSet;
 
-            string domainName = requestConverter.Convert();
+            string domainName = requestTextBuilder.Build();
 
             switch (domainType)
             {
                 case CommonConsts.DomainsAndEntities.Cycle:
                     if (AlreadyExistDomainWithName(domainName, DomainType.Cycle))
                     {
-                        responseConverter = new ResponseTextConverter("Ошибка при добавлении названия!", $"Цикл с названием {domainName.AddBoldAndQuotes()} уже существует",
+                        responseTextBuilder = new ResponseTextBuilder("Ошибка при добавлении названия!", $"Цикл с названием {domainName.AddBoldAndQuotes()} уже существует",
                             "Ввведите другое название тренировочного цикла");
                         buttonsSets = (ButtonsSet.None, ButtonsSet.SettingCycles);
 
-                        informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+                        informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
                         return informationSet;
                     }
 
-                    responseConverter = new ResponseTextConverter("Название цикла сохранено!");
+                    responseTextBuilder = new ResponseTextBuilder("Название цикла сохранено!");
                     buttonsSets = (ButtonsSet.SettingCycle, ButtonsSet.CycleList);
                     break;
 
                 case CommonConsts.DomainsAndEntities.Day:
                     if (AlreadyExistDomainWithName(domainName, DomainType.Day))
                     {
-                        responseConverter = new ResponseTextConverter("Ошибка при сохранении!", $"В этом цикле уже существует день с названием {domainName.AddBoldAndQuotes()}",
-                    $"Ввведите другое название дня для цикла {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}");
+                        responseTextBuilder = new ResponseTextBuilder("Ошибка при сохранении!", $"В этом цикле уже существует день с названием {domainName.AddBoldAndQuotes()}",
+                    $"Ввведите другое название дня для цикла {this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}");
 
                         buttonsSets = GetButtonsSetIfFailedSaveNewDomainValue(ButtonsSet.SettingDays);
 
-                        informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+                        informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
                         return informationSet;
                     }
 
-                    responseConverter = new ResponseTextConverter("Название дня сохранено!", "Выберите интересующую настройку для указанного дня");
+                    responseTextBuilder = new ResponseTextBuilder("Название дня сохранено!", "Выберите интересующую настройку для указанного дня");
                     buttonsSets = (ButtonsSet.SettingDay, ButtonsSet.DaysList);
                     break;
 
@@ -480,31 +480,31 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
                     if (AlreadyExistDomainWithName(domainName, DomainType.Exercise))
                     {
-                        responseConverter = new ResponseTextConverter("Ошибка при сохранении!", $"В этом дне уже существует упражнение с названием {domainName.AddBoldAndQuotes()}",
-                        $"Введите другое(ие) название(я) упражнение(ий) для дня {this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name}");
+                        responseTextBuilder = new ResponseTextBuilder("Ошибка при сохранении!", $"В этом дне уже существует упражнение с названием {domainName.AddBoldAndQuotes()}",
+                        $"Введите другое(ие) название(я) упражнение(ий) для дня {this.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name}");
 
                         buttonsSets = GetButtonsSetIfFailedSaveNewDomainValue(ButtonsSet.SettingExercises);
 
-                        informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+                        informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
                         return informationSet;
                     }
 
-                    responseConverter = new ResponseTextConverter("Название сохранено!", "Выберите интересующую настройку для указанного упражнения");
+                    responseTextBuilder = new ResponseTextBuilder("Название сохранено!", "Выберите интересующую настройку для указанного упражнения");
                     buttonsSets = (ButtonsSet.SettingExercise, ButtonsSet.ExercisesList);
                     break;
                 default:
                     throw new InvalidOperationException($"Неожиданный {nameof(domainType)} : {domainType}");
             }
 
-            IDTODomain DTODomain = this.CommandHandlerTools.CurrentUserContext.DataManager.GetRequiredCurrentDomain(domainType);
+            IDTODomain DTODomain = this.CurrentUserContext.DataManager.GetRequiredCurrentDomain(domainType);
             DTODomain.Name = domainName;
 
-            await this.CommandHandlerTools.Db.UpdateEntity(DTODomain);
+            await this.Db.UpdateEntity(DTODomain);
 
-            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
-            this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
+            this.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
             return informationSet;
         }
@@ -514,13 +514,13 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             switch (domainType)
             {
                 case DomainType.Cycle:
-                    return this.CommandHandlerTools.CurrentUserContext.UserInformation.Cycles.Any(c => c.Name == name);
+                    return this.CurrentUserContext.UserInformation.Cycles.Any(c => c.Name == name);
                 
                 case DomainType.Day:
-                    return this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Days.Any(d => d.Name == name);
+                    return this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Days.Any(d => d.Name == name);
 
                 case DomainType.Exercise:
-                    return this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Exercises.Any(e => e.Name == name);
+                    return this.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Exercises.Any(e => e.Name == name);
 
                 default:
                     throw new NotSupportedException($"Неподдерживаемый тип домена: {domainType.ToString()}");
@@ -529,7 +529,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
         private (ButtonsSet, ButtonsSet) GetButtonsSetIfFailedSaveNewDomainValue(ButtonsSet backButtonForSetting)
         {
-            switch (this.CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom)
+            switch (this.CurrentUserContext.Navigation.QueryFrom)
             {
                 case QueryFrom.Start:
                     return (ButtonsSet.None, ButtonsSet.None);
@@ -538,44 +538,42 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                     return (ButtonsSet.None, backButtonForSetting);
 
                 default:
-                    throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {this.CommandHandlerTools.CurrentUserContext.Navigation.QueryFrom}");
+                    throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {this.CurrentUserContext.Navigation.QueryFrom}");
             }
         }
 
         private async Task<IInformationSet> FindResultByDateCommand(bool isNeedFindByCurrentDay)
         {
-            SharedCH sharedCH = new SharedCH(this.CommandHandlerTools);
+            string finderDate = requestTextBuilder.RemoveCompletely(10).Build();
 
-            string findedDate = requestConverter.RemoveCompletely(10).Convert();
-
-            IInformationSet informationSet = await sharedCH.FindResultByDateCommand(findedDate, isNeedFindByCurrentDay);
+            IInformationSet informationSet = await SharedExercisesAndResultsLogicHelper.FindResultByDateCommand(this.Db, this.CurrentUserContext, finderDate, isNeedFindByCurrentDay);
 
             return informationSet;
         }
 
         private async Task<IInformationSet> FindLogByIDCommand(bool isEventID)
         {
-            this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
+            this.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
             if (AccessDenied(out IInformationSet? informationSet))
                 return informationSet;
 
-            LogsRepository logsRepository = this.CommandHandlerTools.ParentHandler.CoreManager.GetRequiredRepository<LogsRepository>();
+            LogsRepository logsRepository = this.GetRequiredRepository<LogsRepository>();
 
-            ResponseTextConverter responseConverter;
+            ResponseTextBuilder responseTextBuilder;
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.AdminLogs, ButtonsSet.Admin);
 
             string identifierType = isEventID
                              ? "eventId"
                              : "Id";
 
-            string IdStr = requestConverter.RemoveCompletely(10).WithoutServiceSymbol().Convert();
+            string IdStr = requestTextBuilder.RemoveCompletely(10).WithoutServiceSymbol().Build();
 
             if (!int.TryParse(IdStr, out int Id))
             {
-                responseConverter = new ResponseTextConverter($"Передан некорректный {identifierType}: {IdStr.AddBoldAndQuotes()}", "Выберите интересующее действие");
+                responseTextBuilder = new ResponseTextBuilder($"Передан некорректный {identifierType}: {IdStr.AddBoldAndQuotes()}", "Выберите интересующее действие");
 
-                informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+                informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
                 return informationSet;
             }
@@ -588,15 +586,15 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 log = await logsRepository.GetLogById(Id, 1);
 
             if (log == null)
-                responseConverter = new ResponseTextConverter($"Не удалось найти лог с {identifierType}: {Id.ToString().AddBoldAndQuotes()}", "Выберите интересующее действие");
+                responseTextBuilder = new ResponseTextBuilder($"Не удалось найти лог с {identifierType}: {Id.ToString().AddBoldAndQuotes()}", "Выберите интересующее действие");
             else
             {
                 string logStr = LogFormatter.ConvertLogToStr(log);
 
-                responseConverter = new ResponseTextConverter("Найденный лог:", logStr, "Выберите интересующее действие");
+                responseTextBuilder = new ResponseTextBuilder("Найденный лог:", logStr, "Выберите интересующее действие");
             }
 
-            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets, ParseMode.None);
+            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets, ParseMode.None);
 
             return informationSet;
         }
@@ -606,22 +604,22 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             if (AccessDenied(out IInformationSet? informationSet))
                 return informationSet;
 
-            ResponseTextConverter responseConverter;
+            ResponseTextBuilder responseTextBuilder;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
-            requestConverter.RemoveCompletely(300).WithoutServiceSymbol();
+            requestTextBuilder.RemoveCompletely(300).WithoutServiceSymbol();
 
-            string[] parameters = requestConverter.Convert().Split("-", StringSplitOptions.RemoveEmptyEntries);
+            string[] parameters = requestTextBuilder.Build().Split("-", StringSplitOptions.RemoveEmptyEntries);
 
             bool isInvalidParameters = parameters.Length != 2 || string.IsNullOrWhiteSpace(parameters[0]) || string.IsNullOrWhiteSpace(parameters[1]);
 
             if (isInvalidParameters)
             {
-                responseConverter = new ResponseTextConverter("Некорректные параметры для отправки сообщения пользователю", "Пример: @TestUser-Тест",
+                responseTextBuilder = new ResponseTextBuilder("Некорректные параметры для отправки сообщения пользователю", "Пример: @TestUser-Тест",
                     "Введите параметры повторно");
                 buttonsSets = (ButtonsSet.None, ButtonsSet.AdminUsers);
                 
-                informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+                informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
                 return informationSet;
             }
 
@@ -630,7 +628,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             UserInformation? user;
 
-            AdminRepository adminRepository = this.CommandHandlerTools.ParentHandler.CoreManager.GetRequiredRepository<AdminRepository>();
+            AdminRepository adminRepository = this.GetRequiredRepository<AdminRepository>();
 
             if (long.TryParse(userIdentity, out long userID))
                 user = await adminRepository.GetUserInformation(userID);
@@ -639,21 +637,21 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             if (user == null)
             {
-                responseConverter = new ResponseTextConverter($"Пользователь {userIdentity.AddBoldAndQuotes()} не найден!", 
+                responseTextBuilder = new ResponseTextBuilder($"Пользователь {userIdentity.AddBoldAndQuotes()} не найден!", 
                     "Введите параметры для поиска другого пользователя");
                 buttonsSets = (ButtonsSet.None, ButtonsSet.AdminUsers);
 
-                informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+                informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
                 return informationSet;
             }
 
-            await this.CommandHandlerTools.ParentHandler.CoreManager.SimpleSendNotification(user.UserId, text);
+            await this.SimpleSendNotification(user.UserId, text);
 
-            responseConverter = new ResponseTextConverter($"Сообщение отправлено пользователю {userIdentity.AddBoldAndQuotes()}",
+            responseTextBuilder = new ResponseTextBuilder($"Сообщение отправлено пользователю {userIdentity.AddBoldAndQuotes()}",
                     "Выберите интересующее действие");
             buttonsSets = (ButtonsSet.AdminUsers, ButtonsSet.Admin);
 
-            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
@@ -663,22 +661,22 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             if (AccessDenied(out IInformationSet? informationSet))
                 return informationSet;
 
-            string text = requestConverter.RemoveCompletely(300).WithoutServiceSymbol().Convert();
+            string text = requestTextBuilder.RemoveCompletely(300).WithoutServiceSymbol().Build();
 
             int counter = 0;
             foreach (var userID in isNeedFromDB 
-                ? this.CommandHandlerTools.Db.UsersInformation.AsNoTracking().Select(x => x.UserId)
-                : this.CommandHandlerTools.ParentHandler.CoreManager.ContextKeeper.GetAllKeys())
+                ? this.Db.UsersInformation.AsNoTracking().Select(x => x.UserId)
+                : this.ContextKeeper.GetAllKeys())
             {
-                await this.CommandHandlerTools.ParentHandler.CoreManager.SimpleSendNotification(userID, text);
+                await this.SimpleSendNotification(userID, text);
                 ++counter;
             }
 
-            ResponseTextConverter responseConverter = new ResponseTextConverter(@$"Сообщение отправлено {counter} пользователям",
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder(@$"Сообщение отправлено {counter} пользователям",
                 "Выберите интересующее действие");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.AdminUsers, ButtonsSet.Admin);
 
-            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
@@ -688,21 +686,21 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             if (AccessDenied(out IInformationSet? informationSet))
                 return informationSet;
 
-            ResponseTextConverter responseConverter;
+            ResponseTextBuilder responseTextBuilder;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
-            requestConverter.RemoveCompletely(35).WithoutServiceSymbol();
+            requestTextBuilder.RemoveCompletely(35).WithoutServiceSymbol();
 
-            string[] parameters = requestConverter.Convert().Split(" ", StringSplitOptions.RemoveEmptyEntries);
+            string[] parameters = requestTextBuilder.Build().Split(" ", StringSplitOptions.RemoveEmptyEntries);
 
             bool isInvalidParameters = parameters.Length != 2 || string.IsNullOrWhiteSpace(parameters[0]) || string.IsNullOrWhiteSpace(parameters[1]);
 
             if (isInvalidParameters)
             {
-                responseConverter = new ResponseTextConverter("Некорректные параметры для изменения состояния пользователя", "Введите параметры повторно");
+                responseTextBuilder = new ResponseTextBuilder("Некорректные параметры для изменения состояния пользователя", "Введите параметры повторно");
                 buttonsSets = (ButtonsSet.None, ButtonsSet.AdminUsers);
                 
-                informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+                informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
                 return informationSet;
             }
 
@@ -711,7 +709,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             UserInformation? user;
 
-            AdminRepository adminRepository = this.CommandHandlerTools.ParentHandler.CoreManager.GetRequiredRepository<AdminRepository>();
+            AdminRepository adminRepository = this.GetRequiredRepository<AdminRepository>();
 
             if (long.TryParse(userIdentity, out long userID))
                 user = await adminRepository.GetUserInformation(userID);
@@ -720,14 +718,14 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             if (user == null)
             {
-                responseConverter = new ResponseTextConverter($"Пользователь {userIdentity.AddBoldAndQuotes()} не найден!", "Введите параметры для поиска другого пользователя");
+                responseTextBuilder = new ResponseTextBuilder($"Пользователь {userIdentity.AddBoldAndQuotes()} не найден!", "Введите параметры для поиска другого пользователя");
                 buttonsSets = (ButtonsSet.None, ButtonsSet.AdminUsers);
 
-                informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+                informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
                 return informationSet;
             }
 
-            UserContext? userContext = this.CommandHandlerTools.ParentHandler.CoreManager.ContextKeeper.GetContext(user.UserId);
+            UserContext? userContext = this.ContextKeeper.GetContext(user.UserId);
 
             switch (list)
             {
@@ -738,7 +736,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
                     await adminRepository.ChangeWhiteListByUser(user);
 
-                    responseConverter = new ResponseTextConverter($"WhiteList для {user.Username.AddBoldAndQuotes()} ({user.UserId}) установлен в: {user.WhiteList.ToString().AddBold()}",
+                    responseTextBuilder = new ResponseTextBuilder($"WhiteList для {user.Username.AddBoldAndQuotes()} ({user.UserId}) установлен в: {user.WhiteList.ToString().AddBold()}",
                         "Выберите интересующее действие");
 
                     break;
@@ -749,7 +747,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
                     await adminRepository.ChangeBlackListByUser(user);
 
-                    responseConverter = new ResponseTextConverter($"BlackList для {user.Username.AddBoldAndQuotes()} ({user.UserId}) установлен в: {user.BlackList.ToString().AddBold()}",
+                    responseTextBuilder = new ResponseTextBuilder($"BlackList для {user.Username.AddBoldAndQuotes()} ({user.UserId}) установлен в: {user.BlackList.ToString().AddBold()}",
                         "Выберите интересующее действие");
                     break;
                 default:
@@ -757,7 +755,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             }
 
             buttonsSets = (ButtonsSet.AdminUsers, ButtonsSet.Admin);
-            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
@@ -767,17 +765,17 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             if (AccessDenied(out IInformationSet? informationSet))
                 return informationSet;
 
-            ResponseTextConverter responseConverter;
+            ResponseTextBuilder responseTextBuilder;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
-            string userIdentity = requestConverter.RemoveCompletely(35).WithoutServiceSymbol().Convert();
+            string userIdentity = requestTextBuilder.RemoveCompletely(35).WithoutServiceSymbol().Build();
 
             if (string.IsNullOrWhiteSpace(userIdentity))
                 throw new NotImplementedException("Некорректные параметры для изменения состояния пользователя");
 
             UserInformation? user;
 
-            AdminRepository adminRepository = this.CommandHandlerTools.ParentHandler.CoreManager.GetRequiredRepository<AdminRepository>();
+            AdminRepository adminRepository = this.GetRequiredRepository<AdminRepository>();
 
             if (long.TryParse(userIdentity, out long userID))
                 user = await adminRepository.GetUserInformation(userID);
@@ -786,44 +784,44 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             if (user == null)
             {
-                responseConverter = new ResponseTextConverter($"Пользователь {userIdentity.AddBoldAndQuotes()} не найден!", "Введите параметры для поиска другого пользователя");
+                responseTextBuilder = new ResponseTextBuilder($"Пользователь {userIdentity.AddBoldAndQuotes()} не найден!", "Введите параметры для поиска другого пользователя");
                 buttonsSets = (ButtonsSet.None, ButtonsSet.AdminUsers);
 
-                informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+                informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
                 return informationSet;
             }
 
-            this.CommandHandlerTools.ParentHandler.CoreManager.ContextKeeper.RemoveContext(user.UserId);
+            this.ContextKeeper.RemoveContext(user.UserId);
 
             await adminRepository.DeleteAccount(user);
-            responseConverter = new ResponseTextConverter($"Пользователь {user.Username.AddBoldAndQuotes()} ({user.UserId}) был успешно удалён", "Выберите интересующее действие");
+            responseTextBuilder = new ResponseTextBuilder($"Пользователь {user.Username.AddBoldAndQuotes()} ({user.UserId}) был успешно удалён", "Выберите интересующее действие");
 
             buttonsSets = (ButtonsSet.AdminUsers, ButtonsSet.Admin);
 
-            informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
 
         private async Task<IInformationSet> DeleteResultsExerciseCommand()
         {
-            string countToDeleteStr = requestConverter.RemoveCompletely(35).WithoutServiceSymbol().Convert();
+            string countToDeleteStr = requestTextBuilder.RemoveCompletely(35).WithoutServiceSymbol().Build();
 
-            ResponseTextConverter responseConverter;
+            ResponseTextBuilder responseTextBuilder;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
             if (!int.TryParse(countToDeleteStr, out int countToDelete))
             {
-                responseConverter = new ResponseTextConverter($"Не удалось получить кол-во записей для удаления из текста '{countToDeleteStr}'",
+                responseTextBuilder = new ResponseTextBuilder($"Не удалось получить кол-во записей для удаления из текста '{countToDeleteStr}'",
                     "Для удаления введите кол-во последних записей, которые требуется удалить");
 
                 buttonsSets = (ButtonsSet.None, ButtonsSet.SettingExercise);
             }
             else
             {
-                DTOExercise currentExercise = this.CommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull();
+                DTOExercise currentExercise = this.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull();
 
-                string dbProvider = this.CommandHandlerTools.Db.GetDBProvider();
+                string dbProvider = this.Db.GetDBProvider();
 
                 if (dbProvider == "Microsoft.EntityFrameworkCore.Sqlite")
                 {
@@ -837,9 +835,9 @@ WHERE Id IN (
     LIMIT {countToDelete}
 )";
 
-                    int numberOfRowsAffected = await this.CommandHandlerTools.Db.ExecuteSQL(sqlQuery);
+                    int numberOfRowsAffected = await this.Db.ExecuteSQL(sqlQuery);
 
-                    responseConverter = new ResponseTextConverter($"Было удалено {numberOfRowsAffected} строк",
+                    responseTextBuilder = new ResponseTextBuilder($"Было удалено {numberOfRowsAffected} строк",
                         $"Выберите интересуюущую настройку для упражения {currentExercise.Name.AddBoldAndQuotes()}");
 
                     buttonsSets = (ButtonsSet.SettingExercise, ButtonsSet.ExercisesList);
@@ -848,9 +846,9 @@ WHERE Id IN (
                     throw new NotImplementedException($"Операция не поддерживается для DBProvider {dbProvider}");
             }
 
-            this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
+            this.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
-            IInformationSet informationSet = new MessageInformationSet(responseConverter.Convert(), buttonsSets);
+            IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
@@ -859,13 +857,11 @@ WHERE Id IN (
         {
             informationSet = null;
 
-            if (!this.CommandHandlerTools.CurrentUserContext.IsAdmin())
+            if (!this.CurrentUserContext.IsAdmin())
             {
-                SharedCH sharedCH = new SharedCH(this.CommandHandlerTools);
+                informationSet = SharedCommonLogicHelper.GetAccessDeniedMessageInformationSet();
 
-                informationSet = sharedCH.GetAccessDeniedMessageInformationSet();
-
-                this.CommandHandlerTools.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
+                this.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
                 return true;
             }

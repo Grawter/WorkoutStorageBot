@@ -2,7 +2,7 @@
 
 namespace WorkoutStorageBot.BusinessLogic.Helpers.Converters
 {
-    internal class ResponseTextConverter : IStringConverter
+    internal class ResponseTextBuilder : IBuilder
     {
         private string? title;
         private string? content;
@@ -10,14 +10,14 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Converters
         private readonly string? separator;
         private readonly bool onlyTarget;
 
-        internal ResponseTextConverter(string target)
+        internal ResponseTextBuilder(string target)
         {
             this.target = target;
 
             this.onlyTarget = true;
         }
 
-        internal ResponseTextConverter(string content, string target)
+        internal ResponseTextBuilder(string content, string target)
         {
             this.content = content;
 
@@ -26,7 +26,7 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Converters
             this.separator = "======================";
         }
 
-        internal ResponseTextConverter(string title, string content, string target, string? separator = null)
+        internal ResponseTextBuilder(string title, string content, string target, string? separator = null)
         {
             this.title = title;
 
@@ -40,22 +40,31 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Converters
                 this.separator = "======================";
         }
 
-        internal void ResetTitle(string title)
+        internal ResponseTextBuilder ResetTitle(string title)
         {
             this.title = title;
+
+            return this;
         }
 
-        internal void ResetContent(string content)
+        internal ResponseTextBuilder ResetContent(string content)
         {
             this.content = content;
+
+            return this;
         }
 
-        internal void ResetTarget(string target)
+        internal ResponseTextBuilder ResetTarget(string target)
         {
             this.target = target;
+
+            return this;
         }
 
-        public string Convert()
+        string IBuilder.Build()
+            => Build();
+
+        internal string Build()
         {
             if (onlyTarget)
                 return target;
