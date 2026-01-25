@@ -2,16 +2,18 @@
 
 namespace WorkoutStorageBot.BusinessLogic.Helpers.Converters
 {
-    internal class ResponseTextBuilder : IBuilder
+    internal class ResponseTextBuilder
     {
         private string? title;
         private string? content;
         private string target;
-        private readonly string? separator;
+        private string? separator;
         private readonly bool onlyTarget;
 
         internal ResponseTextBuilder(string target)
         {
+            ArgumentNullException.ThrowIfNullOrWhiteSpace(target);
+
             this.target = target;
 
             this.onlyTarget = true;
@@ -19,29 +21,28 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Converters
 
         internal ResponseTextBuilder(string content, string target)
         {
+            ArgumentNullException.ThrowIfNullOrWhiteSpace(content);
+            ArgumentNullException.ThrowIfNullOrWhiteSpace(target);
+
             this.content = content;
-
             this.target = target;
-
-            this.separator = "======================";
         }
 
-        internal ResponseTextBuilder(string title, string content, string target, string? separator = null)
+        internal ResponseTextBuilder(string title, string content, string target, string? separator = null) : this(content, target)
         {
+            ArgumentNullException.ThrowIfNullOrWhiteSpace(title);
+
             this.title = title;
-
-            this.content = content;
-
-            this.target = target;
 
             if (!string.IsNullOrWhiteSpace(separator))
                 this.separator = separator;
-            else
-                this.separator = "======================";
         }
 
         internal ResponseTextBuilder ResetTitle(string title)
         {
+            if (onlyTarget)
+                throw new InvalidOperationException("Нельзя установить title, т.к ранее был установлен признак onlyTarget");
+
             this.title = title;
 
             return this;
@@ -49,6 +50,9 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Converters
 
         internal ResponseTextBuilder ResetContent(string content)
         {
+            if (onlyTarget)
+                throw new InvalidOperationException("Нельзя установить content, т.к ранее был установлен признак onlyTarget");
+
             this.content = content;
 
             return this;
@@ -61,14 +65,14 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Converters
             return this;
         }
 
-        string IBuilder.Build()
-            => Build();
-
         internal string Build()
         {
             if (onlyTarget)
                 return target;
 
+            if (string.IsNullOrWhiteSpace(separator))
+                this.separator = "======================";
+   
             StringBuilder sb = new StringBuilder();
 
             if (!string.IsNullOrWhiteSpace(title))

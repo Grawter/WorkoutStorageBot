@@ -2,14 +2,13 @@
 
 namespace WorkoutStorageBot.BusinessLogic.Helpers.Converters
 {
-    internal class MessageTextBuilder : IBuilder
+    internal class MessageTextBuilder
     {
-        internal MessageTextBuilder(string data, bool withoutTrim = false)
+        internal MessageTextBuilder(string data, bool withTrim = false)
         {
-            if (withoutTrim)
-                sb = new StringBuilder(data.Trim());
-            else
-                sb = new StringBuilder(data);
+            ArgumentNullException.ThrowIfNullOrWhiteSpace(data);
+
+            sb = new StringBuilder(withTrim ? data.Trim() : data);
         }
 
         private StringBuilder sb;
@@ -24,21 +23,19 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Converters
 
         internal MessageTextBuilder WithoutServiceSymbol(string symbol = "/")
         {
-            sb.Replace(symbol, string.Empty);
+            if (!string.IsNullOrWhiteSpace(symbol))
+                sb.Replace(symbol, string.Empty);
 
             return this;
         }
 
-        internal MessageTextBuilder WithoutServiceSymbols(string[] symbols)
+        internal MessageTextBuilder WithoutServiceSymbols(IEnumerable<string> symbols)
         {
-            foreach (string simbol in symbols)
-                WithoutServiceSymbol(simbol);
+            foreach (string symbol in symbols)
+                WithoutServiceSymbol(symbol);
 
             return this;
         }
-
-        string IBuilder.Build()
-            => Build();
 
         internal string Build()
             => sb.ToString();
