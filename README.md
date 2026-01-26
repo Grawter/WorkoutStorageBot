@@ -26,7 +26,7 @@ git clone https://github.com/Grawter/WorkoutStorageBot.git
 ### 2. Заполните стартовую настройку
 
 ```
-cd WorkoutStorageBot/WorkoutStorageBot/Application/StartConfiguration
+cd src/WorkoutStorageBot/WorkoutStorageBot/Application/StartConfiguration
 nano appsettings.json
 ```
 
@@ -72,11 +72,11 @@ docker-compose up -d
 ```
 
 ### 4. Создайте свой первый тренировочный цикл
-![til](./DescriptionResources/StartBot.gif)
+![til](./CommonResources/DescriptionResources/StartBot.gif)
 
 
 ## :world_map: Карта кнопок
-![Описание элементов схемы](./DescriptionResources/ButtonsMap.jpg)
+![Описание элементов схемы](./CommonResources/DescriptionResources/ButtonsMap.jpg)
 
 ## :jigsaw: Полное описание настройки appsettings.json
 
@@ -170,9 +170,72 @@ docker-compose up -d
 }
 ```
 
+## :briefcase: Database Schema
+
+```
+Domains:
++---------------------+      +-------------------------------+      +---------------------+      +-----------------------+      +------------------------+
+|   UserInformation   | 1  * |             Cycle             | 1  * |         Day         | 1  * |       Exercise        | 1  * |     ResultExercise     |
++---------------------+------>-------------------------------+------>---------------------+------>-----------------------+------>------------------------+
+| Id (PK) : int       |      | Id (PK) : int                 |      | Id (PK) : int       |      | Id (PK) : int         |      | Id (PK) : int          |
+| UserId : long       |      | Name : string                 |      | Name : string       |      | Name : string         |      | Count : int?           |
+| FirstName : string  |      | UserInformationId (FK) : int  |      | CycleId (FK) : int  |      | Mode : ExercisesMods  |      | Weight : float?        |
+| Username : string   |      | IsActive : bool               |      | IsArchive : bool    |      | DayId (FK) : int      |      | FreeResult : string?   |
+| WhiteList : bool    |      | IsArchive : bool              |      |                     |      | IsArchive : bool      |      | DateTime : DateTime    |
+| BlackList : bool    |      |                               |      |                     |      |                       |      | ExerciseId (FK) : int  |
++---------------------+      +-------------------------------+      +---------------------+      +-----------------------+      +------------------------+
+
+==========================================================================================================================================================
+
+Infrastructure Tables:
++-------------------------+      +-------------------------------+
+|           Log           |      |          ImportInfo           |
++-------------------------+      +-------------------------------+
+| Id (PK) : int           |      | Id (PK) : int                 |
+| LogLevel : string       |      | DomainType : string           |
+| EventID : int?          |      | DomainId : int                |
+| EventName : string?     |      | UserInformationId (FK) : int  |
+| DateTime : DateTime     |      | DateTime : DateTime           |
+| Message : string        |      |                               |
+| SourceContext : string  |      |                               |
+| TelegramUserId : long?  |      |                               |
++-------------------------+      +-------------------------------+
+
+==================================================================
+
+Enums in Tables:
++------------------+
+|  ExercisesMods   |
++------------------+
+| Count = 0        |
+| WeightCount = 1  |
+| Timer = 2        |
+| FreeResult = 3   |
++-------------------+
+```
+### :clipboard: Описание таблиц
+**Domains**
+
+- UserInformation — Профили пользователей
+
+- Cycle — Тренировочные циклы пользователей
+
+- Day — Тренировочные дни внутри цикла
+
+- Exercise — Упражнения внутри тренировочного дня
+
+- ResultExercise — Результаты выполнения упражнений
+
+**Infrastructure Tables**
+
+- ImportInfo - Хранит историю об импорте доменных сущностей
+
+- Log - Таблица логов (инфраструктурная, без FK)
+
 ## :toolbox: Дополнительная информация
 
 - Хранение данных: Используется SQLite + EF
-- Логи находятся таблице "Logs"
-- Данные тренировок можно импортировать через консольное приложение **WorkoutStorageImport**. 
-Запись об импортированных данных хранятся в таблице "ImportInfo"
+- **WorkoutStorageBot** - Cам бот и его бизнес-логика
+- **WorkoutStorageImport** - Утилита для экспорта тренировок из json
+- **WorkoutStorageModels** - Модели EF
+- **WorkoutStorageBot.UnitTests** - Unit тесты бота
