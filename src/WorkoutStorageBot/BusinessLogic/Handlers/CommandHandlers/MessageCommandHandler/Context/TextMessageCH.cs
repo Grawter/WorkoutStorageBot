@@ -586,13 +586,17 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 log = await logsRepository.GetLogById(Id, 1);
 
             if (log == null)
-                responseTextBuilder = new ResponseTextBuilder($"Не удалось найти лог с {identifierType}: {Id.ToString().AddBoldAndQuotes()}", "Выберите интересующее действие");
-            else
             {
-                string logStr = LogFormatter.ConvertLogToStr(log);
+                responseTextBuilder = new ResponseTextBuilder($"Не удалось найти лог с {identifierType}: {Id.ToString().AddBoldAndQuotes()}", "Выберите интересующее действие");
 
-                responseTextBuilder = new ResponseTextBuilder("Найденный лог:", logStr, "Выберите интересующее действие");
+                informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
+
+                return informationSet;
             }
+
+            string logStr = LogFormatter.ConvertLogToStr(log);
+
+            responseTextBuilder = new ResponseTextBuilder("Найденный лог:", logStr, "Выберите интересующее действие");
 
             informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets, ParseMode.None);
 

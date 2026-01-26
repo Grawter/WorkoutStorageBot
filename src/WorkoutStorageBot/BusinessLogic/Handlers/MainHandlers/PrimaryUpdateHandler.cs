@@ -73,7 +73,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
 
         private async Task<(UserContext? userContext, bool isNewContext)> GetOrCreateContext(User user)
         {
-            UserContext? userContext = GetExistingContext(user);
+            UserContext? userContext = GetExistingContext(user.Id);
 
             if (userContext == null)
                 return (await CreateNewContext(user), true);
@@ -84,9 +84,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
             return (null, false);
         }
 
-        private UserContext? GetExistingContext(User user)
-            => ContextKeeper.HasContext(user.Id)
-                ? ContextKeeper.GetContext(user.Id)
+        private UserContext? GetExistingContext(long userID)
+            => ContextKeeper.HasContext(userID)
+                ? ContextKeeper.GetContext(userID)
                 : null;
 
         private async Task<UserContext?> CreateNewContext(User user)

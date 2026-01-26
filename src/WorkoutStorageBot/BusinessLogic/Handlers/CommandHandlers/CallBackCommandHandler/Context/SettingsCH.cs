@@ -493,7 +493,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                         case QueryFrom.Settings:
                             this.CurrentUserContext.DataManager.SetCurrentDomain(this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Days.First(d => d.Id == domainID));
 
-                            responseTextBuilder = new ResponseTextBuilder($"Выберите интересующую настройку для дня {this.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()}");
+                            responseTextBuilder = new ResponseTextBuilder($"Выберите интересующую настройку для дня {this.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()} ({this.CurrentUserContext.DataManager.CurrentCycle.Name.AddBold()})");
                             buttonsSets = (ButtonsSet.SettingDay, ButtonsSet.DaysList);
                             break;
                         default:
@@ -538,7 +538,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                             break;
 
                         case QueryFrom.Settings:
-                            responseTextBuilder = new ResponseTextBuilder($"Выберите интересующую настройку для упражнения {currentExerciseNameBoldAndQuotes}");
+                            responseTextBuilder = new ResponseTextBuilder($"Выберите интересующую настройку для упражнения {currentExerciseNameBoldAndQuotes} ({this.CurrentUserContext.DataManager.CurrentDay.Name.AddBold()}-{this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBold()})");
                             buttonsSets = (ButtonsSet.SettingExercise, ButtonsSet.ExercisesList);
                             break;
                         default:
