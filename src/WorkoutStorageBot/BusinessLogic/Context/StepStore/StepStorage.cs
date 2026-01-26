@@ -4,58 +4,49 @@ namespace WorkoutStorageBot.BusinessLogic.Context.StepStore
 {
     internal static class StepStorage
     {
-        private readonly static List<StepInformation> stepsInformation;
+        private static readonly IReadOnlyDictionary<ButtonsSet, StepInformation> stepsInformation = new Dictionary<ButtonsSet, StepInformation>()
+        { 
+            #region workout area
 
-        static StepStorage()
-        {
-            stepsInformation = new() {
+            { ButtonsSet.Main, new StepInformation(QueryFrom.NoMatter, "Выберите интересующий раздел", ButtonsSet.Main, ButtonsSet.None) },
+            { ButtonsSet.DaysListWithLastWorkout, new StepInformation(QueryFrom.NoMatter, "Выберите тренировочный день", ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main) },
+            { ButtonsSet.ExercisesListWithLastWorkoutForDay, new StepInformation(QueryFrom.NoMatter, "Выберите упражнение", ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout) },
 
-                #region workout area
+            #endregion
 
-                new StepInformation(QueryFrom.NoMatter, "Выберите интересующий раздел", ButtonsSet.Main, ButtonsSet.None),
-                new StepInformation(QueryFrom.NoMatter, "Выберите тренировочный день", ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main),
-                new StepInformation(QueryFrom.NoMatter, "Выберите упраженение", ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout),
+            #region settings area
 
-                #endregion
+            { ButtonsSet.Settings, new StepInformation(QueryFrom.Settings, "Выберите интересующие настройки", ButtonsSet.Settings, ButtonsSet.Main) },
 
-                #region settings area
+            { ButtonsSet.SettingCycles, new StepInformation(QueryFrom.Settings, "Выберите интересующие настройки для циклов", ButtonsSet.SettingCycles, ButtonsSet.Settings) },
+            { ButtonsSet.ArchiveList, new StepInformation(QueryFrom.Settings, "Выберите интересующий архив для разархивирования", ButtonsSet.ArchiveList, ButtonsSet.Settings) },
 
-                new StepInformation(QueryFrom.Settings, "Выберите интересующие настройки", ButtonsSet.Settings, ButtonsSet.Main),
+            { ButtonsSet.CycleList, new StepInformation(QueryFrom.Settings, "Выберите интересующий цикл", ButtonsSet.CycleList, ButtonsSet.SettingCycles) },
+            { ButtonsSet.SettingCycle, new StepInformation(QueryFrom.Settings, "Выберите интересующую настройку для указанного цикла", ButtonsSet.SettingCycle, ButtonsSet.CycleList) },
 
-                new StepInformation(QueryFrom.Settings, "Выберите интересующие настройки для циклов", ButtonsSet.SettingCycles, ButtonsSet.Settings),
-                new StepInformation(QueryFrom.Settings, "Выберите интересующий архив для разархивирования", ButtonsSet.ArchiveList, ButtonsSet.Settings),
+            { ButtonsSet.SettingDays, new StepInformation(QueryFrom.Settings, "Выберите интересующие настройки для дней", ButtonsSet.SettingDays, ButtonsSet.SettingCycle) },
+            { ButtonsSet.DaysList, new StepInformation(QueryFrom.Settings, "Выберите интересующий день", ButtonsSet.DaysList, ButtonsSet.SettingDays) },
+            { ButtonsSet.SettingDay, new StepInformation(QueryFrom.Settings, "Выберите интересующую настройку для указанного дня", ButtonsSet.SettingDay, ButtonsSet.DaysList) },
 
-                new StepInformation(QueryFrom.Settings, "Выберите интересующий цикл", ButtonsSet.CycleList, ButtonsSet.SettingCycles),
-                new StepInformation(QueryFrom.Settings, "Выберите интересующую настройку для указанного цикла", ButtonsSet.SettingCycle, ButtonsSet.CycleList),
+            { ButtonsSet.SettingExercises, new StepInformation(QueryFrom.Settings, "Выберите интересующие настройки для упражнений", ButtonsSet.SettingExercises, ButtonsSet.SettingDay) },
+            { ButtonsSet.ExercisesList, new StepInformation(QueryFrom.Settings, "Выберите интересующее упражнение", ButtonsSet.ExercisesList, ButtonsSet.SettingExercises) } ,
+            { ButtonsSet.SettingExercise, new StepInformation(QueryFrom.Settings, "Выберите интересующую настройку для указанного упражнения", ButtonsSet.SettingExercise, ButtonsSet.ExercisesList) },
 
-                new StepInformation(QueryFrom.Settings, "Выберите интересующие настройки для дней", ButtonsSet.SettingDays, ButtonsSet.SettingCycle),
-                new StepInformation(QueryFrom.Settings, "Выберите интересующий день", ButtonsSet.DaysList, ButtonsSet.SettingDays),
-                new StepInformation(QueryFrom.Settings, "Выберите интересующую настройку для указанного дня", ButtonsSet.SettingDay, ButtonsSet.DaysList),
+            #endregion
 
-                new StepInformation(QueryFrom.Settings, "Выберите интересующие настройки для упражнений", ButtonsSet.SettingExercises, ButtonsSet.SettingDay),
-                new StepInformation(QueryFrom.Settings, "Выберите интересующее упражнение", ButtonsSet.ExercisesList, ButtonsSet.SettingExercises),
-                new StepInformation(QueryFrom.Settings, "Выберите интересующую настройку для указанного упражнения", ButtonsSet.SettingExercise, ButtonsSet.ExercisesList),
+            #region admin area
 
-                #endregion
+            { ButtonsSet.Admin, new StepInformation(QueryFrom.NoMatter, "Выберите интересующее действие", ButtonsSet.Admin, ButtonsSet.Main) },
+            { ButtonsSet.AdminLogs, new StepInformation(QueryFrom.NoMatter, "Выберите интересующее действие", ButtonsSet.AdminLogs, ButtonsSet.Admin) },
+            { ButtonsSet.AdminUsers, new StepInformation(QueryFrom.NoMatter, "Выберите интересующее действие", ButtonsSet.AdminUsers, ButtonsSet.Admin) },
 
-                #region admin area
+            #endregion 
+        };
 
-                new StepInformation(QueryFrom.NoMatter, "Выберите интересующее действие", ButtonsSet.Admin, ButtonsSet.Main),
-                new StepInformation(QueryFrom.NoMatter, "Выберите интересующее действие", ButtonsSet.AdminLogs, ButtonsSet.Admin),
-                new StepInformation(QueryFrom.NoMatter, "Выберите интересующее действие", ButtonsSet.AdminUsers, ButtonsSet.Admin),
-
-                #endregion 
-            };
-        }
-
-        internal static StepInformation GetStep(string buttonsSet)
-        {
-            return stepsInformation.FirstOrDefault(SI => SI.ButtonsSet.ToString() == buttonsSet) ?? GetMainStep();
-        }
+        internal static StepInformation GetStep(ButtonsSet buttonsSet)
+            => stepsInformation.GetValueOrDefault(buttonsSet) ?? GetMainStep();
 
         internal static StepInformation GetMainStep()
-        {
-            return stepsInformation.First();
-        }
+            => stepsInformation.First().Value;
     }
 }

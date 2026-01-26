@@ -37,5 +37,16 @@ namespace WorkoutStorageBot.Core.Extensions
 
         internal static bool HasItemsInCollection<T>([NotNullWhen(true)] this IEnumerable<T>? collection)
             => collection != null && collection.Any();
+
+        internal static bool TryParseToEnum<TEnum>(this string value, out TEnum result, bool ignoreCase = true) where TEnum : struct, Enum
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                result = default;
+                return false;
+            }
+
+            return Enum.TryParse<TEnum>(value, ignoreCase, out result);
+        }
     }
 }
