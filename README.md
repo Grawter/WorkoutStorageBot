@@ -26,7 +26,7 @@ git clone https://github.com/Grawter/WorkoutStorageBot.git
 ### 2. Заполните стартовую настройку
 
 ```
-cd src/WorkoutStorageBot/WorkoutStorageBot/Application/StartConfiguration
+cd ./WorkoutStorageBot/src/WorkoutStorageBot/Application/StartConfiguration
 nano appsettings.json
 ```
 
