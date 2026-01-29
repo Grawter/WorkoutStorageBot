@@ -22,113 +22,39 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 {
     internal class TextMessageCH : MessageCH
     {
+        private static IReadOnlyDictionary<MessageNavigationTarget, Func<TextMessageCH, Task<IInformationSet>>> commandMap
+           = new Dictionary<MessageNavigationTarget, Func<TextMessageCH, Task<IInformationSet>>>
+           {
+               { MessageNavigationTarget.Default, (x) => Task.FromResult(x.DefaultCommand()) },
+               { MessageNavigationTarget.AddCycle, (x) => x.AddCycleCommand() },
+               { MessageNavigationTarget.AddDays, (x) => x.AddDaysCommand() },
+               { MessageNavigationTarget.AddExercises, (x) => Task.FromResult(x.AddExercisesCommand()) },
+               { MessageNavigationTarget.AddResultForExercise, (x) => Task.FromResult(x.AddResultForExerciseCommand()) },
+               { MessageNavigationTarget.AddCommentForExerciseTimer, (x) => x.AddCommentForExerciseTimerCommand() },
+               { MessageNavigationTarget.ChangeNameCycle, (x) => x.ChangeNameCommand(domainType: CommonConsts.DomainsAndEntities.Cycle) },
+               { MessageNavigationTarget.ChangeNameDay, (x) => x.ChangeNameCommand(domainType: CommonConsts.DomainsAndEntities.Day) },
+               { MessageNavigationTarget.ChangeNameExercise, (x) => x.ChangeNameCommand(domainType: CommonConsts.DomainsAndEntities.Exercise) },
+               { MessageNavigationTarget.FindResultsByDate, (x) => x.FindResultByDateCommand(isNeedFindByCurrentDay: false) },
+               { MessageNavigationTarget.FindResultsByDateInDay, (x) => x.FindResultByDateCommand(isNeedFindByCurrentDay: true) },
+               { MessageNavigationTarget.FindLogByID, (x) => x.FindLogByIDCommand(isEventID: false) },
+               { MessageNavigationTarget.FindLogByEventID, (x) => x.FindLogByIDCommand(isEventID: true) },
+               { MessageNavigationTarget.SendMessageToUser, (x) => x.SendMessageToUserCommand() },
+               { MessageNavigationTarget.SendMessagesToActiveUsers, (x) => x.MassiveSendMessagesToUsers(isNeedFromDB: false) },
+               { MessageNavigationTarget.SendMessagesToAllUsers, (x) => x.MassiveSendMessagesToUsers(isNeedFromDB: true) },
+               { MessageNavigationTarget.ChangeUserState, (x) => x.ChangeUserStateCommand() },
+               { MessageNavigationTarget.DeleteUser, (x) => x.DeleteUserCommand() },
+               { MessageNavigationTarget.DeleteResultsExercise, (x) => x.DeleteResultsExerciseCommand() },
+           };
+
         internal TextMessageCH(CommandHandlerTools commandHandlerTools, MessageTextBuilder requestTextBuilder) : base(commandHandlerTools, requestTextBuilder)
         { }
 
         internal override async Task<IInformationSet> GetInformationSet()
         {
-            IInformationSet informationSet;
+            Func<TextMessageCH, Task<IInformationSet>>? selectedCommand = commandMap.GetValueOrDefault(this.CurrentUserContext.Navigation.MessageNavigationTarget)
+                ?? throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.MessageNavigationTarget: {this.CurrentUserContext.Navigation.MessageNavigationTarget}");
 
-            switch (this.CurrentUserContext.Navigation.MessageNavigationTarget)
-            {
-                case MessageNavigationTarget.Default:
-                    informationSet = DefaultCommand();
-
-                    break;
-
-                case MessageNavigationTarget.AddCycle:
-                    informationSet = await AddCycleCommand();
-
-                    break;
-
-                case MessageNavigationTarget.AddDays:
-                    informationSet = await AddDaysCommand();
-
-                    break;
-
-                case MessageNavigationTarget.AddExercises:
-                    informationSet = AddExercisesCommand();
-
-                    break;
-
-                case MessageNavigationTarget.AddResultForExercise:
-                    informationSet = AddResultForExerciseCommand();
-
-                    break;
-
-                case MessageNavigationTarget.AddCommentForExerciseTimer:
-                    informationSet = await AddCommentForExerciseTimerCommand();
-
-                    break;
-
-                case MessageNavigationTarget.ChangeNameCycle:
-                    informationSet = await ChangeNameCommand(CommonConsts.DomainsAndEntities.Cycle);
-
-                    break;
-
-                case MessageNavigationTarget.ChangeNameDay:
-                    informationSet = await ChangeNameCommand(CommonConsts.DomainsAndEntities.Day);
-
-                    break;
-
-                case MessageNavigationTarget.ChangeNameExercise:
-                    informationSet = await ChangeNameCommand(CommonConsts.DomainsAndEntities.Exercise);
-
-                    break;
-
-                case MessageNavigationTarget.FindResultsByDate:
-                    informationSet = await FindResultByDateCommand(false);
-
-                    break;
-
-                case MessageNavigationTarget.FindResultsByDateInDay:
-                    informationSet = await FindResultByDateCommand(true);
-
-                    break;
-
-                case MessageNavigationTarget.FindLogByID:
-                    informationSet = await FindLogByIDCommand(isEventID: false);
-
-                    break;
-
-                case MessageNavigationTarget.FindLogByEventID:
-                    informationSet = await FindLogByIDCommand(isEventID: true);
-
-                    break;
-
-                case MessageNavigationTarget.SendMessageToUser:
-                    informationSet = await SendMessageToUserCommand();
-
-                    break;
-
-                case MessageNavigationTarget.SendMessagesToActiveUsers:
-                    informationSet = await MassiveSendMessagesToUsers(false);
-
-                    break;
-
-                case MessageNavigationTarget.SendMessagesToAllUsers:
-                    informationSet = await MassiveSendMessagesToUsers(true);
-
-                    break;
-
-                case MessageNavigationTarget.ChangeUserState:
-                    informationSet = await ChangeUserStateCommand();
-
-                    break;
-
-                case MessageNavigationTarget.DeleteUser:
-                    informationSet = await DeleteUserCommand();
-
-                    break;
-
-                case MessageNavigationTarget.DeleteResultsExercise:
-                    informationSet = await DeleteResultsExerciseCommand();
-
-                    break;
-
-                default:
-                    throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.MessageNavigationTarget: {this.CurrentUserContext.Navigation.MessageNavigationTarget}!");
-            }
+            IInformationSet informationSet = await selectedCommand(this);
 
             CheckInformationSet(informationSet);
 

@@ -18,109 +18,43 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 {
     internal class SettingsCH : CallBackCH
     {
+        private static IReadOnlyDictionary<string, Func<SettingsCH, Task<IInformationSet>>> commandMap
+           = new Dictionary<string, Func<SettingsCH, Task<IInformationSet>>>
+           {
+               { "Settings", (x) => Task.FromResult(x.SettingsCommand()) },
+               { "ArchiveStore", (x) => Task.FromResult(x.ArchiveStoreCommand()) },
+               { "Archive", (x) => Task.FromResult(x.ArchiveCommand()) },
+               { "Export", (x) => Task.FromResult(x.ExportCommand()) },
+               { "ExportTo", (x) => Task.FromResult(x.ExportToCommand()) },
+               { "UnArchive", (x) => x.UnArchiveCommand() },
+               { "AboutBot", (x) => Task.FromResult(x.AboutBotCommand()) },
+               { "Setting", (x) => Task.FromResult(x.SettingCommand()) },
+               { "Add", (x) => Task.FromResult(x.AddCommand()) },
+               { "ResetTempDomains", (x) => Task.FromResult(x.ResetTempDomainsCommand()) },
+               { "SaveExercises", (x) => x.SaveExercisesCommand() },
+               { "SettingExisting", (x) => Task.FromResult(x.SettingExistingCommand()) },
+               { "Selected", (x) => Task.FromResult(x.SelectedCommand()) },
+               { "ChangeActive", (x) => x.ChangeActiveCommand() },
+               { "Archiving", (x) => x.ArchivingCommand() },
+               { "Replace", (x) => Task.FromResult(x.ReplaceCommand()) },
+               { "ReplaceTo", (x) => x.ReplaceToCommand() },
+               { "ChangeName", (x) => Task.FromResult(x.ChangeNameCommand()) },
+               { "ChangeMode", (x) => Task.FromResult(x.ChangeModeCommand()) },
+               { "ChangedMode", (x) => x.ChangedModeCommand() },
+               { "Period", (x) => x.Period() },
+               { "Delete", (x) => Task.FromResult(x.DeleteCommand()) },
+               { "ConfirmDelete", (x) => x.ConfirmDeleteCommand() },
+           };
+
         internal SettingsCH(CommandHandlerTools commandHandlerTools, CallbackQueryParser callbackQueryParser) : base(commandHandlerTools, callbackQueryParser)
         { }
 
         internal override async Task<IInformationSet> GetInformationSet()
         {
-            IInformationSet informationSet;
+            Func<SettingsCH, Task<IInformationSet>>? selectedCommand = commandMap.GetValueOrDefault(callbackQueryParser.SubDirection)
+                ?? throw new NotImplementedException($"Неожиданный callbackQueryParser.SubDirection: {callbackQueryParser.SubDirection}");
 
-            switch (callbackQueryParser.SubDirection)
-            {
-                case "Settings":
-                    informationSet = SettingsCommand();
-                    break;
-
-                case "ArchiveStore":
-                    informationSet = ArchiveStoreCommand();
-                    break;
-
-                case "Archive":
-                    informationSet = ArchiveCommand();
-                    break;
-                case "Export":
-                    informationSet = ExportCommand();
-                    break;
-
-                case "ExportTo":
-                    informationSet = ExportToCommand();
-                    break;
-
-                case "UnArchive":
-                    informationSet = await UnArchiveCommand();
-                    break;
-
-                case "AboutBot":
-                    informationSet = AboutBotCommand();
-
-                    break;
-
-                case "Setting":
-                    informationSet = SettingCommand();
-                    break;
-
-                case "Add":
-                    informationSet = AddCommand();
-                    break;
-
-                case "ResetTempDomains":
-                    informationSet = ResetTempDomainsCommand();
-                    break;
-
-                case "SaveExercises":
-                    informationSet = await SaveExercisesCommand();
-                    break;
-
-                case "SettingExisting":
-                    informationSet = SettingExistingCommand();
-                    break;
-
-                case "Selected":
-                    informationSet = SelectedCommand();
-                    break;
-
-                case "ChangeActive":
-                    informationSet = await ChangeActiveCommand();
-                    break;
-
-                case "Archiving":
-                    informationSet = await ArchivingCommand();
-                    break;
-
-                case "Replace":
-                    informationSet = ReplaceCommand();
-                    break;
-
-                case "ReplaceTo":
-                    informationSet = await ReplaceToCommand();
-                    break;
-
-                case "ChangeName":
-                    informationSet = ChangeNameCommand();
-                    break;
-
-                case "ChangeMode":
-                    informationSet = ChangeModeCommand();
-                    break;
-
-                case "ChangedMode":
-                    informationSet = await ChangedModeCommand();
-                    break;
-
-                case "Period":
-                    informationSet = await Period();
-                    break;
-
-                case "Delete":
-                    informationSet = DeleteCommand();
-                    break;
-
-                case "ConfirmDelete":
-                    informationSet = await ConfirmDeleteCommand();
-                    break;
-                default:
-                    throw new NotImplementedException($"Неожиданный callbackQueryParser.SubDirection: {callbackQueryParser.SubDirection}");
-            }
+            IInformationSet informationSet = await selectedCommand(this);
 
             CheckInformationSet(informationSet);
 

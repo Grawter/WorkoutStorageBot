@@ -11,29 +11,26 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 {
     internal class CommonCH : CallBackCH
     {
+        private static IReadOnlyDictionary<string, Func<CommonCH, Task<IInformationSet>>> commandMap
+            = new Dictionary<string, Func<CommonCH, Task<IInformationSet>>>
+            {
+                { "Back", (x) => Task.FromResult(x.BackCommand()) },
+                { "ToMain", (x) => Task.FromResult(x.ToMainCommand()) },
+            };
+
         internal CommonCH(CommandHandlerTools commandHandlerTools, CallbackQueryParser callbackQueryParser) : base(commandHandlerTools, callbackQueryParser)
         { }
 
-        internal override Task<IInformationSet> GetInformationSet()
+        internal override async Task<IInformationSet> GetInformationSet()
         {
-            IInformationSet informationSet;
+            Func<CommonCH, Task<IInformationSet>>? selectedCommand = commandMap.GetValueOrDefault(callbackQueryParser.SubDirection)
+                ?? throw new NotImplementedException($"Неожиданный callbackQueryParser.SubDirection: {callbackQueryParser.SubDirection}");
 
-            switch (callbackQueryParser.SubDirection)
-            {
-                case "Back":
-                    informationSet = BackCommand();
-                    break;
-
-                case "ToMain":
-                    informationSet = ToMainCommand();
-                    break;
-                default:
-                    throw new NotImplementedException($"Неожиданный CallbackQueryParser.SubDirection: {callbackQueryParser.SubDirection}");
-            }
+            IInformationSet informationSet = await selectedCommand(this);
 
             CheckInformationSet(informationSet);
 
-            return Task.FromResult<IInformationSet>(informationSet);
+            return informationSet;
         }
 
         private IInformationSet BackCommand()

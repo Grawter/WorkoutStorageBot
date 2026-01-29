@@ -18,6 +18,28 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 {
     internal class AdminCH : CallBackCH
     {
+        private static IReadOnlyDictionary<string, Func<AdminCH, Task<IInformationSet>>> commandMap
+            = new Dictionary<string, Func<AdminCH, Task<IInformationSet>>>
+            {
+                { "Admin", (x) => Task.FromResult(x.AdminCommand()) },
+                { "Logs", (x) => Task.FromResult(x.LogsCommand()) },
+                { "ShowLastLog", (x) => x.ShowLastLogCommand() },
+                { "ShowLastExceptionLogs", (x) => x.ShowLastExceptionLogsCommand() },
+                { "FindLogByID", (x) => Task.FromResult(x.FindLogByIDCommand(isEventID: false)) },
+                { "FindLogByEventID", (x) => Task.FromResult(x.FindLogByIDCommand(isEventID: true)) },
+                { "AdminUsers", (x) => Task.FromResult(x.AdminUsersCommand()) },
+                { "ShowCountActiveSessions", (x) => Task.FromResult(x.ShowCountActiveSessionsCommand()) },
+                { "SendMessageToUser", (x) => Task.FromResult(x.SendMessageToUsersCommand(mode: 1)) },
+                { "SendMessagesToActiveUsers", (x) => Task.FromResult(x.SendMessageToUsersCommand(mode: 2)) },
+                { "SendMessagesToAllUsers", (x) => Task.FromResult(x.SendMessageToUsersCommand(mode: 3)) },
+                { "ChangeUserState", (x) => Task.FromResult(x.ChangeUserStateCommand()) },
+                { "RemoveUser", (x) => Task.FromResult(x.RemoveUserCommand()) },
+                { "ShowStartConfiguration", (x) => Task.FromResult(x.ShowStartConfigurationCommand()) },
+                { "ChangeLimitsMods", (x) => Task.FromResult(x.ChangeLimitsModsCommand()) },
+                { "ChangeWhiteListMode", (x) => Task.FromResult(x.ChangeWhiteListModeCommand()) },
+                { "DisableBot", (x) => Task.FromResult(x.DisableBotCommand()) },
+            };
+
         private AdminRepository AdminRepository { get; }
         private LogsRepository LogsRepository { get; }
 
@@ -32,79 +54,10 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             if (AccessDenied(out IInformationSet? informationSet))
                 return informationSet;
 
-            switch (callbackQueryParser.SubDirection)
-            {
-                case "Admin":
-                    informationSet = AdminCommand();
-                    break;
+            Func<AdminCH, Task<IInformationSet>>? selectedCommand = commandMap.GetValueOrDefault(callbackQueryParser.SubDirection)
+                ?? throw new NotImplementedException($"Неожиданный callbackQueryParser.SubDirection: {callbackQueryParser.SubDirection}");
 
-                case "Logs":
-                    informationSet = LogsCommand();
-                    break;
-
-                case "ShowLastLog":
-                    informationSet = await ShowLastLogCommand();
-                    break;
-
-                case "ShowLastExceptionLogs":
-                    informationSet = await ShowLastExceptionLogsCommand();
-                    break;
-
-                case "FindLogByID":
-                    informationSet = FindLogByIDCommand(isEventID: false);
-                    break;
-
-                case "FindLogByEventID":
-                    informationSet = FindLogByIDCommand(isEventID: true);
-                    break;
-
-                case "AdminUsers":
-                    informationSet = AdminUsersCommand();
-                    break;
-
-                case "ShowCountActiveSessions":
-                    informationSet = ShowCountActiveSessionsCommand();
-                    break;
-
-                case "SendMessageToUser":
-                    informationSet = SendMessageToUsersCommand(1);
-                    break;
-
-                case "SendMessagesToActiveUsers":
-                    informationSet = SendMessageToUsersCommand(2);
-                    break;
-
-                case "SendMessagesToAllUsers":
-                    informationSet = SendMessageToUsersCommand(3);
-                    break;
-
-                case "ChangeUserState":
-                    informationSet = ChangeUserStateCommand();
-                    break;
-
-                case "RemoveUser":
-                    informationSet = RemoveUserCommand();
-                    break;
-
-                case "ShowStartConfiguration":
-                    informationSet = ShowStartConfigurationCommand();
-                    break;
-
-                case "ChangeLimitsMods":
-                    informationSet = ChangeLimitsModsCommand();
-                    break;
-
-                case "ChangeWhiteListMode":
-                    informationSet = ChangeWhiteListModeCommand();
-                    break;
-
-                case "DisableBot":
-                    informationSet = DisableBotCommand();
-                    break;
-
-                default:
-                    throw new NotImplementedException($"Неожиданный callbackQueryParser.SubDirection: {callbackQueryParser.SubDirection}");
-            }
+            informationSet = await selectedCommand(this);
 
             CheckInformationSet(informationSet);
 

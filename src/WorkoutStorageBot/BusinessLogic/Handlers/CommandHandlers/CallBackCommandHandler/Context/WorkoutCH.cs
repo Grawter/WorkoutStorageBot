@@ -15,56 +15,31 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 {
     internal class WorkoutCH : CallBackCH
     {
+        private static IReadOnlyDictionary<string, Func<WorkoutCH, Task<IInformationSet>>> commandMap
+           = new Dictionary<string, Func<WorkoutCH, Task<IInformationSet>>>
+           {
+               { "Workout", (x) => Task.FromResult(x.WorkoutCommand()) },
+               { "LastResults", (x) => x.LastResultsCommand() },
+               { "StartFindResultsByDate", (x) => Task.FromResult(x.StartFindResultsByDateCommand()) },
+               { "FindResultsByDate", (x) => x.FindResultsByDateCommand() },
+               { "StartExerciseTimer", (x) => Task.FromResult(x.StartExerciseTimerCommand()) },
+               { "StopExerciseTimer", (x) => Task.FromResult(x.StopExerciseTimerCommand()) },
+               { "ShowExerciseTimer", (x) => Task.FromResult(x.ShowExerciseTimerCommand()) },
+               { "ResetResultsExercise", (x) => Task.FromResult(x.ResetResultsExerciseCommand()) },
+               { "SaveResultsExercise", (x) => x.SaveResultsExerciseCommand() },
+           };
+
         internal WorkoutCH(CommandHandlerTools commandHandlerTools, CallbackQueryParser callbackQueryParser) : base(commandHandlerTools, callbackQueryParser)
         { }
 
         internal override async Task<IInformationSet> GetInformationSet()
         {
-            IInformationSet informationSet;
+            Func<WorkoutCH, Task<IInformationSet>>? selectedCommand = commandMap.GetValueOrDefault(callbackQueryParser.SubDirection)
+                ?? throw new NotImplementedException($"Неожиданный callbackQueryParser.SubDirection: {callbackQueryParser.SubDirection}");
 
-            switch (callbackQueryParser.SubDirection)
-            {
-                case "Workout":
-                    informationSet = WorkoutCommand();
-                    break;
+            IInformationSet informationSet = await selectedCommand(this);
 
-                case "LastResults":
-                    informationSet = await LastResultsCommand();
-                    break;
-
-                case "StartFindResultsByDate":
-                    informationSet = StartFindResultsByDateCommand();
-                    break;
-
-                case "FindResultsByDate":
-                    informationSet = await FindResultsByDateCommand();
-                    break;
-
-                case "StartExerciseTimer":
-                    informationSet = StartExerciseTimerCommand();
-                    break;
-
-                case "StopExerciseTimer":
-                    informationSet = StopExerciseTimerCommand();
-                    break;
-
-                case "ShowExerciseTimer":
-                    informationSet = ShowExerciseTimerCommand();
-                    break;
-
-                case "ResetResultsExercise":
-                    informationSet = ResetResultsExerciseCommand();
-                    break;
-
-                case "SaveResultsExercise":
-                    informationSet = await SaveResultsExerciseCommand();                     
-                    break;
-
-                default:
-                    throw new NotImplementedException($"Неожиданный CallbackQueryParser.SubDirection: {callbackQueryParser.SubDirection}");
-            }
-
-            CheckInformationSet(informationSet); 
+            CheckInformationSet(informationSet);
 
             return informationSet;
         }
