@@ -26,7 +26,7 @@ git clone https://github.com/Grawter/WorkoutStorageBot.git
 ### 2. Заполните стартовую настройку
 
 ```
-cd WorkoutStorageBot/WorkoutStorageBot/Application/StartConfiguration
+cd ./WorkoutStorageBot/src/WorkoutStorageBot/Application/StartConfiguration
 nano appsettings.json
 ```
 
@@ -35,8 +35,9 @@ nano appsettings.json
 ```
 {
   "DB": {
+    "EnsureCreated": "True",
     "Server": "",
-    "Database": "test.db",
+    "Database": "data/test.db",
     "UserName": "",
     "Password": ""
   },
@@ -66,17 +67,16 @@ nano appsettings.json
 ### 3. Соберите и запустите бота
 
 ```
-cd ../..
-dotnet build
-dotnet run
+cd ../../..
+docker-compose up -d
 ```
 
 ### 4. Создайте свой первый тренировочный цикл
-![til](./DescriptionResources/StartBot.gif)
+![til](./CommonResources/DescriptionResources/StartBot.gif)
 
 
 ## :world_map: Карта кнопок
-![Описание элементов схемы](./DescriptionResources/ButtonsMap.jpg)
+![Описание элементов схемы](./CommonResources/DescriptionResources/ButtonsMap.jpg)
 
 ## :jigsaw: Полное описание настройки appsettings.json
 
@@ -89,16 +89,18 @@ dotnet run
   По-умолчанию, используется SQLite, в случае необходимости можно поменять DBProvider: Program -> GetEntityContext.
   В случае необходимости можно написать свою реализацию строки подключения: ConfigurationData -> DbSettings -> ConnectionString.
 
+  EnsureCreated - Требуется ли первичная инициализация БД при старте приложения (Database.EnsureCreated()) [Необязательно] [По-умолчанию - False]
   Server - Сервер DB [Необязательно]
-  Database - Название DB [Обязательно]
+  Database - Название DB. data обязательно, т.к. в этой папке будет volume [Обязательно]
   UserName - УЗ для подключения к DB [Необязательно]
   Password - для от УЗ для подключения к DB [Необязательно]
   
   После инициализации всех зависимостей значения UserName и Password будут затёрты из переменных. Подробнее: ConfigurationManager -> SetCensorToDBSettings.
   */
   "DB": {
+    "EnsureCreated": "False",
     "Server": "",
-    "Database": "test.db",
+    "Database": "data/<someName>.db",
     "UserName": "",
     "Password": ""
   },
@@ -112,13 +114,15 @@ dotnet run
   IsNeedCacheContext - Нужно ли включать кэш для глобального контекста [Обязательно]
   При включённом режиме, по-умолчанию, он держится 6 часов, если к определённому контексту не было запросов.
   IsNeedLimits - Нужно ли включать режим лимитов. [Необязательно] [По-умолчанию - False]
+  IsSupportOnlyKnownTypes - Поддерживать только известные типы обновлений (UpdateType.Message, UpdateType.CallbackQuery). [Необязательно] [По-умолчанию - True]
   */
   "Bot": {
     "Token": "<Your telegram bot token>",
     "WhiteListIsEnable": "False",
     "OwnersChatIDs": [ "000000000" ],
     "IsNeedCacheContext": "True",
-    "IsNeedLimits": "True"
+    "IsNeedLimits": "True",
+    "IsSupportOnlyKnownTypes": "True"
   },
 
   /*
@@ -166,9 +170,72 @@ dotnet run
 }
 ```
 
+## :briefcase: Database Schema
+
+```
+Domains:
++---------------------+      +-------------------------------+      +---------------------+      +-----------------------+      +------------------------+
+|   UserInformation   | 1  * |             Cycle             | 1  * |         Day         | 1  * |       Exercise        | 1  * |     ResultExercise     |
++---------------------+------>-------------------------------+------>---------------------+------>-----------------------+------>------------------------+
+| Id (PK) : int       |      | Id (PK) : int                 |      | Id (PK) : int       |      | Id (PK) : int         |      | Id (PK) : int          |
+| UserId : long       |      | Name : string                 |      | Name : string       |      | Name : string         |      | Count : int?           |
+| FirstName : string  |      | UserInformationId (FK) : int  |      | CycleId (FK) : int  |      | Mode : ExercisesMods  |      | Weight : float?        |
+| Username : string   |      | IsActive : bool               |      | IsArchive : bool    |      | DayId (FK) : int      |      | FreeResult : string?   |
+| WhiteList : bool    |      | IsArchive : bool              |      |                     |      | IsArchive : bool      |      | DateTime : DateTime    |
+| BlackList : bool    |      |                               |      |                     |      |                       |      | ExerciseId (FK) : int  |
++---------------------+      +-------------------------------+      +---------------------+      +-----------------------+      +------------------------+
+
+==========================================================================================================================================================
+
+Infrastructure Tables:
++-------------------------+      +-------------------------------+
+|           Log           |      |          ImportInfo           |
++-------------------------+      +-------------------------------+
+| Id (PK) : int           |      | Id (PK) : int                 |
+| LogLevel : string       |      | DomainType : string           |
+| EventID : int?          |      | DomainId : int                |
+| EventName : string?     |      | UserInformationId (FK) : int  |
+| DateTime : DateTime     |      | DateTime : DateTime           |
+| Message : string        |      |                               |
+| SourceContext : string  |      |                               |
+| TelegramUserId : long?  |      |                               |
++-------------------------+      +-------------------------------+
+
+==================================================================
+
+Enums in Tables:
++------------------+
+|  ExercisesMods   |
++------------------+
+| Count = 0        |
+| WeightCount = 1  |
+| Timer = 2        |
+| FreeResult = 3   |
++-------------------+
+```
+### :clipboard: Описание таблиц
+**Domains**
+
+- UserInformation — Профили пользователей
+
+- Cycle — Тренировочные циклы пользователей
+
+- Day — Тренировочные дни внутри цикла
+
+- Exercise — Упражнения внутри тренировочного дня
+
+- ResultExercise — Результаты выполнения упражнений
+
+**Infrastructure Tables**
+
+- ImportInfo - Хранит историю об импорте доменных сущностей
+
+- Log - Таблица логов (инфраструктурная, без FK)
+
 ## :toolbox: Дополнительная информация
 
 - Хранение данных: Используется SQLite + EF
-- Логи находятся таблице "Logs"
-- Данные тренировок можно импортировать через консольное приложение **WorkoutStorageImport**. 
-Запись об импортированных данных хранятся в таблице "ImportInfo"
+- **WorkoutStorageBot** - Cам бот и его бизнес-логика
+- **WorkoutStorageImport** - Утилита для экспорта тренировок из json
+- **WorkoutStorageModels** - Модели EF
+- **WorkoutStorageBot.UnitTests** - Unit тесты бота

@@ -1,0 +1,14 @@
+services:
+  workoutstoragebot:
+    build: 
+      context: .
+      dockerfile: WorkoutStorageBot/Dockerfile
+    image: workoutstoragebot:latest 
+    container_name: workoutstoragebot_container
+    volumes:
+      - workoutstoragebot_data:/app/data
+    restart: no
+
+volumes:
+  workoutstoragebot_data:
+    name: workoutstoragebot_data  
