@@ -1,5 +1,8 @@
 ﻿using Microsoft.Extensions.Configuration;
+using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.RegularExpressions;
+using System.Text.Unicode;
 using WorkoutStorageBot.Core.Extensions;
 using WorkoutStorageBot.Core.Helpers;
 
@@ -7,6 +10,12 @@ namespace WorkoutStorageBot.Application.Configuration
 {
     internal class ConfigurationManager
     {
+        private static JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions
+        {
+            WriteIndented = true, // форматированная сериализация с табуляцией
+            Encoder = JavaScriptEncoder.Create(UnicodeRanges.All), // Чтобы кириллические (или возможные другие) символы не экранировались
+        };
+
         internal static ConfigurationData GetConfiguration(string pathFileConfig)
         {
             if (!File.Exists(pathFileConfig))
@@ -121,11 +130,7 @@ namespace WorkoutStorageBot.Application.Configuration
         internal static string GetSerializedSafeDeepCopy(ConfigurationData configurationData)
         {
             ConfigurationData safeDeepCopy = GetSafeDeepCopy(configurationData);
-
-            JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions
-            {
-                WriteIndented = true
-            };
+            safeDeepCopy.AboutBotText = RemoveTags(safeDeepCopy.AboutBotText);
 
             return JsonSerializer.Serialize(safeDeepCopy, jsonSerializerOptions);
         }
@@ -152,6 +157,15 @@ namespace WorkoutStorageBot.Application.Configuration
             configurationData.Bot.OwnersChatIDs = configurationData.Bot.OwnersChatIDs.Where(x => !string.IsNullOrWhiteSpace(x))
                                                                                      .Select(x => CommonHelper.GetCensorValue(x, 3))
                                                                                      .ToArray();
+        }
+
+        private static string RemoveTags(string? input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return string.Empty;
+
+            // Удаляем любые теги вида <...>, включая переносы строк внутри тега
+            return Regex.Replace(input, @"<[^>]*>", string.Empty, RegexOptions.Compiled);
         }
 
         private static IEnumerable<string> GetChildrenCollection(IConfigurationSection configurationSection, string sectionPath, bool isRequiredSection = true)
