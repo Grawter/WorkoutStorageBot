@@ -4,7 +4,7 @@ using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.UnitTests.Helpers;
 using WorkoutStorageModels.Entities.BusinessLogic;
 
-namespace WorkoutStorageBot.UnitTests.BusinessLogic.Helpers.Exceptions
+namespace WorkoutStorageBot.UnitTests.BusinessLogic.Exceptions
 {
     public class ModelExtensionTests
     {

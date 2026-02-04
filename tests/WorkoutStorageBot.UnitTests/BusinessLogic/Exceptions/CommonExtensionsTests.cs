@@ -1,7 +1,7 @@
 ﻿using FluentAssertions;
 using WorkoutStorageBot.BusinessLogic.Extensions;
 
-namespace WorkoutStorageBot.UnitTests.BusinessLogic.Helpers.Exceptions
+namespace WorkoutStorageBot.UnitTests.BusinessLogic.Exceptions
 {
     public class CommonExtensionsTests
     {

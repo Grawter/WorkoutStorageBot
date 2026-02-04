@@ -9,7 +9,7 @@ using WorkoutStorageBot.UnitTests.Helpers;
 using WorkoutStorageModels.Entities.BusinessLogic;
 using WorkoutStorageModels.Interfaces;
 
-namespace WorkoutStorageBot.UnitTests.BusinessLogic.Helpers.es
+namespace WorkoutStorageBot.UnitTests.BusinessLogic.Exceptions
 {
     public class EntityContextExtensionsTests
     {
