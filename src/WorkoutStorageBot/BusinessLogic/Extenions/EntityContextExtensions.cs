@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.Extenions;
 using WorkoutStorageBot.Model.AppContext;
@@ -12,7 +11,7 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
 {
     internal static class EntityContextExtensions
     {
-        internal static async Task AddEntity(this EntityContext db, IDTOByEntity DTOByEntity, bool isNeedSave = true)
+        internal static async Task AddEntity(this EntityContext db, IDTOByEntity DTOByEntity, bool isNeedSaveChanges = true)
         {
             ArgumentNullException.ThrowIfNull(db);
             ArgumentNullException.ThrowIfNull(DTOByEntity);
@@ -21,7 +20,7 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
 
             await db.AddAsync(entity);
 
-            if (isNeedSave)
+            if (isNeedSaveChanges)
             {
                 await db.SaveChangesAsync();
 
@@ -29,38 +28,84 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
             }
         }
 
-        internal static async Task AddEntities(this EntityContext db, IEnumerable<DTOExercise> DTOExercises, bool isNeedSave = true)
+        internal static async Task AddEntities(this EntityContext db, IEnumerable<IDTODomain> DTODomains, bool isNeedSaveChanges = true)
         {
             ArgumentNullException.ThrowIfNull(db);
-            ArgumentNullException.ThrowIfNull(DTOExercises);
+            ArgumentNullException.ThrowIfNull(DTODomains);
 
-            var pairs = DTOExercises.Select(x => new { DTO = x, Entity = x.ToExercise() })
-                                    .ToList();
+            List<DTOCycle> DTOCycles = DTODomains.OfType<DTOCycle>().ToList();
+            List<DTODay> DTODays = DTODomains.OfType<DTODay>().ToList();
+            List<DTOExercise> DTOExercises = DTODomains.OfType<DTOExercise>().ToList();
 
-            await db.Exercises.AddRangeAsync(pairs.Select(p => p.Entity));
+            if (DTOCycles.Count + DTODays.Count + DTOExercises.Count != DTODomains.Count())
+                throw new InvalidOperationException("Для добавления в БД был указан неожиданный тип данных");
 
-            if (isNeedSave)
+            if (DTOCycles.Count > 0)
             {
-                await db.SaveChangesAsync();
+                var pairs = DTOCycles.Select(x => new { DTO = x, Entity = x.ToCycle() })
+                                     .ToList();
 
-                foreach (var pair in pairs)
+                await db.Cycles.AddRangeAsync(pairs.Select(p => p.Entity));
+
+                if (isNeedSaveChanges)
                 {
-                    pair.DTO.Id = pair.Entity.Id;
+                    await db.SaveChangesAsync();
+
+                    foreach (var pair in pairs)
+                    {
+                        pair.DTO.Id = pair.Entity.Id;
+                    }
+                }
+            }
+
+            if (DTODays.Count > 0)
+            {
+                var pairs = DTODays.Select(x => new { DTO = x, Entity = x.ToDay() })
+                                   .ToList();
+
+                await db.Days.AddRangeAsync(pairs.Select(p => p.Entity));
+
+                if (isNeedSaveChanges)
+                {
+                    await db.SaveChangesAsync();
+
+                    foreach (var pair in pairs)
+                    {
+                        pair.DTO.Id = pair.Entity.Id;
+                    }
+                }
+            }
+
+            if (DTOExercises.Count > 0)
+            {
+                var pairs = DTOExercises.Select(x => new { DTO = x, Entity = x.ToExercise() })
+                                        .ToList();
+
+                await db.Exercises.AddRangeAsync(pairs.Select(p => p.Entity));
+
+                if (isNeedSaveChanges)
+                {
+                    await db.SaveChangesAsync();
+
+                    foreach (var pair in pairs)
+                    {
+                        pair.DTO.Id = pair.Entity.Id;
+                    }
                 }
             }
         }
 
-        internal static async Task AddEntities(this EntityContext db, IEnumerable<DTOResultExercise> DTOResultExercise, bool isNeedSave = true)
+        internal static async Task AddEntities(this EntityContext db, IEnumerable<DTOResultExercise> DTOResultExercises, bool isNeedSaveChanges = true)
         {
             ArgumentNullException.ThrowIfNull(db);
-            ArgumentNullException.ThrowIfNull(DTOResultExercise);
+            ArgumentNullException.ThrowIfNull(DTOResultExercises);
 
-            var pairs = DTOResultExercise.Select(x => new { DTO = x, Entity = x.ToResultExercise() })
-                                         .ToList();
+            var pairs = DTOResultExercises.Select(x => new { DTO = x, Entity = x.ToResultExercise() })
+                                          .ToList();
 
             await db.ResultsExercises.AddRangeAsync(pairs.Select(p => p.Entity));
 
-            if (isNeedSave)
+            if (isNeedSaveChanges)
             {
                 await db.SaveChangesAsync();
 
@@ -71,7 +116,7 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
             }
         }
 
-        internal static async Task UpdateEntity(this EntityContext db, IDTOByEntity DTOByEntity, bool isNeedSave = true)
+        internal static async Task UpdateEntity(this EntityContext db, IDTOByEntity DTOByEntity, bool isNeedSaveChanges = true)
         {
             ArgumentNullException.ThrowIfNull(db);
             ArgumentNullException.ThrowIfNull(DTOByEntity);
@@ -147,11 +192,11 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
                     throw new NotSupportedException($"Неподдерживаемый тип IDTOByEntity: {DTOByEntity.GetType().Name}");
             }
 
-            if (isNeedSave)
+            if (isNeedSaveChanges)
                 await db.SaveChangesAsync();
         }
 
-        internal static async Task UpdateEntities(this EntityContext db, IEnumerable<IDTOByEntity> DTOByEntities, bool isNeedSave = true)
+        internal static async Task UpdateEntities(this EntityContext db, IEnumerable<IDTOByEntity> DTOByEntities, bool isNeedSaveChanges = true)
         {
             ArgumentNullException.ThrowIfNull(DTOByEntities);
 
@@ -160,11 +205,11 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
                 await db.UpdateEntity(DTOByEntity, false);
             }
 
-            if (isNeedSave)
+            if (isNeedSaveChanges)
                 await db.SaveChangesAsync();
         }
 
-        internal static async Task RemoveEntity(this EntityContext db, IDTOByEntity DTOByEntity, bool isNeedSave = true)
+        internal static async Task RemoveEntity(this EntityContext db, IDTOByEntity DTOByEntity, bool isNeedSaveChanges = true)
         {
             ArgumentNullException.ThrowIfNull(db);
             ArgumentNullException.ThrowIfNull(DTOByEntity);
@@ -173,11 +218,11 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
 
             db.Remove(entity);
 
-            if (isNeedSave)
+            if (isNeedSaveChanges)
                 await db.SaveChangesAsync();
         }
 
-        internal static async Task RemoveEntities(this EntityContext db, IEnumerable<IDTOByEntity> DTOByEntities, bool isNeedSave = true)
+        internal static async Task RemoveEntities(this EntityContext db, IEnumerable<IDTOByEntity> DTOByEntities, bool isNeedSaveChanges = true)
         {
             ArgumentNullException.ThrowIfNull(DTOByEntities);
 
@@ -186,7 +231,7 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
                 await db.RemoveEntity(entity, false);
             }
 
-            if (isNeedSave)
+            if (isNeedSaveChanges)
                 await db.SaveChangesAsync();
         }
 
@@ -206,21 +251,17 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
             };
         }
 
-        internal static async Task<IDomain> GetDomainWithId(this EntityContext db, int id, DomainType domainType)
-            => await db.GetDomainWithId(id, domainType.ToString());
-        
-        internal static async Task<IDomain> GetDomainWithId(this EntityContext db, int id, string domainType)
+        private static async Task<IDomain> GetDomainWithId(this EntityContext db, int id, DomainType domainType)
         {
             ArgumentNullException.ThrowIfNull(db);
-            ArgumentException.ThrowIfNullOrWhiteSpace(domainType);
 
             return domainType switch
             {
-                CommonConsts.DomainsAndEntities.Cycle
+                DomainType.Cycle
                     => await db.Cycles.FindAsync(id) ?? throw new InvalidOperationException($"Not found cycle with ID = {id}"),
-                CommonConsts.DomainsAndEntities.Day
+                DomainType.Day
                     => await db.Days.FindAsync(id) ?? throw new InvalidOperationException($"Not found day with ID = {id}"),
-                CommonConsts.DomainsAndEntities.Exercise
+                DomainType.Exercise
                     => await db.Exercises.FindAsync(id) ?? throw new InvalidOperationException($"Not found Exercise with ID = {id}"),
                 _ => throw new NotImplementedException($"Неожиданный domainTyped: {domainType}")
             };
