@@ -43,7 +43,7 @@ namespace WorkoutStorageBot.Core.BotTools.Listener
             this.botSender = botSender;
 
             this.configurationData = configurationData;
-            ConfigurationManager.SetCensorToDBSettings(this.configurationData);
+            ConfigurationManager.SetCensorToConfigurationData(this.configurationData, false);
 
             cancellationTokenSource = new CancellationTokenSource();
         }

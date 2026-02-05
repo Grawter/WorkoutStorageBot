@@ -121,16 +121,15 @@ namespace WorkoutStorageBot.Application.Configuration
                 Directory.CreateDirectory(directory);
         }
 
-        internal static void SetCensorToDBSettings(ConfigurationData configurationData)
+        internal static void SetCensorToConfigurationData(ConfigurationData configurationData, bool isNeedCensorOwnersChatIDs)
         {
-            configurationData.DB.UserName = "******";
-            configurationData.DB.Password = "******";
+            SetCensorToDBSettings(configurationData.DB);
+            SetCensorToBotSettings(configurationData.Bot, isNeedCensorOwnersChatIDs);
         }
 
-        internal static string GetSerializedSafeDeepCopy(ConfigurationData configurationData)
+        internal static string GetSerializedSafeConfigurationData(ConfigurationData configurationData)
         {
             ConfigurationData safeDeepCopy = GetSafeDeepCopy(configurationData);
-            safeDeepCopy.AboutBotText = RemoveTags(safeDeepCopy.AboutBotText);
 
             return JsonSerializer.Serialize(safeDeepCopy, jsonSerializerOptions);
         }
@@ -138,7 +137,9 @@ namespace WorkoutStorageBot.Application.Configuration
         private static ConfigurationData GetSafeDeepCopy(ConfigurationData configurationData)
         {
             ConfigurationData deepCopy = GetDeepCopy(configurationData);
-            SetCensorToConfigurationData(deepCopy);
+            SetCensorToConfigurationData(deepCopy, true);
+
+            deepCopy.AboutBotText = RemoveTags(deepCopy.AboutBotText);
 
             return deepCopy;
         }
@@ -149,12 +150,18 @@ namespace WorkoutStorageBot.Application.Configuration
                     ?? throw new InvalidOperationException("Десериализация configurationData вернула null");
         }
 
-        private static void SetCensorToConfigurationData(ConfigurationData configurationData)
+        private static void SetCensorToDBSettings(DbSettings dbSettings)
         {
-            SetCensorToDBSettings(configurationData);
+            dbSettings.UserName = "******";
+            dbSettings.Password = "******";
+        }
 
-            configurationData.Bot.Token = CommonHelper.GetCensorValue(configurationData.Bot.Token, 3);
-            configurationData.Bot.OwnersChatIDs = configurationData.Bot.OwnersChatIDs.Where(x => !string.IsNullOrWhiteSpace(x))
+        private static void SetCensorToBotSettings(BotSettings botSettings, bool isNeedCensorOwnersChatIDs)
+        {
+            botSettings.Token = CommonHelper.GetCensorValue(botSettings.Token, 3);
+
+            if (isNeedCensorOwnersChatIDs)
+                botSettings.OwnersChatIDs = botSettings.OwnersChatIDs.Where(x => !string.IsNullOrWhiteSpace(x))
                                                                                      .Select(x => CommonHelper.GetCensorValue(x, 3))
                                                                                      .ToArray();
         }

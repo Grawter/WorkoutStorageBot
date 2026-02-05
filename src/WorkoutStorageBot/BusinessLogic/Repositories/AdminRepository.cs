@@ -30,7 +30,7 @@ namespace WorkoutStorageBot.BusinessLogic.Repositories
         private ILogger Logger { get; }
 
         internal string GetSafeConfigurationData()
-            => ConfigurationManager.GetSerializedSafeDeepCopy(CoreTools.ConfigurationData);
+            => ConfigurationManager.GetSerializedSafeConfigurationData(CoreTools.ConfigurationData);
 
         internal void ChangeWhiteListMode()
         {

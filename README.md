@@ -156,9 +156,9 @@ docker-compose up -d
 
     "CustomRulesLog": [
       {
-        "FullClassName": "",
-        "DBLogLevels": [ "" ],
-        "ConsoleLogLevels": [ "" ]
+        "FullClassName": "WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.PrimaryUpdateHandler",
+        "DBLogLevels": [ "Warning", "Error", "Critical" ],
+        "ConsoleLogLevels": [ "Warning" ]
       }
     ]
   },
