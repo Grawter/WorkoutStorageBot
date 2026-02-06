@@ -38,6 +38,8 @@ namespace WorkoutStorageBot.UnitTests.Application.Configuration
             customRuleLog.FullClassName.Should().Be("WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers.PrimaryUpdateHandler");
             customRuleLog.DBLogLevels.Should().Contain("Warning", "Error", "Critical");
             customRuleLog.ConsoleLogLevels.Should().Contain("Warning");
+
+            templateConfigurationData.AboutBotText.Should().Be("Some information about <b>bot</b>");
         }
 
         [Fact]
@@ -66,6 +68,9 @@ namespace WorkoutStorageBot.UnitTests.Application.Configuration
             }
 
             serializedSafeConfigurationData.Should().Contain(templateConfigurationData.LogInfo.CustomRulesLog.Single().FullClassName);
+
+
+            serializedSafeConfigurationData.Should().NotContainAll(["<", ">"]);
         }
 
         [Theory]

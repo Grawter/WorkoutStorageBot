@@ -166,7 +166,7 @@ docker-compose up -d
   /*
   AboutBot - Описание, выводимое из меню настройки по кнопке "О боте" [Необязательно]
   */
-  "AboutBot": "Some information about bot"
+  "AboutBot": "Some information about <b>bot</b>"
 }
 ```
 
