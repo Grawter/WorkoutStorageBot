@@ -1,8 +1,9 @@
 ﻿using System.Collections.Immutable;
 using WorkoutStorageBot.BusinessLogic.Buttons.Abstraction;
-using WorkoutStorageBot.BusinessLogic.Buttons.BusinessButtonsFactories;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Enums;
+using WorkoutStorageBot.BusinessLogic.Buttons.Factories;
+using WorkoutStorageBot.BusinessLogic.Buttons.Factories.TestFactories;
 
 namespace WorkoutStorageBot.BusinessLogic.Buttons.Storage
 {
@@ -96,6 +97,14 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.Storage
                #endregion
 
                {  ButtonsSet.None, (x) => new EmptyBF(x) },
+
+               #region Test area
+
+               {  ButtonsSet.HorizontalButtonsMoreThanExpectedTest, (x) => new HorizontalButtonsMoreThanExpectedTestBF(x) },
+               {  ButtonsSet.VerticalButtonsMoreThanExpectedTest, (x) => new VerticalButtonsMoreThanExpectedTestBF(x) },
+               {  ButtonsSet.HorizontalAndVerticalButtonsMoreThanExpectedTest, (x) => new HorizontalAndVerticalButtonsMoreThanExpectedTestBF(x) },
+
+               #endregion
            };
 
         internal static ButtonsFactory GetButtonsFactory(ButtonsSet buttonsSet, UserContext userContext)

@@ -36,13 +36,10 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.Abstraction
             if (backButtonsSet != ButtonsSet.None)
                 AddInlineButton("Назад", $"0|Back||{backButtonsSet}");
 
-            if (inlineKeyboardButtons.HasItemsInCollection())
-                inlineKeyboardButtonsMain.Add(inlineKeyboardButtons);
-
             return inlineKeyboardButtonsMain;
         }
 
-        internal abstract void AddBusinessButtons(Dictionary<string, string>? additionalParameters = null);
+        protected abstract void AddBusinessButtons(Dictionary<string, string>? additionalParameters = null);
 
         protected void AddInlineButton(string titleButton, string callBackDataWithoutId, bool onNewLine = true)
         {
@@ -79,11 +76,16 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.Abstraction
             }
         }
 
-        private string AddCallBackId(string callBackDataWithoutId)
+        protected void SaveHorizontalButtons()
         {
-            callBackDataWithoutId += $"|{CurrentUserContext.CallBackId}";
+            if (inlineKeyboardButtons.HasItemsInCollection())
+            {
+                ++verticalButtonsCounter;
 
-            return callBackDataWithoutId;
+                inlineKeyboardButtonsMain.Add(inlineKeyboardButtons.ToList());
+
+                inlineKeyboardButtons.Clear();
+            }
         }
 
         protected void GetDomainsInButtons(IEnumerable<IDTODomain>? source, string subDirection, bool isNeedShowID = false)
@@ -98,6 +100,13 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.Abstraction
                         AddInlineButton(domain.Name, $"2|{subDirection}|{domain.GetType().Name.Replace("DTO", string.Empty)}|{domain.Id}");
                 }
             }
+        }
+
+        private string AddCallBackId(string callBackDataWithoutId)
+        {
+            callBackDataWithoutId += $"|{CurrentUserContext.CallBackId}";
+
+            return callBackDataWithoutId;
         }
     }
 }

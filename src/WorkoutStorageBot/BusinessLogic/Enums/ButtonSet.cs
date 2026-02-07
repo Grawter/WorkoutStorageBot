@@ -45,5 +45,9 @@
         Admin,
             AdminLogs,
             AdminUsers,
+
+        HorizontalButtonsMoreThanExpectedTest,
+        VerticalButtonsMoreThanExpectedTest,
+        HorizontalAndVerticalButtonsMoreThanExpectedTest,
     }
 }

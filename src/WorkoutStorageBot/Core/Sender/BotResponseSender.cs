@@ -1,9 +1,9 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
+using WorkoutStorageBot.BusinessLogic.Buttons.Provider;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
-using WorkoutStorageBot.BusinessLogic.Helpers.Buttons;
 using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 
 namespace WorkoutStorageBot.Core.Sender
@@ -22,10 +22,10 @@ namespace WorkoutStorageBot.Core.Sender
             ArgumentNullException.ThrowIfNull(messageInformationSetting);
             ArgumentNullException.ThrowIfNull(currentUserContext);
 
-            InlineButtonsHelper buttonsHelper = new InlineButtonsHelper(currentUserContext);
-            ReplyMarkup buttons = buttonsHelper.GetInlineButtons(messageInformationSetting.ButtonsSets, messageInformationSetting.AdditionalParameters);
+            InlineButtonsProvider buttonsProvider = new InlineButtonsProvider(currentUserContext);
+            ReplyMarkup buttons = buttonsProvider.GetInlineButtons(messageInformationSetting.ButtonsSets, messageInformationSetting.AdditionalParameters);
 
-            string resultText = GetResultText(messageInformationSetting.Message, buttonsHelper.AllVerticalButtonsDisplayed, buttonsHelper.AllHorizontalButtonsDisplayed);
+            string resultText = GetResultText(messageInformationSetting.Message, buttonsProvider.AllVerticalButtonsDisplayed, buttonsProvider.AllHorizontalButtonsDisplayed);
 
             switch (messageInformationSetting)
             {
