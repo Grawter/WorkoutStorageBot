@@ -14,9 +14,9 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Exceptions
             // Arrange
             DTOModelBuilder DTOModelBuilder = new DTOModelBuilder().WithDTOUserInformation();
 
-            DTOUserInformation dTOUserInformation = DTOModelBuilder.DTOTestUserInformation;
+            DTOUserInformation DTOUserInformation = DTOModelBuilder.DTOTestUserInformation;
 
-            UserContext userContext = new UserContext(dTOUserInformation, WorkoutStorageBot.BusinessLogic.Enums.Roles.Admin, false);
+            UserContext userContext = new UserContext(DTOUserInformation, WorkoutStorageBot.BusinessLogic.Enums.Roles.Admin, false);
             
             // Act
             bool isAdmin = userContext.IsAdmin();
@@ -31,9 +31,10 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Exceptions
             // Arrange
             DTOModelBuilder DTOModelBuilder = new DTOModelBuilder().WithDTOUserInformation();
 
-            DTOUserInformation dTOUserInformation = DTOModelBuilder.DTOTestUserInformation;
+            DTOUserInformation DTOUserInformation = DTOModelBuilder.DTOTestUserInformation;
 
-            UserContext userContext = new UserContext(dTOUserInformation, WorkoutStorageBot.BusinessLogic.Enums.Roles.User, false);
+            UserContext userContext = new UserContext(DTOUserInformation, WorkoutStorageBot.BusinessLogic.Enums.Roles.User, false);
+            
             // Act
             bool isAdmin = userContext.IsAdmin();
 

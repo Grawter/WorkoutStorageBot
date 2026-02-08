@@ -96,8 +96,6 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.Storage
 
                #endregion
 
-               {  ButtonsSet.None, (x) => new EmptyBF(x) },
-
                #region Test area
 
                {  ButtonsSet.HorizontalButtonsMoreThanExpectedTest, (x) => new HorizontalButtonsMoreThanExpectedTestBF(x) },
@@ -105,6 +103,8 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.Storage
                {  ButtonsSet.HorizontalAndVerticalButtonsMoreThanExpectedTest, (x) => new HorizontalAndVerticalButtonsMoreThanExpectedTestBF(x) },
 
                #endregion
+
+               {  ButtonsSet.None, (x) => new EmptyBF(x) },
            };
 
         internal static ButtonsFactory GetButtonsFactory(ButtonsSet buttonsSet, UserContext userContext)
