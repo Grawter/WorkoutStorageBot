@@ -2,7 +2,7 @@
 
 namespace WorkoutStorageBot.BusinessLogic.Enums
 {
-    internal enum DomainType
+    public enum DomainType
     {
         Cycle = 0,
         Day = 1,

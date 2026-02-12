@@ -2,7 +2,7 @@
 
 namespace WorkoutStorageBot.Model.DTO.BusinessLogic
 {
-    internal record class DTOResultExercise : IDTOByEntity
+    internal class DTOResultExercise : IDTOByEntity
     {
         public int Id { get; set; }
         public int? Count { get; set; }

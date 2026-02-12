@@ -513,7 +513,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
                     this.CurrentUserContext.ActiveCycle.IsActive = false;
                     await this.Db.UpdateEntity(this.CurrentUserContext.ActiveCycle, false);
-                    this.CurrentUserContext.UpdateActiveCycleForce(this.CurrentUserContext.DataManager.CurrentCycle);
+                    this.CurrentUserContext.SetNewActiveCycleForce(this.CurrentUserContext.DataManager.CurrentCycle);
                     await this.Db.UpdateEntity(this.CurrentUserContext.ActiveCycle);
 
                     responseTextBuilder = new ResponseTextBuilder($"Активный цикл изменён на {this.CurrentUserContext.ActiveCycle.Name.AddBoldAndQuotes()}",
@@ -934,11 +934,11 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
             IInformationSet result;
 
-            if (this.CurrentUserContext.LimitsManager.HasBlockByTimeLimit("Export", out DateTime limit))
+            if (this.CurrentUserContext.LimitsManager.HasBlockByTimeLimit("Export", out DateTime endLimitDateTime))
             {
                 responseTextBuilder =
-                    new ResponseTextBuilder($"Следующее выполнение этой операции будет доступно {limit.ToString(CommonConsts.Common.DateTimeFormatHoursFirst)})",
-                                                "Выберите интересующую настройку");
+                    new ResponseTextBuilder($"Следующее выполнение этой операции будет доступно {endLimitDateTime.ToString(CommonConsts.Common.DateTimeFormatHoursFirst)})",
+                                            "Выберите интересующую настройку");
 
                 result = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
             }

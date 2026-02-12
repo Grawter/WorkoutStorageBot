@@ -180,7 +180,7 @@ AND date(re.DateTime) = last.MaxDate";
 
         private IInformationSet StartExerciseTimerCommand()
         {
-            this.CurrentUserContext.DataManager.StartExerciseTimer();
+            this.CurrentUserContext.DataManager.SetCurrentDateTimeToExerciseTimer();
 
             ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder("Таймер запущен");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.FixExerciseTimer, ButtonsSet.None);

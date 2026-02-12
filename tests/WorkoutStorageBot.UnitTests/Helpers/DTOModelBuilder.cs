@@ -19,11 +19,25 @@ namespace WorkoutStorageBot.UnitTests.Helpers
             : throw new InvalidOperationException($"{nameof(dtoTestCycle)} not initialized");
 
 
+        private List<DTOCycle> dtoTestCycles;
+        private bool dtoTestCyclesWasInit;
+        internal List<DTOCycle> DTOTestCycles => dtoTestCyclesWasInit
+            ? dtoTestCycles
+            : throw new InvalidOperationException($"{nameof(dtoTestCycles)} not initialized");
+
+
         private DTODay dtoTestDay;
         private bool dtoTestDayWasInit;
         internal DTODay DTOTestDay => dtoTestDayWasInit
             ? dtoTestDay
             : throw new InvalidOperationException($"{nameof(dtoTestDay)} not initialized");
+
+
+        private List<DTODay> dtoTestDays;
+        private bool dtoTestDaysWasInit;
+        internal List<DTODay> DTOTestDays => dtoTestDaysWasInit
+            ? dtoTestDays
+            : throw new InvalidOperationException($"{nameof(dtoTestDays)} not initialized");
 
 
         private DTOExercise dtoTestExercise;
@@ -33,11 +47,26 @@ namespace WorkoutStorageBot.UnitTests.Helpers
             : throw new InvalidOperationException($"{nameof(dtoTestExercise)} not initialized");
 
 
+        private List<DTOExercise> dtoTestExercises;
+        private bool dtoTestExercisesWasInit;
+        internal List<DTOExercise> DTOTestExercises => dtoTestExercisesWasInit
+            ? dtoTestExercises
+            : throw new InvalidOperationException($"{nameof(dtoTestExercises)} not initialized");
+
+
         private DTOResultExercise dtoTestResultExercise;
         private bool dtoTestResultExerciseWasInit;
         internal DTOResultExercise DTOTestResultExercise => dtoTestResultExerciseWasInit
             ? dtoTestResultExercise
             : throw new InvalidOperationException($"{nameof(dtoTestResultExercise)} not initialized");
+
+
+        private List<DTOResultExercise> dtoTestResultExercises;
+        private bool dtoTestResultExercisesWasInit;
+        internal List<DTOResultExercise> DTOTestResultExercises => dtoTestResultExercisesWasInit
+            ? dtoTestResultExercises
+            : throw new InvalidOperationException($"{nameof(dtoTestResultExercises)} not initialized");
+
 
         internal DTOModelBuilder()
         {
@@ -95,6 +124,34 @@ namespace WorkoutStorageBot.UnitTests.Helpers
             return this;
         }
 
+        internal DTOModelBuilder WithDTOCyclesByDTOUserInformation()
+        {
+            dtoTestCycles =
+           [
+                new DTOCycle() { Id = 1, Name = "DTOCycle1", UserInformation = DTOTestUserInformation, UserInformationId = DTOTestUserInformation.Id },
+                new DTOCycle() { Id = 2, Name = "DTOCycle2", UserInformation = DTOTestUserInformation, UserInformationId = DTOTestUserInformation.Id },
+           ];
+
+            dtoTestCyclesWasInit = true;
+
+            DTOTestUserInformation.Cycles = DTOTestCycles;
+
+            return this;
+        }
+
+        internal DTOModelBuilder WithDTOCycles()
+        {
+            dtoTestCycles =
+           [
+                new DTOCycle() { Id = 1, Name = "DTOCycle1" },
+                new DTOCycle() { Id = 2, Name = "DTOCycle2" },
+           ];
+
+            dtoTestCyclesWasInit = true;
+
+            return this;
+        }
+
         internal DTOModelBuilder WithDTODayByDTOCycle()
         {
             dtoTestDay = new DTODay
@@ -123,6 +180,34 @@ namespace WorkoutStorageBot.UnitTests.Helpers
             };
 
             dtoTestDayWasInit = true;
+
+            return this;
+        }
+
+        internal DTOModelBuilder WithDTODaysByDTOCycle()
+        {
+            dtoTestDays =
+           [
+                new DTODay() { Id = 1, Name = "DTODay1", Cycle = DTOTestCycle, CycleId = DTOTestCycle.Id },
+                new DTODay() { Id = 2, Name = "DTODay2", Cycle = DTOTestCycle, CycleId = DTOTestCycle.Id },
+           ];
+
+            dtoTestDaysWasInit = true;
+
+            DTOTestCycle.Days = DTOTestDays;
+
+            return this;
+        }
+
+        internal DTOModelBuilder WithDTODays()
+        {
+            dtoTestDays =
+           [
+                new DTODay() { Id = 1, Name = "DTODay1" },
+                new DTODay() { Id = 2, Name = "DTODay2" },
+           ];
+
+            dtoTestDaysWasInit = true;
 
             return this;
         }
@@ -161,6 +246,38 @@ namespace WorkoutStorageBot.UnitTests.Helpers
             return this;
         }
 
+        internal DTOModelBuilder WithDTOExercisesByDTODay()
+        {
+            dtoTestExercises =
+           [
+                new DTOExercise() { Id = 1, Name = "DTOExercise1", Mode = ExercisesMods.Count, Day = DTOTestDay, DayId = DTOTestDay.Id },
+                new DTOExercise() { Id = 2, Name = "DTOExercise2", Mode = ExercisesMods.WeightCount, Day = DTOTestDay, DayId = DTOTestDay.Id },
+                new DTOExercise() { Id = 3, Name = "DTOExercise3", Mode = ExercisesMods.Timer, Day = DTOTestDay, DayId = DTOTestDay.Id },
+                new DTOExercise() { Id = 4, Name = "DTOExercise4", Mode = ExercisesMods.FreeResult, Day = DTOTestDay, DayId = DTOTestDay.Id },
+           ];
+
+            dtoTestExercisesWasInit = true;
+
+            DTOTestDay.Exercises = DTOTestExercises;
+
+            return this;
+        }
+
+        internal DTOModelBuilder WithDTOExercises()
+        {
+            dtoTestExercises =
+           [
+                new DTOExercise() { Id = 1, Name = "DTOExercise1", Mode = ExercisesMods.Count },
+                new DTOExercise() { Id = 2, Name = "DTOExercise2", Mode = ExercisesMods.WeightCount },
+                new DTOExercise() { Id = 3, Name = "DTOExercise3", Mode = ExercisesMods.Timer },
+                new DTOExercise() { Id = 4, Name = "DTOExercise4", Mode = ExercisesMods.FreeResult },
+           ];
+
+            dtoTestExercisesWasInit = true;
+
+            return this;
+        }
+
         internal DTOModelBuilder WithDTOResultExerciseByDTOExercise()
         {
             dtoTestResultExercise = new DTOResultExercise
@@ -191,6 +308,38 @@ namespace WorkoutStorageBot.UnitTests.Helpers
             };
 
             dtoTestResultExerciseWasInit = true;
+
+            return this;
+        }
+
+        internal DTOModelBuilder WithDTOResultExercisesByDTOExercise()
+        {
+            dtoTestResultExercises =
+           [
+                new DTOResultExercise() { Id = 1, Count = 10, Weight = 20, FreeResult = "DTOResultExercise1", DateTime = DateTime.Now, Exercise = DTOTestExercise, ExerciseId = DTOTestExercise.Id },
+                new DTOResultExercise() { Id = 2, Count = 20, Weight = 40, FreeResult = "DTOResultExercise2", DateTime = DateTime.Now.AddMinutes(1), Exercise = DTOTestExercise, ExerciseId = DTOTestExercise.Id },
+                new DTOResultExercise() { Id = 3, Count = 30, Weight = 60, FreeResult = "DTOResultExercise3", DateTime = DateTime.Now.AddMinutes(2), Exercise = DTOTestExercise, ExerciseId = DTOTestExercise.Id },
+                new DTOResultExercise() { Id = 4, Count = 40, Weight = 80, FreeResult = "DTOResultExercise4", DateTime = DateTime.Now.AddMinutes(3), Exercise = DTOTestExercise, ExerciseId = DTOTestExercise.Id },
+           ];
+
+            dtoTestResultExercisesWasInit = true;
+
+            DTOTestExercise.ResultsExercise = DTOTestResultExercises;
+
+            return this;
+        }
+
+        internal DTOModelBuilder WithDTOResultExercises()
+        {
+            dtoTestResultExercises =
+           [
+                new DTOResultExercise() { Id = 1, Count = 10, Weight = 20, FreeResult = "DTOResultExercise1", DateTime = DateTime.Now },
+                new DTOResultExercise() { Id = 2, Count = 20, Weight = 40, FreeResult = "DTOResultExercise2", DateTime = DateTime.Now.AddMinutes(1) },
+                new DTOResultExercise() { Id = 3, Count = 30, Weight = 60, FreeResult = "DTOResultExercise3", DateTime = DateTime.Now.AddMinutes(2) },
+                new DTOResultExercise() { Id = 4, Count = 40, Weight = 80, FreeResult = "DTOResultExercise4", DateTime = DateTime.Now.AddMinutes(3) },
+           ];
+
+            dtoTestResultExercisesWasInit = true;
 
             return this;
         }

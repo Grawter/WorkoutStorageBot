@@ -31,9 +31,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                { MessageNavigationTarget.AddExercises, (x) => Task.FromResult(x.AddExercisesCommand()) },
                { MessageNavigationTarget.AddResultForExercise, (x) => Task.FromResult(x.AddResultForExerciseCommand()) },
                { MessageNavigationTarget.AddCommentForExerciseTimer, (x) => x.AddCommentForExerciseTimerCommand() },
-               { MessageNavigationTarget.ChangeNameCycle, (x) => x.ChangeNameCommand(domainType: CommonConsts.DomainsAndEntities.Cycle) },
-               { MessageNavigationTarget.ChangeNameDay, (x) => x.ChangeNameCommand(domainType: CommonConsts.DomainsAndEntities.Day) },
-               { MessageNavigationTarget.ChangeNameExercise, (x) => x.ChangeNameCommand(domainType: CommonConsts.DomainsAndEntities.Exercise) },
+               { MessageNavigationTarget.ChangeNameCycle, (x) => x.ChangeNameCommand(domainType: DomainType.Cycle) },
+               { MessageNavigationTarget.ChangeNameDay, (x) => x.ChangeNameCommand(domainType: DomainType.Day) },
+               { MessageNavigationTarget.ChangeNameExercise, (x) => x.ChangeNameCommand(domainType: DomainType.Exercise) },
                { MessageNavigationTarget.FindResultsByDate, (x) => x.FindResultByDateCommand(isNeedFindByCurrentDay: false) },
                { MessageNavigationTarget.FindResultsByDateInDay, (x) => x.FindResultByDateCommand(isNeedFindByCurrentDay: true) },
                { MessageNavigationTarget.FindLogByID, (x) => x.FindLogByIDCommand(isEventID: false) },
@@ -116,11 +116,11 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 return informationSet;
             }
 
-            bool hasActiveCycle = this.CurrentUserContext.ActiveCycle == null ? false : true;
-            DTOCycle currentCycle = this.CurrentUserContext.DataManager.SetCurrentCycle(requestTextBuilder.Build(), !hasActiveCycle, this.CurrentUserContext.UserInformation);
+            bool isNeedSetActiveCycle = this.CurrentUserContext.ActiveCycle == null ? true : false;
+            DTOCycle currentCycle = this.CurrentUserContext.DataManager.CreateAndSetCurrentCycle(requestTextBuilder.Build(), isNeedSetActiveCycle, this.CurrentUserContext.UserInformation);
 
-            if (!hasActiveCycle)
-                this.CurrentUserContext.UpdateActiveCycleForce(currentCycle);
+            if (isNeedSetActiveCycle)
+                this.CurrentUserContext.SetNewActiveCycleForce(currentCycle);
 
             this.CurrentUserContext.UserInformation.Cycles.Add(currentCycle);
             await this.Db.AddEntity(currentCycle);
@@ -178,7 +178,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 return informationSet;
             }
 
-            DTODay currentDay = this.CurrentUserContext.DataManager.SetCurrentDay(domainName);
+            DTODay currentDay = this.CurrentUserContext.DataManager.CreateAndSetCurrentDay(domainName);
 
             this.CurrentUserContext.DataManager.CurrentCycle.Days.Add(currentDay);
 
@@ -357,7 +357,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             return informationSet;
         }
 
-        private async Task<IInformationSet> ChangeNameCommand(string domainType)
+        private async Task<IInformationSet> ChangeNameCommand(DomainType domainType)
         {
             requestTextBuilder.RemoveCompletely(25).WithoutServiceSymbol();
 
@@ -369,7 +369,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             switch (domainType)
             {
-                case CommonConsts.DomainsAndEntities.Cycle:
+                case DomainType.Cycle:
                     if (AlreadyExistDomainWithName(domainName, DomainType.Cycle))
                     {
                         responseTextBuilder = new ResponseTextBuilder("Ошибка при добавлении названия!", $"Цикл с названием {domainName.AddBoldAndQuotes()} уже существует",
@@ -385,7 +385,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                     buttonsSets = (ButtonsSet.SettingCycle, ButtonsSet.CycleList);
                     break;
 
-                case CommonConsts.DomainsAndEntities.Day:
+                case DomainType.Day:
                     if (AlreadyExistDomainWithName(domainName, DomainType.Day))
                     {
                         responseTextBuilder = new ResponseTextBuilder("Ошибка при сохранении!", $"В этом цикле уже существует день с названием {domainName.AddBoldAndQuotes()}",
@@ -402,7 +402,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                     buttonsSets = (ButtonsSet.SettingDay, ButtonsSet.DaysList);
                     break;
 
-                case CommonConsts.DomainsAndEntities.Exercise:
+                case DomainType.Exercise:
 
                     if (AlreadyExistDomainWithName(domainName, DomainType.Exercise))
                     {

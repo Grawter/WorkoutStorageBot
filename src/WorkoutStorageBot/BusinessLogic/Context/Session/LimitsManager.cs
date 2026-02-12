@@ -16,29 +16,29 @@ namespace WorkoutStorageBot.BusinessLogic.Context.Session
 
         internal bool IsEnableLimit { get; set; }
 
-        internal bool HasBlockByTimeLimit(string limitName, out DateTime limit)
+        internal bool HasBlockByTimeLimit(string limitName, out DateTime endLimitDateTime)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(limitName);
 
-            limit = DateTime.MinValue;
+            endLimitDateTime = DateTime.MinValue;
 
             if (!IsEnableLimit)
                 return false;
 
-            if (!timeLimits.TryGetValue(limitName, out limit))
+            if (!timeLimits.TryGetValue(limitName, out endLimitDateTime))
                 return false;
 
-            return limit >= DateTime.Now;
+            return endLimitDateTime >= DateTime.Now;
         }
 
-        internal bool AddOrUpdateTimeLimit(string limitName, DateTime newLimit)
+        internal bool AddOrUpdateTimeLimit(string limitName, DateTime newEndLimitDateTime)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(limitName);
 
             if (!IsEnableLimit) 
                 return false;
 
-            timeLimits.AddOrUpdate(limitName, newLimit, (_, _) => newLimit);
+            timeLimits.AddOrUpdate(limitName, newEndLimitDateTime, (_, _) => newEndLimitDateTime);
 
             return true;
         }

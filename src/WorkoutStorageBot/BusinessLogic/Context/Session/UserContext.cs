@@ -35,7 +35,7 @@ namespace WorkoutStorageBot.BusinessLogic.Context.Session
             LimitsManager = new(isEnableLimit);
         }
 
-        internal void UpdateActiveCycleForce(DTOCycle cycle)
+        internal void SetNewActiveCycleForce(DTOCycle cycle)
         {
             ActiveCycle = cycle;
             ActiveCycle.IsActive = true;
