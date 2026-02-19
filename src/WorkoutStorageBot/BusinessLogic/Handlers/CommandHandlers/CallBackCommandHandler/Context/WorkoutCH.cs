@@ -169,7 +169,7 @@ AND date(re.DateTime) = last.MaxDate";
 
         private async Task<IInformationSet> FindResultsByDateCommand()
         {
-            string findedDate = callbackQueryParser.GetRequiredAdditionalParameter(0);
+            string findedDate = callbackQueryParser.AdditionalParameters.First();
 
             bool isNeedFindByCurrentDay = callbackQueryParser.DomainType == CommonConsts.DomainsAndEntities.Exercise;
 

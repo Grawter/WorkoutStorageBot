@@ -1,4 +1,6 @@
-﻿using WorkoutStorageModels.Entities.BusinessLogic;
+﻿#nullable disable
+
+using WorkoutStorageModels.Entities.BusinessLogic;
 
 namespace WorkoutStorageBot.UnitTests.Helpers
 {
@@ -132,7 +134,7 @@ namespace WorkoutStorageBot.UnitTests.Helpers
             testExercise = new Exercise
             {
                 Id = 100,
-                Name = "Day 1",
+                Name = "Exercise 1",
                 Mode = ExercisesMods.Count,
                 Day = TestDay,
                 DayId = TestDay.Id,
@@ -151,7 +153,7 @@ namespace WorkoutStorageBot.UnitTests.Helpers
             testExercise = new Exercise
             {
                 Id = 100,
-                Name = "Day 1",
+                Name = "Exercise 1",
                 Mode = ExercisesMods.Count,
                 IsArchive = true
             };

@@ -4,10 +4,9 @@
     {
         internal CallbackQueryParser(string data)
         {
-            AllParameters = data.Split(['|']);
+            ArgumentNullException.ThrowIfNullOrWhiteSpace(data);
 
-            if (AllParameters.Length == 0)
-                throw new FormatException("Получен пустой CallBack");
+            AllParameters = data.Split(['|']);
         }
 
         internal int Direction { get => int.Parse(AllParameters[0]); }
@@ -18,14 +17,7 @@
 
         private string[] AllParameters { get; }
 
-
-        internal string GetRequiredParameter(int index)
-            => AllParameters[index];
-
-        internal string GetRequiredAdditionalParameter(int index)
-            => AdditionalParameters[index];
-
-        public bool TryGetAdditionalParameter(int index, out string? value)
+        internal bool TryGetAdditionalParameter(int index, out string? value)
         {
             if (index >= 0 && index < AdditionalParameters.Count)
             {

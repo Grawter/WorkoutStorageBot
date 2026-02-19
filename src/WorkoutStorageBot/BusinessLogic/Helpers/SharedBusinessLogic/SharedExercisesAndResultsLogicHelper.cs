@@ -49,6 +49,9 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic
 
         internal static List<DTOExercise> GetExercisesFromText(string text)
         {
+            if (string.IsNullOrWhiteSpace(text))
+                throw new CreateExerciseException("Не удалось начать парсинг строки для создания упражнений, т.к. получена пустая строка");
+
             List<DTOExercise> exercises = new List<DTOExercise>();
 
             foreach (string exerciseWithType in text.Split(';', stringSplitOptions))
@@ -70,13 +73,14 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic
                 exercises.Add(exercise);
             }
 
-            return exercises.Count > 0
-                ? exercises
-                : throw new CreateExerciseException("Не удалось получить ни одного упражнения");
+            return exercises;
         }
 
         internal static List<DTOResultExercise> GetResultsExerciseFromText(string text, ExercisesMods currentExerciseMode)
         {
+            if (string.IsNullOrWhiteSpace(text))
+                throw new CreateResultExerciseException("Не удалось начать парсинг строки для создания результатов упражнений, т.к. получена пустая строка");
+
             List<DTOResultExercise> results = new();
 
             StringSplitOptions stringSplitOptions = StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries;
@@ -88,11 +92,20 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic
                 _ => string.Empty
             };
 
-            foreach (string resultExerciseStr in text.Split(separator, stringSplitOptions))
+            if (currentExerciseMode == ExercisesMods.FreeResult)
             {
-                DTOResultExercise resultExercise = GetResultExerciseFromText(resultExerciseStr.Trim(), currentExerciseMode);
+                DTOResultExercise resultExercise = GetResultExerciseFromText(text.Trim(), currentExerciseMode);
 
                 results.Add(resultExercise);
+            }
+            else
+            {
+                foreach (string resultExerciseStr in text.Split(separator, stringSplitOptions))
+                {
+                    DTOResultExercise resultExercise = GetResultExerciseFromText(resultExerciseStr.Trim(), currentExerciseMode);
+
+                    results.Add(resultExercise);
+                }
             }
 
             return results;
@@ -117,7 +130,10 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic
 
                 case ExercisesMods.WeightCount:
 
-                    string[] resultExerciseWeightCount = resultExerciseStr.Split(' ', stringSplitOptions);
+                    string[] resultExerciseWeightCount = resultExerciseStr.Split(" ", stringSplitOptions);
+
+                    if (resultExerciseWeightCount.Length != 2)
+                        throw new CreateResultExerciseException($"Некорректный ввод. Ожидаемое кол-во аргументов больше 2 для упражнения с типом {currentType}");
 
                     string weightStr = resultExerciseWeightCount.FirstOrDefault()
                         ?? throw new CreateResultExerciseException($"Не удалось получить указанный вес подхода для упражнения с типом {currentType}");
@@ -309,11 +325,22 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic
 
             IEnumerable<IGrouping<int, ResultExercise>> groupsResultsExercise = resultsExercises.GroupBy(x => x.ExerciseId);
 
+            string dateStr = string.Empty;
+
             foreach (IGrouping<int, ResultExercise> groupResultExercise in groupsResultsExercise)
             {
                 ResultExercise firstResultExercise = groupResultExercise.First();
 
-                sb.AppendLine($"Упражнение: {firstResultExercise.Exercise.ThrowIfNull().Name.AddBoldAndQuotes()} | Дата: {firstResultExercise.DateTime.ToString(CommonConsts.Common.DateFormat).AddBoldAndQuotes()}");
+                string tempDateStr = firstResultExercise.DateTime.ToString(CommonConsts.Common.DateFormat).AddBoldAndQuotes();
+
+                if (dateStr != tempDateStr)
+                {
+                    dateStr = tempDateStr;
+
+                    sb.AppendLine($"Дата: {tempDateStr}");
+                }
+
+                sb.AppendLine($"Упражнение: {firstResultExercise.Exercise.ThrowIfNull().Name.AddBoldAndQuotes()}");
 
                 foreach (ResultExercise resultExercise in groupResultExercise)
                 {
@@ -326,7 +353,7 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic
             return sb.ToString().Trim();
         }
 
-        internal static string ConvertResultExerciseToString(ResultExercise resultExercise)
+        private static string ConvertResultExerciseToString(ResultExercise resultExercise)
         {
             if (!string.IsNullOrWhiteSpace(resultExercise.FreeResult))
                 return $"=> {resultExercise.FreeResult}";

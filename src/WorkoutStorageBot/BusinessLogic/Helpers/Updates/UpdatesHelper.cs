@@ -6,8 +6,6 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Updates
 {
     internal static class UpdatesHelper
     {
-        private const string NotSupportedData = "NotSupportedData";
-
         internal static IUpdateInfo GetUpdateInfo(Update update)
         {
             ArgumentNullException.ThrowIfNull(update);
@@ -18,47 +16,23 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Updates
             {
                 case UpdateType.Message:
 
-                    if (update.Message != null)
+                    if (update.Message != null && update.Message.From != null)
                     {
                         if (update.Message.Type == MessageType.Text)
-                            result = new ShortUpdateInfo(update, update.Message.From, update.Message.Chat.Id, update.Message.Text, update.Type, true);
+                            result = new ShortUpdateInfo(update, update.Message.From, update.Message.Chat.Id, update.Message.Text, update.Type, true, update.Message.Type);
                         else
-                            result = new ShortUpdateInfo(update, update.Message.From, update.Message.Chat.Id, update.Message.Type.ToString(), update.Type, false);
+                            result = new ShortUpdateInfo(update, update.Message.From, update.Message.Chat.Id, string.Empty, update.Type, false, update.Message.Type);
                     }
                     break;
+
                 case UpdateType.CallbackQuery:
-                    if (update.CallbackQuery != null && update.CallbackQuery.Message != null)
+                    if (update.CallbackQuery != null && update.CallbackQuery.From != null && update.CallbackQuery.Message != null)
                         result = new ShortUpdateInfo(update, update.CallbackQuery.From, update.CallbackQuery.Message.Chat.Id, update.CallbackQuery.Data, update.Type, true);
                     break;
 
                 case UpdateType.EditedMessage:
-                    if (update.EditedMessage != null)
-                        result = new ShortUpdateInfo(update, update.EditedMessage.From, update.EditedMessage.Chat.Id, NotSupportedData, update.Type, false);
-                    break;
-
-                case UpdateType.ChannelPost:
-                    if (update.ChannelPost != null)
-                        result = new ShortUpdateInfo(update, update.ChannelPost.From, update.ChannelPost.Chat.Id, NotSupportedData, update.Type, false);
-                    break;
-
-                case UpdateType.EditedChannelPost:
-                    if (update.EditedChannelPost != null)
-                        result = new ShortUpdateInfo(update, update.EditedChannelPost.From, update.EditedChannelPost.Chat.Id, NotSupportedData, update.Type, false);
-                    break;
-
-                case UpdateType.MyChatMember:
-                    if (update.MyChatMember != null)
-                        result = new ShortUpdateInfo(update, update.MyChatMember.From, update.MyChatMember.Chat.Id, NotSupportedData, update.Type, false);
-                    break;
-
-                case UpdateType.ChatMember:
-                    if (update.ChatMember != null)
-                        result = new ShortUpdateInfo(update, update.ChatMember.From, update.ChatMember.Chat.Id, NotSupportedData, update.Type, false);
-                    break;
-
-                case UpdateType.ChatJoinRequest:
-                    if (update.ChatJoinRequest != null)
-                        result = new ShortUpdateInfo(update, update.ChatJoinRequest.From, update.ChatJoinRequest.Chat.Id, NotSupportedData, update.Type, false);
+                    if (update.EditedMessage != null && update.EditedMessage.From != null)
+                        result = new ShortUpdateInfo(update, update.EditedMessage.From, update.EditedMessage.Chat.Id, update.EditedMessage.Text, update.Type, false);
                     break;
 
                 default:

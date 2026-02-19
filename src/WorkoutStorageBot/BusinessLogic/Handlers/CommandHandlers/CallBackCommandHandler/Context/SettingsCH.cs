@@ -113,7 +113,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
         private async Task <IInformationSet> UnArchiveCommand()
         {
-            string domainIDStr = callbackQueryParser.GetRequiredAdditionalParameter(0);
+            string domainIDStr = callbackQueryParser.AdditionalParameters.First();
             int domainID = int.Parse(domainIDStr);
 
             IDTODomain? DTODomain = null;
@@ -402,7 +402,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             ResponseTextBuilder responseTextBuilder;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
-            string domainIDStr = callbackQueryParser.GetRequiredAdditionalParameter(0);
+            string domainIDStr = callbackQueryParser.AdditionalParameters.First();
             int domainID = int.Parse(domainIDStr);
 
             switch (callbackQueryParser.DomainType)
@@ -608,7 +608,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             (ButtonsSet, ButtonsSet) buttonsSets;
             IInformationSet informationSet;
 
-            string targetDomainIDStr = callbackQueryParser.GetRequiredAdditionalParameter(0);
+            string targetDomainIDStr = callbackQueryParser.AdditionalParameters.First();
             int targetDomainID = int.Parse(targetDomainIDStr);
 
             switch (callbackQueryParser.DomainType)
@@ -965,7 +965,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                         recyclableMemoryStream = await ExcelExportHelper.GetExcelFile(this.CurrentUserContext.UserInformation.Cycles, resultsExercisesForExcel, monthFilterPeriod);
                     break;
                     case ".json":
-                        recyclableMemoryStream = await JsonExportHelper.GetJSONFile(this.CurrentUserContext.UserInformation.Cycles, resultsExercisesForExcel, monthFilterPeriod);
+                        recyclableMemoryStream = await JsonExportHelper.GetJSONFile(this.CurrentUserContext.UserInformation, resultsExercisesForExcel, monthFilterPeriod);
                     break;
                     default:
                         throw new NotSupportedException("Неподдерживаемый формат экспорта");

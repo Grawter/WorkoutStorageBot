@@ -153,7 +153,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
             string textUpdateType;
 
             if (shortUpdateInfo.UpdateType == UpdateType.Message)
-                textUpdateType = shortUpdateInfo.Data;
+                textUpdateType = $"Message/{shortUpdateInfo.MessageType}";
             else
                 textUpdateType = shortUpdateInfo.UpdateType.ToString();
 

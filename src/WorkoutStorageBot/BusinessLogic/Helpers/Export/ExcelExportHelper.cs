@@ -4,6 +4,7 @@ using OfficeOpenXml.Style;
 using System.Drawing;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Extenions;
+using WorkoutStorageBot.BusinessLogic.Helpers.Stream;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageModels.Entities.BusinessLogic;
 
@@ -18,7 +19,7 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Export
             DateTime filterDateTime = CommonExportHelper.GetFilterDateTime(monthFilterPeriod, allUserResultsExercises);
             IQueryable<ResultExercise> resultExercisesByFilterData = CommonExportHelper.GetResultExercisesByFilterDate(allUserResultsExercises, filterDateTime);
 
-            RecyclableMemoryStream recyclableMemoryStream = CommonExportHelper.RecyclableMSManager.GetStream();
+            RecyclableMemoryStream recyclableMemoryStream = StreamHelper.RecyclableMSManager.GetStream();
 
             using (ExcelPackage package = new ExcelPackage())
             {

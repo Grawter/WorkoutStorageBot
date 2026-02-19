@@ -5,6 +5,7 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Text.Unicode;
 using WorkoutStorageBot.BusinessLogic.Extenions;
+using WorkoutStorageBot.BusinessLogic.Helpers.Stream;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageModels.Entities.BusinessLogic;
 
@@ -24,31 +25,17 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Export
             Encoder = JavaScriptEncoder.Create(UnicodeRanges.All), // Чтобы кириллические (или возможные другие) символы не экранировались
         };
 
-        internal static async Task<RecyclableMemoryStream> GetJSONFile(List<DTOCycle> allUserCycles, IQueryable<ResultExercise> allUserResultsExercises, int monthFilterPeriod)
+        internal static async Task<RecyclableMemoryStream> GetJSONFile(DTOUserInformation DTOUserInformation, IQueryable<ResultExercise> allUserResultsExercises, int monthFilterPeriod)
         {
-            UnionExercisesAndResults(allUserCycles, allUserResultsExercises, monthFilterPeriod);
+            UnionExercisesAndResults(DTOUserInformation.Cycles, allUserResultsExercises, monthFilterPeriod);
 
-            JsonNode rootNode = await GetFinalRootNode(allUserCycles);
+            JsonNode rootNode = GetFinalRootNode(DTOUserInformation);
 
-            RecyclableMemoryStream recyclableMemoryStream = CommonExportHelper.RecyclableMSManager.GetStream();
+            RecyclableMemoryStream recyclableMemoryStream = StreamHelper.RecyclableMSManager.GetStream();
             await JsonSerializer.SerializeAsync(recyclableMemoryStream, rootNode, finalOptions);
 
+            recyclableMemoryStream.Position = 0;
             return recyclableMemoryStream;
-        }
-
-        private static async Task<JsonNode> GetFinalRootNode(List<DTOCycle> allUserCycles)
-        {
-            using RecyclableMemoryStream tempStream = CommonExportHelper.RecyclableMSManager.GetStream();
-            
-            await JsonSerializer.SerializeAsync(tempStream, allUserCycles, starterOptions);
-            tempStream.Position = 0;
-
-            JsonNode rootNode = await JsonNode.ParseAsync(tempStream)
-                ?? throw new InvalidOperationException("Не удалось получить json rootNode");
-            
-            RemoveAdminInfo(rootNode);
-
-            return rootNode;
         }
 
         private static void UnionExercisesAndResults(List<DTOCycle> allUserCycles, IQueryable<ResultExercise> allUserResultsExercises, int monthFilterPeriod)
@@ -69,27 +56,24 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Export
             }
         }
 
-        private static void RemoveAdminInfo(JsonNode rootNode)
+        private static JsonNode GetFinalRootNode(DTOUserInformation DTOUserInformation)
         {
-            if (rootNode is JsonArray array)
-            {
-                foreach (JsonNode? subRootNode in array)
-                {
-                    if (subRootNode is JsonObject obj)
-                    {
-                        obj.Remove("UserInformationId");
-                        obj.Remove("UserInformation");
-                        obj.Remove("IsActive");
-                        obj.Remove("IsArchive");
-                    }
-                    else
-                        throw new InvalidOperationException("Не удалось корректно обработать json (Ожидался JsonObject).");
-                }
-            }
-            else
-                throw new InvalidOperationException("Не удалось корректно обработать json (Ожидался JsonArray).");
+            JsonNode rootNode = JsonSerializer.SerializeToNode(DTOUserInformation, starterOptions)
+                ?? throw new InvalidOperationException("Не удалось получить json rootNode");
+            
+            RemoveSensitiveInfo(rootNode, ["UserId", "FirstName", "Username", "WhiteList", "BlackList"]);
 
-            return;
+            return rootNode;
+        }
+
+        private static void RemoveSensitiveInfo(JsonNode rootNode, List<string> propertyNamesToRemove)
+        {
+            JsonObject rootJsonObject = rootNode.AsObject();
+
+            foreach (string propertyNameToRemove in propertyNamesToRemove)
+            {
+                rootJsonObject.Remove(propertyNameToRemove);
+            }
         }
     }
 }

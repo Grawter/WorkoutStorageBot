@@ -1,3 +1,5 @@
+﻿#nullable disable
+
 ﻿using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageModels.Entities.BusinessLogic;
 
@@ -217,7 +219,7 @@ namespace WorkoutStorageBot.UnitTests.Helpers
             dtoTestExercise = new DTOExercise
             {
                 Id = 100,
-                Name = "Day 1",
+                Name = "Exercise 1",
                 Mode = ExercisesMods.Count,
                 Day = DTOTestDay,
                 DayId = DTOTestDay.Id,
@@ -236,7 +238,7 @@ namespace WorkoutStorageBot.UnitTests.Helpers
             dtoTestExercise = new DTOExercise
             {
                 Id = 100,
-                Name = "Day 1",
+                Name = "Exercise 1",
                 Mode = ExercisesMods.Count,
                 IsArchive = true
             };
