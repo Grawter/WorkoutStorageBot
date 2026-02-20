@@ -1,4 +1,6 @@
-﻿using Microsoft.Data.Sqlite;
+﻿#nullable disable
+
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using WorkoutStorageBot.Model.AppContext;
 using WorkoutStorageModels.Entities.BusinessLogic;

@@ -7,11 +7,11 @@ using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackCommandHa
 using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageCommandHandler.Context;
 using WorkoutStorageBot.BusinessLogic.Helpers.CallbackQueryParser;
 using WorkoutStorageBot.BusinessLogic.Helpers.Converters;
-using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.Core.Abstraction;
 using WorkoutStorageBot.Core.Manager;
 using WorkoutStorageBot.Model.DTO.HandlerData;
 using WorkoutStorageBot.Model.DTO.HandlerData.Results;
+using WorkoutStorageBot.Model.DTO.InformationSetForSend;
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
 {

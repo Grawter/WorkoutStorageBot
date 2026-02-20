@@ -1,5 +1,5 @@
 ﻿using WorkoutStorageBot.BusinessLogic.Context.Session;
-using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
+using WorkoutStorageBot.Model.DTO.InformationSetForSend;
 
 namespace WorkoutStorageBot.Core.Sender
 {

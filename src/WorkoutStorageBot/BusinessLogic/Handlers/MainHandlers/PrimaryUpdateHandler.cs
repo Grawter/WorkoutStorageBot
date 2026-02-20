@@ -4,7 +4,6 @@ using Telegram.Bot.Types.Enums;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Repositories;
 using WorkoutStorageBot.BusinessLogic.Enums;
-using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.Core.Abstraction;
 using WorkoutStorageBot.Core.Manager;
 using WorkoutStorageBot.Model.DTO.HandlerData;
@@ -19,6 +18,7 @@ using WorkoutStorageBot.Core.Helpers;
 using WorkoutStorageBot.BusinessLogic.Helpers.Converters;
 using WorkoutStorageBot.BusinessLogic.Helpers.Updates;
 using WorkoutStorageBot.BusinessLogic.Extenions;
+using WorkoutStorageBot.Model.DTO.InformationSetForSend;
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
 {

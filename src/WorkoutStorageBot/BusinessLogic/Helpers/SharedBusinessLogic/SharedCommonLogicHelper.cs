@@ -1,6 +1,6 @@
 ﻿using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.Helpers.Converters;
-using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
+using WorkoutStorageBot.Model.DTO.InformationSetForSend;
 
 namespace WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic
 {

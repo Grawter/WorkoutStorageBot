@@ -8,10 +8,10 @@ using WorkoutStorageBot.BusinessLogic.Extensions;
 using WorkoutStorageBot.BusinessLogic.Helpers.CallbackQueryParser;
 using WorkoutStorageBot.BusinessLogic.Helpers.Converters;
 using WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic;
-using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.BusinessLogic.Repositories;
 using WorkoutStorageBot.Core.Helpers;
 using WorkoutStorageBot.Model.DTO.HandlerData;
+using WorkoutStorageBot.Model.DTO.InformationSetForSend;
 using WorkoutStorageModels.Entities.Core.Logging;
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackCommandHandler.Context

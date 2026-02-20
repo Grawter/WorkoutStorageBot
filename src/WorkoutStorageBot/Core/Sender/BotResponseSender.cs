@@ -4,7 +4,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 using WorkoutStorageBot.BusinessLogic.Buttons.Provider;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
-using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
+using WorkoutStorageBot.Model.DTO.InformationSetForSend;
 
 namespace WorkoutStorageBot.Core.Sender
 {

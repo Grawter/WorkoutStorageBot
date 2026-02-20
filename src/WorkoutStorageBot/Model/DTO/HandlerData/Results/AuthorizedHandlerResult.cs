@@ -1,6 +1,6 @@
 ﻿using WorkoutStorageBot.BusinessLogic.Context.Session;
-using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.Model.DTO.HandlerData.Results.UpdateInfo;
+using WorkoutStorageBot.Model.DTO.InformationSetForSend;
 
 namespace WorkoutStorageBot.Model.DTO.HandlerData.Results
 {

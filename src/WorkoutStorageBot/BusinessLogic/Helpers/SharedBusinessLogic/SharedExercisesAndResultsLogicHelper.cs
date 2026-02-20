@@ -6,10 +6,10 @@ using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.Exceptions;
 using WorkoutStorageBot.BusinessLogic.Extensions;
 using WorkoutStorageBot.BusinessLogic.Helpers.Converters;
-using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.Core.Extensions;
 using WorkoutStorageBot.Model.AppContext;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
+using WorkoutStorageBot.Model.DTO.InformationSetForSend;
 using WorkoutStorageModels.Entities.BusinessLogic;
 
 namespace WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic

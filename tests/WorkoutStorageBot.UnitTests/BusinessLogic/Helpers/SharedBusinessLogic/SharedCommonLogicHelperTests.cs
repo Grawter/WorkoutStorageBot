@@ -1,7 +1,7 @@
 ﻿using FluentAssertions;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic;
-using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
+using WorkoutStorageBot.Model.DTO.InformationSetForSend;
 
 namespace WorkoutStorageBot.UnitTests.BusinessLogic.Helpers.SharedBusinessLogic
 {

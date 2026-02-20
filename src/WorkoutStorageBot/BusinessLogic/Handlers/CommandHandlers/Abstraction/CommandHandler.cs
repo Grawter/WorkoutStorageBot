@@ -1,10 +1,10 @@
 ﻿using Microsoft.Extensions.Logging;
 using WorkoutStorageBot.BusinessLogic.Context.Global;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
-using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.Core.Abstraction;
 using WorkoutStorageBot.Model.AppContext;
 using WorkoutStorageBot.Model.DTO.HandlerData;
+using WorkoutStorageBot.Model.DTO.InformationSetForSend;
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.Abstraction
 {

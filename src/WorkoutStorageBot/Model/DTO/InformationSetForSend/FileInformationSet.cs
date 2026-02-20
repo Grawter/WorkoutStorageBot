@@ -2,7 +2,7 @@
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.Core.Extensions;
 
-namespace WorkoutStorageBot.BusinessLogic.InformationSetForSend
+namespace WorkoutStorageBot.Model.DTO.InformationSetForSend
 {
     internal class FileInformationSet : IInformationSet
     {

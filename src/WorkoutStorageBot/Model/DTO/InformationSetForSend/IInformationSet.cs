@@ -1,7 +1,7 @@
 ﻿using Telegram.Bot.Types.Enums;
 using WorkoutStorageBot.BusinessLogic.Enums;
 
-namespace WorkoutStorageBot.BusinessLogic.InformationSetForSend
+namespace WorkoutStorageBot.Model.DTO.InformationSetForSend
 {
     internal interface IInformationSet
     {

@@ -5,7 +5,6 @@ using WorkoutStorageBot.BusinessLogic.Extensions;
 using WorkoutStorageBot.BusinessLogic.Helpers.CallbackQueryParser;
 using WorkoutStorageBot.BusinessLogic.Helpers.Converters;
 using WorkoutStorageBot.BusinessLogic.Helpers.Export;
-using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.BusinessLogic.Repositories;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.Model.DTO.HandlerData;
@@ -13,6 +12,7 @@ using WorkoutStorageModels.Entities.BusinessLogic;
 using WorkoutStorageBot.Model.Interfaces;
 using WorkoutStorageBot.Core.Extensions;
 using WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic;
+using WorkoutStorageBot.Model.DTO.InformationSetForSend;
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackCommandHandler.Context
 {

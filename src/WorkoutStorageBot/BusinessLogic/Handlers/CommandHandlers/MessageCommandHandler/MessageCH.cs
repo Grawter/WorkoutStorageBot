@@ -1,7 +1,7 @@
 using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.Abstraction;
 using WorkoutStorageBot.BusinessLogic.Helpers.Converters;
-using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.Model.DTO.HandlerData;
+using WorkoutStorageBot.Model.DTO.InformationSetForSend;
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageCommandHandler
 {

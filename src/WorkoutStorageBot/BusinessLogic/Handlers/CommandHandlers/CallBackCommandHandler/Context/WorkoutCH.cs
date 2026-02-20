@@ -1,6 +1,5 @@
 ﻿using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Enums;
-using WorkoutStorageBot.BusinessLogic.InformationSetForSend;
 using WorkoutStorageBot.Model.DTO.HandlerData;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +9,7 @@ using WorkoutStorageBot.BusinessLogic.Helpers.Converters;
 using WorkoutStorageBot.BusinessLogic.Extensions;
 using WorkoutStorageModels.Entities.BusinessLogic;
 using WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic;
+using WorkoutStorageBot.Model.DTO.InformationSetForSend;
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackCommandHandler.Context
 {
