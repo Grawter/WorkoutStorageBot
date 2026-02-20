@@ -44,7 +44,9 @@ namespace WorkoutStorageBot.Core.Helpers
             if (maxLength == 0)
                 maxLength = MaxCharactersCount;
 
-            string logMessage = log.Message.Length > maxLength ? $"{log.Message.Substring(0, maxLength)}..." : log.Message;
+            string logMessage = log.Message.Length > maxLength 
+                ? $"{log.Message.Substring(0, maxLength)}..." 
+                : log.Message;
 
             string logStr = 
                 @$"[{log.Id}] [{log.LogLevel}] [{log.EventID}] [{log.DateTime.ToString(CommonConsts.Common.DateTimeFormatDateFirst)}] [{from}] [{lastContext}]:

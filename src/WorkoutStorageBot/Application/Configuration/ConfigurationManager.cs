@@ -4,7 +4,6 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Text.Unicode;
 using WorkoutStorageBot.Core.Extensions;
-using WorkoutStorageBot.Core.Helpers;
 
 namespace WorkoutStorageBot.Application.Configuration
 {
@@ -158,12 +157,26 @@ namespace WorkoutStorageBot.Application.Configuration
 
         private static void SetCensorToBotSettings(BotSettings botSettings, bool isNeedCensorOwnersChatIDs)
         {
-            botSettings.Token = CommonHelper.GetCensorValue(botSettings.Token, 3);
+            botSettings.Token = GetCensorValue(botSettings.Token, 3);
 
             if (isNeedCensorOwnersChatIDs)
                 botSettings.OwnersChatIDs = botSettings.OwnersChatIDs.Where(x => !string.IsNullOrWhiteSpace(x))
-                                                                                     .Select(x => CommonHelper.GetCensorValue(x, 3))
+                                                                                     .Select(x => GetCensorValue(x, 3))
                                                                                      .ToArray();
+        }
+
+        private static string GetCensorValue(string text, int countShowLastSymbols)
+        {
+            if (string.IsNullOrWhiteSpace(text) || text.Length <= countShowLastSymbols)
+                return "******";
+
+            // Берём только последние 3 символа
+            string lastThreeSymbols = text.Substring(text.Length - countShowLastSymbols);
+
+            // Заменяем остальные символы на *
+            string masked = $"{new string('*', text.Length - countShowLastSymbols)}{lastThreeSymbols}";
+
+            return masked;
         }
 
         private static string RemoveTags(string? input)

@@ -182,7 +182,7 @@ CallStack: {Environment.StackTrace}");
                 logMessage = @$"[{currentLogLevelStr}] [{dateTime.ToString(dateTimeFormat)}] {categoryName}:
 {logData["Message"]}";
 
-            if (CommonHelper.TryConvertToLong(logData.GetValueOrDefault("TelegramUserId"), out long? telegramUserId))
+            if (long.TryParse(logData.GetValueOrDefault("TelegramUserId")?.ToString(), out long telegramUserId))
                 logMessage += $" |by|{telegramUserId}|";
 
             Console.WriteLine(logMessage);
@@ -221,7 +221,7 @@ CallStack: {Environment.StackTrace}");
             if (string.IsNullOrWhiteSpace(message))
 				return false;
 
-			CommonHelper.TryConvertToLong(logData.GetValueOrDefault("TelegramUserId"), out long? telegramUserId);
+			long.TryParse(logData.GetValueOrDefault("TelegramUserId")?.ToString(), out long telegramUserId);
 
             Log log = new Log()
             {
