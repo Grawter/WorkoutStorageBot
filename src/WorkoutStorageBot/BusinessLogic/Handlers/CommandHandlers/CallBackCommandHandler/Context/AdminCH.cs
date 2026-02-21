@@ -66,7 +66,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
         private IInformationSet AdminCommand()
         {
-            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder("Выберите интересующее действие");
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder("Выберите интересующее действие с админкой");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.Admin, ButtonsSet.Main);
 
             IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
@@ -76,7 +76,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
         private IInformationSet LogsCommand()
         {
-            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder("Выберите интересующее действие");
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder("Выберите интересующее действие с логами");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.AdminLogs, ButtonsSet.Admin);
 
             IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
@@ -92,12 +92,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             Log? lastLog = await LogsRepository.GetLogs(1).FirstOrDefaultAsync();
 
             if (lastLog == null)
-                responseTextBuilder = new ResponseTextBuilder("Логов не найдено", "Выберите интересующее действие");
+                responseTextBuilder = new ResponseTextBuilder("Логов не найдено", "Выберите интересующее действие с логами");
             else
             {
                 string logStr = LogFormatter.ConvertLogToStr(lastLog);
 
-                responseTextBuilder = new ResponseTextBuilder("Последний лог:", logStr, "Выберите интересующее действие");
+                responseTextBuilder = new ResponseTextBuilder("Последний лог:", logStr, "Выберите интересующее действие с логами");
             }
 
             IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets, ParseMode.None);
@@ -132,7 +132,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             if (sb.Length < 1)
                 sb.AppendLine("Логов не найдено");
 
-            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder("Последние ошибочные логи:", sb.ToString(), "Выберите интересующее действие");
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder("Последние ошибочные логи:", sb.ToString(), "Выберите интересующее действие с логами");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.AdminLogs, ButtonsSet.Admin);
 
             IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets, ParseMode.None);
@@ -160,7 +160,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
         private IInformationSet AdminUsersCommand()
         {
-            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder("Выберите интересующее действие");
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder("Выберите интересующее действие с пользователями");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.AdminUsers, ButtonsSet.Admin);
 
             IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
@@ -174,7 +174,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
             ResponseTextBuilder responseTextBuilder = 
                 new ResponseTextBuilder(@$"[{DateTime.Now.ToString(Consts.CommonConsts.Common.DateTimeFormatHoursFirst)}]: {countActiveUserContext.ToString().AddBold()}",
-                "Выберите интересующее действие");
+                "Выберите интересующее действие с пользователями");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.AdminUsers, ButtonsSet.Admin);
 
             IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);

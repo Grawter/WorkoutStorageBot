@@ -349,7 +349,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             this.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
-            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder(resultExercise.FreeResult.AddBold(), "Введённые данные сохранены!", "Выберите упраженение");
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder(resultExercise.FreeResult.AddBold(), "Введённые данные сохранены!", "Выберите упражнение");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout);
 
             IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);

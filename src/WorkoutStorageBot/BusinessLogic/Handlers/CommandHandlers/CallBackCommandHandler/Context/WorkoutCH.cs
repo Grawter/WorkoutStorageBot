@@ -47,8 +47,11 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
         private IInformationSet WorkoutCommand()
         {
             this.CurrentUserContext.Navigation.ResetNavigation(); // not necessary, but just in case
-            
-            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder("Выберите тренировочный день");
+
+            // immediately first set the active cycle as current
+            this.CurrentUserContext.DataManager.SetCurrentDomain(this.CurrentUserContext.ActiveCycle.ThrowIfNull());
+
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder($"Выберите тренировочный день из цикла {this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main);
 
             IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
@@ -90,7 +93,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     else
                         information = SharedExercisesAndResultsLogicHelper.GetInformationAboutLastExercises(resultLastTraining.Date, resultLastTraining.Data);
 
-                    responseTextBuilder = new ResponseTextBuilder("Последняя тренировка:", information, "Выберите тренировочный день");
+                    responseTextBuilder = new ResponseTextBuilder("Последняя тренировка:", information, $"Выберите тренировочный день из цикла {this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}");
                     buttonsSets = (ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main);
                     break;
 
@@ -123,7 +126,9 @@ AND date(re.DateTime) = last.MaxDate";
                                                                                                                  .ToListAsync();
 
                     information = SharedExercisesAndResultsLogicHelper.GetInformationAboutLastDay(lastResultsExercisesInCurrentDay);
-                    responseTextBuilder = new ResponseTextBuilder("Последние результаты упражнений из этого дня:", information, "Выберите упражнение");
+                    responseTextBuilder = new ResponseTextBuilder("Последние результаты упражнений из этого дня:", 
+                        information, 
+                        $"Выберите упражнение из дня {this.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBold()} ({this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBold()})");
                     buttonsSets = (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout);
                     break;
                 default:
@@ -230,8 +235,8 @@ AND date(re.DateTime) = last.MaxDate";
 
             this.CurrentUserContext.DataManager.ResetTempResultsExercise();
 
-            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder($"Результат упражнения '{this.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().Name.AddBoldAndQuotes()}' был сброшен", 
-                "Выберите упражнение");
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder($"Результат упражнения '{this.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().Name.AddBoldAndQuotes()}' был сброшен",
+                $"Выберите упражнение из дня {this.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBold()} ({this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBold()})");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout);
 
             IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
@@ -252,7 +257,7 @@ AND date(re.DateTime) = last.MaxDate";
 
             this.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
-            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder("Введённые данные сохранены!", "Выберите упраженение");
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder("Введённые данные сохранены!", "Выберите упражнение");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout);
 
             IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);

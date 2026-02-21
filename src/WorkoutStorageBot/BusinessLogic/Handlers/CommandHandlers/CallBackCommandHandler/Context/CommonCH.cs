@@ -45,16 +45,34 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             this.CurrentUserContext.Navigation.SetQueryFrom(previousStep.QueryFrom);
             this.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
-            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder(previousStep.ButtonsSet switch // optional additional information
+            string target;
+
+            switch(previousStep.ButtonsSet)
             {
-                ButtonsSet.SettingCycle
-                    => $"{previousStep.Message} {this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}",
-                ButtonsSet.SettingDay
-                    => $"{previousStep.Message} {this.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()} ({this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBold()})",
-                ButtonsSet.SettingExercise
-                    => $"{previousStep.Message} {this.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().Name.AddBoldAndQuotes()} ({this.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBold()}-{this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBold()})",
-                _ => previousStep.Message
-            });
+                case ButtonsSet.DaysListWithLastWorkout:
+                case ButtonsSet.SettingCycle:
+                case ButtonsSet.SettingDays:
+                case ButtonsSet.DaysList:
+                    target = $"{previousStep.Message} {this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}";
+                    break;
+
+                case ButtonsSet.ExercisesListWithLastWorkoutForDay:
+                case ButtonsSet.SettingDay:
+                case ButtonsSet.SettingExercises:
+                case ButtonsSet.ExercisesList:
+                    target = $"{previousStep.Message} {this.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()} ({this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBold()})";
+                    break;
+
+                case ButtonsSet.SettingExercise:
+                    target = $"{previousStep.Message} {this.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().Name.AddBoldAndQuotes()} ({this.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBold()}-{this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBold()})";
+                    break;
+
+                default:
+                    target = previousStep.Message;
+                break;
+            }
+
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder(target);
 
             (ButtonsSet, ButtonsSet) buttonsSets = (previousStep.ButtonsSet, previousStep.BackButtonsSet);
 
