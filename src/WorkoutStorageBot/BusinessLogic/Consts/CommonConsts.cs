@@ -46,6 +46,7 @@
 <b>13.12</b>
 <b>13.12.2000</b>
 <b>2000.13.12</b>
+<b>13/12</b>
 <b>13/12/2000</b>
 <b>2000/13/12</b>
 <b>13-12</b>
@@ -55,7 +56,7 @@
 <b>13 12 2000</b>
 <b>2000 13 12</b>";
 
-            internal static string[] ValidDateFormats = ["dd.MM", "dd.MM.yyyy", "yyyy.MM.dd", "dd/MM/yyyy", "yyyy/MM/dd", "dd-MM", "dd-MM-yyyy", "yyyy-MM-dd", "dd MM", "dd MM yyyy", "yyyy MM dd"];
+            internal static string[] ValidDateFormats = ["dd.MM", "dd.MM.yyyy", "yyyy.MM.dd", "dd/MM", "dd/MM/yyyy", "yyyy/MM/dd", "dd-MM", "dd-MM-yyyy", "yyyy-MM-dd", "dd MM", "dd MM yyyy", "yyyy MM dd"];
 
             internal const string ExamplesTypesExercise = @$"Доступные типы упражений:
 <b>0</b> - только кол-во повторений (например, подтягивания)
