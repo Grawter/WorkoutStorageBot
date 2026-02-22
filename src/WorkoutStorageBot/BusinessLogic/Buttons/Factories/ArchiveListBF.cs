@@ -15,6 +15,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.Factories
             AddInlineButton("Архивированные циклы", $"2|Archive|{CommonConsts.DomainsAndEntities.Cycles}");
             AddInlineButton("Архивированные дни", $"2|Archive|{CommonConsts.DomainsAndEntities.Days}");
             AddInlineButton("Архивированные упражнения", $"2|Archive|{CommonConsts.DomainsAndEntities.Exercises}");
+            AddInlineButton("Вернуться к главному меню", "0|ToMain");
         }
     }
 }

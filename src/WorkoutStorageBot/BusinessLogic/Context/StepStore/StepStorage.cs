@@ -18,9 +18,11 @@ namespace WorkoutStorageBot.BusinessLogic.Context.StepStore
 
             { ButtonsSet.Settings, new StepInformation(QueryFrom.Settings, "Выберите интересующие настройки", ButtonsSet.Settings, ButtonsSet.Main) },
 
-            { ButtonsSet.SettingCycles, new StepInformation(QueryFrom.Settings, "Выберите интересующие настройки для циклов", ButtonsSet.SettingCycles, ButtonsSet.Settings) },
             { ButtonsSet.ArchiveList, new StepInformation(QueryFrom.Settings, "Выберите интересующий архив для разархивирования", ButtonsSet.ArchiveList, ButtonsSet.Settings) },
+            { ButtonsSet.Export, new StepInformation(QueryFrom.Settings, "Выберите формат в котором экспортировать данные о ваших тренировках", ButtonsSet.Export, ButtonsSet.Settings) },
 
+
+            { ButtonsSet.SettingCycles, new StepInformation(QueryFrom.Settings, "Выберите интересующие настройки для циклов", ButtonsSet.SettingCycles, ButtonsSet.Settings) },
             { ButtonsSet.CycleList, new StepInformation(QueryFrom.Settings, "Выберите интересующий цикл", ButtonsSet.CycleList, ButtonsSet.SettingCycles) },
             { ButtonsSet.SettingCycle, new StepInformation(QueryFrom.Settings, "Выберите интересующую настройку для цикла", ButtonsSet.SettingCycle, ButtonsSet.CycleList) },
 

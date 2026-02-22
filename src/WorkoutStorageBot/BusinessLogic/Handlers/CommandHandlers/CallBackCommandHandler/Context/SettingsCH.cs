@@ -186,13 +186,13 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             switch (exportFormat)
             {
                 case "Excel":
-                    responseTextBuilder = new ResponseTextBuilder("Выберите временной промежуток формирования данных от последней тренировки");
-                    buttonsSets = (ButtonsSet.Period, ButtonsSet.Settings);
+                    responseTextBuilder = new ResponseTextBuilder($"Выберите временной промежуток формирования данных от последней тренировки для экспорта в {"Excel".AddBold()}");
+                    buttonsSets = (ButtonsSet.Period, ButtonsSet.Export);
                     additionalParameters = new() { { "Act", "Export/Excel" } };
                     break;
                 case "JSON":
-                    responseTextBuilder = new ResponseTextBuilder("Выберите временной промежуток формирования данных от последней тренировки");
-                    buttonsSets = (ButtonsSet.Period, ButtonsSet.Settings);
+                    responseTextBuilder = new ResponseTextBuilder($"Выберите временной промежуток формирования данных от последней тренировки для экспорта в {"JSON".AddBold()}");
+                    buttonsSets = (ButtonsSet.Period, ButtonsSet.Export);
                     additionalParameters = new() { { "Act", "Export/JSON" } };
                     break;
                 default:

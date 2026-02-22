@@ -13,6 +13,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.Factories
         {
             AddInlineButton("Экспортировать тренировки в Excel", "2|ExportTo||Excel");
             AddInlineButton("Экспортировать тренировки в JSON", "2|ExportTo||JSON");
+            AddInlineButton("Вернуться к главному меню", "0|ToMain");
         }
     }
 }

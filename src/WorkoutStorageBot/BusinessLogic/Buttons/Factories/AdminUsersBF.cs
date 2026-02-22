@@ -20,6 +20,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.Factories
                 AddInlineButton("Разослать сообщение всем пользователям", "3|SendMessagesToAllUsers");
                 AddInlineButton("Сменить white/black list у пользователя", "3|ChangeUserState");
                 AddInlineButton("Удалить пользователя", "3|RemoveUser");
+                AddInlineButton("Вернуться к главному меню", "0|ToMain");
             }
         }
     }

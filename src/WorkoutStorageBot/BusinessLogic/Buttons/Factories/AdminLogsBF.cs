@@ -18,6 +18,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.Factories
                 AddInlineButton("Показать последние логи ошибок", "3|ShowLastExceptionLogs");
                 AddInlineButton("Найти лог по ID", "3|FindLogByID");
                 AddInlineButton("Найти лог по eventID", "3|FindLogByEventID");
+                AddInlineButton("Вернуться к главному меню", "0|ToMain");
             }
         }
     }
