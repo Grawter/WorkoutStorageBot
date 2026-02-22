@@ -11,9 +11,9 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.Abstraction
     {
         private List<List<InlineKeyboardButton>> inlineKeyboardButtonsMain;
         private List<InlineKeyboardButton>? inlineKeyboardButtons;
-        
-        private int horizontalButtonsCounter = 0;
-        private int verticalButtonsCounter = 0;
+
+        internal int HorizontalButtonsCountAtCurrentLine => inlineKeyboardButtons?.Count ?? 0;
+        internal int VerticalButtonsCount => inlineKeyboardButtonsMain.Count;
 
         internal bool AllVerticalButtonsDisplayed { get; private set; } = true;
         internal bool AllHorizontalButtonsDisplayed { get; private set; } = true;
@@ -26,7 +26,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.Abstraction
 
             CurrentUserContext.GenerateNewCallBackId();
 
-            inlineKeyboardButtonsMain = new();
+            inlineKeyboardButtonsMain = new(CommonConsts.Buttons.MaxVerticalButtonsCount);
         }
 
         internal IEnumerable<IEnumerable<InlineKeyboardButton>> CreateButtons(ButtonsSet backButtonsSet = ButtonsSet.None, Dictionary<string, string>? additionalParameters = null)
@@ -34,7 +34,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.Abstraction
             AddBusinessButtons(additionalParameters);
 
             if (backButtonsSet != ButtonsSet.None)
-                AddInlineButton("Назад", $"0|Back||{backButtonsSet}");
+                AddBackButton(backButtonsSet);
 
             return inlineKeyboardButtonsMain;
         }
@@ -47,9 +47,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.Abstraction
 
             if (onNewLine)
             {
-                ++verticalButtonsCounter;
-
-                if (verticalButtonsCounter > CommonConsts.Buttons.MaxVerticalButtonsCount)
+                if (inlineKeyboardButtonsMain.Count >= CommonConsts.Buttons.MaxVerticalButtonsCount)
                 {
                     AllVerticalButtonsDisplayed = false;
                     return;
@@ -61,18 +59,34 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.Abstraction
             }
             else
             {
-                ++horizontalButtonsCounter;
-
-                if (horizontalButtonsCounter > CommonConsts.Buttons.MaxHorizontalButtonsCount)
+                if (inlineKeyboardButtons?.Count >= CommonConsts.Buttons.MaxHorizontalButtonsCount)
                 {
                     AllHorizontalButtonsDisplayed = false;
                     return;
                 }
 
                 if (inlineKeyboardButtons is null)
-                    inlineKeyboardButtons = new();
+                    inlineKeyboardButtons = new(CommonConsts.Buttons.MaxHorizontalButtonsCount);
 
                 inlineKeyboardButtons.Add(InlineKeyboardButton.WithCallbackData(titleButton, callBackData));
+            }
+        }
+
+        protected void ReplaceInlineButton(string titleButton, string callBackDataWithoutId, bool onNewLine, int replacedButtonIndex)
+        {
+            string callBackData = AddCallBackId(callBackDataWithoutId);
+
+            if (onNewLine)
+            {
+                List<InlineKeyboardButton> lastReplacedButton = new() { InlineKeyboardButton.WithCallbackData(titleButton, callBackData) };
+                inlineKeyboardButtonsMain[replacedButtonIndex] = lastReplacedButton;
+            }
+            else
+            {
+                if (inlineKeyboardButtons is null)
+                    inlineKeyboardButtons = new(CommonConsts.Buttons.MaxHorizontalButtonsCount);
+
+                inlineKeyboardButtons[replacedButtonIndex] = InlineKeyboardButton.WithCallbackData(titleButton, callBackData);
             }
         }
 
@@ -80,8 +94,6 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.Abstraction
         {
             if (inlineKeyboardButtons.HasItemsInCollection())
             {
-                ++verticalButtonsCounter;
-
                 inlineKeyboardButtonsMain.Add(inlineKeyboardButtons.ToList());
 
                 inlineKeyboardButtons.Clear();
@@ -100,6 +112,14 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.Abstraction
                         AddInlineButton(domain.Name, $"2|{subDirection}|{domain.GetType().Name.Replace("DTO", string.Empty)}|{domain.Id}");
                 }
             }
+        }
+
+        private void AddBackButton(ButtonsSet backButtonsSet)
+        {
+            if (inlineKeyboardButtonsMain.Count < CommonConsts.Buttons.MaxVerticalButtonsCount)
+                AddInlineButton("Назад", $"0|Back||{backButtonsSet}");
+            else
+                ReplaceInlineButton("Назад", $"0|Back||{backButtonsSet}", true, inlineKeyboardButtonsMain.Count - 1);
         }
 
         private string AddCallBackId(string callBackDataWithoutId)

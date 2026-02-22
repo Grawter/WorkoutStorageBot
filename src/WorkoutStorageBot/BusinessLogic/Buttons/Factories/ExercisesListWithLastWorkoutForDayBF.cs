@@ -15,7 +15,11 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.Factories
             AddInlineButton("Последние результаты выбранного дня", $"1|LastResults|{CommonConsts.DomainsAndEntities.Day}");
             AddInlineButton("Найти тренировку этого дня по дате", $"1|StartFindResultsByDate|{CommonConsts.DomainsAndEntities.Day}");
             GetDomainsInButtons(CurrentUserContext.DataManager.CurrentDay?.Exercises.Where(e => !e.IsArchive), "Selected");
-            AddInlineButton("Вернуться к главному меню", "0|ToMain");
+
+            if (this.VerticalButtonsCount >= CommonConsts.Buttons.MaxVerticalButtonsCount - 1)
+                ReplaceInlineButton("Вернуться к главному меню", "0|ToMain", true, CommonConsts.Buttons.MaxVerticalButtonsCount - 2);
+            else
+                AddInlineButton("Вернуться к главному меню", "0|ToMain");
         }
     }
 }
