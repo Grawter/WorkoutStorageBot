@@ -3,7 +3,7 @@ using WorkoutStorageModels.Entities.BusinessLogic;
 using WorkoutStorageModels.Entities.Core.Logging;
 using WorkoutStorageModels.Entities.Import;
 
-namespace WorkoutStorageImport
+namespace WorkoutStorageImport.Models
 {
     public class EntityContext : DbContext
     {

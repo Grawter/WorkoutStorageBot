@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
+using WorkoutStorageImport.Models;
 using WorkoutStorageModels.Entities.BusinessLogic;
 using WorkoutStorageModels.Entities.Import;
 using WorkoutStorageModels.Interfaces;
@@ -21,22 +22,22 @@ namespace WorkoutStorageImport
 
         internal void ExecuteImport(UserInformation userInformation, string inputStr, JsonSerializerOptions? options = null)
         {
-            List<Cycle> cycles = DeserializeWorkout(inputStr, options);
+            DTOUserInformation DTOUserInformation = DeserializationWorkout(inputStr, options);
 
-            Import(userInformation, cycles);
+            Import(userInformation, DTOUserInformation.Cycles);
         }
 
-        private List<Cycle> DeserializeWorkout(string workoutStr, JsonSerializerOptions? options)
+        private DTOUserInformation DeserializationWorkout(string workoutStr, JsonSerializerOptions? options)
         {
             JsonSerializerOptions jsonSerializerOptions = options ?? new JsonSerializerOptions()
             {
                 ReferenceHandler = ReferenceHandler.IgnoreCycles,
             };
 
-            List<Cycle> cycles = JsonSerializer.Deserialize<List<Cycle>>(workoutStr, jsonSerializerOptions) ??
+            DTOUserInformation DTOUserInformation = JsonSerializer.Deserialize<DTOUserInformation>(workoutStr, jsonSerializerOptions) ??
                 throw new InvalidOperationException("Результат десериализации - null");
 
-            return cycles;
+            return DTOUserInformation;
         }
 
         private void Import(UserInformation userInformation, List<Cycle> cycles)
@@ -49,19 +50,19 @@ namespace WorkoutStorageImport
             {
                 cycle.UserInformationId = userInformation.Id;
 
-                ProcessLightDomain(cycle, userInformation.Id, currentDate, ref countCycles);
+                ProcessEntity(cycle, userInformation.Id, currentDate, ref countCycles);
 
                 foreach (Day day in cycle.Days)
                 {
-                    ProcessLightDomain(day, userInformation.Id, currentDate, ref countDays);
+                    ProcessEntity(day, userInformation.Id, currentDate, ref countDays);
 
                     foreach (Exercise exercise in day.Exercises)
                     {
-                        ProcessLightDomain(exercise, userInformation.Id, currentDate, ref countExercise);
+                        ProcessEntity(exercise, userInformation.Id, currentDate, ref countExercise);
 
                         foreach (ResultExercise resultExercise in exercise.ResultsExercise)
                         {
-                            ProcessLightDomain(resultExercise, userInformation.Id, currentDate, ref countResultExercise);
+                            ProcessEntity(resultExercise, userInformation.Id, currentDate, ref countResultExercise);
                         }
                     }
                 }
@@ -74,26 +75,26 @@ namespace WorkoutStorageImport
             return;
         }
 
-        private void ProcessLightDomain(IEntity lightDomain, int userInformationId, DateTime currentDate, ref int countAddedLightDomain)
+        private void ProcessEntity(IEntity entityDomain, int userInformationId, DateTime currentDate, ref int countAddedEntityDomain)
         {
-            if (TryAddIfLightDomainIsUnique(lightDomain))
+            if (TryAddIfEntityDomainIsUnique(entityDomain))
             {
-                ++countAddedLightDomain;
-                AddImportInfoEntry(lightDomain, userInformationId, currentDate);
+                ++countAddedEntityDomain;
+                AddImportInfoEntry(entityDomain, userInformationId, currentDate);
             }
         }
 
-        private bool TryAddIfLightDomainIsUnique(IEntity lightDomain)
+        private bool TryAddIfEntityDomainIsUnique(IEntity entityDomain)
         {
-            bool lightDomainWasAdded = false;
+            bool entityWasAdded = false;
 
-            switch (lightDomain)
+            switch (entityDomain)
             {
                 case Cycle cycle:
                     if (!EntityContext.Cycles.Any(x => x.Id == cycle.Id))
                     {
                         EntityContext.Cycles.Add(cycle);
-                        lightDomainWasAdded = true;
+                        entityWasAdded = true;
                     }
                         
                 break;
@@ -101,7 +102,7 @@ namespace WorkoutStorageImport
                     if (!EntityContext.Days.Any(x => x.Id == day.Id))
                     {
                         EntityContext.Days.Add(day);
-                        lightDomainWasAdded = true;
+                        entityWasAdded = true;
                     }
 
                     break;
@@ -110,7 +111,7 @@ namespace WorkoutStorageImport
                     if (!EntityContext.Exercises.Any(x => x.Id == exercise.Id))
                     {
                         EntityContext.Exercises.Add(exercise);
-                        lightDomainWasAdded = true;
+                        entityWasAdded = true;
                     }
                         
                     break;
@@ -119,23 +120,23 @@ namespace WorkoutStorageImport
                     if (!EntityContext.ResultsExercises.Any(x => x.Id == resultExercise.Id))
                     {
                         EntityContext.ResultsExercises.Add(resultExercise);
-                        lightDomainWasAdded = true;
+                        entityWasAdded = true;
                     }
                         
                     break;
                 default:
-                    throw new NotImplementedException($"Неожиданный lightDomain: {lightDomain.GetType().FullName}");
+                    throw new NotImplementedException($"Неожиданный entityDomain: {entityDomain.GetType().FullName}");
             }
 
-            return lightDomainWasAdded;
+            return entityWasAdded;
         }
 
-        private void AddImportInfoEntry(IEntity lightDomain, int userInformationId, DateTime currentDate)
+        private void AddImportInfoEntry(IEntity entityDomain, int userInformationId, DateTime currentDate)
         {
             ImportInfo importInfo = new ImportInfo()
             {
-                DomainId = lightDomain.Id,
-                DomainType = lightDomain.GetType().Name,
+                DomainId = entityDomain.Id,
+                DomainType = entityDomain.GetType().Name,
                 UserInformationId = userInformationId,
                 DateTime = currentDate
             };
@@ -143,18 +144,18 @@ namespace WorkoutStorageImport
             EntityContext.ImportInfo.Add(importInfo);
         }
 
-        internal string GetDomainTypeName(IEntity lightDomain)
+        internal string GetDomainTypeName(IEntity entityDomain)
         {
             string domainTypeName;
 
-            if (lightDomain is IDomain domain)
+            if (entityDomain is IDomain domain)
                 domainTypeName = domain.Name;
             else
             {
-                domainTypeName = lightDomain switch
+                domainTypeName = entityDomain switch
                 {
                     ResultExercise => nameof(ResultExercise),
-                    _ => throw new NotImplementedException($"Неожиданный lightDomain: {lightDomain.GetType().FullName}")
+                    _ => throw new NotImplementedException($"Неожиданный entityDomain: {entityDomain.GetType().FullName}")
                 };
             }
 

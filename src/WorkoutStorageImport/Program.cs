@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using WorkoutStorageImport.Models;
 using WorkoutStorageModels.Entities.BusinessLogic;
 
 namespace WorkoutStorageImport
@@ -143,7 +144,7 @@ namespace WorkoutStorageImport
                     userInformation = entityContext.UsersInformation.FirstOrDefault(x => string.Equals(x.Username, userName, StringComparison.Ordinal));
                     break;
                 default:
-                    throw new ExpectedException($"Неизвестный тип условия для поиска UserInformatin: '{typeCondition}'");
+                    throw new ExpectedException($"Неизвестный тип условия для поиска UserInformation: '{typeCondition}'");
             }
 
             if (userInformation == null)
