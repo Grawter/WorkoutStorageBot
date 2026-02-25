@@ -15,7 +15,7 @@ using WorkoutStorageModels.Entities.BusinessLogic;
 namespace WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic
 {
     /// <summary>
-    /// Повторяющаяся бизнес-логика, для упражнение и результатов упражнений которая может быть применима в разных CommandHandler
+    /// Повторяющаяся бизнес-логика, для упражнений и результатов упражнений, которая может быть применима в разных CommandHandler
     /// </summary>
     internal static class SharedExercisesAndResultsLogicHelper
     {
@@ -163,64 +163,67 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic
 
                 default:
                     throw new CreateResultExerciseException($"Неподдерживаемый тип упражнения: {currentType}");
-
             }
         }
 
-        internal static async Task<IInformationSet> FindResultByDateCommand(EntityContext db, UserContext userContext, string finderDate, bool isNeedFindByCurrentDay)
+        internal static async Task<IInformationSet> GetInformationSetWithTextResultsByDateCommand(EntityContext db, UserContext userContext, DateTime finderDate, bool isNeedFindByCurrentDay)
         {
-            ResponseTextBuilder responseConverter;
-            (ButtonsSet, ButtonsSet) buttonsSets;
             IInformationSet informationSet;
-
-            if (!DateTime.TryParseExact(finderDate, CommonConsts.Exercise.ValidDateFormats, null, System.Globalization.DateTimeStyles.None, out DateTime dateTime))
-            {
-                responseConverter = new ResponseTextBuilder(
-                    $"Не удалось получить дату из сообщения '{finderDate}', для корректного поиска придерживайтесь допустимого формата",
-                    CommonConsts.Exercise.FindResultsByDateFormat,
-                    "Введите дату искомой тренировки");
-
-                buttonsSets = isNeedFindByCurrentDay
-                    ? (ButtonsSet.None, ButtonsSet.ExercisesListWithLastWorkoutForDay)
-                    : (ButtonsSet.None, ButtonsSet.DaysListWithLastWorkout);
-
-                informationSet = new MessageInformationSet(responseConverter.Build(), buttonsSets);
-
-                return informationSet;
-            }
 
             List<int> exercisesIDs = GetNotArchivingExercisesIDs(userContext, isNeedFindByCurrentDay);
 
-            IEnumerable<ResultExercise> resultLastTraining = await db.ResultsExercises.AsNoTracking()
-                                                                                        .Where(re => exercisesIDs.Contains(re.ExerciseId)
-                                                                                                && re.DateTime.Date == dateTime)
-                                                                                        .Include(e => e.Exercise)
-                                                                                        .ToListAsync();
-            if (resultLastTraining.HasItemsInCollection())
+            IEnumerable<ResultExercise> resultsLastTraining = await GetGetResultsExerciseByDate(db, finderDate, exercisesIDs);
+
+            if (!resultsLastTraining.HasItemsInCollection())
             {
-                userContext.Navigation.ResetMessageNavigationTarget();
-
-                string information = GetInformationAboutLastExercises(dateTime, resultLastTraining);
-
-                string target = isNeedFindByCurrentDay
-                    ? $"Выберите упражнение из дня {userContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()} ({userContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBold()})"
-                    : $"Выберите тренировочный день из цикла {userContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}";
-
-                responseConverter = new ResponseTextBuilder($"Найденная тренировка:", information, target);
-
-                buttonsSets = isNeedFindByCurrentDay
-                    ? (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout)
-                    : (ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main);
-
-                informationSet = new MessageInformationSet(responseConverter.Build(), buttonsSets);
+                informationSet = await GetInformationSetWithClosestByDateTrainings(db, finderDate, exercisesIDs, isNeedFindByCurrentDay);
 
                 return informationSet;
             }
 
+            userContext.Navigation.ResetMessageNavigationTarget();
+
+            string information = GetInformationAboutLastExercises(finderDate, resultsLastTraining);
+
+            string target = isNeedFindByCurrentDay
+                ? $"Выберите упражнение из дня {userContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()} ({userContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBold()})"
+                : $"Выберите тренировочный день из цикла {userContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}";
+
+            ResponseTextBuilder responseConverter = new ResponseTextBuilder($"Найденная тренировка:", information, target);
+
+            (ButtonsSet, ButtonsSet) buttonsSets = isNeedFindByCurrentDay
+                ? (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout)
+                : (ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main);
+
+            informationSet = new MessageInformationSet(responseConverter.Build(), buttonsSets);
+
+            return informationSet;
+        }
+
+        private static async Task<IEnumerable<ResultExercise>> GetGetResultsExerciseByDate(EntityContext db, UserContext userContext, DateTime finderDate, bool isNeedFindByCurrentDay)
+        {
+            List<int> exercisesIDs = GetNotArchivingExercisesIDs(userContext, isNeedFindByCurrentDay);
+
+            return await GetGetResultsExerciseByDate(db, finderDate, exercisesIDs);
+        }
+
+        private static async Task<IEnumerable<ResultExercise>> GetGetResultsExerciseByDate(EntityContext db, DateTime finderDate, List<int> exercisesIDs)
+        {
+            IEnumerable<ResultExercise> resultsLastTraining = await db.ResultsExercises.AsNoTracking()
+                                                                                        .Where(re => exercisesIDs.Contains(re.ExerciseId)
+                                                                                                && re.DateTime.Date == finderDate)
+                                                                                        .Include(e => e.Exercise)
+                                                                                        .ToListAsync();
+
+            return resultsLastTraining;
+        }
+
+        private static async Task<IInformationSet> GetInformationSetWithClosestByDateTrainings(EntityContext db, DateTime finderDate, List<int> exercisesIDs, bool isNeedFindByCurrentDay)
+        {
             ResultExercise? resultLessThanFinderDate = await db.ResultsExercises.AsNoTracking()
                                                                                     .Where(re =>
                                                                                             exercisesIDs.Contains(re.ExerciseId)
-                                                                                            && re.DateTime.Date < dateTime)
+                                                                                            && re.DateTime.Date < finderDate)
                                                                                     .OrderByDescending(re => re.DateTime)
                                                                                     .FirstOrDefaultAsync();
 
@@ -229,7 +232,7 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic
             ResultExercise? resultDateGreaterThanFinderDate = await db.ResultsExercises.AsNoTracking()
                                                                                         .Where(re =>
                                                                                                 exercisesIDs.Contains(re.ExerciseId)
-                                                                                                && re.DateTime.Date > dateTime)
+                                                                                                && re.DateTime.Date > finderDate)
                                                                                         .OrderBy(re => re.DateTime)
                                                                                         .FirstOrDefaultAsync();
 
@@ -255,16 +258,16 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic
                     ? CommonConsts.DomainsAndEntities.Exercise
                     : CommonConsts.DomainsAndEntities.Day);
 
-            responseConverter = new ResponseTextBuilder($"Не удалось найти тренировки с датой '{finderDate}'",
+            ResponseTextBuilder responseConverter = new ResponseTextBuilder($"Не удалось найти тренировки с датой '{finderDate.ToString(CommonConsts.Common.DateFormat)}'",
                     hasClosestByDateTrainings
                     ? "Найдены ближайшие тренировки к искомой дате:"
                     : "Не удалось найти ближайших тренировок к искомой дате");
 
-            buttonsSets = (ButtonsSet.FoundResultsByDate, isNeedFindByCurrentDay
+            (ButtonsSet, ButtonsSet)  buttonsSets = (ButtonsSet.FoundResultsByDate, isNeedFindByCurrentDay
                 ? ButtonsSet.ExercisesListWithLastWorkoutForDay
                 : ButtonsSet.DaysListWithLastWorkout);
 
-            informationSet = new MessageInformationSet(responseConverter.Build(), buttonsSets, additionalParameters);
+            IInformationSet informationSet = new MessageInformationSet(responseConverter.Build(), buttonsSets, additionalParameters);
 
             return informationSet;
         }

@@ -174,9 +174,9 @@ namespace WorkoutStorageBot.UnitTests.Helpers
             return this;
         }
 
-        internal EntityContextBuilder WithCycle()
+        internal EntityContextBuilder WithCycle(bool isActive = false)
         {
-            testCycle = new Cycle() { Name = "TestCycle", UserInformationId = UserInformationId };
+            testCycle = new Cycle() { Name = "TestCycle", UserInformationId = UserInformationId, IsActive = isActive };
 
             Context.Cycles.Add(testCycle);
             Context.SaveChanges();

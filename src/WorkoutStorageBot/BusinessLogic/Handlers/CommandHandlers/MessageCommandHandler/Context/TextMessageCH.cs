@@ -470,9 +470,27 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
         private async Task<IInformationSet> FindResultByDateCommand(bool isNeedFindByCurrentDay)
         {
+            IInformationSet informationSet;
+
             string finderDate = requestTextBuilder.RemoveCompletely(10).Build();
 
-            IInformationSet informationSet = await SharedExercisesAndResultsLogicHelper.FindResultByDateCommand(this.Db, this.CurrentUserContext, finderDate, isNeedFindByCurrentDay);
+            if (!DateTime.TryParseExact(finderDate, CommonConsts.Exercise.ValidDateFormats, null, System.Globalization.DateTimeStyles.None, out DateTime dateTime))
+            {
+                ResponseTextBuilder responseConverter = new ResponseTextBuilder(
+                    $"Не удалось получить дату из сообщения '{finderDate}', для корректного поиска придерживайтесь допустимого формата",
+                    CommonConsts.Exercise.FindResultsByDateFormat,
+                    "Введите дату искомой тренировки");
+
+                (ButtonsSet, ButtonsSet) buttonsSets = isNeedFindByCurrentDay
+                    ? (ButtonsSet.None, ButtonsSet.ExercisesListWithLastWorkoutForDay)
+                    : (ButtonsSet.None, ButtonsSet.DaysListWithLastWorkout);
+
+                informationSet = new MessageInformationSet(responseConverter.Build(), buttonsSets);
+
+                return informationSet;
+            }
+
+            informationSet = await SharedExercisesAndResultsLogicHelper.GetInformationSetWithTextResultsByDateCommand(this.Db, this.CurrentUserContext, dateTime, isNeedFindByCurrentDay);
 
             return informationSet;
         }

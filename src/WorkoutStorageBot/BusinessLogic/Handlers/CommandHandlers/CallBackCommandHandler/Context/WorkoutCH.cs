@@ -174,11 +174,30 @@ AND date(re.DateTime) = last.MaxDate";
 
         private async Task<IInformationSet> FindResultsByDateCommand()
         {
-            string findedDate = callbackQueryParser.AdditionalParameters.First();
+            string finderDate = callbackQueryParser.AdditionalParameters.First();
 
             bool isNeedFindByCurrentDay = callbackQueryParser.DomainType == CommonConsts.DomainsAndEntities.Exercise;
 
-            IInformationSet informationSet = await SharedExercisesAndResultsLogicHelper.FindResultByDateCommand(this.Db, this.CurrentUserContext, findedDate, isNeedFindByCurrentDay);
+            string target = isNeedFindByCurrentDay
+                    ? $"Выберите упражнение из дня  {this.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()} ({this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBold()})"
+                    : $"Выберите тренировочный день из цикла {this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}";
+         
+            IInformationSet informationSet;
+
+            if (!DateTime.TryParseExact(finderDate, CommonConsts.Exercise.ValidDateFormats, null, System.Globalization.DateTimeStyles.None, out DateTime dateTime))
+            {
+                (ButtonsSet, ButtonsSet) buttonsSets = isNeedFindByCurrentDay
+                    ? (ButtonsSet.None, ButtonsSet.ExercisesListWithLastWorkoutForDay)
+                    : (ButtonsSet.None, ButtonsSet.DaysListWithLastWorkout);
+
+                ResponseTextBuilder responseConverter = new ResponseTextBuilder($"Не удалось найти данные, т.к. не удалось распарсить дату '{finderDate}'", target);
+
+                informationSet = new MessageInformationSet(responseConverter.Build(), buttonsSets);
+
+                return informationSet;
+            }
+
+            informationSet = await SharedExercisesAndResultsLogicHelper.GetInformationSetWithTextResultsByDateCommand(this.Db, this.CurrentUserContext, dateTime, isNeedFindByCurrentDay);
 
             return informationSet;
         }
