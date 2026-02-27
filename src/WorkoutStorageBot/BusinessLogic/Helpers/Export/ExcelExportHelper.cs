@@ -21,9 +21,11 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Export
 
             RecyclableMemoryStream recyclableMemoryStream = StreamHelper.RecyclableMSManager.GetStream();
 
-            using (ExcelPackage package = new ExcelPackage())
+            using (ExcelPackage excelPackage = new ExcelPackage())
             {
-                ExcelWorksheet mainSheet = package.Workbook.Worksheets.Add("Workout");
+                ExcelWorksheet mainSheet = excelPackage.Workbook.Worksheets.Add("Workout");
+
+                ExcelRange cells = mainSheet.Cells;
 
                 int startPosition = 1;
 
@@ -47,12 +49,12 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Export
                                 : "Тренировки, зафиксированные за всё время";
 
                 // informationAboutSelectedPeriod
-                SetStyle(mainSheet.Cells[informationAboutSelectedPeriodPoint.Y, informationAboutSelectedPeriodPoint.X,
-                                         informationAboutSelectedPeriodPoint.Y, informationAboutSelectedPeriodPoint.X + 7],
-                                         needMerge: true,
-                                         needBorder: true,
-                                         backgroundCellColor: Color.Azure);
-                mainSheet.Cells[informationAboutSelectedPeriodPoint.Y, informationAboutSelectedPeriodPoint.X].Value = informationAboutSelectedPeriod;
+                SetStyle(cells[informationAboutSelectedPeriodPoint.Y, informationAboutSelectedPeriodPoint.X,
+                        informationAboutSelectedPeriodPoint.Y, informationAboutSelectedPeriodPoint.X + 7],
+                        needMerge: true,
+                        needBorder: true,
+                        backgroundCellColor: Color.Azure);
+                cells[informationAboutSelectedPeriodPoint.Y, informationAboutSelectedPeriodPoint.X].Value = informationAboutSelectedPeriod;
 
                 int resultExerciseRowNumber = 0;
 
@@ -62,9 +64,9 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Export
                     {
                         foreach (DTOExercise exercise in day.Exercises)
                         {
-                            SetExerciseName(exercise.Name, exercisePoint, mainSheet);
+                            SetExerciseName(exercise.Name, exercisePoint, cells);
 
-                            SetResultTitle(resultTitlePoint, mainSheet);
+                            SetResultTitle(resultTitlePoint, cells);
 
                             DateTime tempDate = DateTime.MinValue;
 
@@ -81,7 +83,7 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Export
                                     isNeedWriteDate = true;
                                 }
 
-                                SetResultExercise(++resultExerciseRowNumber, resultExercise, resultExercisePoint, mainSheet, isNeedWriteDate);
+                                SetResultExercise(++resultExerciseRowNumber, resultExercise, resultExercisePoint, cells, isNeedWriteDate);
 
                                 // shift to next (row) resultExercisePoint
                                 resultExercisePoint.X = exercisePoint.X;
@@ -110,7 +112,7 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Export
                         else
                             endDayPoint = new Point(exercisePoint.X - 1, startDayPoint.Y);
 
-                        SetDayName(day.Name, startDayPoint, endDayPoint, mainSheet);
+                        SetDayName(day.Name, startDayPoint, endDayPoint, cells);
 
                         // shift to next day
                         startDayPoint.X = endDayPoint.X + 1;
@@ -118,7 +120,7 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Export
 
                     // calculate endCyclePoint
                     endCyclePoint = new Point(endDayPoint.X, startCyclePoint.Y);
-                    SetCycleName(cycle.Name, startCyclePoint, endCyclePoint, mainSheet);
+                    SetCycleName(cycle.Name, startCyclePoint, endCyclePoint, cells);
 
                     // shift to next cycle
                     newCyclePointY = maxResultExercisePointY + 3;
@@ -132,9 +134,11 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Export
                     resultExercisePoint = new Point(startPosition, resultTitlePoint.Y + 1);
                 }
 
-                mainSheet.Cells.AutoFitColumns();
+                cells.AutoFitColumns();
 
-                await package.SaveAsAsync(recyclableMemoryStream);
+                await excelPackage.SaveAsAsync(recyclableMemoryStream);
+
+                recyclableMemoryStream.Position = 0;
 
                 return recyclableMemoryStream;
             }
@@ -153,63 +157,63 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Export
             //ExcelPackage.License.SetNonCommercialPersonal("WorkoutStorageBot");
         }
 
-        private static void SetExerciseName(string exerciseName, Point exercisePoint, ExcelWorksheet mainSheet)
+        private static void SetExerciseName(string exerciseName, Point exercisePoint, ExcelRange cells)
         {
             Point endExercisePoint = new Point(exercisePoint.X + 3, exercisePoint.Y);
 
-            SetStyle(mainSheet.Cells[exercisePoint.Y, exercisePoint.X, endExercisePoint.Y, endExercisePoint.X], needMerge: true, needBorder: true, backgroundCellColor: Color.NavajoWhite);
-            mainSheet.Cells[exercisePoint.Y, exercisePoint.X].Value = exerciseName;
+            SetStyle(cells[exercisePoint.Y, exercisePoint.X, endExercisePoint.Y, endExercisePoint.X], needMerge: true, needBorder: true, backgroundCellColor: Color.NavajoWhite);
+            cells[exercisePoint.Y, exercisePoint.X].Value = exerciseName;
         }
 
-        private static void SetResultTitle(Point resultTitlePoint, ExcelWorksheet mainSheet)
+        private static void SetResultTitle(Point resultTitlePoint, ExcelRange cells)
         {
-            SetStyle(mainSheet.Cells[resultTitlePoint.Y, resultTitlePoint.X], needBorder: true, backgroundCellColor: Color.Salmon);
-            mainSheet.Cells[resultTitlePoint.Y, resultTitlePoint.X].Value = "Дата";
+            SetStyle(cells[resultTitlePoint.Y, resultTitlePoint.X], needBorder: true, backgroundCellColor: Color.Salmon);
+            cells[resultTitlePoint.Y, resultTitlePoint.X].Value = "Дата";
 
             resultTitlePoint.X += 1;
-            SetStyle(mainSheet.Cells[resultTitlePoint.Y, resultTitlePoint.X], needBorder: true, backgroundCellColor: Color.SkyBlue);
-            mainSheet.Cells[resultTitlePoint.Y, resultTitlePoint.X].Value = "Кол-во";
+            SetStyle(cells[resultTitlePoint.Y, resultTitlePoint.X], needBorder: true, backgroundCellColor: Color.SkyBlue);
+            cells[resultTitlePoint.Y, resultTitlePoint.X].Value = "Кол-во";
 
             resultTitlePoint.X += 1;
-            SetStyle(mainSheet.Cells[resultTitlePoint.Y, resultTitlePoint.X], needBorder: true, backgroundCellColor: Color.DarkSeaGreen);
-            mainSheet.Cells[resultTitlePoint.Y, resultTitlePoint.X].Value = "Вес";
+            SetStyle(cells[resultTitlePoint.Y, resultTitlePoint.X], needBorder: true, backgroundCellColor: Color.DarkSeaGreen);
+            cells[resultTitlePoint.Y, resultTitlePoint.X].Value = "Вес";
 
             resultTitlePoint.X += 1;
-            SetStyle(mainSheet.Cells[resultTitlePoint.Y, resultTitlePoint.X], needBorder: true, backgroundCellColor: Color.LightCyan);
-            mainSheet.Cells[resultTitlePoint.Y, resultTitlePoint.X].Value = "Свободный рез.";
+            SetStyle(cells[resultTitlePoint.Y, resultTitlePoint.X], needBorder: true, backgroundCellColor: Color.LightCyan);
+            cells[resultTitlePoint.Y, resultTitlePoint.X].Value = "Свободный рез.";
         }
 
-        private static void SetResultExercise(int rowNumber, DTOResultExercise resultExercise, Point resultExercisePoint, ExcelWorksheet mainSheet, bool isNeedWriteDate = true)
+        private static void SetResultExercise(int rowNumber, DTOResultExercise resultExercise, Point resultExercisePoint, ExcelRange cells, bool isNeedWriteDate = true)
         {
             Color backgroundCellColor = GetColorForRow(rowNumber);
 
-            SetStyle(mainSheet.Cells[resultExercisePoint.Y, resultExercisePoint.X], needBorder: true, needBold: true, backgroundCellColor: Color.Yellow);
+            SetStyle(cells[resultExercisePoint.Y, resultExercisePoint.X], needBorder: true, needBold: true, backgroundCellColor: Color.Yellow);
             if (isNeedWriteDate)
-                mainSheet.Cells[resultExercisePoint.Y, resultExercisePoint.X].Value = resultExercise.DateTime.ToString(CommonConsts.Common.DateFormat);
+                cells[resultExercisePoint.Y, resultExercisePoint.X].Value = resultExercise.DateTime.ToString(CommonConsts.Common.DateFormat);
 
             resultExercisePoint.X += 1;
-            SetStyle(mainSheet.Cells[resultExercisePoint.Y, resultExercisePoint.X], needBorder: true, backgroundCellColor: backgroundCellColor);
-            mainSheet.Cells[resultExercisePoint.Y, resultExercisePoint.X].Value = resultExercise.Count;
+            SetStyle(cells[resultExercisePoint.Y, resultExercisePoint.X], needBorder: true, backgroundCellColor: backgroundCellColor);
+            cells[resultExercisePoint.Y, resultExercisePoint.X].Value = resultExercise.Count;
 
             resultExercisePoint.X += 1;
-            SetStyle(mainSheet.Cells[resultExercisePoint.Y, resultExercisePoint.X], needBorder: true, backgroundCellColor: backgroundCellColor);
-            mainSheet.Cells[resultExercisePoint.Y, resultExercisePoint.X].Value = resultExercise.Weight;
+            SetStyle(cells[resultExercisePoint.Y, resultExercisePoint.X], needBorder: true, backgroundCellColor: backgroundCellColor);
+            cells[resultExercisePoint.Y, resultExercisePoint.X].Value = resultExercise.Weight;
 
             resultExercisePoint.X += 1;
-            SetStyle(mainSheet.Cells[resultExercisePoint.Y, resultExercisePoint.X], needBorder: true, needWrapText: true, backgroundCellColor: backgroundCellColor);
-            mainSheet.Cells[resultExercisePoint.Y, resultExercisePoint.X].Value = resultExercise.FreeResult;
+            SetStyle(cells[resultExercisePoint.Y, resultExercisePoint.X], needBorder: true, needWrapText: true, backgroundCellColor: backgroundCellColor);
+            cells[resultExercisePoint.Y, resultExercisePoint.X].Value = resultExercise.FreeResult;
         }
 
-        private static void SetDayName(string dayName, Point startDayPoint, Point endDayPoint, ExcelWorksheet mainSheet)
+        private static void SetDayName(string dayName, Point startDayPoint, Point endDayPoint, ExcelRange cells)
         {
-            SetStyle(mainSheet.Cells[startDayPoint.Y, startDayPoint.X, endDayPoint.Y, endDayPoint.X], needMerge: true, needBorder: true, backgroundCellColor: Color.Gold);
-            mainSheet.Cells[startDayPoint.Y, startDayPoint.X].Value = dayName;
+            SetStyle(cells[startDayPoint.Y, startDayPoint.X, endDayPoint.Y, endDayPoint.X], needMerge: true, needBorder: true, backgroundCellColor: Color.Gold);
+            cells[startDayPoint.Y, startDayPoint.X].Value = dayName;
         }
 
-        private static void SetCycleName(string cycleName, Point startCyclePoint, Point endCyclePoint, ExcelWorksheet mainSheet)
+        private static void SetCycleName(string cycleName, Point startCyclePoint, Point endCyclePoint, ExcelRange cells)
         {
-            SetStyle(mainSheet.Cells[startCyclePoint.Y, startCyclePoint.X, endCyclePoint.Y, endCyclePoint.X], needMerge: true, needBorder: true, backgroundCellColor: Color.PaleGreen);
-            mainSheet.Cells[startCyclePoint.Y, startCyclePoint.X].Value = cycleName;
+            SetStyle(cells[startCyclePoint.Y, startCyclePoint.X, endCyclePoint.Y, endCyclePoint.X], needMerge: true, needBorder: true, backgroundCellColor: Color.PaleGreen);
+            cells[startCyclePoint.Y, startCyclePoint.X].Value = cycleName;
         }
 
         private static void SetStyle(ExcelRange excelRange,
