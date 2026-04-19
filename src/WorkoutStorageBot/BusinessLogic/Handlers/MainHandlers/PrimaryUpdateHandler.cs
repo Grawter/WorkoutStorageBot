@@ -19,6 +19,7 @@ using WorkoutStorageBot.BusinessLogic.Helpers.Converters;
 using WorkoutStorageBot.BusinessLogic.Helpers.Updates;
 using WorkoutStorageBot.BusinessLogic.Extenions;
 using WorkoutStorageBot.Model.DTO.InformationSetForSend;
+using WorkoutStorageBot.Model.DTO.Log;
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
 {
@@ -166,13 +167,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
 
             Logger.Log(LogLevel.Information,
                        eventId,
-                       new Dictionary<string, object>()
-                       {
-                           { "Message", message },
-                           { "TelegramUserId", shortUpdateInfo.User.Id },
-                       },
+                       new LogData() { Message = message, TelegramUserId = shortUpdateInfo.User.Id },
                        null,
-                       LogFormatter.EmptyFormatter);
+                       LogFormatter.SimpleFormatter);
         }
 
         private void LoggingExpectedUpdateType(User user, string data, UpdateType updateType)
@@ -202,13 +199,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
 
             Logger.Log(logLevel,
                        eventId,
-                       new Dictionary<string, object>()
-                       {
-                           { "Message", message },
-                           { "TelegramUserId", user.Id },
-                       },
+                       new LogData() { Message = message, TelegramUserId = user.Id },
                        null,
-                       LogFormatter.EmptyFormatter);
+                       LogFormatter.SimpleFormatter);
         }
 
         private void SetInformationSetForNewContext(PrimaryHandlerResult primaryHandledData)

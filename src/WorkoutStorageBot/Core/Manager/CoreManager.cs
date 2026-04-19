@@ -2,21 +2,23 @@
 using Telegram.Bot.Types;
 using WorkoutStorageBot.Application.Configuration;
 using WorkoutStorageBot.BusinessLogic.Consts;
-using WorkoutStorageBot.BusinessLogic.Repositories;
+using WorkoutStorageBot.BusinessLogic.Context.Global;
+using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers;
+using WorkoutStorageBot.BusinessLogic.Helpers.Updates;
+using WorkoutStorageBot.BusinessLogic.Repositories;
 using WorkoutStorageBot.Core.Abstraction;
+using WorkoutStorageBot.Core.Consts;
+using WorkoutStorageBot.Core.Helpers;
+using WorkoutStorageBot.Core.Logging;
+using WorkoutStorageBot.Core.Sender;
 using WorkoutStorageBot.Model.AppContext;
 using WorkoutStorageBot.Model.DTO.HandlerData;
 using WorkoutStorageBot.Model.DTO.HandlerData.Results;
 using WorkoutStorageBot.Model.DTO.HandlerData.Results.UpdateInfo;
-using WorkoutStorageBot.BusinessLogic.Context.Global;
-using WorkoutStorageBot.BusinessLogic.Context.Session;
-using WorkoutStorageBot.Core.Helpers;
-using WorkoutStorageBot.BusinessLogic.Helpers.Updates;
-using WorkoutStorageBot.Core.Logging;
-using WorkoutStorageBot.Core.Sender;
-using WorkoutStorageModels.Entities.BusinessLogic;
 using WorkoutStorageBot.Model.DTO.InformationSetForSend;
+using WorkoutStorageBot.Model.DTO.Log;
+using WorkoutStorageModels.Entities.BusinessLogic;
 
 namespace WorkoutStorageBot.Core.Manager
 {
@@ -126,8 +128,8 @@ namespace WorkoutStorageBot.Core.Manager
 
             string exMessage = ex.ToString();
 
-            if (exMessage.Length > LogFormatter.MaxCharactersCount)
-                exMessage = $"{exMessage.Substring(0, LogFormatter.MaxCharactersCount)}...";
+            if (exMessage.Length > CoreConsts.Log.ShowLimit)
+                exMessage = $"{exMessage.Substring(0, CoreConsts.Log.ShowLimit)}...";
 
             if (ConfigurationData.Notifications.NotifyOwnersAboutRuntimeErrors)
                 await BotResponseSender.SendSimpleMassiveNotification(ConfigurationData.Bot.OwnersChatIDs, @$"Ошибка во время исполнения. EventID: {eventId.Id}
@@ -143,28 +145,16 @@ namespace WorkoutStorageBot.Core.Manager
 
                 logger.Log(LogLevel.Error,
                            eventId,
-                           new Dictionary<string, object>()
-                           {
-                               { "TelegramUserId", userId },
-                           },
+                           new LogData() { TelegramUserId = userId },
                            ex,
-                           LogFormatter.EmptyFormatter);
+                           LogFormatter.SimpleFormatter);
 
-                if (shortUpdateInfo.ChatId > 0)
-                {
-                    // не отправлять EventID, если нет доступа у пользователя
-                    // выглядит излишне, но пускай будет
-                    // if(await IsNeedSendEventIdToUser(userId))
-
+                // не отправлять EventID, если нет доступа у пользователя
+                if (shortUpdateInfo.ChatId > 0 && await IsNeedSendEventIdToUser(userId))
                     await BotResponseSender.SendSimpleNotification(shortUpdateInfo.ChatId, $"Ошибка обработки. EventId: {eventId.Id}");
-                }
             }
             else
-                logger.Log(LogLevel.Error, 
-                           eventId,
-                           new Dictionary<string, object>(),
-                           ex,
-                           LogFormatter.EmptyFormatter);
+                logger.LogError(eventId, ex, null);
         }
 
         private async Task<bool> IsNeedSendEventIdToUser(long userId)

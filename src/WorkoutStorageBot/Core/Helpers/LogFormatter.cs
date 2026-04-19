@@ -1,31 +1,48 @@
-﻿using Telegram.Bot.Exceptions;
-using WorkoutStorageBot.BusinessLogic.Consts;
+﻿using WorkoutStorageBot.BusinessLogic.Consts;
+using WorkoutStorageBot.Core.Consts;
+using WorkoutStorageBot.Model.DTO.Log;
 using WorkoutStorageModels.Entities.Core.Logging;
 
 namespace WorkoutStorageBot.Core.Helpers
 {
     internal static class LogFormatter
     {
-        internal const int MaxCharactersCount = 1500;
-
-        internal static string EmptyFormatter<TState>(TState state, Exception? exception)
-            => string.Empty;
-
-        internal static string CriticalExBotFormatter<TState>(TState state, Exception? exception)
+        internal static string SimpleFormatter<TState>(TState state, Exception? exception)
         {
-            string errorMessage = string.Empty;
-
-            if (exception == null)
-                return "Получено пустое исключение";
-
-            errorMessage = exception switch
+            if (state == null)
             {
-                ApiRequestException apiRequestException
-                    => $"Telegram API Error:{Environment.NewLine}[{apiRequestException.ErrorCode}]{Environment.NewLine}{apiRequestException.Message}",
-                _ => exception.ToString()
-            };
-
-            return errorMessage;
+                if (exception == null)
+                    return string.Empty;
+                else
+                    return exception.ToString();
+            }
+            else if (state is string logMessage)
+            {
+                if (exception != null)
+                {
+                    if (!string.IsNullOrWhiteSpace(logMessage))
+                        return $"Text: {logMessage} Ex: {exception.ToString()}";
+                    else
+                        return $"Ex: {exception.ToString()}";
+                }
+                else
+                    return logMessage;
+            }
+            else if (state is LogData logData)
+            {
+                if (exception != null)
+                {
+                    if (!string.IsNullOrWhiteSpace(logData.Message))
+                        return $"Text: {logData.Message} Ex: {exception.ToString()}";
+                    else
+                        return $"Ex: {exception.ToString()}";
+                }
+                else
+                    return logData.Message ?? string.Empty;
+            }
+            else
+                return @$"Тип {nameof(state)} - {typeof(TState).FullName} не поддеживается {nameof(SimpleFormatter)}
+CallStack: {Environment.StackTrace}";
         }
 
         internal static string ConvertLogToStr(Log log, int maxLength = 0)
@@ -42,7 +59,7 @@ namespace WorkoutStorageBot.Core.Helpers
                 from = log.TelegramUserId.ToString()!;
 
             if (maxLength == 0)
-                maxLength = MaxCharactersCount;
+                maxLength = CoreConsts.Log.ShowLimit;
 
             string logMessage = log.Message.Length > maxLength 
                 ? $"{log.Message.Substring(0, maxLength)}..." 

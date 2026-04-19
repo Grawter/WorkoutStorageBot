@@ -1,7 +1,8 @@
 ﻿using FluentAssertions;
-using Telegram.Bot.Exceptions;
 using WorkoutStorageBot.BusinessLogic.Consts;
+using WorkoutStorageBot.Core.Consts;
 using WorkoutStorageBot.Core.Helpers;
+using WorkoutStorageBot.Model.DTO.Log;
 using WorkoutStorageModels.Entities.Core.Logging;
 
 namespace WorkoutStorageBot.UnitTests.Core.Helpers
@@ -9,53 +10,130 @@ namespace WorkoutStorageBot.UnitTests.Core.Helpers
     public class LogFormatterTests
     {
         [Fact]
-        public void EmptyFormatter_WithNullException_ShouldReturnEmptyStr()
+        public void SimpleFormatter_WithNullStateAndException_ShouldReturnEmptyStr()
         {
-            Exception? ex = null;
+            // Act
+            string resultMes = LogFormatter.SimpleFormatter<LogData?>(null, null);
 
-            string emptyStr = LogFormatter.EmptyFormatter<string>("123", ex);
-
-            emptyStr.Should().BeEmpty();
-
+            // Assert
+            resultMes.Should().BeEmpty();
         }
 
         [Fact]
-        public void EmptyFormatter_WithException_ShouldReturnEmptyStr()
+        public void SimpleFormatter_WithNullStateAndNotNullException_ShouldReturnExceptionStr()
         {
-            string emptyStr = LogFormatter.EmptyFormatter<string>("123", new Exception("TestEx"));
-
-            emptyStr.Should().BeEmpty();
-        }
-
-
-        [Fact]
-        public void CriticalExBotFormatter_WithNullException_ShouldReturnTextAboutEmptyEx()
-        {
-            Exception? ex = null;
-
-            string emptyStr = LogFormatter.CriticalExBotFormatter<string>("123", ex);
-
-            emptyStr.Should().Be("Получено пустое исключение");
-        }
-
-        [Fact]
-        public void CriticalExBotFormatter_WithException_ShouldReturnTextEx()
-        {
+            // Arrange
             Exception ex = new Exception("TestEx");
 
-            string emptyStr = LogFormatter.CriticalExBotFormatter<string>("123", new Exception("TestEx"));
+            // Act
+            string resultMes = LogFormatter.SimpleFormatter<LogData?>(null, ex);
 
-            emptyStr.Should().Be(ex.ToString());
+            // Assert
+            resultMes.Should().Be(ex.ToString());
         }
 
         [Fact]
-        public void CriticalExBotFormatter_WithApiRequestException_ShouldReturnFormattedTextEx()
+        public void SimpleFormatter_WithStrStateAndNullException_ShouldReturnStateStr()
         {
-            ApiRequestException apiEx = new ApiRequestException("TestEx", 11);
+            // Arrange
+            string state = "123";
 
-            string emptyStr = LogFormatter.CriticalExBotFormatter<string>("123", apiEx);
+            // Act
+            string resultMes = LogFormatter.SimpleFormatter<string>(state, null);
 
-            emptyStr.Should().Be($"Telegram API Error:{Environment.NewLine}[{apiEx.ErrorCode}]{Environment.NewLine}{apiEx.Message}");
+            // Assert
+            resultMes.Should().Be(state);
+        }
+
+        [Fact]
+        public void SimpleFormatter_WithStrStateAndNotNullException_ShouldReturnExceptionStr()
+        {
+            // Arrange
+            Exception ex = new Exception("TestEx");
+
+            // Act
+            string resultMes = LogFormatter.SimpleFormatter<string>(string.Empty, ex);
+
+            // Assert
+            resultMes.Should().Be($"Ex: {ex.ToString()}");
+        }
+
+        [Fact]
+        public void SimpleFormatter_WithEmptyStrStateAndNotNullException_ShouldReturnFormattedStr()
+        {
+            // Arrange
+            string state = "123";
+            Exception ex = new Exception("TestEx");
+
+            // Act
+            string resultMes = LogFormatter.SimpleFormatter<string>(state, ex);
+
+            // Assert
+            resultMes.Should().Be($"Text: {state} Ex: {ex.ToString()}");
+        }
+
+        [Fact]
+        public void SimpleFormatter_WithEmptyLogDataStateAndNullException_ShouldReturnEmptyStr()
+        {
+            // Arrange
+            LogData state = new LogData();
+
+            // Act
+            string resultMes = LogFormatter.SimpleFormatter<LogData>(state, null);
+
+            // Assert
+            resultMes.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void SimpleFormatter_WithLogDataStateAndNullException_ShouldReturnStateStr()
+        {
+            // Arrange
+            LogData state = new LogData() { Message = "123" };
+
+            // Act
+            string resultMes = LogFormatter.SimpleFormatter<LogData>(state, null);
+
+            // Assert
+            resultMes.Should().Be(state.Message);
+        }
+
+        [Fact]
+        public void SimpleFormatter_WithEmptyLogDataStateAndNotNullException_ShouldReturnExceptionStr()
+        {
+            // Arrange
+            LogData state = new LogData();
+            Exception ex = new Exception("TestEx");
+
+            // Act
+            string resultMes = LogFormatter.SimpleFormatter<LogData>(state, ex);
+
+            // Assert
+            resultMes.Should().Be($"Ex: {ex.ToString()}");
+        }
+
+        [Fact]
+        public void SimpleFormatter_WithLogDataStateAndNotNullException_ShouldReturnFormattedStr()
+        {
+            // Arrange
+            LogData state = new LogData() { Message = "123" };
+            Exception ex = new Exception("TestEx");
+
+            // Act
+            string resultMes = LogFormatter.SimpleFormatter<LogData>(state, ex);
+
+            // Assert
+            resultMes.Should().Be($"Text: {state.Message} Ex: {ex.ToString()}");
+        }
+
+        [Fact]
+        public void SimpleFormatter_WithUnexpectedState_ShouldReturnStrAboutUnexpectedState()
+        {
+            // Act
+            string resultMes = LogFormatter.SimpleFormatter<DateTime>(DateTime.Now, null);
+
+            // Assert
+            resultMes.Should().Contain($"Тип state - {typeof(DateTime).FullName} не поддеживается SimpleFormatter{Environment.NewLine}CallStack:");
         }
 
         [Fact]
@@ -213,8 +291,8 @@ namespace WorkoutStorageBot.UnitTests.Core.Helpers
             int? eventId = 10;
             DateTime dateTime = new DateTime(2020, 6, 1);
             long? telegramId = 12345;
-            string context = "MyApp.Services.UserService";
-            // Сообщение длиной 100 символов, меньше чем MaxCharactersCount (1500)
+            string context = "MyApp.Services.UserService"; 
+            // Сообщение длиной, меньше чем CoreConsts.LogLengthLimit.ConvertLimit
             string message = new string('B', 100);
 
             Log log = CreateLog(id,
@@ -245,8 +323,8 @@ namespace WorkoutStorageBot.UnitTests.Core.Helpers
             DateTime dateTime = new DateTime(2020, 6, 1);
             long? telegramId = 1;
             string context = "MyApp.Services.UserService";
-            // Сообщение длиной 1600 символов, больше чем MaxCharactersCount (+ 5)
-            string message = new string('C', LogFormatter.MaxCharactersCount + 5);
+            // Сообщение длиной, больше чем CoreConsts.Log.ConvertLimit (+ 5)
+            string message = new string('C', CoreConsts.Log.ShowLimit + 5);
 
             Log log = CreateLog(id,
                                 level,
@@ -262,7 +340,7 @@ namespace WorkoutStorageBot.UnitTests.Core.Helpers
             string result = LogFormatter.ConvertLogToStr(log, maxLength);
 
             // Assert
-            result.Should().Be($"[{id}] [{level}] [{eventId}] [{dateTime.ToString(CommonConsts.Common.DateTimeFormatDateFirst)}] [{telegramId}] [UserService]:{Environment.NewLine}{new string('C', LogFormatter.MaxCharactersCount)}...");
+            result.Should().Be($"[{id}] [{level}] [{eventId}] [{dateTime.ToString(CommonConsts.Common.DateTimeFormatDateFirst)}] [{telegramId}] [UserService]:{Environment.NewLine}{new string('C', CoreConsts.Log.ShowLimit)}...");
         }
 
         [Fact]
@@ -275,7 +353,7 @@ namespace WorkoutStorageBot.UnitTests.Core.Helpers
             DateTime dateTime = new DateTime(2020, 6, 1);
             long? telegramId = 12345;
             string context = "NoDotsContext";
-            // Сообщение длиной 100 символов, меньше чем MaxCharactersCount (1500)
+            // Сообщение длиной 100 символов, меньше чем CoreConsts.Log.ConvertLimit
             string message = "Msg";
 
             Log log = CreateLog(id,

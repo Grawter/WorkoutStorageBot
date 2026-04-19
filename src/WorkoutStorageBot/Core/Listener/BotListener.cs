@@ -7,6 +7,7 @@ using Telegram.Bot.Types.Enums;
 using WorkoutStorageBot.Application.Configuration;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Context.Global;
+using WorkoutStorageBot.Core.Consts;
 using WorkoutStorageBot.Core.Helpers;
 using WorkoutStorageBot.Core.Logging;
 using WorkoutStorageBot.Core.Manager;
@@ -97,18 +98,12 @@ namespace WorkoutStorageBot.Core.BotTools.Listener
 
                 EventId eventId = EventIDHelper.GetNextEventIdThreadSafe(CommonConsts.EventNames.Critical);
 
-                logger.Log(LogLevel.Critical,
-                           eventId,
-                           new Dictionary<string, object>(),
-                           exception,
-                           LogFormatter.CriticalExBotFormatter);
-
-                logger.LogWarning("Отключение бота после необработанной ошибки");
+                logger.LogCritical(eventId, exception, "Отключение бота после необработанной ошибки");
 
                 string exMessage = exception.ToString();
 
-                if (exMessage.Length > LogFormatter.MaxCharactersCount)
-                    exMessage = $"{exMessage.Substring(0, LogFormatter.MaxCharactersCount)}...";
+                if (exMessage.Length > CoreConsts.Log.ShowLimit)
+                    exMessage = $"{exMessage.Substring(0, CoreConsts.Log.ShowLimit - 3)}...";
 
                 if (configurationData.Notifications.NotifyOwnersAboutCriticalErrors)
                     await botSender.SendSimpleMassiveNotification(configurationData.Bot.OwnersChatIDs, @$"!!!Необработанная ошибка!!!:

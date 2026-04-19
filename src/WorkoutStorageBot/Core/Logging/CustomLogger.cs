@@ -1,9 +1,11 @@
 ﻿using Microsoft.Extensions.Logging;
 using WorkoutStorageBot.Application.Configuration;
 using WorkoutStorageBot.BusinessLogic.Consts;
+using WorkoutStorageBot.Core.Consts;
 using WorkoutStorageBot.Core.Extensions;
-using WorkoutStorageBot.Core.Helpers;
+using WorkoutStorageBot.Core.Logging.OutputWriter;
 using WorkoutStorageBot.Model.AppContext;
+using WorkoutStorageBot.Model.DTO.Log;
 using WorkoutStorageModels.Entities.Core.Logging;
 
 namespace WorkoutStorageBot.Core.Logging
@@ -12,14 +14,15 @@ namespace WorkoutStorageBot.Core.Logging
     {
         private readonly string categoryName;
         private readonly EntityContext db;
-        private readonly ConfigurationData configurationData;
-        private const string dateTimeFormat = CommonConsts.Common.DateTimeFormatDateFirst;
+        private readonly IOutputWriter outputWriter;
+        private readonly LogSettings logSettings;
 
-        public CustomLogger(string categoryName, EntityContext db, ConfigurationData configurationData) 
+        public CustomLogger(string categoryName, EntityContext db, IOutputWriter outputWriter, LogSettings logSettings) 
         { 
             this.categoryName = categoryName;
             this.db = db;
-            this.configurationData = configurationData;
+            this.outputWriter = outputWriter;
+            this.logSettings = logSettings;
         }
 
         public IDisposable BeginScope<TState>(TState state) where TState : notnull
@@ -49,18 +52,21 @@ namespace WorkoutStorageBot.Core.Logging
 
             RuleLog ruleLog = GetRuleLog();
 
-            Dictionary<string, object> logData = GetLogData(state, exception, formatter);
-
             DateTime dateTime = DateTime.Now;
 
-            ConsoleColor originalConsoleColor = Console.ForegroundColor;
+            LogData logData = GetLogData(state, exception, formatter);
 
-            SetConsoleColorText(logLevel);
+            if (string.IsNullOrWhiteSpace(logData.Message) || logData.Message == "[null]")
+                return;
 
-            TryWriteLogToConsole(ruleLog.ConsoleLogLevels, logLevelStr, eventId, dateTime, logData);
-            TryWriteLogToDB(ruleLog.DBLogLevels, logLevelStr, eventId, dateTime, logData);
+            if (logData.Message.Length > CoreConsts.Log.SaveLimit)
+                logData.Message = $"{logData.Message.Substring(0, CoreConsts.Log.SaveLimit - 3)}...";
 
-            Console.ForegroundColor = originalConsoleColor;
+            if (CurrentLogLevelIsEnable(logLevelStr, ruleLog.ConsoleLogLevels))
+                TryWriteLogToConsoleWrapper(logLevelStr, eventId, dateTime, logData.Message, logData.TelegramUserId);
+
+            if (CurrentLogLevelIsEnable(logLevelStr, ruleLog.DBLogLevels))
+                TryWriteLogToDB(logLevelStr, eventId, dateTime, logData.Message, logData.TelegramUserId);
         }
 
         private RuleLog GetRuleLog()
@@ -70,163 +76,150 @@ namespace WorkoutStorageBot.Core.Logging
             if (customRuleLog != null)
                 return customRuleLog;
             else
-                return configurationData.LogInfo.MainRuleLog;
+                return logSettings.MainRuleLog;
         }
 
         private CustomRuleLog? GetCustomRuleLog()
         {
-            if (!configurationData.LogInfo.CustomRulesLog.HasItemsInCollection())
+            if (!logSettings.CustomRulesLog.HasItemsInCollection())
                 return default;
 
             CustomRuleLog? customRuleLog =
-                configurationData.LogInfo.CustomRulesLog.FirstOrDefault(x => string.Equals(x.FullClassName, categoryName, StringComparison.InvariantCulture));
+                logSettings.CustomRulesLog.FirstOrDefault(x => string.Equals(x.FullClassName, categoryName, StringComparison.InvariantCulture));
 
             return customRuleLog;
         }
 
-        private Dictionary<string, object> GetLogData<TState>(TState state, Exception? ex, Func<TState, Exception?, string> formatter)
+        private LogData GetLogData<TState>(TState state, Exception? ex, Func<TState, Exception?, string> formatter)
         {
-            if (ex != null)
-                return GetLogDataByEx(state, ex, formatter);
-            else
-                return GetLogDataByTState(state);
-        }
-
-        private Dictionary<string, object> GetLogDataByEx<TState>(TState state, Exception ex, Func<TState, Exception, string> formatter)
-        {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-
-            string formatterMessage = string.Empty;
-
             if (formatter != null)
-                formatterMessage = formatter(state, ex);
-
-            if (!string.IsNullOrWhiteSpace(formatterMessage))
-                result.Add("Message", formatterMessage);
+                return GetLogDataWithFormatter(state, ex, formatter);
             else
-                result.Add("Message", ex.ToString());
-
-            Dictionary<string, object> TStateLogData = GetLogDataByTState(state);
-
-            if (TStateLogData.Count > 0)
-                UnionLogData(result, TStateLogData);
-
-            return result;
+                return GetLogDataWithoutFormatter(state, ex);
         }
 
-        private Dictionary<string, object> GetLogDataByTState<TState>(TState state, Dictionary<string, object>? startedCollection = null)
+        private LogData GetLogDataWithFormatter<TState>(TState state, Exception? ex, Func<TState, Exception?, string> formatter)
         {
-            Dictionary<string, object> result = startedCollection 
-                ?? new Dictionary<string, object>();
+            LogData logData = new LogData();
 
-            if (state is IReadOnlyList<KeyValuePair<string, object>> logReadOnlyListData)
+            if (state is LogData logDataExternal)
             {
-                foreach (KeyValuePair<string, object> keyValuePair in logReadOnlyListData)
-                {
-                    if (keyValuePair.Key == "{OriginalFormat}")
-                        result.Add("Message", keyValuePair.Value);
-                    else
-                        result.Add(keyValuePair.Key, keyValuePair.Value);
-                }
+                logData.Message = formatter(state, ex);
+                logData.TelegramUserId = logDataExternal.TelegramUserId;
             }
-            else if (state is Dictionary<string, object> logDictionaryResult)
-                return logDictionaryResult;
+            // если это стандартный встроенный форматер, то он никак не обработает ex, поэтому обрабатываем ex самостоятельно
+            else if (ex != null && formatter.Method.Name == "MessageFormatter" && formatter.Method.Module.Name == "Microsoft.Extensions.Logging.Abstractions.dll")
+            {
+                string stateValue = formatter(state, ex);
+
+                if (stateValue == "[null]")
+                    logData.Message = $"Ex: {ex.ToString()}";
+                else
+                    logData.Message = $"Text: {stateValue} Ex: {ex.ToString()}";
+            }
+            else
+                logData.Message = formatter(state, ex);
+            
+            return logData;
+        }
+
+        private LogData GetLogDataWithoutFormatter<TState>(TState state, Exception? ex)
+        {
+            LogData logData = new LogData();
+
+            if (state == null)
+                return logData;
             else if (state is string logMessage)
-                result.Add("Message", logMessage);
-            else
-                result.Add("Message", @$"Не удалось обработать {nameof(state)} с типом {typeof(TState).FullName}
-CallStack: {Environment.StackTrace}");
-
-            return result;
-        }
-
-        private Dictionary<string, object> UnionLogData(Dictionary<string, object> exLogData, Dictionary<string, object> stateLogData)
-        {
-            foreach (KeyValuePair<string, object> keyValuePair in stateLogData)
             {
-                exLogData.TryAdd(keyValuePair.Key, keyValuePair.Value);
+                if (ex != null)
+                {
+                    if (!string.IsNullOrWhiteSpace(logMessage))
+                        logData.Message = $"Text: {logMessage} Ex: {ex.ToString()}";
+                    else
+                        logData.Message = $"Ex: {ex.ToString()}";
+                }
+                else
+                    logData.Message = logMessage;
             }
+            else if (state is LogData logDataExternal)
+            {
+                if (ex != null)
+                {
+                    if (!string.IsNullOrWhiteSpace(logDataExternal.Message))
+                        logData.Message = $"Text: {logDataExternal.Message} Ex: {ex.ToString()}";
+                    else
+                        logData.Message = $"Ex: {ex.ToString()}";
 
-            return exLogData;
+                    logData.TelegramUserId = logDataExternal.TelegramUserId;
+                }
+                else
+                    logData = logDataExternal;
+            }
+            else
+                logData.Message = @$"Не удалось обработать {nameof(state)} с типом {typeof(TState).FullName}
+CallStack: {Environment.StackTrace}";
+
+            return logData;
         }
 
-        private void SetConsoleColorText(LogLevel logLevel)
+        private void TryWriteLogToConsoleWrapper(string currentLogLevelStr,
+                                                 EventId eventId,
+                                                 DateTime dateTime,
+                                                 string message,
+                                                 long? telegramUserId)
         {
-            Console.ForegroundColor = logLevel switch
+            ConsoleColor originalConsoleColor = Console.ForegroundColor;
+
+            SetConsoleColorText(currentLogLevelStr);
+
+            TryWriteLogToConsole(currentLogLevelStr, eventId, dateTime, message, telegramUserId);
+
+            Console.ForegroundColor = originalConsoleColor;
+        }
+
+        private void SetConsoleColorText(string logLevelStr)
+        {
+            Console.ForegroundColor = logLevelStr switch
             {
-                LogLevel.Information => ConsoleColor.Cyan,
-                LogLevel.Warning => ConsoleColor.Yellow,
-                LogLevel.Error => ConsoleColor.Red,
-                LogLevel.Critical => ConsoleColor.DarkRed,
+                "Information" => ConsoleColor.Cyan,
+                "Warning" => ConsoleColor.Yellow,
+                "Error" => ConsoleColor.Red,
+                "Critical" => ConsoleColor.DarkRed,
                 _ => ConsoleColor.Gray
             };
         }
 
-        private bool TryWriteLogToConsole(IEnumerable<string> permittedLogLevels,
-                                     string currentLogLevelStr,
-                                     EventId eventId,
-                                     DateTime dateTime,
-                                     Dictionary<string, object> logData)
+        private void TryWriteLogToConsole(string currentLogLevelStr,
+                                          EventId eventId,
+                                          DateTime dateTime,
+                                          string message,
+                                          long? telegramUserId)
         {
-            ArgumentNullException.ThrowIfNull(permittedLogLevels);
-
-            if (!CurrentLogLevelIsEnable(currentLogLevelStr, permittedLogLevels))
-                return false;
-
-            string logMessage = string.Empty;
+            string logMessage;
 
             if (HasEventId(eventId, out string eventIdStr))
-                logMessage = @$"[{currentLogLevelStr}] [{eventIdStr}] [{dateTime.ToString(dateTimeFormat)}] {categoryName}:
-{logData["Message"]}";
+                logMessage = @$"[{currentLogLevelStr}] [{eventIdStr}] [{dateTime.ToString(CommonConsts.Common.DateTimeFormatDateFirst)}] {categoryName}:
+{message}";
             else
-                logMessage = @$"[{currentLogLevelStr}] [{dateTime.ToString(dateTimeFormat)}] {categoryName}:
-{logData["Message"]}";
+                logMessage = @$"[{currentLogLevelStr}] [{dateTime.ToString(CommonConsts.Common.DateTimeFormatDateFirst)}] {categoryName}:
+{message}";
 
-            if (long.TryParse(logData.GetValueOrDefault("TelegramUserId")?.ToString(), out long telegramUserId))
-                logMessage += $" |by|{telegramUserId}|";
+            if (telegramUserId.HasValue)
+                logMessage += $" |by {telegramUserId}";
 
-            Console.WriteLine(logMessage);
-
-            return true;
+            outputWriter.Write(logMessage);
         }
 
-        private bool HasEventId(EventId eventId, out string eventIdStr)
-        {
-            eventIdStr = string.Empty;
-
-            if (eventId.Id < 1)
-                return false;
-
-            if (eventId.Name != null)
-                eventIdStr = $"{eventId.Id}|{eventId.Name}";
-            else
-                eventIdStr = eventId.Id.ToString();
-
-            return true;
-        }
-
-        private bool TryWriteLogToDB(IEnumerable<string> permittedLogLevels,
-                                     string currentLogLevelStr,
+        private void TryWriteLogToDB(string currentLogLevelStr,
                                      EventId eventId,
                                      DateTime dateTime,
-                                     Dictionary<string, object> logData)
+                                     string message,
+                                     long? telegramUserId)
         {
-            ArgumentNullException.ThrowIfNull(permittedLogLevels);
-
-            if (!CurrentLogLevelIsEnable(currentLogLevelStr, permittedLogLevels))
-                return false;
-
-            string? message = logData["Message"].ToString();
-
-            if (string.IsNullOrWhiteSpace(message))
-				return false;
-
-			long.TryParse(logData.GetValueOrDefault("TelegramUserId")?.ToString(), out long telegramUserId);
-
             Log log = new Log()
             {
                 LogLevel = currentLogLevelStr,
-                EventID = eventId.Id,
+                EventID = eventId.Id > 0 ? eventId.Id : null,
                 EventName = eventId.Name,
                 DateTime = dateTime,
                 Message = message,
@@ -237,6 +230,19 @@ CallStack: {Environment.StackTrace}");
             db.Logs.Add(log);
 
             db.SaveChanges();
+        }
+
+        private bool HasEventId(EventId eventId, out string eventIdStr)
+        {
+            eventIdStr = string.Empty;
+
+            if (eventId.Id < 1)
+                return false;
+
+            if (!string.IsNullOrWhiteSpace(eventId.Name))
+                eventIdStr = $"{eventId.Id}|{eventId.Name}";
+            else
+                eventIdStr = eventId.Id.ToString();
 
             return true;
         }
