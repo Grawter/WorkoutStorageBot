@@ -234,7 +234,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Logging
             {
                 EventId eventId = new EventId(1);
                 LogData logData = new LogData() { Message = logStr, TelegramUserId = 22 };
-                customLogger.Log(LogLevel.Trace, eventId, logData, null, null);
+                customLogger.Log(LogLevel.Trace, eventId, logData, null, null!);
                 regexStr = $@"\[Trace\] \[{eventId.Id}\] \[.*?\] CustomLoggerTests:{Environment.NewLine}{logStr} |by {logData.TelegramUserId}";
 
                 // Assert
@@ -252,7 +252,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Logging
                 EventId eventId = new EventId(1);
                 LogData logData = new LogData() { Message = logStr, TelegramUserId = 22 };
                 Exception ex = new Exception("TestEx");
-                customLogger.Log(LogLevel.Trace, eventId, logData, ex, null);
+                customLogger.Log(LogLevel.Trace, eventId, logData, ex, null!);
                 regexStr = $@"\[Trace\] \[{eventId.Id}\] \[.*?\] CustomLoggerTests:{Environment.NewLine}Text: {logStr} Ex: {ex.ToString()} |by {logData.TelegramUserId}";
                 logStr = $"Text: {logStr} Ex: {ex.ToString()}";
 

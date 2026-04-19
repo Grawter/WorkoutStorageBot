@@ -236,6 +236,7 @@ Enums in Tables:
 
 - Хранение данных: Используется SQLite + EF
 - **WorkoutStorageBot** - Cам бот и его бизнес-логика
-- **WorkoutStorageImport** - Утилита для экспорта тренировок из json
+- **WorkoutStorageImport** - Утилита для экспорта тренировок из JSON
 - **WorkoutStorageModels** - Модели EF
 - **WorkoutStorageBot.UnitTests** - Unit тесты бота
+- **WorkoutStorageBot.IntegrationTests** - Интеграционные тесты БД/логика
