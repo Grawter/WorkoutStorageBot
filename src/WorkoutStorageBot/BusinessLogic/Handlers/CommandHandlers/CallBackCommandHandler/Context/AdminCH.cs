@@ -89,7 +89,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             ResponseTextBuilder responseTextBuilder;
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.AdminLogs, ButtonsSet.Admin);
 
-            Log? lastLog = await LogsRepository.GetLogs(1).FirstOrDefaultAsync();
+            Log? lastLog = await LogsRepository.GetLastLogs(1).FirstOrDefaultAsync();
 
             if (lastLog == null)
                 responseTextBuilder = new ResponseTextBuilder("Логов не найдено", "Выберите интересующее действие с логами");
@@ -107,8 +107,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
         private async Task<IInformationSet> ShowLastExceptionLogsCommand()
         {
-            Log? lastErrorLog = await LogsRepository.GetLogs(LogLevel.Error.ToString(), 1).FirstOrDefaultAsync();
-            Log? lastCriticalLog = await LogsRepository.GetLogs(LogLevel.Critical.ToString(), 1).FirstOrDefaultAsync();
+            Log? lastErrorLog = await LogsRepository.GetLastLogs(LogLevel.Error.ToString(), 1).FirstOrDefaultAsync();
+            Log? lastCriticalLog = await LogsRepository.GetLastLogs(LogLevel.Critical.ToString(), 1).FirstOrDefaultAsync();
 
             List<Log?> exceptionLogs = new List<Log?>() { lastErrorLog, lastCriticalLog };
 

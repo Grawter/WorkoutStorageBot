@@ -525,9 +525,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             Log? log;
 
             if (isEventID)
-                log = await logsRepository.GetLogs(Id, 1).FirstOrDefaultAsync();
+                log = await logsRepository.GetLogByEventId(Id);
             else
-                log = await logsRepository.GetLogById(Id, 1);
+                log = await logsRepository.GetLogById(Id);
 
             if (log == null)
             {
