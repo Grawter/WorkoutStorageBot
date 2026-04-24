@@ -147,7 +147,8 @@ namespace WorkoutStorageBot.UnitTests.Helpers
             testUserInformation = new UserInformation
             {
                 FirstName = "TestFirstName",
-                Username = "@TestUsername"
+                Username = "@TestUsername",
+                UserId = 1,
             };
 
             Context.UsersInformation.Add(testUserInformation);
