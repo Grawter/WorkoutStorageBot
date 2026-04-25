@@ -18,7 +18,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Repositories
     {
         private readonly EntityContextBuilder builder;
 
-        private readonly Mock<ICustomLoggerFactory> loggerFactoryMock;
         private readonly Mock<ILogger> loggerMock;
 
         private readonly AdminRepository adminRepository;
@@ -27,7 +26,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Repositories
         {
             builder = new EntityContextBuilder();
 
-            loggerFactoryMock = new();
+            Mock<ICustomLoggerFactory> loggerFactoryMock = new();
 
             loggerMock = new();
 
