@@ -502,7 +502,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             if (AccessDenied(out IInformationSet? informationSet))
                 return informationSet;
 
-            LogsRepository logsRepository = this.GetRequiredRepository<LogsRepository>();
+            LogsRepository logsRepository = this.RepositoriesHub.GetRequiredRepository<LogsRepository>();
 
             ResponseTextBuilder responseTextBuilder;
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.AdminLogs, ButtonsSet.Admin);
@@ -576,12 +576,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             UserInformation? user;
 
-            AdminRepository adminRepository = this.GetRequiredRepository<AdminRepository>();
+            UserInformationRepository userInformationRepository = this.RepositoriesHub.GetRequiredRepository<UserInformationRepository>();
 
             if (long.TryParse(userIdentity, out long userID))
-                user = await adminRepository.GetUserInformation(userID);
+                user = await userInformationRepository.GetUserInformation(userID);
             else
-                user = await adminRepository.GetUserInformation(userIdentity);
+                user = await userInformationRepository.GetUserInformation(userIdentity);
 
             if (user == null)
             {
@@ -593,7 +593,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 return informationSet;
             }
 
-            await this.SimpleSendNotification(user.UserId, text);
+            await this.BotResponseSender.SendSimpleNotification(user.UserId, text);
 
             responseTextBuilder = new ResponseTextBuilder($"Сообщение отправлено пользователю {userIdentity.AddBoldAndQuotes()}",
                     "Выберите интересующее действие");
@@ -616,7 +616,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 ? this.Db.UsersInformation.AsNoTracking().Select(x => x.UserId)
                 : this.ContextKeeper.GetAllKeys())
             {
-                await this.SimpleSendNotification(userID, text);
+                await this.BotResponseSender.SendSimpleNotification(userID, text);
                 ++counter;
             }
 
@@ -657,12 +657,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             UserInformation? user;
 
-            AdminRepository adminRepository = this.GetRequiredRepository<AdminRepository>();
+            AdminWrapper adminWrapper = this.RepositoriesHub.InitRepository(x => new AdminWrapper(x, this.GetConfigurationData(), this.CreateLogger<AdminWrapper>()));
 
             if (long.TryParse(userIdentity, out long userID))
-                user = await adminRepository.GetUserInformation(userID);
+                user = await adminWrapper.GetUserInformation(userID);
             else
-                user = await adminRepository.GetUserInformation(userIdentity);
+                user = await adminWrapper.GetUserInformation(userIdentity);
 
             if (user == null)
             {
@@ -682,7 +682,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                     if (userContext != null)
                         userContext.UserInformation.WhiteList = !userContext.UserInformation.WhiteList;
 
-                    await adminRepository.ChangeWhiteListByUser(user);
+                    await adminWrapper.ChangeWhiteListByUser(user);
 
                     responseTextBuilder = new ResponseTextBuilder($"WhiteList для {user.Username.AddBoldAndQuotes()} ({user.UserId}) установлен в: {user.WhiteList.ToString().AddBold()}",
                         "Выберите интересующее действие");
@@ -693,7 +693,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                     if (userContext != null)
                         userContext.UserInformation.BlackList = !userContext.UserInformation.BlackList;
 
-                    await adminRepository.ChangeBlackListByUser(user);
+                    await adminWrapper.ChangeBlackListByUser(user);
 
                     responseTextBuilder = new ResponseTextBuilder($"BlackList для {user.Username.AddBoldAndQuotes()} ({user.UserId}) установлен в: {user.BlackList.ToString().AddBold()}",
                         "Выберите интересующее действие");
@@ -723,12 +723,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             UserInformation? user;
 
-            AdminRepository adminRepository = this.GetRequiredRepository<AdminRepository>();
+            AdminWrapper adminWrapper = this.RepositoriesHub.InitRepository(x => new AdminWrapper(x, this.GetConfigurationData(), this.CreateLogger<AdminWrapper>()));
 
             if (long.TryParse(userIdentity, out long userID))
-                user = await adminRepository.GetUserInformation(userID);
+                user = await adminWrapper.GetUserInformation(userID);
             else
-                user = await adminRepository.GetUserInformation(userIdentity);
+                user = await adminWrapper.GetUserInformation(userIdentity);
 
             if (user == null)
             {
@@ -741,7 +741,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             this.ContextKeeper.RemoveContext(user.UserId);
 
-            await adminRepository.DeleteAccount(user);
+            await adminWrapper.DeleteAccount(user);
             responseTextBuilder = new ResponseTextBuilder($"Пользователь {user.Username.AddBoldAndQuotes()} ({user.UserId}) был успешно удалён", "Выберите интересующее действие");
 
             buttonsSets = (ButtonsSet.AdminUsers, ButtonsSet.Admin);

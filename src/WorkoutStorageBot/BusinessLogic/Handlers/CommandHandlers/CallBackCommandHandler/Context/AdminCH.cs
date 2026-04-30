@@ -40,13 +40,13 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                 { "DisableBot", (x) => Task.FromResult(x.DisableBotCommand()) },
             };
 
-        private AdminRepository AdminRepository { get; }
+        private AdminWrapper AdminWrapper { get; }
         private LogsRepository LogsRepository { get; }
 
         internal AdminCH(CommandHandlerTools commandHandlerTools, CallbackQueryParser callbackQueryParser) : base(commandHandlerTools, callbackQueryParser)
         {
-            AdminRepository = GetRequiredRepository<AdminRepository>();
-            LogsRepository = GetRequiredRepository<LogsRepository>();
+            AdminWrapper = this.RepositoriesHub.InitRepository(x => new AdminWrapper(x, this.GetConfigurationData(), this.CreateLogger<AdminWrapper>()));
+            LogsRepository = this.RepositoriesHub.GetRequiredRepository<LogsRepository>();
         }
 
         internal override async Task<IInformationSet> GetInformationSet()
@@ -245,7 +245,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
         private IInformationSet ShowStartConfigurationCommand()
         {
             ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder(@$"Текущая настройка:
-{AdminRepository.GetSafeConfigurationData()}", "Выберите интересующее действие");
+{AdminWrapper.GetSafeConfigurationData()}", "Выберите интересующее действие");
 
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.Admin, ButtonsSet.Main);
 
@@ -272,9 +272,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
         private IInformationSet ChangeWhiteListModeCommand()
         {
-            AdminRepository.ChangeWhiteListMode();
+            AdminWrapper.ChangeWhiteListMode();
 
-            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder($"Белый список включён: {AdminRepository.WhiteListIsEnable.ToString().AddBold()}",
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder($"Белый список включён: {AdminWrapper.WhiteListIsEnable.ToString().AddBold()}",
                 "Выберите интересующее действие");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.Admin, ButtonsSet.Main);
 

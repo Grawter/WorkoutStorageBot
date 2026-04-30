@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using Microsoft.Extensions.Logging;
+using System.Diagnostics.CodeAnalysis;
 using Telegram.Bot.Types.Enums;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Enums;
@@ -7,8 +8,8 @@ using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackCommandHa
 using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageCommandHandler.Context;
 using WorkoutStorageBot.BusinessLogic.Helpers.CallbackQueryParser;
 using WorkoutStorageBot.BusinessLogic.Helpers.Converters;
-using WorkoutStorageBot.Core.Abstraction;
-using WorkoutStorageBot.Core.Manager;
+using WorkoutStorageBot.Core.Handlers.Abstraction;
+using WorkoutStorageBot.Core.Repositories.Store;
 using WorkoutStorageBot.Model.DTO.HandlerData;
 using WorkoutStorageBot.Model.DTO.HandlerData.Results;
 using WorkoutStorageBot.Model.DTO.InformationSetForSend;
@@ -17,8 +18,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
 {
     internal class UpdateHandler : CoreHandler
     {
-        internal UpdateHandler(CoreTools coreTools, CoreManager coreManager) : base(coreTools, coreManager, nameof(PrimaryUpdateHandler))
-        { }
+        protected override ILogger Logger { get; }
+
+        internal UpdateHandler(CoreTools coreTools, RepositoriesStore repositoriesHub) : base(coreTools, repositoriesHub, nameof(PrimaryUpdateHandler))
+        {
+            this.Logger = CoreTools.LoggerFactory.CreateLogger<UpdateHandler>();
+        }
 
         internal override async Task<HandlerResult> Process(HandlerResult handlerResult)
         {

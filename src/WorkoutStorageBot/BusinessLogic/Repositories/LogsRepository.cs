@@ -1,33 +1,32 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using WorkoutStorageBot.Core.Abstraction;
-using WorkoutStorageBot.Core.Manager;
-using WorkoutStorageBot.Model.DTO.HandlerData;
+using WorkoutStorageBot.Core.Repositories.Abstraction;
+using WorkoutStorageBot.Model.AppContext;
 using WorkoutStorageModels.Entities.Core.Logging;
 
 namespace WorkoutStorageBot.BusinessLogic.Repositories
 {
     internal class LogsRepository : CoreRepository
     {
-        internal LogsRepository(CoreTools coreTools, CoreManager coreManager) : base(coreTools, coreManager, nameof(LogsRepository))
+        internal LogsRepository(EntityContext db) : base(db, nameof(LogsRepository))
         {}
 
         internal IQueryable<Log> GetLastLogs(int count)
-            => CoreTools.Db.Logs.AsNoTracking()
-                                .OrderByDescending(x => x.Id)
-                                .Take(count);
+            => db.Logs.AsNoTracking()
+                      .OrderByDescending(x => x.Id)
+                      .Take(count);
 
         internal IQueryable<Log> GetLastLogs(string logLevel, int count)
-            => CoreTools.Db.Logs.AsNoTracking()
-                                .Where(x => x.LogLevel == logLevel)
-                                .OrderByDescending(x => x.Id)
-                                .Take(count);
+            => db.Logs.AsNoTracking()
+                      .Where(x => x.LogLevel == logLevel)
+                      .OrderByDescending(x => x.Id)
+                      .Take(count);
 
         internal async Task<Log?> GetLogByEventId(int eventID)
-           => await CoreTools.Db.Logs.AsNoTracking()
-                                     .FirstOrDefaultAsync(x => x.EventID == eventID);
+           => await db.Logs.AsNoTracking()
+                           .FirstOrDefaultAsync(x => x.EventID == eventID);
 
         internal async Task<Log?> GetLogById(int id)
-            => await CoreTools.Db.Logs.AsNoTracking()
-                                      .FirstOrDefaultAsync(x => x.Id == id);
+            => await db.Logs.AsNoTracking()
+                            .FirstOrDefaultAsync(x => x.Id == id);
     }
 }

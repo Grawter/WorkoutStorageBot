@@ -13,6 +13,7 @@ using WorkoutStorageBot.Core.Logging;
 using WorkoutStorageBot.Core.Manager;
 using WorkoutStorageBot.Core.Sender;
 using WorkoutStorageBot.Model.AppContext;
+using WorkoutStorageBot.Model.DTO.HandlerData;
 
 namespace WorkoutStorageBot.Core.BotTools.Listener
 {
@@ -83,7 +84,17 @@ namespace WorkoutStorageBot.Core.BotTools.Listener
             EntityContext db = scope.ServiceProvider.GetRequiredService<EntityContext>();
             ICustomLoggerFactory loggerFactory = scope.ServiceProvider.GetRequiredService<ICustomLoggerFactory>();
 
-            CoreManager coreManager = new CoreManager(configurationData, db, contextKeeper, botSender, loggerFactory, cancellationTokenSource);
+            CoreTools coreTools = new CoreTools()
+            {
+                ConfigurationData = configurationData,
+                Db = db,
+                ContextKeeper = contextKeeper,
+                BotResponseSender = botSender,
+                LoggerFactory = loggerFactory,
+                AppCTS = cancellationTokenSource,
+            };
+
+            CoreManager coreManager = new CoreManager(coreTools);
 
             await coreManager.ProcessUpdate(update);
         }

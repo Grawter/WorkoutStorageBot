@@ -2,42 +2,43 @@
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using WorkoutStorageBot.BusinessLogic.Consts;
-using WorkoutStorageBot.BusinessLogic.Repositories;
-using WorkoutStorageBot.BusinessLogic.Enums;
-using WorkoutStorageBot.Core.Abstraction;
-using WorkoutStorageBot.Core.Manager;
-using WorkoutStorageBot.Model.DTO.HandlerData;
-using WorkoutStorageBot.Model.DTO.HandlerData.Results;
-using WorkoutStorageBot.Model.DTO.HandlerData.Results.UpdateInfo;
-using WorkoutStorageModels.Entities.BusinessLogic;
-using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.BusinessLogic.Context.Global;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Context.StepStore;
-using WorkoutStorageBot.Core.Helpers;
+using WorkoutStorageBot.BusinessLogic.Enums;
+using WorkoutStorageBot.BusinessLogic.Extenions;
 using WorkoutStorageBot.BusinessLogic.Helpers.Converters;
 using WorkoutStorageBot.BusinessLogic.Helpers.Updates;
-using WorkoutStorageBot.BusinessLogic.Extenions;
+using WorkoutStorageBot.BusinessLogic.Repositories;
+using WorkoutStorageBot.Core.Handlers.Abstraction;
+using WorkoutStorageBot.Core.Helpers;
+using WorkoutStorageBot.Core.Repositories.Store;
+using WorkoutStorageBot.Core.Sender;
+using WorkoutStorageBot.Model.DTO.BusinessLogic;
+using WorkoutStorageBot.Model.DTO.HandlerData;
+using WorkoutStorageBot.Model.DTO.HandlerData.Results;
+using WorkoutStorageBot.Model.DTO.HandlerData.Results.UpdateInfo;
 using WorkoutStorageBot.Model.DTO.InformationSetForSend;
 using WorkoutStorageBot.Model.DTO.Log;
+using WorkoutStorageModels.Entities.BusinessLogic;
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
 {
     internal class PrimaryUpdateHandler : CoreHandler
     {
-        private IContextKeeper ContextKeeper { get; }
+        private IContextKeeper ContextKeeper => CoreTools.ContextKeeper;
 
-        private AdminRepository AdminRepository { get; }
+        private IBotResponseSender BotResponseSender => CoreTools.BotResponseSender;
+
+        private AdminWrapper AdminWrapper { get; }
 
         protected override ILogger Logger { get; }
 
-        internal PrimaryUpdateHandler(CoreTools coreTools, CoreManager coreManager) : base(coreTools, coreManager, nameof(PrimaryUpdateHandler))
+        internal PrimaryUpdateHandler(CoreTools coreTools, RepositoriesStore repositoriesHub) : base(coreTools, repositoriesHub, nameof(PrimaryUpdateHandler))
         {
             this.Logger = CoreTools.LoggerFactory.CreateLogger<PrimaryUpdateHandler>();
 
-            this.ContextKeeper = CoreManager.ContextKeeper;
-
-            this.AdminRepository = CoreManager.GetRequiredRepository<AdminRepository>();
+            this.AdminWrapper = RepositoriesHub.InitRepository(x => new AdminWrapper(x, coreTools.ConfigurationData, coreTools.LoggerFactory));
         }
 
         internal override async Task<HandlerResult> Process(HandlerResult handlerResult)
@@ -79,7 +80,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
             if (userContext == null)
                 return (await CreateNewContext(user), true);
 
-            if (AdminRepository.UserHasAccess(userContext.UserInformation))
+            if (AdminWrapper.UserHasAccess(userContext.UserInformation))
                 return (userContext, false);
 
             return (null, false);
@@ -94,10 +95,10 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
         {
             UserInformation? userInformation = await GetOrCreateNewUserInformation(user);
 
-            if (userInformation == null || !AdminRepository.UserHasAccess(userInformation))
+            if (userInformation == null || !AdminWrapper.UserHasAccess(userInformation))
                 return null;
 
-            Roles currentRoles = GetUserRoles(userInformation, AdminRepository);
+            Roles currentRoles = GetUserRoles(userInformation);
 
             DTOUserInformation DTOCurrentUser = userInformation.ToDTOUserInformation();
 
@@ -109,12 +110,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
         }
 
         private async Task<UserInformation?> GetOrCreateNewUserInformation(User user)
-            => await AdminRepository.GetFullUserInformationWithoutTracking(user.Id) 
-                ?? await AdminRepository.TryCreateNewUserInformation(user);
+            => await AdminWrapper.GetFullUserInformationWithoutTracking(user.Id) 
+                ?? await AdminWrapper.TryCreateNewUserInformation(user);
 
-        private Roles GetUserRoles(UserInformation currentUser, AdminRepository adminRepository)
+        private Roles GetUserRoles(UserInformation currentUser)
         {
-            Roles currentRoles = adminRepository.UserIsOwner(currentUser.UserId)
+            Roles currentRoles = AdminWrapper.UserIsOwner(currentUser.UserId)
                     ? Roles.Admin
                     : Roles.User;
 
@@ -139,7 +140,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
 
             // Не обязательно. Чтобы не было анимации "зависание кнопки" в ТГ боте
             if (primaryHandledData.ShortUpdateInfo.UpdateType == UpdateType.CallbackQuery)
-                await this.CoreManager.AnswerCallbackQuery(primaryHandledData.Update.CallbackQuery!.Id);
+                await this.BotResponseSender.AnswerCallbackQuery(primaryHandledData.Update.CallbackQuery!.Id);
 
             if (primaryHandledData.IsNewContext)
                 SetInformationSetForNewContext(primaryHandledData);

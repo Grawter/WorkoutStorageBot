@@ -1,7 +1,10 @@
 ﻿using Microsoft.Extensions.Logging;
+using WorkoutStorageBot.Application.Configuration;
 using WorkoutStorageBot.BusinessLogic.Context.Global;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
-using WorkoutStorageBot.Core.Abstraction;
+using WorkoutStorageBot.Core.Handlers.Abstraction;
+using WorkoutStorageBot.Core.Repositories.Store;
+using WorkoutStorageBot.Core.Sender;
 using WorkoutStorageBot.Model.AppContext;
 using WorkoutStorageBot.Model.DTO.HandlerData;
 using WorkoutStorageBot.Model.DTO.InformationSetForSend;
@@ -10,38 +13,45 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.Abstraction
 {
     internal abstract class CommandHandler
     {
-        protected EntityContext Db { get; }
         private CoreHandler ParentHandler { get; }
+
+        protected EntityContext Db { get; }
+        
         protected UserContext CurrentUserContext { get; }
 
         protected IContextKeeper ContextKeeper { get; }
+
+        protected RepositoriesStore RepositoriesHub { get; }
+
+        protected IBotResponseSender BotResponseSender { get; }
 
         internal CommandHandler(CommandHandlerTools commandHandlerTools)
         {
             this.ParentHandler = commandHandlerTools.ParentHandler;
 
-            this.Db = ParentHandler.CoreTools.Db;
+            this.Db = this.ParentHandler.CoreTools.Db;
 
             this.CurrentUserContext = commandHandlerTools.CurrentUserContext;
 
-            this.ContextKeeper = this.ParentHandler.CoreManager.ContextKeeper;
+            this.ContextKeeper = this.ParentHandler.CoreTools.ContextKeeper;
+
+            this.RepositoriesHub = this.ParentHandler.RepositoriesHub;
+
+            this.BotResponseSender = this.ParentHandler.CoreTools.BotResponseSender;
         }
 
         internal abstract Task<IInformationSet> GetInformationSet();
 
-        internal ILogger CreateLogger<T>()
+        protected ILogger CreateLogger<T>()
             => this.ParentHandler.CoreTools.LoggerFactory.CreateLogger<T>();
 
-        internal string? GetBotDescription()
+        protected string? GetBotDescription()
             => this.ParentHandler.CoreTools.ConfigurationData.AboutBotText;
 
-        protected T GetRequiredRepository<T>() where T : CoreRepository
-            => this.ParentHandler.CoreManager.GetRequiredRepository<T>();
-
-        protected async Task SimpleSendNotification(long chatId, string message)
-            => await this.ParentHandler.CoreManager.SimpleSendNotification(chatId, message);
+        protected ConfigurationData GetConfigurationData()
+           => this.ParentHandler.CoreTools.ConfigurationData;
 
         protected async Task CloseApp(TimeSpan timeSpan)
-            => await this.ParentHandler.CoreManager.CloseApp(timeSpan);
+         => await this.ParentHandler.CloseApp(timeSpan);
     }
 }

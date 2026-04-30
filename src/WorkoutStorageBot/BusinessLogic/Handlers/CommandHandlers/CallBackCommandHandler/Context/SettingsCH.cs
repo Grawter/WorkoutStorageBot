@@ -5,7 +5,6 @@ using WorkoutStorageBot.BusinessLogic.Extensions;
 using WorkoutStorageBot.BusinessLogic.Helpers.CallbackQueryParser;
 using WorkoutStorageBot.BusinessLogic.Helpers.Converters;
 using WorkoutStorageBot.BusinessLogic.Helpers.Export;
-using WorkoutStorageBot.BusinessLogic.Repositories;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.Model.DTO.HandlerData;
 using WorkoutStorageModels.Entities.BusinessLogic;
@@ -13,6 +12,7 @@ using WorkoutStorageBot.Model.Interfaces;
 using WorkoutStorageBot.Core.Extensions;
 using WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic;
 using WorkoutStorageBot.Model.DTO.InformationSetForSend;
+using WorkoutStorageBot.BusinessLogic.Repositories;
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackCommandHandler.Context
 {
@@ -865,9 +865,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             {
                 this.ContextKeeper.RemoveContext(this.CurrentUserContext.UserInformation.UserId);
 
-                AdminRepository repository = GetRequiredRepository<AdminRepository>();
-                UserInformation currentUser = await repository.GetRequiredUserInformation(this.CurrentUserContext.UserInformation.UserId);
-                await repository.DeleteAccount(currentUser);
+                AdminWrapper adminWrapper = this.RepositoriesHub.InitRepository(x => new AdminWrapper(x, this.GetConfigurationData(), this.CreateLogger<AdminWrapper>()));
+                UserInformation currentUser = await adminWrapper.GetRequiredUserInformation(this.CurrentUserContext.UserInformation.UserId);
+                await adminWrapper.DeleteAccount(currentUser);
                 
                 buttonsSets = (ButtonsSet.None, ButtonsSet.None);
                 responseTextBuilder = new ResponseTextBuilder("Аккаунт успешно удалён");

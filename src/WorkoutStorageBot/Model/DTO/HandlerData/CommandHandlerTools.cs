@@ -1,5 +1,5 @@
 ﻿using WorkoutStorageBot.BusinessLogic.Context.Session;
-using WorkoutStorageBot.Core.Abstraction;
+using WorkoutStorageBot.Core.Handlers.Abstraction;
 
 namespace WorkoutStorageBot.Model.DTO.HandlerData
 {

@@ -1,22 +1,17 @@
 ﻿using Microsoft.Extensions.Logging;
 using Telegram.Bot.Types;
-using WorkoutStorageBot.Application.Configuration;
 using WorkoutStorageBot.BusinessLogic.Consts;
-using WorkoutStorageBot.BusinessLogic.Context.Global;
-using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers;
 using WorkoutStorageBot.BusinessLogic.Helpers.Updates;
 using WorkoutStorageBot.BusinessLogic.Repositories;
-using WorkoutStorageBot.Core.Abstraction;
 using WorkoutStorageBot.Core.Consts;
+using WorkoutStorageBot.Core.Handlers.Abstraction;
 using WorkoutStorageBot.Core.Helpers;
-using WorkoutStorageBot.Core.Logging;
+using WorkoutStorageBot.Core.Repositories.Store;
 using WorkoutStorageBot.Core.Sender;
-using WorkoutStorageBot.Model.AppContext;
 using WorkoutStorageBot.Model.DTO.HandlerData;
 using WorkoutStorageBot.Model.DTO.HandlerData.Results;
 using WorkoutStorageBot.Model.DTO.HandlerData.Results.UpdateInfo;
-using WorkoutStorageBot.Model.DTO.InformationSetForSend;
 using WorkoutStorageBot.Model.DTO.Log;
 using WorkoutStorageModels.Entities.BusinessLogic;
 
@@ -24,59 +19,34 @@ namespace WorkoutStorageBot.Core.Manager
 {
     internal class CoreManager
     {
-        internal CoreManager(ConfigurationData configurationData,
-                             EntityContext db,
-                             IContextKeeper contextKeeper,
-                             IBotResponseSender botResponseSender,
-                             ICustomLoggerFactory loggerFactory,
-                             CancellationTokenSource cancellationTokenSource)
+        internal CoreManager(CoreTools coreTools)
         {
-            this.ConfigurationData = configurationData;
+            this.coreTools = coreTools;
 
-            this.loggerFactory = loggerFactory;
+            this.repositoriesStore = new RepositoriesStore(this.coreTools.Db);
 
-            this.logger = this.loggerFactory.CreateLogger<CoreManager>();
-
-            this.ContextKeeper = contextKeeper;
-
-            this.BotResponseSender = botResponseSender;
-
-            this.cancellationTokenSource = cancellationTokenSource;
-
-            CoreTools coreTools = new CoreTools()
+            this.handlers = new List<CoreHandler>()
             {
-                Db = db,
-                LoggerFactory = loggerFactory,
-                ConfigurationData = configurationData
+                new PrimaryUpdateHandler(this.coreTools, this.repositoriesStore),
+                new UpdateHandler(this.coreTools, this.repositoriesStore),
             };
 
-            this.Repositories = new List<CoreRepository>()
-            {
-                new AdminRepository(coreTools, this),
-                new LogsRepository(coreTools, this),
-            };
+            this.logger = this.coreTools.LoggerFactory.CreateLogger<CoreManager>();
 
-            this.Handlers = new List<CoreHandler>()
-            {
-                new PrimaryUpdateHandler(coreTools, this),
-                new UpdateHandler(coreTools, this),
-            };
+            this.cancellationTokenSource = this.coreTools.AppCTS;
         }
 
-        internal List<CoreHandler> Handlers { get; }
-        internal List<CoreRepository> Repositories { get; }
+        private readonly CoreTools coreTools;
 
-        internal IContextKeeper ContextKeeper { get; }
+        private readonly RepositoriesStore repositoriesStore;
 
-        private ConfigurationData ConfigurationData { get; }
-
-        private IBotResponseSender BotResponseSender { get; }
-
-        private readonly ICustomLoggerFactory loggerFactory;
+        private readonly List<CoreHandler> handlers;
 
         private readonly ILogger logger;
 
         private readonly CancellationTokenSource cancellationTokenSource;
+
+        private IBotResponseSender BotResponseSender => coreTools.BotResponseSender;
 
         internal CancellationToken CancellationToken => cancellationTokenSource.Token;
 
@@ -100,7 +70,7 @@ namespace WorkoutStorageBot.Core.Manager
                 HasAccess = true, // Устанавливаем true, считая любое первоначальное обращение разрешённым (чтобы первый раз пройти условие на .HasAccess) 
             };
 
-            foreach (CoreHandler handler in Handlers)
+            foreach (CoreHandler handler in handlers)
             {
                 if (handlerResult.HasAccess)
                 {
@@ -109,7 +79,7 @@ namespace WorkoutStorageBot.Core.Manager
                     // Перепроверяем доступ, т.к. во время работы очередного обработчика доступ мог быть отозван
                     if (handlerResult is AuthorizedHandlerResult authorizedHandlerResult && authorizedHandlerResult.InformationSet != null && handlerResult.HasAccess)
                     {
-                        await SendResponse(authorizedHandlerResult.ShortUpdateInfo.ChatId, authorizedHandlerResult.InformationSet, authorizedHandlerResult.CurrentUserContext);
+                        await BotResponseSender.SendResponse(authorizedHandlerResult.ShortUpdateInfo.ChatId, authorizedHandlerResult.InformationSet, authorizedHandlerResult.CurrentUserContext);
 
                         if (!handlerResult.IsNeedContinue)
                             return;
@@ -131,8 +101,8 @@ namespace WorkoutStorageBot.Core.Manager
             if (exMessage.Length > CoreConsts.Log.ShowLimit)
                 exMessage = $"{exMessage.Substring(0, CoreConsts.Log.ShowLimit)}...";
 
-            if (ConfigurationData.Notifications.NotifyOwnersAboutRuntimeErrors)
-                await BotResponseSender.SendSimpleMassiveNotification(ConfigurationData.Bot.OwnersChatIDs, @$"Ошибка во время исполнения. EventID: {eventId.Id}
+            if (this.coreTools.ConfigurationData.Notifications.NotifyOwnersAboutRuntimeErrors)
+                await this.BotResponseSender.SendSimpleMassiveNotification(this.coreTools.ConfigurationData.Bot.OwnersChatIDs, @$"Ошибка во время исполнения. EventID: {eventId.Id}
 ======================
 {exMessage}");
         }
@@ -159,62 +129,11 @@ namespace WorkoutStorageBot.Core.Manager
 
         private async Task<bool> IsNeedSendEventIdToUser(long userId)
         {
-            AdminRepository adminRepository = GetRequiredRepository<AdminRepository>();
+            AdminWrapper adminWrapper = this.repositoriesStore.InitRepository(x => new AdminWrapper(x, coreTools.ConfigurationData, coreTools.LoggerFactory));
 
-            UserInformation? userInformation = await adminRepository.GetUserInformationWithoutTracking(userId);
+            UserInformation? userInformation = await adminWrapper.GetUserInformationWithoutTracking(userId);
 
-            return userInformation != null && adminRepository.UserHasAccess(userInformation);
-        }
-
-        private async Task SendResponse(long chatId, IInformationSet messageInformationSetting, UserContext currentUserContext)
-            => await BotResponseSender.SendResponse(chatId, messageInformationSetting, currentUserContext);
-
-        internal async Task SimpleSendNotification(long chatId, string message)
-            => await BotResponseSender.SendSimpleNotification(chatId, message);
-
-        internal async Task SendSimpleMassiveNotification(IEnumerable<long> chatId, string message)
-            => await BotResponseSender.SendSimpleMassiveNotification(chatId, message);
-
-        internal async Task AnswerCallbackQuery(string callbackQueryID)
-            => await BotResponseSender.AnswerCallbackQuery(callbackQueryID);
-
-        internal T GetRequiredHandler<T>() where T : CoreHandler
-        {
-            T? handler = GetHandler<T>();
-
-            if (handler == null)
-            
-                throw new InvalidOperationException($"Обработчик {typeof(T).Name} не найден");
-
-            return handler;
-        }
-
-        internal T? GetHandler<T>() where T : CoreHandler
-            => Handlers.OfType<T>().FirstOrDefault();
-
-        internal T GetRequiredRepository<T>() where T : CoreRepository
-        {
-            T? repository = GetRepository<T>();
-
-            if (repository == null)
-                throw new InvalidOperationException($"Репозиторий {typeof(T).Name} не найден");
-
-            return repository;
-        }
-
-        internal T? GetRepository<T>() where T : CoreRepository
-            => Repositories.OfType<T>().FirstOrDefault();
-
-        internal async Task CloseApp(TimeSpan timeSpan)
-        {
-            if (timeSpan.TotalSeconds < 2)
-                timeSpan = TimeSpan.FromSeconds(2);
-
-            logger.LogWarning("Инициировано отключение бота");
-
-            await Task.Delay(timeSpan);
-
-            this.cancellationTokenSource.Cancel();
+            return userInformation != null && adminWrapper.UserHasAccess(userInformation);
         }
     }
 }
