@@ -15,6 +15,8 @@ namespace WorkoutStorageBot.BusinessLogic.Repositories
             this.configurationData = configurationData;
 
             this.logger = loggerFactory.CreateLogger<UserInformationRepository>();
+
+            this.WhiteListIsEnable = configurationData.Bot.WhiteListIsEnable;
         }
 
         internal AdminWrapper(EntityContext db, ConfigurationData configurationData, ILogger logger) : base(db)
@@ -24,28 +26,25 @@ namespace WorkoutStorageBot.BusinessLogic.Repositories
             this.logger = logger;
         }
 
+        internal bool WhiteListIsEnable 
+        { 
+            get; 
+            set
+            {
+                field = value;
+
+                AddLogAction($"Глобальный режим белого списка установлен в: {value}");
+            }
+        }
+
         private readonly ConfigurationData configurationData;
 
         private readonly ILogger logger;
 
         private IEnumerable<string> OwnersChatIDs => configurationData.Bot.OwnersChatIDs;
 
-        internal bool WhiteListIsEnable
-        {
-            get => configurationData.Bot.WhiteListIsEnable;
-
-            private set { }
-        }
-
         internal string GetSafeConfigurationData()
             => ConfigurationManager.GetSerializedSafeConfigurationData(this.configurationData);
-
-        internal void ChangeWhiteListMode()
-        {
-            WhiteListIsEnable = !WhiteListIsEnable;
-
-            AddLogAction($"Глобальный режим белого списка установлен в: {WhiteListIsEnable}");
-        }
 
         internal async Task ChangeBlackListByUser(UserInformation user)
         {
@@ -71,9 +70,18 @@ namespace WorkoutStorageBot.BusinessLogic.Repositories
         internal async Task<UserInformation?> TryCreateNewUserInformation(User user)
         {
             if (!WhiteListIsEnable)
-                return await base.TryCreateNewUserInformation(user);
+            {
+                UserInformation newUser = await base.TryCreateNewUserInformation(user);
+
+                AddLogAction($"Создан новый пользователь {newUser.Id} ({newUser.Username}-{newUser.UserId})");
+
+                return newUser;
+            }
             else
+            {
+                AddLogAction($"Не удалось создать нового пользователя {user.Id} ({user.Username})");
                 return default;
+            }
         }
 
         internal bool UserHasAccess(DTOUserInformation user)

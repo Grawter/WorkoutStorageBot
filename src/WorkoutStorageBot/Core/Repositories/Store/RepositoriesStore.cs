@@ -35,17 +35,17 @@ namespace WorkoutStorageBot.Core.Repositories.Store
 
             if (repository == null)
             {
-                repository = TryAddRepository<T>(typeof(T).Name);
+                repository = TryAddRepository<T>();
             }
 
             return repository;
         }
             
-        internal T? TryAddRepository<T>(string repositoryName) where T : CoreRepository
+        internal T? TryAddRepository<T>() where T : CoreRepository
         {
             CoreRepository? coreRepository = null;
 
-            switch (repositoryName)
+            switch (typeof(T).Name)
             {
                 case nameof(UserInformationRepository):
                     coreRepository = new UserInformationRepository(db);

@@ -75,7 +75,7 @@ namespace WorkoutStorageBot.BusinessLogic.Repositories
                                             .FirstOrDefaultAsync();
         }
 
-        protected async Task<UserInformation?> TryCreateNewUserInformation(User user, bool isNeedSaveChanges = true)
+        protected async Task<UserInformation> TryCreateNewUserInformation(User user, bool isNeedSaveChanges = true)
         {
             UserInformation newUser = new UserInformation
             {
