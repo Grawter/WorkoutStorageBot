@@ -34,11 +34,11 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
 
         protected override ILogger Logger { get; }
 
-        internal PrimaryUpdateHandler(CoreTools coreTools, RepositoriesStore repositoriesHub) : base(coreTools, repositoriesHub, nameof(PrimaryUpdateHandler))
+        internal PrimaryUpdateHandler(CoreTools coreTools, RepositoriesStore repositoriesStore) : base(coreTools, repositoriesStore, nameof(PrimaryUpdateHandler))
         {
             this.Logger = CoreTools.LoggerFactory.CreateLogger<PrimaryUpdateHandler>();
 
-            this.AdminWrapper = RepositoriesHub.InitRepository(x => new AdminWrapper(x, coreTools.ConfigurationData, coreTools.LoggerFactory));
+            this.AdminWrapper = RepositoriesStore.InitRepository(x => new AdminWrapper(x, coreTools.ConfigurationData, coreTools.LoggerFactory));
         }
 
         internal override async Task<HandlerResult> Process(HandlerResult handlerResult)

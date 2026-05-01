@@ -7,15 +7,15 @@ namespace WorkoutStorageBot.Core.Handlers.Abstraction
 {
     internal abstract class CoreHandler : CoreData
     {
-        internal RepositoriesStore RepositoriesHub { get; }
+        internal RepositoriesStore RepositoriesStore { get; }
 
         internal string HandlerName { get; }
 
         protected virtual ILogger Logger { get; }
 
-        protected CoreHandler(CoreTools coreTools, RepositoriesStore repositoriesHub, string handlerName) : base(coreTools)
+        protected CoreHandler(CoreTools coreTools, RepositoriesStore repositoriesStore, string handlerName) : base(coreTools)
         {
-            RepositoriesHub = repositoriesHub;
+            RepositoriesStore = repositoriesStore;
 
             HandlerName = handlerName;
             

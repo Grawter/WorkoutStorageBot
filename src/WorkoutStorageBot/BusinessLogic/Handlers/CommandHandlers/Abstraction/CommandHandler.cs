@@ -35,7 +35,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.Abstraction
 
             this.ContextKeeper = this.ParentHandler.CoreTools.ContextKeeper;
 
-            this.RepositoriesHub = this.ParentHandler.RepositoriesHub;
+            this.RepositoriesHub = this.ParentHandler.RepositoriesStore;
 
             this.BotResponseSender = this.ParentHandler.CoreTools.BotResponseSender;
         }

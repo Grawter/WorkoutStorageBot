@@ -20,7 +20,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
     {
         protected override ILogger Logger { get; }
 
-        internal UpdateHandler(CoreTools coreTools, RepositoriesStore repositoriesHub) : base(coreTools, repositoriesHub, nameof(PrimaryUpdateHandler))
+        internal UpdateHandler(CoreTools coreTools, RepositoriesStore repositoriesStore) : base(coreTools, repositoriesStore, nameof(PrimaryUpdateHandler))
         {
             this.Logger = CoreTools.LoggerFactory.CreateLogger<UpdateHandler>();
         }
