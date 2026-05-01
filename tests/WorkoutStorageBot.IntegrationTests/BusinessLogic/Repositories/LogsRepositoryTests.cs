@@ -1,11 +1,10 @@
 ﻿using FluentAssertions;
 using WorkoutStorageBot.BusinessLogic.Repositories;
 using WorkoutStorageBot.Model.AppContext;
-using WorkoutStorageBot.Model.DTO.HandlerData;
 using WorkoutStorageBot.UnitTests.Helpers;
 using WorkoutStorageModels.Entities.Core.Logging;
 
-namespace WorkoutStorageBot.IntegrationTests.Core.Repositories
+namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Repositories
 {
     public class LogsRepositoryTests
     {
@@ -19,14 +18,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Repositories
 
             AddTestLogs(entityContext);
 
-            CoreTools coreTools = new CoreTools()
-            {
-                Db = entityContext,
-                ConfigurationData = null,
-                LoggerFactory = null,
-            };
-
-            LogsRepository logsRepository = new LogsRepository(coreTools, null);
+            LogsRepository logsRepository = new LogsRepository(entityContext);
 
             // Act
             List<Log> logs = logsRepository.GetLastLogs(2).ToList();
@@ -46,14 +38,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Repositories
 
             AddTestLogs(entityContext);
 
-            CoreTools coreTools = new CoreTools()
-            {
-                Db = entityContext,
-                ConfigurationData = null,
-                LoggerFactory = null,
-            };
-
-            LogsRepository logsRepository = new LogsRepository(coreTools, null);
+            LogsRepository logsRepository = new LogsRepository(entityContext);
 
             // Act
             List<Log> logs = logsRepository.GetLastLogs("Trace", 2).ToList();
@@ -73,14 +58,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Repositories
 
             AddTestLogs(entityContext);
 
-            CoreTools coreTools = new CoreTools()
-            {
-                Db = entityContext,
-                ConfigurationData = null,
-                LoggerFactory = null,
-            };
-
-            LogsRepository logsRepository = new LogsRepository(coreTools, null);
+            LogsRepository logsRepository = new LogsRepository(entityContext);
 
             // Act
             Log? log = await logsRepository.GetLogByEventId(200);
@@ -100,14 +78,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Repositories
 
             AddTestLogs(entityContext);
 
-            CoreTools coreTools = new CoreTools()
-            {
-                Db = entityContext,
-                ConfigurationData = null,
-                LoggerFactory = null,
-            };
-
-            LogsRepository logsRepository = new LogsRepository(coreTools, null);
+            LogsRepository logsRepository = new LogsRepository(entityContext);
 
             // Act
             Log? log = await logsRepository.GetLogById(3);
