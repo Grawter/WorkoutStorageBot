@@ -82,11 +82,11 @@ docker-compose up -d
 
 ```
 {
-  // Настроить считывание настроек под свои нужды можно в ConfigurationData -> GetConfiguration
+  // Настроить считывание настроек под свои нужды можно в ConfigurationManager -> GetConfiguration
 
   /*
   Настройки подключения к БД.
-  По-умолчанию, используется SQLite, в случае необходимости можно поменять DBProvider: Program -> GetEntityContext.
+  По-умолчанию, используется SQLite, в случае необходимости можно поменять DBProvider: Program -> CreateHostAndSetDI.
   В случае необходимости можно написать свою реализацию строки подключения: ConfigurationData -> DbSettings -> ConnectionString.
 
   EnsureCreated - Требуется ли первичная инициализация БД при старте приложения (Database.EnsureCreated()) [Необязательно] [По-умолчанию - False]

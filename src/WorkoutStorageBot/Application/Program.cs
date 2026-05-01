@@ -16,11 +16,23 @@ namespace WorkoutStorageBot.Application
     {
         private static async Task Main(string[] args)
         {
-            IHost host = Host.CreateDefaultBuilder()
+            ConfigurationData configurationData = GetConfigurationData();
+
+            IHost host = CreateHostAndSetDI(configurationData);
+
+            BotListener botListener = host.Services.GetRequiredService<BotListener>();
+
+            await botListener.StartListen();
+
+            await host.RunAsync(botListener.CancellationToken);
+        }
+
+        private static IHost CreateHostAndSetDI(ConfigurationData configurationData)
+        {
+            return 
+            Host.CreateDefaultBuilder()
                 .ConfigureServices((context, serviceCollection) =>
                 {
-                    ConfigurationData configurationData = GetConfigurationData();
-
                     serviceCollection.AddSingleton<ConfigurationData>(configurationData);
 
                     serviceCollection.AddLogging(builder =>
@@ -43,12 +55,6 @@ namespace WorkoutStorageBot.Application
                     serviceCollection.AddSingleton<BotListener>();
                 })
                 .Build();
-
-            BotListener botListener = host.Services.GetRequiredService<BotListener>();
-
-            await botListener.StartListen();
-
-            await host.RunAsync(botListener.CancellationToken);
         }
 
         private static ConfigurationData GetConfigurationData()
