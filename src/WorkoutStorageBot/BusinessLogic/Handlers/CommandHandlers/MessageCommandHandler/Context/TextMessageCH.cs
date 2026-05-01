@@ -51,8 +51,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
         internal override async Task<IInformationSet> GetInformationSet()
         {
-            Func<TextMessageCH, Task<IInformationSet>>? selectedCommand = commandMap.GetValueOrDefault(this.CurrentUserContext.Navigation.MessageNavigationTarget)
-                ?? throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.MessageNavigationTarget: {this.CurrentUserContext.Navigation.MessageNavigationTarget}");
+            Func<TextMessageCH, Task<IInformationSet>> selectedCommand = GetSelectedCommand();
 
             IInformationSet informationSet = await selectedCommand(this);
 
@@ -61,6 +60,10 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             return informationSet;
         }
 
+        protected Func<TextMessageCH, Task<IInformationSet>> GetSelectedCommand()
+            => commandMap.GetValueOrDefault(this.CurrentUserContext.Navigation.MessageNavigationTarget) 
+            ?? throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.MessageNavigationTarget: {this.CurrentUserContext.Navigation.MessageNavigationTarget}");
+        
         private IInformationSet DefaultCommand()
         {
             ResponseTextBuilder responseTextBuilder;

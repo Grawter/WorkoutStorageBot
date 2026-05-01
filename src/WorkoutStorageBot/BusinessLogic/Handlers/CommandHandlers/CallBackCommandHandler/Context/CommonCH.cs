@@ -23,8 +23,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
         internal override async Task<IInformationSet> GetInformationSet()
         {
-            Func<CommonCH, Task<IInformationSet>>? selectedCommand = commandMap.GetValueOrDefault(callbackQueryParser.SubDirection)
-                ?? throw new NotImplementedException($"Неожиданный callbackQueryParser.SubDirection: {callbackQueryParser.SubDirection}");
+            Func<CommonCH, Task<IInformationSet>> selectedCommand = GetSelectedCommand();
 
             IInformationSet informationSet = await selectedCommand(this);
 
@@ -32,6 +31,10 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
             return informationSet;
         }
+
+        protected Func<CommonCH, Task<IInformationSet>> GetSelectedCommand()
+            => commandMap.GetValueOrDefault(callbackQueryParser.SubDirection)
+                ?? throw new NotImplementedException($"Неожиданный callbackQueryParser.SubDirection: {callbackQueryParser.SubDirection}");
 
         private IInformationSet BackCommand()
         {

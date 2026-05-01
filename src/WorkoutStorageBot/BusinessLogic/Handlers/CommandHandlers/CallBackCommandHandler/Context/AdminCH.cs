@@ -54,8 +54,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             if (AccessDenied(out IInformationSet? informationSet))
                 return informationSet;
 
-            Func<AdminCH, Task<IInformationSet>>? selectedCommand = commandMap.GetValueOrDefault(callbackQueryParser.SubDirection)
-                ?? throw new NotImplementedException($"Неожиданный callbackQueryParser.SubDirection: {callbackQueryParser.SubDirection}");
+            Func<AdminCH, Task<IInformationSet>> selectedCommand = GetSelectedCommand();
 
             informationSet = await selectedCommand(this);
 
@@ -63,6 +62,10 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
             return informationSet;
         }
+
+        protected Func<AdminCH, Task<IInformationSet>> GetSelectedCommand()
+            => commandMap.GetValueOrDefault(callbackQueryParser.SubDirection)
+                ?? throw new NotImplementedException($"Неожиданный callbackQueryParser.SubDirection: {callbackQueryParser.SubDirection}");
 
         private IInformationSet AdminCommand()
         {
