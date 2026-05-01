@@ -26,16 +26,7 @@ namespace WorkoutStorageBot.BusinessLogic.Repositories
             this.logger = logger;
         }
 
-        internal bool WhiteListIsEnable 
-        { 
-            get; 
-            set
-            {
-                field = value;
-
-                AddLogAction($"Глобальный режим белого списка установлен в: {value}");
-            }
-        }
+        internal bool WhiteListIsEnable { get; private set; }
 
         private readonly ConfigurationData configurationData;
 
@@ -45,6 +36,13 @@ namespace WorkoutStorageBot.BusinessLogic.Repositories
 
         internal string GetSafeConfigurationData()
             => ConfigurationManager.GetSerializedSafeConfigurationData(this.configurationData);
+
+        internal void ChangeWhiteListMode()
+        {
+            WhiteListIsEnable = !WhiteListIsEnable;
+
+            AddLogAction($"Глобальный режим белого списка установлен в: {WhiteListIsEnable}");
+        }
 
         internal async Task ChangeBlackListByUser(UserInformation user)
         {

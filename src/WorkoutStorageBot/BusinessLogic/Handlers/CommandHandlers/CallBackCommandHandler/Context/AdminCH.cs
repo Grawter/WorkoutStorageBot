@@ -275,7 +275,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
         private IInformationSet ChangeWhiteListModeCommand()
         {
-            AdminWrapper.WhiteListIsEnable = !AdminWrapper.WhiteListIsEnable;
+            AdminWrapper.ChangeWhiteListMode();
 
             ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder($"Белый список включён: {AdminWrapper.WhiteListIsEnable.ToString().AddBold()}",
                 "Выберите интересующее действие");

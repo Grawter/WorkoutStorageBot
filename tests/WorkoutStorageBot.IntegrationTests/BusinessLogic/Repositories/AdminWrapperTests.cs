@@ -74,7 +74,7 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Repositories
             bool currentWhiteListMode = adminWrapper.WhiteListIsEnable;
 
             // Act
-            adminWrapper.WhiteListIsEnable = !adminWrapper.WhiteListIsEnable;
+            adminWrapper.ChangeWhiteListMode();
 
             // Assert
             adminWrapper.WhiteListIsEnable.Should().Be(!currentWhiteListMode);
@@ -85,7 +85,7 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Repositories
                                 It.IsAny<It.IsAnyType>(),
                                 It.IsAny<Exception>(),
                                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-                                Times.Exactly(2));
+                                Times.Once);
         }
 
         [Fact]
@@ -107,7 +107,7 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Repositories
                                 It.IsAny<It.IsAnyType>(),
                                 It.IsAny<Exception>(),
                                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-                                Times.Exactly(2));
+                                Times.Once);
         }
 
         [Fact]
@@ -129,7 +129,7 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Repositories
                                 It.IsAny<It.IsAnyType>(),
                                 It.IsAny<Exception>(),
                                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-                                Times.Exactly(2));
+                                Times.Once);
         }
 
         [Fact]
@@ -150,7 +150,7 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Repositories
                                 It.IsAny<It.IsAnyType>(),
                                 It.IsAny<Exception>(),
                                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-                                Times.Exactly(2));
+                                Times.Once);
         }
 
         [Fact]
@@ -178,7 +178,7 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Repositories
                                 It.IsAny<It.IsAnyType>(),
                                 It.IsAny<Exception>(),
                                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-                                Times.Exactly(2));
+                                Times.Once);
         }
 
         [Fact]
@@ -192,7 +192,7 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Repositories
                 Username = "TestUserName",
             };
 
-            adminWrapper.WhiteListIsEnable = true;
+            adminWrapper.ChangeWhiteListMode();
 
             // Act 
             UserInformation? userInformation = await adminWrapper.TryCreateNewUserInformation(newUser);
@@ -206,7 +206,7 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Repositories
                                 It.IsAny<It.IsAnyType>(),
                                 It.IsAny<Exception>(),
                                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-                                Times.Exactly(3));
+                                Times.Exactly(2));
         }
 
         [Theory]
@@ -294,7 +294,7 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Repositories
 
                 case 4:
                     userInformation.UserId = 3;
-                    adminWrapper.WhiteListIsEnable = !adminWrapper.WhiteListIsEnable;
+                    adminWrapper.ChangeWhiteListMode();
 
                     // Act
                     userHasAccess = adminWrapper.UserHasAccess(userInformation);
@@ -305,7 +305,7 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Repositories
 
                 case 5:
                     userInformation.UserId = 3;
-                    adminWrapper.WhiteListIsEnable = !adminWrapper.WhiteListIsEnable;
+                    adminWrapper.ChangeWhiteListMode();
                     userInformation.WhiteList = true;
 
                     // Act
@@ -380,7 +380,7 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Repositories
 
                 case 4:
                     DTOuserInformation.UserId = 3;
-                    adminWrapper.WhiteListIsEnable = !adminWrapper.WhiteListIsEnable;
+                    adminWrapper.ChangeWhiteListMode();
 
                     // Act
                     userHasAccess = adminWrapper.UserHasAccess(DTOuserInformation);
@@ -391,7 +391,7 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Repositories
 
                 case 5:
                     DTOuserInformation.UserId = 3;
-                    adminWrapper.WhiteListIsEnable = !adminWrapper.WhiteListIsEnable;
+                    adminWrapper.ChangeWhiteListMode();
                     DTOuserInformation.WhiteList = true;
 
                     // Act
