@@ -3,7 +3,7 @@ using WorkoutStorageBot.Model.DTO.InformationSetForSend;
 
 namespace WorkoutStorageBot.Core.Sender
 {
-    internal interface IBotResponseSender
+    public interface IBotResponseSender
     {
         Task SendResponse(long chatId, IInformationSet messageInformationSetting, UserContext currentUserContext);
 

@@ -4,16 +4,16 @@ namespace WorkoutStorageBot.BusinessLogic.Context.Global
 {
     public interface IContextKeeper
     {
-        internal bool HasContext(long userID);
+        bool HasContext(long userID);
 
-        internal UserContext? GetContext(long userID);
+        UserContext? GetContext(long userID);
 
-        internal void SetContext(long userID, UserContext userContext);
+        void SetContext(long userID, UserContext userContext);
 
-        internal void RemoveContext(long userID);
+        void RemoveContext(long userID);
 
-        internal int Count { get; }
+        int Count { get; }
 
-        internal IEnumerable<long> GetAllKeys();
+        IEnumerable<long> GetAllKeys();
     }
 }

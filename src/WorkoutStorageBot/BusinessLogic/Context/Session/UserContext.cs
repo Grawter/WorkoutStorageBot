@@ -4,7 +4,7 @@ using WorkoutStorageBot.Model.DTO.BusinessLogic;
 
 namespace WorkoutStorageBot.BusinessLogic.Context.Session
 {
-    internal class UserContext
+    public class UserContext
     {
         internal DTOUserInformation UserInformation { get; }
         

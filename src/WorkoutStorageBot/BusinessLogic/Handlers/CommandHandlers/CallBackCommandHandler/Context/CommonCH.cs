@@ -14,8 +14,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
         private static IReadOnlyDictionary<string, Func<CommonCH, Task<IInformationSet>>> commandMap
             = new Dictionary<string, Func<CommonCH, Task<IInformationSet>>>
             {
-                { "Back", (x) => Task.FromResult(x.BackCommand()) },
                 { "ToMain", (x) => Task.FromResult(x.ToMainCommand()) },
+                { "Back", (x) => Task.FromResult(x.BackCommand()) },
             };
 
         internal CommonCH(CommandHandlerTools commandHandlerTools, CallbackQueryParser callbackQueryParser) : base(commandHandlerTools, callbackQueryParser)
@@ -35,6 +35,23 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
         protected Func<CommonCH, Task<IInformationSet>> GetSelectedCommand()
             => commandMap.GetValueOrDefault(callbackQueryParser.SubDirection)
                 ?? throw new NotImplementedException($"Неожиданный callbackQueryParser.SubDirection: {callbackQueryParser.SubDirection}");
+
+        private IInformationSet ToMainCommand()
+        {
+            this.CurrentUserContext.DataManager.ResetAll();
+
+            StepInformation mainStep = StepStorage.GetMainStep();
+
+            this.CurrentUserContext.Navigation.SetQueryFrom(mainStep.QueryFrom);
+            this.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
+
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder(mainStep.Message);
+            (ButtonsSet, ButtonsSet) buttonsSets = (mainStep.ButtonsSet, mainStep.BackButtonsSet);
+
+            IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
+
+            return informationSet;
+        }
 
         private IInformationSet BackCommand()
         {
@@ -78,23 +95,6 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder(target);
 
             (ButtonsSet, ButtonsSet) buttonsSets = (previousStep.ButtonsSet, previousStep.BackButtonsSet);
-
-            IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
-
-            return informationSet;
-        }
-
-        private IInformationSet ToMainCommand()
-        {
-            this.CurrentUserContext.DataManager.ResetAll();
-
-            StepInformation mainStep = StepStorage.GetMainStep();
-
-            this.CurrentUserContext.Navigation.SetQueryFrom(mainStep.QueryFrom);
-            this.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
-
-            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder(mainStep.Message);
-            (ButtonsSet, ButtonsSet) buttonsSets = (mainStep.ButtonsSet, mainStep.BackButtonsSet);
 
             IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 

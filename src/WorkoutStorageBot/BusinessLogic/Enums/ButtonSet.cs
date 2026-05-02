@@ -1,6 +1,6 @@
 ﻿namespace WorkoutStorageBot.BusinessLogic.Enums
 {
-    internal enum ButtonsSet
+    public enum ButtonsSet
     {
         None,
 

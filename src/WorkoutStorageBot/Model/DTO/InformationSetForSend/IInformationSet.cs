@@ -3,7 +3,7 @@ using WorkoutStorageBot.BusinessLogic.Enums;
 
 namespace WorkoutStorageBot.Model.DTO.InformationSetForSend
 {
-    internal interface IInformationSet
+    public interface IInformationSet
     {
         string Message { get; }
         ParseMode ParseMode { get; }
