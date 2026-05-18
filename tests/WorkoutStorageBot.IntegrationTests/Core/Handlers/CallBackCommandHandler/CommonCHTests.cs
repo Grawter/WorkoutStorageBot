@@ -76,12 +76,15 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         [Fact]
         public async Task GetInformationSet_WithMainSubDirection_ShouldReturnExpectedIInformationSet()
         {
+            // Arrange
             CallbackQueryParser callbackQueryParser = new CallbackQueryParser("Direction|ToMain|DomainType|CallBackId");
 
             CommonCH commonCH = new CommonCH(commandHandlerTools, callbackQueryParser);
 
+            // Act
             IInformationSet informationSet = await commonCH.GetInformationSet();
 
+            // Assert
             informationSet.Message.Should().Be("Выберите интересующий раздел");
             informationSet.ButtonsSets.Should().Be((ButtonsSet.Main, ButtonsSet.None));
             informationSet.ParseMode.Should().Be(ParseMode.Html);
@@ -91,12 +94,15 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         [Fact]
         public async Task GetInformationSet_WithBackSubDirection_ShouldReturnExpectedIInformationSet()
         {
+            // Arrange
             CallbackQueryParser callbackQueryParser = new CallbackQueryParser("Direction|Back||DaysListWithLastWorkout|CallBackId");
 
             CommonCH commonCH = new CommonCH(commandHandlerTools, callbackQueryParser);
 
+            // Act
             IInformationSet informationSet = await commonCH.GetInformationSet();
 
+            // Assert
             informationSet.Message.Should().Be("Выберите тренировочный день из цикла \"<b>testCycle</b>\"");
             informationSet.ButtonsSets.Should().Be((ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main));
             informationSet.ParseMode.Should().Be(ParseMode.Html);
@@ -106,12 +112,15 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         [Fact]
         public async Task GetInformationSet_WithUnknownSubDirection_ShouldThrowNotImplementedException()
         {
+            // Arrange
             CallbackQueryParser callbackQueryParser = new CallbackQueryParser("Direction|SomeUnknownSubDirection|DomainType|CallBackId");
 
             CommonCH commonCH = new CommonCH(commandHandlerTools, callbackQueryParser);
 
+            // Act
             Func<Task> task = async () => await commonCH.GetInformationSet();
 
+            // Assert
             await task.Should().ThrowAsync<NotImplementedException>()
                 .WithMessage("Неожиданный callbackQueryParser.SubDirection: SomeUnknownSubDirection");
         }
