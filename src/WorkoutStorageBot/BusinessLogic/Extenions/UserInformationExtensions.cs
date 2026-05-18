@@ -6,6 +6,6 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
     internal static class UserInformationExtensions
     {
         internal static bool IsAdmin(this UserContext userContext)
-            => userContext.Roles == Roles.Admin;
+            => userContext.Roles.HasFlag(Roles.Admin);
     }
 }
