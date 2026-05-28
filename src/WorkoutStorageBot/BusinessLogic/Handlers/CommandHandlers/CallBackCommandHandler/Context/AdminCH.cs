@@ -33,7 +33,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                 { "SendMessagesToActiveUsers", (x) => Task.FromResult(x.SendMessageToUsersCommand(mode: 2)) },
                 { "SendMessagesToAllUsers", (x) => Task.FromResult(x.SendMessageToUsersCommand(mode: 3)) },
                 { "ChangeUserState", (x) => Task.FromResult(x.ChangeUserStateCommand()) },
-                { "RemoveUser", (x) => Task.FromResult(x.RemoveUserCommand()) },
+                { "DeleteUser", (x) => Task.FromResult(x.DeleteUserCommand()) },
                 { "ShowStartConfiguration", (x) => Task.FromResult(x.ShowStartConfigurationCommand()) },
                 { "ChangeLimitsMods", (x) => Task.FromResult(x.ChangeLimitsModsCommand()) },
                 { "ChangeWhiteListMode", (x) => Task.FromResult(x.ChangeWhiteListModeCommand()) },
@@ -233,7 +233,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             return informationSet;
         }
 
-        private IInformationSet RemoveUserCommand()
+        private IInformationSet DeleteUserCommand()
         {
             this.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.DeleteUser);
 
@@ -290,7 +290,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
         {
             IInformationSet informationSet = new MessageInformationSet("Бот отключён");
 
-            Task.Run(() => this.CloseApp(TimeSpan.FromSeconds(2)));
+            this.CloseApp(TimeSpan.FromSeconds(2));
 
             return informationSet;
         }

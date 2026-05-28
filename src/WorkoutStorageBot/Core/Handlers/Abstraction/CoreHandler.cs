@@ -24,16 +24,14 @@ namespace WorkoutStorageBot.Core.Handlers.Abstraction
 
         internal abstract Task<HandlerResult> Process(HandlerResult handlerResult);
 
-        internal async Task CloseApp(TimeSpan timeSpan)
+        internal void CloseApp(TimeSpan timeSpan)
         {
             if (timeSpan.TotalSeconds < 2)
                 timeSpan = TimeSpan.FromSeconds(2);
 
             Logger.LogWarning("Инициировано отключение бота");
 
-            await Task.Delay(timeSpan);
-
-            this.CoreTools.AppCTS.Cancel();
+            this.CoreTools.AppCTS.CancelAfter(timeSpan);
         }
     }
 }

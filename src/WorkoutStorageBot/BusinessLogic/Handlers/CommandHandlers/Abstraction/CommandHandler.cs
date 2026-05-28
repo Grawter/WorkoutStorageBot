@@ -51,7 +51,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.Abstraction
         protected ConfigurationData GetConfigurationData()
            => this.ParentHandler.CoreTools.ConfigurationData;
 
-        protected async Task CloseApp(TimeSpan timeSpan)
-         => await this.ParentHandler.CloseApp(timeSpan);
+        protected void CloseApp(TimeSpan timeSpan)
+            => this.ParentHandler.CloseApp(timeSpan);
     }
 }
