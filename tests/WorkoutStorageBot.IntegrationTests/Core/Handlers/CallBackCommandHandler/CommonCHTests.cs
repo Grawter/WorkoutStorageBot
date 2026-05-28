@@ -85,6 +85,9 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             IInformationSet informationSet = await commonCH.GetInformationSet();
 
             // Assert
+            commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+            commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+
             informationSet.Message.Should().Be("Выберите интересующий раздел");
             informationSet.ButtonsSets.Should().Be((ButtonsSet.Main, ButtonsSet.None));
             informationSet.ParseMode.Should().Be(ParseMode.Html);
@@ -103,6 +106,9 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             IInformationSet informationSet = await commonCH.GetInformationSet();
 
             // Assert
+            commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+            commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+
             informationSet.Message.Should().Be("Выберите тренировочный день из цикла \"<b>testCycle</b>\"");
             informationSet.ButtonsSets.Should().Be((ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main));
             informationSet.ParseMode.Should().Be(ParseMode.Html);
