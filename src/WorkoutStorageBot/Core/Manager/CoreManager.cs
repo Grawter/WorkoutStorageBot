@@ -96,15 +96,8 @@ namespace WorkoutStorageBot.Core.Manager
 
             await LogRuntimeError(updateInfo, eventId, ex);
 
-            string exMessage = ex.ToString();
-
-            if (exMessage.Length > CoreConsts.Log.ShowLimit)
-                exMessage = $"{exMessage.Substring(0, CoreConsts.Log.ShowLimit)}...";
-
             if (this.coreTools.ConfigurationData.Notifications.NotifyOwnersAboutRuntimeErrors)
-                await this.BotResponseSender.SendSimpleMassiveNotification(this.coreTools.ConfigurationData.Bot.OwnersChatIDs, @$"Ошибка во время исполнения. EventID: {eventId.Id}
-======================
-{exMessage}");
+                await NotifyOwnersAboutError(ex, eventId);
         }
 
         private async Task LogRuntimeError(IUpdateInfo updateInfo, EventId eventId, Exception ex)
@@ -134,6 +127,18 @@ namespace WorkoutStorageBot.Core.Manager
             UserInformation? userInformation = await adminWrapper.GetUserInformationWithoutTracking(userId);
 
             return userInformation != null && adminWrapper.UserHasAccess(userInformation);
+        }
+
+        private async Task NotifyOwnersAboutError(Exception ex, EventId eventId)
+        {
+            string exMessage = ex.ToString();
+
+            if (exMessage.Length > CoreConsts.Log.ShowLimit)
+                exMessage = $"{exMessage.Substring(0, CoreConsts.Log.ShowLimit)}...";
+
+            await this.BotResponseSender.SendSimpleMassiveNotification(this.coreTools.ConfigurationData.Bot.OwnersChatIDs, @$"Ошибка во время исполнения. EventID: {eventId.Id}
+======================
+{exMessage}");    
         }
     }
 }
