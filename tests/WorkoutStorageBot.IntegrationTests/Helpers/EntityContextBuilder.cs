@@ -249,7 +249,7 @@ namespace WorkoutStorageBot.UnitTests.Helpers
 
         internal EntityContextBuilder WithExercise()
         {
-            testExercise = new Exercise() { Name = "TestExercise1", Mode = ExercisesMods.Count, DayId = DayId };
+            testExercise = new Exercise() { Name = "TestExercise", Mode = ExercisesMods.Count, DayId = DayId };
 
             Context.Exercises.Add(testExercise);
             Context.SaveChanges();

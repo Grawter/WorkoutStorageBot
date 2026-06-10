@@ -96,7 +96,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     else
                         information = SharedExercisesAndResultsLogicHelper.GetInformationAboutLastExercises(resultLastTraining.Date, resultLastTraining.Data);
 
-                    responseTextBuilder = new ResponseTextBuilder("Последняя тренировка:", information, $"Выберите тренировочный день из цикла {this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}");
+                    responseTextBuilder = new ResponseTextBuilder("Последняя тренировка:", 
+                                                                  information, 
+                                                                  $"Выберите тренировочный день из цикла {this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}");
                     buttonsSets = (ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main);
                     break;
 
@@ -130,8 +132,8 @@ AND date(re.DateTime) = last.MaxDate";
 
                     information = SharedExercisesAndResultsLogicHelper.GetInformationAboutLastDay(lastResultsExercisesInCurrentDay);
                     responseTextBuilder = new ResponseTextBuilder("Последние результаты упражнений из этого дня:", 
-                        information, 
-                        $"Выберите упражнение из дня {this.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBold()} ({this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBold()})");
+                                                                  information, 
+                                                                  $"Выберите упражнение из дня {this.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBold()} ({this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBold()})");
                     buttonsSets = (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout);
                     break;
                 default:
