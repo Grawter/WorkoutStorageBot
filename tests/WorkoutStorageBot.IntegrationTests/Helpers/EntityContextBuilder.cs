@@ -119,6 +119,7 @@ namespace WorkoutStorageBot.UnitTests.Helpers
             connection.Open();
 
             options = new DbContextOptionsBuilder<EntityContext>()
+                .EnableSensitiveDataLogging()
                 .UseSqlite(connection)
                 .Options;
         }
@@ -175,14 +176,23 @@ namespace WorkoutStorageBot.UnitTests.Helpers
             return this;
         }
 
-        internal EntityContextBuilder WithCycle(bool isActive = false)
+        internal EntityContextBuilder WithCycle(bool isActive = false, bool isArchive = false)
         {
-            testCycle = new Cycle() { Name = "TestCycle", UserInformationId = UserInformationId, IsActive = isActive };
+            testCycle = new Cycle() { Name = "TestCycle", UserInformationId = UserInformationId, IsActive = isActive, IsArchive = isArchive };
 
             Context.Cycles.Add(testCycle);
             Context.SaveChanges();
 
             testCycleWasInit = true;
+
+            return this;
+        }
+
+        internal EntityContextBuilder WithCycleDetached(bool isActive = false, bool isArchive = false)
+        {
+            WithCycle(isActive, isArchive);
+
+            Context.Entry(testCycle).State = EntityState.Detached;
 
             return this;
         }
@@ -219,14 +229,23 @@ namespace WorkoutStorageBot.UnitTests.Helpers
             return this;
         }
 
-        internal EntityContextBuilder WithDay()
+        internal EntityContextBuilder WithDay(bool isArchive = false)
         {
-            testDay = new Day() { Name = "TestDay", CycleId = CycleId };
+            testDay = new Day() { Name = "TestDay", CycleId = CycleId, IsArchive = isArchive };
 
             Context.Days.Add(testDay);
             Context.SaveChanges();
 
             testDayWasInit = true;
+
+            return this;
+        }
+
+        internal EntityContextBuilder WithDayDetached(bool isArchive = false)
+        {
+            WithDay(isArchive);
+
+            Context.Entry(testDay).State = EntityState.Detached;
 
             return this;
         }
@@ -247,14 +266,23 @@ namespace WorkoutStorageBot.UnitTests.Helpers
             return this;
         }
 
-        internal EntityContextBuilder WithExercise()
+        internal EntityContextBuilder WithExercise(bool isArchive = false, ExercisesMods mode = ExercisesMods.Count)
         {
-            testExercise = new Exercise() { Name = "TestExercise", Mode = ExercisesMods.Count, DayId = DayId };
+            testExercise = new Exercise() { Name = "TestExercise", Mode = mode, DayId = DayId, IsArchive = isArchive };
 
             Context.Exercises.Add(testExercise);
             Context.SaveChanges();
 
             testExerciseWasInit = true;
+
+            return this;
+        }
+
+        internal EntityContextBuilder WithExerciseDetached(bool isArchive = false, ExercisesMods mode = ExercisesMods.Count)
+        {
+            WithExercise(isArchive, mode);
+
+            Context.Entry(testExercise).State = EntityState.Detached;
 
             return this;
         }
@@ -284,6 +312,15 @@ namespace WorkoutStorageBot.UnitTests.Helpers
             Context.SaveChanges();
 
             testResultExerciseWasInit = true;
+
+            return this;
+        }
+
+        internal EntityContextBuilder WithResultExerciseDetached()
+        {
+            WithResultExercise();
+
+            Context.Entry(testResultExercise).State = EntityState.Detached;
 
             return this;
         }

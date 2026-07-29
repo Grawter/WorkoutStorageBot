@@ -2,7 +2,7 @@
 
 namespace WorkoutStorageBot.BusinessLogic.Enums
 {
-    internal enum QueryFrom
+    public enum QueryFrom
     {
         NoMatter,
         Start,

@@ -26,7 +26,7 @@ namespace WorkoutStorageBot.BusinessLogic.Context.Session
 
             Roles = currentRoles;
 
-            ActiveCycle = UserInformation.Cycles.FirstOrDefault(c => c.IsActive);
+            ActiveCycle = UserInformation.Cycles.SingleOrDefault(c => c.IsActive);
 
             DataManager = new();
 

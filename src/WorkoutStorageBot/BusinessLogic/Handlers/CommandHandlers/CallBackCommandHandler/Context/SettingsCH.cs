@@ -24,9 +24,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                { "Settings", (x) => Task.FromResult(x.SettingsCommand()) },
                { "ArchiveStore", (x) => Task.FromResult(x.ArchiveStoreCommand()) },
                { "Archive", (x) => Task.FromResult(x.ArchiveCommand()) },
+               { "UnArchive", (x) => x.UnArchiveCommand() },
                { "Export", (x) => Task.FromResult(x.ExportCommand()) },
                { "ExportTo", (x) => Task.FromResult(x.ExportToCommand()) },
-               { "UnArchive", (x) => x.UnArchiveCommand() },
                { "AboutBot", (x) => Task.FromResult(x.AboutBotCommand()) },
                { "Setting", (x) => Task.FromResult(x.SettingCommand()) },
                { "Add", (x) => Task.FromResult(x.AddCommand()) },
@@ -41,7 +41,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                { "ChangeName", (x) => Task.FromResult(x.ChangeNameCommand()) },
                { "ChangeMode", (x) => Task.FromResult(x.ChangeModeCommand()) },
                { "ChangedMode", (x) => x.ChangedModeCommand() },
-               { "Period", (x) => x.Period() },
+               { "Period", (x) => x.PeriodCommand() },
                { "Delete", (x) => Task.FromResult(x.DeleteCommand()) },
                { "ConfirmDelete", (x) => x.ConfirmDeleteCommand() },
            };
@@ -106,7 +106,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     buttonsSets = (ButtonsSet.ArchiveExercisesList, ButtonsSet.ArchiveList);
                     break;
                 default:
-                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
+                    throw new NotImplementedException($"Неожиданный callbackQueryParser.DomainType: {callbackQueryParser.DomainType}");
             }
 
             IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
@@ -123,24 +123,24 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
             if (callbackQueryParser.DomainType == CommonConsts.DomainsAndEntities.Cycle)
             {
-                DTODomain = this.CurrentUserContext.UserInformation.Cycles.FirstOrDefault(x => x.Id == domainID)
-                    ?? throw new InvalidOperationException($"Not found cycle for unarchiving with ID = {domainID}");
+                DTODomain = this.CurrentUserContext.UserInformation.Cycles.FirstOrDefault(x => x.Id == domainID && x.IsArchive)
+                    ?? throw new InvalidOperationException($"Not found archive cycle for unarchiving with ID = {domainID}");
             }
             else if (callbackQueryParser.DomainType == CommonConsts.DomainsAndEntities.Day)
             {
                 IEnumerable<DTODay> allDays = this.CurrentUserContext.UserInformation.Cycles.SelectMany(x => x.Days);
 
-                DTODomain = allDays.FirstOrDefault(x => x.Id == domainID) ?? throw new InvalidOperationException($"Not found day for unarchiving with ID = {domainID}");
+                DTODomain = allDays.FirstOrDefault(x => x.Id == domainID && x.IsArchive) ?? throw new InvalidOperationException($"Not found archive day for unarchiving with ID = {domainID}");
             }
             else if (callbackQueryParser.DomainType == CommonConsts.DomainsAndEntities.Exercise)
             {
                 IEnumerable<DTOExercise> allExercise = this.CurrentUserContext.UserInformation.Cycles.SelectMany(x => x.Days)
                                                                                                      .SelectMany(x => x.Exercises);
 
-                DTODomain = allExercise.FirstOrDefault(x => x.Id == domainID) ?? throw new InvalidOperationException($"Not found exercise for unarchiving with ID = {domainID}");
+                DTODomain = allExercise.FirstOrDefault(x => x.Id == domainID && x.IsArchive) ?? throw new InvalidOperationException($"Not found archive exercise for unarchiving with ID = {domainID}");
             }
             else
-                throw new NotImplementedException($"Неожиданный domainTyped: {callbackQueryParser.DomainType}");
+                throw new NotImplementedException($"Неожиданный callbackQueryParser.DomainType: {callbackQueryParser.DomainType}");
 
             DTODomain.IsArchive = false;
             await this.Db.UpdateEntity(DTODomain);
@@ -190,17 +190,17 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             {
                 case "Excel":
                     responseTextBuilder = new ResponseTextBuilder($"Выберите временной промежуток формирования данных от последней тренировки для экспорта в {"Excel".AddBold()}");
-                    buttonsSets = (ButtonsSet.Period, ButtonsSet.Export);
                     additionalParameters = new() { { "Act", "Export/Excel" } };
                     break;
                 case "JSON":
                     responseTextBuilder = new ResponseTextBuilder($"Выберите временной промежуток формирования данных от последней тренировки для экспорта в {"JSON".AddBold()}");
-                    buttonsSets = (ButtonsSet.Period, ButtonsSet.Export);
                     additionalParameters = new() { { "Act", "Export/JSON" } };
                     break;
                 default:
-                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
+                    throw new NotImplementedException($"Неожиданный {nameof(exportFormat)}: {exportFormat}");
             }
+
+            buttonsSets = (ButtonsSet.Period, ButtonsSet.Export);
 
             IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets, additionalParameters);
 
@@ -301,7 +301,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     }
                     break;
                 default:
-                    throw new NotImplementedException($"Неожиданный CallbackQueryParser.SubDirection: {callbackQueryParser.SubDirection}");
+                    throw new NotImplementedException($"Неожиданный callbackQueryParser.DomainType: {callbackQueryParser.DomainType}");
             }
 
             IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
@@ -316,9 +316,6 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
             switch (callbackQueryParser.DomainType)
             {
-                case CommonConsts.DomainsAndEntities.Day:
-                    throw new NotImplementedException($"Нереализовано для типа домена {CommonConsts.DomainsAndEntities.Day}, т.к. не нашлось ни одно небходимого кейса");
-
                 case CommonConsts.DomainsAndEntities.Exercise:
                     this.CurrentUserContext.DataManager.ResetTempExercises();
 
@@ -328,7 +325,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     break;
 
                 default:
-                    throw new InvalidOperationException($"Неожиданный {nameof(callbackQueryParser.DomainType)}: {callbackQueryParser.DomainType}");
+                    throw new NotImplementedException($"Неожиданный callbackQueryParser.DomainType: {callbackQueryParser.DomainType}");
             }
 
             IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
@@ -392,7 +389,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     buttonsSets = (ButtonsSet.ExercisesList, ButtonsSet.SettingExercises);
                     break;
                 default:
-                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
+                    throw new NotImplementedException($"Неожиданный callbackQueryParser.DomainType: {callbackQueryParser.DomainType}");
             }
 
             IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
@@ -483,7 +480,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     }
                     break;
                 default:
-                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
+                    throw new NotImplementedException($"Неожиданный callbackQueryParser.DomainType: {callbackQueryParser.DomainType}");
             }
 
             IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
@@ -524,7 +521,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     buttonsSets = (ButtonsSet.SettingCycle, ButtonsSet.SettingCycles);
                     break;
                 default:
-                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
+                    throw new NotImplementedException($"Неожиданный callbackQueryParser.DomainType: {callbackQueryParser.DomainType}");
             }
 
             informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
@@ -545,7 +542,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                 case CommonConsts.DomainsAndEntities.Cycle:
                     if (this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().IsActive)
                     {
-                        responseTextBuilder = new ResponseTextBuilder("Ошибка при архивации!", "Нельзя архивировать активный цикл!",
+                        responseTextBuilder = new ResponseTextBuilder("Ошибка при архивации!", $"Нельзя архивировать цикл {DTODomain.Name.AddBoldAndQuotes()}, т.к. он является активным!",
                             $"Выберите интересующую настройку для цикла {this.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()}");
                         buttonsSets = (ButtonsSet.SettingCycle, ButtonsSet.CycleList);
 
@@ -568,7 +565,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     buttonsSets = (ButtonsSet.ExercisesList, ButtonsSet.SettingExercises);
                     break;
                 default:
-                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
+                    throw new NotImplementedException($"Неожиданный callbackQueryParser.DomainType: {callbackQueryParser.DomainType}");
             }
 
             DTODomain.IsArchive = true;
@@ -597,7 +594,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     buttonsSets = (ButtonsSet.ReplaceToDay, ButtonsSet.SettingExercise);
                     break;
                 default:
-                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
+                    throw new NotImplementedException($"Неожиданный callbackQueryParser.DomainType: {callbackQueryParser.DomainType}");
             }
 
             IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
@@ -635,7 +632,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
                     targetCycle.Days.Add(currentDay);
                     DTOCycle oldCycleByDay = currentDay.Cycle.ThrowIfNull();
-                    oldCycleByDay.Days.Remove(currentDay);
+
+                    int indexToDeleteDay = oldCycleByDay.Days.FindIndex(x => x.Id == currentDay.Id);
+                    if (indexToDeleteDay == -1)
+                         throw new InvalidOperationException($"Не удалось определить индекс дня (ID = {currentDay.Id}) для удаления из старого цикла (ID = '{oldCycleByDay.Id})' среди дней ({string.Join(",", oldCycleByDay.Days.Select(x => x.Id))}) у пользователя '{this.CurrentUserContext.UserInformation.UserId}'");
+
+                    oldCycleByDay.Days.RemoveAt(indexToDeleteDay);
 
                     currentDay.Cycle = targetCycle;
                     currentDay.CycleId = targetCycle.Id;
@@ -644,6 +646,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
                     responseTextBuilder = new ResponseTextBuilder($"День {currentDay.Name.AddBoldAndQuotes()}, перенесён в цикл {targetCycle.Name.AddBoldAndQuotes()}",
                         "Выберите интересующий цикл");
+
                     break;
 
                 case CommonConsts.DomainsAndEntities.Day:
@@ -659,14 +662,19 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     }
 
                     DTODay targetDay = this.CurrentUserContext.UserInformation.Cycles.SelectMany(cycle => cycle.Days)
-                                                                                                      ?.FirstOrDefault(day => day.Id == targetDomainID)
+                                                                                      ?.FirstOrDefault(day => day.Id == targetDomainID)
                         ?? throw new InvalidOperationException($"Не удалось найти targetDomain c ID = '{targetDomainID}' среди дней неархивных циклов у пользователя '{this.CurrentUserContext.UserInformation.UserId}'");
 
                     DTOExercise currentExercise = this.CurrentUserContext.DataManager.CurrentExercise;
 
                     targetDay.Exercises.Add(currentExercise);
                     DTODay oldDayByExercise = currentExercise.Day.ThrowIfNull();
-                    oldDayByExercise.Exercises.Remove(currentExercise);
+
+                    int indexToDeleteExercise = oldDayByExercise.Exercises.FindIndex(x => x.Id == currentExercise.Id);
+                    if (indexToDeleteExercise == -1)
+                        throw new InvalidOperationException($"Не удалось определить индекс упражнения (ID = {currentExercise.Id}) для удаления из старого дня (ID = '{oldDayByExercise.Id})' среди упражнений ({string.Join(",", oldDayByExercise.Exercises.Select(x => x.Id))}) у пользователя '{this.CurrentUserContext.UserInformation.UserId}'");
+
+                    oldDayByExercise.Exercises.RemoveAt(indexToDeleteExercise);
 
                     currentExercise.Day = targetDay;
                     currentExercise.DayId = targetDay.Id;
@@ -675,9 +683,10 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
                     responseTextBuilder = new ResponseTextBuilder($"Упражнение {currentExercise.Name.AddBoldAndQuotes()}, перенесёно в день {targetDay.Name.AddBoldAndQuotes()}",
                         "Выберите интересующий цикл");
+
                     break;
                 default:
-                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
+                    throw new NotImplementedException($"Неожиданный callbackQueryParser.DomainType: {callbackQueryParser.DomainType}");
             }
 
             buttonsSets = (ButtonsSet.CycleList, ButtonsSet.SettingCycles);
@@ -715,7 +724,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     buttonsSets = (ButtonsSet.None, ButtonsSet.SettingExercise);
                     break;
                 default:
-                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
+                    throw new NotImplementedException($"Неожиданный callbackQueryParser.DomainType: {callbackQueryParser.DomainType}");
             }
 
             IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
@@ -736,7 +745,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     buttonsSets = (ButtonsSet.ChangeType, ButtonsSet.SettingExercise);
                     break;
                 default:
-                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
+                    throw new NotImplementedException($"Неожиданный callbackQueryParser.DomainType: {callbackQueryParser.DomainType}");
             }
 
             IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
@@ -762,7 +771,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
                     ExercisesMods newMode = (ExercisesMods)int.Parse(modeStr);
 
-                    ((Exercise)DTODomain).Mode = newMode;
+                    ((DTOExercise)DTODomain).Mode = newMode;
                     await this.Db.UpdateEntity(DTODomain);
 
                     responseTextBuilder = new ResponseTextBuilder($"Режим для упражнения {DTODomain.Name.AddBoldAndQuotes()} изменён на {newMode.ToString().AddBoldAndQuotes()}",
@@ -770,7 +779,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     buttonsSets = (ButtonsSet.SettingExercise, ButtonsSet.ExercisesList);
                     break;
                 default:
-                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
+                    throw new NotImplementedException($"Неожиданный callbackQueryParser.DomainType: {callbackQueryParser.DomainType}");
             }
 
             IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
@@ -778,7 +787,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             return informationSet;
         }
 
-        private async Task<IInformationSet> Period()
+        private async Task<IInformationSet> PeriodCommand()
         {
             IInformationSet informationSet;
 
@@ -850,7 +859,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     additionalParameters.Add("Name", "упражнение");
                     break;
                 default:
-                    throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
+                    throw new NotImplementedException($"Неожиданный callbackQueryParser.DomainType: {callbackQueryParser.DomainType}");
             }
 
             IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets, additionalParameters);
@@ -915,7 +924,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                         buttonsSets = (ButtonsSet.ExercisesList, ButtonsSet.SettingExercises);
                         break;
                     default:
-                        throw new NotImplementedException($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
+                        throw new NotImplementedException($"Неожиданный callbackQueryParser.DomainType: {callbackQueryParser.DomainType}");
                 }
 
                 await this.Db.RemoveEntity(DTODomain);
@@ -976,7 +985,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
                 string fileName = $"Workout{fileExtenstion}";
 
-                recyclableMemoryStream.Position = 0;
+                if (recyclableMemoryStream.CanSeek && recyclableMemoryStream.Position != 0)
+                    recyclableMemoryStream.Position = 0;
 
                 result = new FileInformationSet(recyclableMemoryStream, fileName, $"Тренировки успешно экспортированы!", buttonsSets);
             }
