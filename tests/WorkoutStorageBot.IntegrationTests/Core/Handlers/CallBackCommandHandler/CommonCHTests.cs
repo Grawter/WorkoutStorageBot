@@ -74,10 +74,12 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         }
 
         [Fact]
-        public async Task GetInformationSet_WithMainSubDirection_ShouldReturnExpectedIInformationSet()
+        public async Task GetInformationSet_WithToMainSubDirection_ShouldReturnExpectedIInformationSet()
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser("Direction|ToMain|DomainType|CallBackId");
+            string subDirection = "ToMain";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|DomainType|CallBackId");
 
             CommonCH commonCH = new CommonCH(commandHandlerTools, callbackQueryParser);
 
@@ -98,7 +100,9 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         public async Task GetInformationSet_WithBackSubDirection_ShouldReturnExpectedIInformationSet()
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser("Direction|Back||DaysListWithLastWorkout|CallBackId");
+            string subDirection = "Back";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}||DaysListWithLastWorkout|CallBackId");
 
             CommonCH commonCH = new CommonCH(commandHandlerTools, callbackQueryParser);
 
@@ -119,7 +123,9 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         public async Task GetInformationSet_WithUnknownSubDirection_ShouldThrowNotImplementedException()
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser("Direction|SomeUnknownSubDirection|DomainType|CallBackId");
+            string subDirection = "SomeUnknownSubDirection";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|DomainType|CallBackId");
 
             CommonCH commonCH = new CommonCH(commandHandlerTools, callbackQueryParser);
 

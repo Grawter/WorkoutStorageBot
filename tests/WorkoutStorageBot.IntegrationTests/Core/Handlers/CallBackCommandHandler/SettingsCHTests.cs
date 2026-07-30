@@ -98,7 +98,9 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         public async Task GetInformationSet_WithSettingsSubDirection_ShouldReturnExpectedIInformationSet()
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser("Direction|Settings|DomainType|CallBackId");
+            string subDirection = "Settings";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|DomainType|CallBackId");
 
             SettingsCH settingsCH = new SettingsCH(commandHandlerTools, callbackQueryParser);
 
@@ -119,7 +121,9 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         public async Task GetInformationSet_WithArchiveStoreSubDirection_ShouldReturnExpectedIInformationSet()
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser("Direction|ArchiveStore|DomainType|CallBackId");
+            string subDirection = "ArchiveStore";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|DomainType|CallBackId");
 
             SettingsCH settingsCH = new SettingsCH(commandHandlerTools, callbackQueryParser);
 
@@ -144,7 +148,9 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         public async Task GetInformationSet_WithArchiveSubDirection_ShouldReturnExpectedIInformationSet(string domainType)
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|Archive|{domainType}|CallBackId");
+            string subDirection = "Archive";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|{domainType}|CallBackId");
 
             SettingsCH settingsCH = new SettingsCH(commandHandlerTools, callbackQueryParser);
 
@@ -197,12 +203,14 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         [InlineData("Other", 0)]
         public async Task GetInformationSet_WithUnArchiveSubDirection_ShouldReturnExpectedIInformationSet(string domainType, int domainIDforUnArchive)
         {
-            bool hasDTODomain = domainIDforUnArchive > 0;
-
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|UnArchive|{domainType}|{domainIDforUnArchive}|CallBackId");
+            string subDirection = "UnArchive";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|{domainType}|{domainIDforUnArchive}|CallBackId");
 
             SettingsCH settingsCH = new SettingsCH(commandHandlerTools, callbackQueryParser);
+
+            bool hasDTODomain = domainIDforUnArchive > 0;
 
             // Assert
             if (domainType == "Other")
@@ -265,7 +273,9 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         public async Task GetInformationSet_WithExportSubDirection_ShouldReturnExpectedIInformationSet()
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser("Direction|Export|DomainType|CallBackId");
+            string subDirection = "Export";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|DomainType|CallBackId");
 
             SettingsCH settingsCH = new SettingsCH(commandHandlerTools, callbackQueryParser);
 
@@ -290,7 +300,9 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         public async Task GetInformationSet_WithExportToSubDirection_ShouldReturnExpectedIInformationSet(string exportFormat)
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|ExportTo|DomainType|{exportFormat}|CallBackId");
+            string subDirection = "ExportTo";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|DomainType|{exportFormat}|CallBackId");
 
             SettingsCH settingsCH = new SettingsCH(commandHandlerTools, callbackQueryParser);
 
@@ -333,7 +345,9 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         public async Task GetInformationSet_WithAboutBotSubDirection_ShouldReturnExpectedIInformationSet(bool withTextAboutBot)
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser("Direction|AboutBot|DomainType|CallBackId");
+            string subDirection = "AboutBot";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|DomainType|CallBackId");
 
             SettingsCH? settingsCH = null;
 
@@ -396,7 +410,9 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         public async Task GetInformationSet_WithSettingSubDirection_ShouldReturnExpectedIInformationSet(string domainType)
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|Setting|{domainType}|CallBackId");
+            string subDirection = "Setting";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|{domainType}|CallBackId");
 
             SettingsCH settingsCH = new SettingsCH(commandHandlerTools, callbackQueryParser);
 
@@ -452,7 +468,9 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         public async Task GetInformationSet_WithAddSubDirection_ShouldReturnExpectedIInformationSet(string domainType, QueryFrom queryFrom)
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|Add|{domainType}|CallBackId");
+            string subDirection = "Add";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|{domainType}|CallBackId");
 
             SettingsCH settingsCH = new SettingsCH(commandHandlerTools, callbackQueryParser);
 
@@ -572,7 +590,9 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         public async Task GetInformationSet_WithResetTempDomainsSubDirection_ShouldReturnExpectedIInformationSet(string domainType)
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|ResetTempDomains|{domainType}|CallBackId");
+            string subDirection = "ResetTempDomains";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|{domainType}|CallBackId");
 
             SettingsCH settingsCH = new SettingsCH(commandHandlerTools, callbackQueryParser);
 
@@ -617,7 +637,9 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         public async Task GetInformationSet_WithSaveExercisesSubDirection_ShouldReturnExpectedIInformationSet(QueryFrom queryFrom)
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|SaveExercises|domainType|CallBackId");
+            string subDirection = "SaveExercises";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|domainType|CallBackId");
 
             SettingsCH settingsCH = new SettingsCH(commandHandlerTools, callbackQueryParser);
 
@@ -684,7 +706,9 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         public async Task GetInformationSet_WithSettingExistingSubDirection_ShouldReturnExpectedIInformationSet(string domainType)
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|SettingExisting|{domainType}|CallBackId");
+            string subDirection = "SettingExisting";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|{domainType}|CallBackId");
 
             SettingsCH settingsCH = new SettingsCH(commandHandlerTools, callbackQueryParser);
 
@@ -741,7 +765,9 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         public async Task GetInformationSet_WithSelectedSubDirection_ShouldReturnExpectedIInformationSet(string domainType, QueryFrom queryFrom, int domainID)
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|Selected|{domainType}|{domainID}|CallBackId");
+            string subDirection = "Selected";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|{domainType}|{domainID}|CallBackId");
 
             commandHandlerTools.CurrentUserContext.Navigation.SetQueryFrom(queryFrom);
 
@@ -874,7 +900,9 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         public async Task GetInformationSet_WithChangeActiveSubDirection_ShouldReturnExpectedIInformationSet(string domainType, bool currentCycleIsActive)
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|ChangeActive|{domainType}|CallBackId");
+            string subDirection = "ChangeActive";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|{domainType}|CallBackId");
 
             SettingsCH settingsCH = new SettingsCH(commandHandlerTools, callbackQueryParser);
 
@@ -952,7 +980,9 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         public async Task GetInformationSet_WithArchivingSubDirection_ShouldReturnExpectedIInformationSet(string domainType, bool currentCycleIsActive)
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|Archiving|{domainType}|CallBackId");
+            string subDirection = "Archiving";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|{domainType}|CallBackId");
 
             SettingsCH settingsCH = new SettingsCH(commandHandlerTools, callbackQueryParser);
 
@@ -1068,7 +1098,9 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         public async Task GetInformationSet_WithReplaceSubDirection_ShouldReturnExpectedIInformationSet(string domainType)
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|Replace|{domainType}|CallBackId");
+            string subDirection = "Replace";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|{domainType}|CallBackId");
 
             SettingsCH settingsCH = new SettingsCH(commandHandlerTools, callbackQueryParser);
 
@@ -1117,7 +1149,9 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         public async Task GetInformationSet_WithReplaceToSubDirection_ShouldReturnExpectedIInformationSet(string domainType, int targetDomainID)
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|ReplaceTo|{domainType}|{targetDomainID}|CallBackId");
+            string subDirection = "ReplaceTo";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|{domainType}|{targetDomainID}|CallBackId");
 
             SettingsCH settingsCH = new SettingsCH(commandHandlerTools, callbackQueryParser);
 
@@ -1234,7 +1268,9 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         public async Task GetInformationSet_WithChangeNameSubDirection_ShouldReturnExpectedIInformationSet(string domainType)
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|ChangeName|{domainType}|CallBackId");
+            string subDirection = "ChangeName";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|{domainType}|CallBackId");
 
             SettingsCH settingsCH = new SettingsCH(commandHandlerTools, callbackQueryParser);
 
@@ -1292,7 +1328,9 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         public async Task GetInformationSet_WithChangeModeSubDirection_ShouldReturnExpectedIInformationSet(string domainType)
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|ChangeMode|{domainType}|CallBackId");
+            string subDirection = "ChangeMode";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|{domainType}|CallBackId");
 
             SettingsCH settingsCH = new SettingsCH(commandHandlerTools, callbackQueryParser);
 
@@ -1326,10 +1364,12 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         [Theory]
         [InlineData("Other", ExercisesMods.Count)]
         [InlineData("Exercise", ExercisesMods.FreeResult)]
-        public async Task GetInformationSet_WithCChangedModeSubDirection_ShouldReturnExpectedIInformationSet(string domainType, ExercisesMods newExercisesMods)
+        public async Task GetInformationSet_WithChangedModeSubDirection_ShouldReturnExpectedIInformationSet(string domainType, ExercisesMods newExercisesMods)
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|ChangedMode|{domainType}|{(int)newExercisesMods}|CallBackId");
+            string subDirection = "ChangedMode";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|{domainType}|{(int)newExercisesMods}|CallBackId");
 
             SettingsCH settingsCH = new SettingsCH(commandHandlerTools, callbackQueryParser);
 
@@ -1377,7 +1417,10 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         [InlineData("Export/JSON", true)]
         public async Task GetInformationSet_WithPeriodSubDirection_ShouldReturnExpectedIInformationSet(string operation, bool withResultSExercise)
         {
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|Period||{operation}|0|CallBackId");
+            // Arrange
+            string subDirection = "Period";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}||{operation}|0|CallBackId");
 
             SettingsCH settingsCH = new SettingsCH(commandHandlerTools, callbackQueryParser);
 
@@ -1442,7 +1485,9 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         public async Task GetInformationSet_WithDeleteSubDirection_ShouldReturnExpectedIInformationSet(string domainType)
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|Delete|{domainType}|CallBackId");
+            string subDirection = "Delete";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|{domainType}|CallBackId");
 
             SettingsCH settingsCH = new SettingsCH(commandHandlerTools, callbackQueryParser);
 
@@ -1596,8 +1641,9 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                 CurrentUserContext = localUserContext,
             };
 
-            // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|ConfirmDelete|{domainType}|CallBackId");
+            string subDirection = "ConfirmDelete";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|{domainType}|CallBackId");
 
             SettingsCH settingsCH = new SettingsCH(localCommandHandlerTools, callbackQueryParser);
 

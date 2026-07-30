@@ -95,16 +95,19 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 
             DTOUserInformation localDTOCurrentUser = entityContext.UsersInformation.First().ToDTOUserInformation();
 
-            UserContext userContext = new UserContext(localDTOCurrentUser);
-            userContext.DataManager.CreateAndSetCurrentCycle("testCycle", true, localDTOCurrentUser);
+            UserContext localUserContext = new UserContext(localDTOCurrentUser);
+            localUserContext.DataManager.CreateAndSetCurrentCycle("testCycle", true, localDTOCurrentUser);
 
             CommandHandlerTools localCommandHandlerTools = new CommandHandlerTools()
             {
                 ParentHandler = new PrimaryUpdateHandler(localCoreTools, new RepositoriesStore(entityContext)),
-                CurrentUserContext = userContext,
+                CurrentUserContext = localUserContext,
             };
 
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser("Direction|Admin|DomainType|CallBackId");
+            // Arrange
+            string subDirection = "Admin";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|DomainType|CallBackId");
 
             AdminCH adminCH = new AdminCH(localCommandHandlerTools, callbackQueryParser);
 
@@ -112,8 +115,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             IInformationSet informationSet = await adminCH.GetInformationSet();
 
             // Assert
-            commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-            commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+            localCommandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+            localCommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
             informationSet.Message.Should().Be("Отказано в действии");
             informationSet.ButtonsSets.Should().Be((ButtonsSet.Main, ButtonsSet.None));
@@ -125,7 +128,9 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         public async Task GetInformationSet_WithAdminSubDirection_ShouldReturnExpectedIInformationSet()
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser("Direction|Admin|DomainType|CallBackId");
+            string subDirection = "Admin";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|DomainType|CallBackId");
 
             AdminCH adminCH = new AdminCH(commandHandlerTools, callbackQueryParser);
 
@@ -146,7 +151,9 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         public async Task GetInformationSet_WithLogsSubDirection_ShouldReturnExpectedIInformationSet()
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser("Direction|Logs|DomainType|CallBackId");
+            string subDirection = "Logs";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|DomainType|CallBackId");
 
             AdminCH adminCH = new AdminCH(commandHandlerTools, callbackQueryParser);
 
@@ -169,7 +176,9 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         public async Task GetInformationSet_WithShowLastLogSubDirection_ShouldReturnExpectedIInformationSet(bool withLogs)
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser("Direction|ShowLastLog|DomainType|CallBackId");
+            string subDirection = "ShowLastLog";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|DomainType|CallBackId");
 
             AdminCH adminCH = new AdminCH(commandHandlerTools, callbackQueryParser);
 
@@ -213,7 +222,9 @@ TestLog
         public async Task GetInformationSet_WithShowLastExceptionLogsSubDirection_ShouldReturnExpectedIInformationSet(bool withLogs)
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser("Direction|ShowLastExceptionLogs|DomainType|CallBackId");
+            string subDirection = "ShowLastExceptionLogs";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|DomainType|CallBackId");
 
             AdminCH adminCH = new AdminCH(commandHandlerTools, callbackQueryParser);
 
@@ -263,7 +274,9 @@ TestLog2
         public async Task GetInformationSet_WithFindLogByIDSubDirection_ShouldReturnExpectedIInformationSet()
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser("Direction|FindLogByID|DomainType|CallBackId");
+            string subDirection = "FindLogByID";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|DomainType|CallBackId");
 
             AdminCH adminCH = new AdminCH(commandHandlerTools, callbackQueryParser);
             
@@ -284,7 +297,9 @@ TestLog2
         public async Task GetInformationSet_WithFindLogByEventIDSubDirection_ShouldReturnExpectedIInformationSet()
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser("Direction|FindLogByEventID|DomainType|CallBackId");
+            string subDirection = "FindLogByEventID";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|DomainType|CallBackId");
 
             AdminCH adminCH = new AdminCH(commandHandlerTools, callbackQueryParser);
             
@@ -305,7 +320,9 @@ TestLog2
         public async Task GetInformationSet_WithAdminUsersSubDirection_ShouldReturnExpectedIInformationSet()
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser("Direction|AdminUsers|DomainType|CallBackId");
+            string subDirection = "AdminUsers";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|DomainType|CallBackId");
 
             AdminCH adminCH = new AdminCH(commandHandlerTools, callbackQueryParser);
             
@@ -326,7 +343,9 @@ TestLog2
         public async Task GetInformationSet_WithShowCountActiveSessionsSubDirection_ShouldReturnExpectedIInformationSet()
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser("Direction|ShowCountActiveSessions|DomainType|CallBackId");
+            string subDirection = "ShowCountActiveSessions";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|DomainType|CallBackId");
 
             int countActiveSessions = 2;
             contextKeeperMock.Setup(x => x.Count).Returns(countActiveSessions);
@@ -350,7 +369,9 @@ TestLog2
         public async Task GetInformationSet_WithSendMessageToUserSubDirection_ShouldReturnExpectedIInformationSet()
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser("Direction|SendMessageToUser|DomainType|CallBackId");
+            string subDirection = "SendMessageToUser";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|DomainType|CallBackId");
 
             AdminCH adminCH = new AdminCH(commandHandlerTools, callbackQueryParser);
             
@@ -375,7 +396,9 @@ TestLog2
         public async Task GetInformationSet_WithSendMessagesToActiveUsersSubDirection_ShouldReturnExpectedIInformationSet()
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser("Direction|SendMessagesToActiveUsers|DomainType|CallBackId");
+            string subDirection = "SendMessagesToActiveUsers";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|DomainType|CallBackId");
 
             AdminCH adminCH = new AdminCH(commandHandlerTools, callbackQueryParser);
             
@@ -396,7 +419,9 @@ TestLog2
         public async Task GetInformationSet_WithSendMessagesToAllUsersSubDirection_ShouldReturnExpectedIInformationSet()
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser("Direction|SendMessagesToAllUsers|DomainType|CallBackId");
+            string subDirection = "SendMessagesToAllUsers";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|DomainType|CallBackId");
 
             AdminCH adminCH = new AdminCH(commandHandlerTools, callbackQueryParser);
             
@@ -417,7 +442,9 @@ TestLog2
         public async Task GetInformationSet_WithChangeUserStateSubDirection_ShouldReturnExpectedIInformationSet()
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser("Direction|ChangeUserState|DomainType|CallBackId");
+            string subDirection = "ChangeUserState";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|DomainType|CallBackId");
 
             AdminCH adminCH = new AdminCH(commandHandlerTools, callbackQueryParser);
             
@@ -442,7 +469,9 @@ TestLog2
         public async Task GetInformationSet_WithDeleteUserSubDirection_ShouldReturnExpectedIInformationSet()
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser("Direction|DeleteUser|DomainType|CallBackId");
+            string subDirection = "DeleteUser";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|DomainType|CallBackId");
 
             AdminCH adminCH = new AdminCH(commandHandlerTools, callbackQueryParser);
             
@@ -469,7 +498,9 @@ TestLog2
         public async Task GetInformationSet_WithShowStartConfiguration_ShouldReturnExpectedIInformationSet()
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser("Direction|ShowStartConfiguration|DomainType|CallBackId");
+            string subDirection = "ShowStartConfiguration";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|DomainType|CallBackId");
 
             AdminCH adminCH = new AdminCH(commandHandlerTools, callbackQueryParser);
             
@@ -524,7 +555,9 @@ TestLog2
         public async Task GetInformationSet_WithChangeLimitsModsSubDirection_ShouldReturnExpectedIInformationSet()
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser("Direction|ChangeLimitsMods|DomainType|CallBackId");
+            string subDirection = "ChangeLimitsMods";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|DomainType|CallBackId");
 
             AdminCH adminCH = new AdminCH(commandHandlerTools, callbackQueryParser);
 
@@ -553,7 +586,9 @@ TestLog2
         public async Task GetInformationSet_WithDisableBotSubDirection_ShouldReturnExpectedIInformationSet(int ms)
         {
             // Arrange
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser("Direction|DisableBot|DomainType|CallBackId");
+            string subDirection = "DisableBot";
+
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|DomainType|CallBackId");
 
             AdminCH adminCH = new AdminCH(commandHandlerTools, callbackQueryParser);
 
