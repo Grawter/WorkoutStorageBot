@@ -1,6 +1,6 @@
 ﻿namespace WorkoutStorageBot.BusinessLogic.Enums
 {
-    internal enum MessageNavigationTarget
+    public enum MessageNavigationTarget
     {
         Default,
 

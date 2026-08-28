@@ -47,7 +47,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             builder = new EntityContextBuilder();
             entityContext = builder.Create()
                                    .WithUserInformation()
-                                   .WithCycle(true)
+                                   .WithCycle(isActive: true)
                                    .WithDay()
                                    .WithExercise()
                                    .Build();
@@ -526,6 +526,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         public void Dispose()
         {
             builder.Dispose();
+            cts.Dispose();
         }
     }
 }

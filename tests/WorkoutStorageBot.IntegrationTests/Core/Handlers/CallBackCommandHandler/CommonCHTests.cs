@@ -37,6 +37,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 
         private readonly CommandHandlerTools commandHandlerTools;
 
+        private readonly CancellationTokenSource cts;
+
         public CommonCHTests() 
         {
             builder = new EntityContextBuilder();
@@ -51,6 +53,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 
             customLoggerFactoryMock.Setup(x => x.CreateLogger<It.IsAnyType>()).Returns(loggerMock.Object);
 
+            cts = new CancellationTokenSource();
+
             CoreTools coreTools = new CoreTools()
             {
                 ConfigurationData = new ConfigurationData(),
@@ -58,7 +62,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                 ContextKeeper = contextKeeperMock.Object,
                 BotResponseSender = botResponseSenderMock.Object,
                 LoggerFactory = customLoggerFactoryMock.Object,
-                AppCTS = new CancellationTokenSource(),
+                AppCTS = cts,
             };
 
             DTOUserInformation DTOCurrentUser = entityContext.UsersInformation.First().ToDTOUserInformation();
@@ -140,6 +144,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         public void Dispose()
         {
             builder.Dispose();
+            cts.Dispose();
         }
     }
 }

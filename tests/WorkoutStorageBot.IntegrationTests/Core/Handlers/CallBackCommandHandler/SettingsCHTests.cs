@@ -55,7 +55,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                                    .WithDay(isArchive: false)
                                    .WithExercise(isArchive: true)
                                    .WithExercise(isArchive: false)
-                                   .WithExercise(isArchive: false, ExercisesMods.Timer)
+                                   .WithExercise(isArchive: false, mode: ExercisesMods.Timer)
                                    .Build();
 
             contextKeeperMock = new();
@@ -597,7 +597,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             SettingsCH settingsCH = new SettingsCH(commandHandlerTools, callbackQueryParser);
 
             List<DTOExercise> dTOExercises = new List<DTOExercise>() { new DTOExercise() { Mode = ExercisesMods.Count, Name = "TestDTOExercise01" } };
-            commandHandlerTools.CurrentUserContext.DataManager.TryAddTempExercises(dTOExercises, out string existingExerciseName);
+            commandHandlerTools.CurrentUserContext.DataManager.TryAddTempExercises(dTOExercises, out string? error);
 
             if (domainType == "Other")
             {
@@ -645,7 +645,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 
             commandHandlerTools.CurrentUserContext.Navigation.SetQueryFrom(queryFrom);
             List<DTOExercise> dTOExercises = new List<DTOExercise>() { new DTOExercise() { Mode = ExercisesMods.Count, Name = "TestDTOExercise01" } };
-            commandHandlerTools.CurrentUserContext.DataManager.TryAddTempExercises(dTOExercises, out string existingExerciseName);
+            commandHandlerTools.CurrentUserContext.DataManager.TryAddTempExercises(dTOExercises, out string? error);
 
             if (queryFrom == QueryFrom.NoMatter)
             {
@@ -1773,6 +1773,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         public void Dispose()
         {
             builder.Dispose();
+            cts.Dispose();
         }
     }
 }

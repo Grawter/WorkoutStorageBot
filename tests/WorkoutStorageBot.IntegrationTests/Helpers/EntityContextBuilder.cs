@@ -176,9 +176,9 @@ namespace WorkoutStorageBot.UnitTests.Helpers
             return this;
         }
 
-        internal EntityContextBuilder WithCycle(bool isActive = false, bool isArchive = false)
+        internal EntityContextBuilder WithCycle(string name = "TestCycle", bool isActive = false, bool isArchive = false)
         {
-            testCycle = new Cycle() { Name = "TestCycle", UserInformationId = UserInformationId, IsActive = isActive, IsArchive = isArchive };
+            testCycle = new Cycle() { Name = name, UserInformationId = UserInformationId, IsActive = isActive, IsArchive = isArchive };
 
             Context.Cycles.Add(testCycle);
             Context.SaveChanges();
@@ -188,9 +188,9 @@ namespace WorkoutStorageBot.UnitTests.Helpers
             return this;
         }
 
-        internal EntityContextBuilder WithCycleDetached(bool isActive = false, bool isArchive = false)
+        internal EntityContextBuilder WithCycleDetached(string name = "TestCycle", bool isActive = false, bool isArchive = false)
         {
-            WithCycle(isActive, isArchive);
+            WithCycle(name, isActive, isArchive);
 
             Context.Entry(testCycle).State = EntityState.Detached;
 
@@ -229,9 +229,9 @@ namespace WorkoutStorageBot.UnitTests.Helpers
             return this;
         }
 
-        internal EntityContextBuilder WithDay(bool isArchive = false)
+        internal EntityContextBuilder WithDay(string name = "TestDay", bool isArchive = false)
         {
-            testDay = new Day() { Name = "TestDay", CycleId = CycleId, IsArchive = isArchive };
+            testDay = new Day() { Name = name, CycleId = CycleId, IsArchive = isArchive };
 
             Context.Days.Add(testDay);
             Context.SaveChanges();
@@ -241,9 +241,9 @@ namespace WorkoutStorageBot.UnitTests.Helpers
             return this;
         }
 
-        internal EntityContextBuilder WithDayDetached(bool isArchive = false)
+        internal EntityContextBuilder WithDayDetached(string name = "TestDay", bool isArchive = false)
         {
-            WithDay(isArchive);
+            WithDay(name, isArchive);
 
             Context.Entry(testDay).State = EntityState.Detached;
 
@@ -266,9 +266,9 @@ namespace WorkoutStorageBot.UnitTests.Helpers
             return this;
         }
 
-        internal EntityContextBuilder WithExercise(bool isArchive = false, ExercisesMods mode = ExercisesMods.Count)
+        internal EntityContextBuilder WithExercise(string name = "TestExercise", bool isArchive = false, ExercisesMods mode = ExercisesMods.Count)
         {
-            testExercise = new Exercise() { Name = "TestExercise", Mode = mode, DayId = DayId, IsArchive = isArchive };
+            testExercise = new Exercise() { Name = name, Mode = mode, DayId = DayId, IsArchive = isArchive };
 
             Context.Exercises.Add(testExercise);
             Context.SaveChanges();
@@ -278,9 +278,9 @@ namespace WorkoutStorageBot.UnitTests.Helpers
             return this;
         }
 
-        internal EntityContextBuilder WithExerciseDetached(bool isArchive = false, ExercisesMods mode = ExercisesMods.Count)
+        internal EntityContextBuilder WithExerciseDetached(string name = "TestExercise", bool isArchive = false, ExercisesMods mode = ExercisesMods.Count)
         {
-            WithExercise(isArchive, mode);
+            WithExercise(name, isArchive, mode);
 
             Context.Entry(testExercise).State = EntityState.Detached;
 

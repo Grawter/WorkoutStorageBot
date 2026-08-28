@@ -3,7 +3,6 @@ using System.Text;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Enums;
-using WorkoutStorageBot.BusinessLogic.Exceptions;
 using WorkoutStorageBot.BusinessLogic.Extensions;
 using WorkoutStorageBot.BusinessLogic.Helpers.Converters;
 using WorkoutStorageBot.Core.Extensions;
@@ -47,10 +46,10 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic
             return resultsExercises;
         }
 
-        internal static List<DTOExercise> GetExercisesFromText(string text)
+        internal static (List<DTOExercise> Exercises, string? Error) GetExercisesFromText(string text)
         {
             if (string.IsNullOrWhiteSpace(text))
-                throw new CreateExerciseException("Не удалось начать парсинг строки для создания упражнений, т.к. получена пустая строка");
+                return (new List<DTOExercise>(), "Не удалось начать парсинг строки для создания упражнений, т.к. получена пустая строка");
 
             List<DTOExercise> exercises = new List<DTOExercise>();
 
@@ -61,25 +60,25 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic
                 string? name = exerciseAndType.FirstOrDefault();
 
                 if (string.IsNullOrWhiteSpace(name))
-                    throw new CreateExerciseException("Не удалось получилось название упражнения.");
+                    return (new List<DTOExercise>(), "Не удалось получилось название упражнения.");
 
                 if (!int.TryParse(exerciseAndType.Skip(1).FirstOrDefault(), out int type))
-                    throw new CreateExerciseException($"Не удалось получить тип упражнения '{name}'");
+                    return (new List<DTOExercise>(), $"Не удалось получить тип упражнения '{name}'");
 
                 if (!Enum.IsDefined(typeof(ExercisesMods), type))
-                    throw new CreateExerciseException($"Указанный тип ({type}) упражнения '{name}' не относится к допустимым");
+                    return (new List<DTOExercise>(), $"Указанный тип ({type}) упражнения '{name}' не относится к допустимым");
 
                 DTOExercise exercise = new DTOExercise() { Name = name, Mode = (ExercisesMods)type };
                 exercises.Add(exercise);
             }
 
-            return exercises;
+            return (exercises, null);
         }
 
-        internal static List<DTOResultExercise> GetResultsExerciseFromText(string text, ExercisesMods currentExerciseMode)
+        internal static (List<DTOResultExercise> ResultsExercise, string? Error) GetResultsExerciseFromText(string text, ExercisesMods currentExerciseMode)
         {
             if (string.IsNullOrWhiteSpace(text))
-                throw new CreateResultExerciseException("Не удалось начать парсинг строки для создания результатов упражнений, т.к. получена пустая строка");
+                return(new List<DTOResultExercise>(), "Не удалось начать парсинг строки для создания результатов упражнений, т.к. получена пустая строка");
 
             List<DTOResultExercise> results = new();
 
@@ -94,75 +93,83 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic
 
             if (currentExerciseMode == ExercisesMods.FreeResult)
             {
-                DTOResultExercise resultExercise = GetResultExerciseFromText(text.Trim(), currentExerciseMode);
+                (DTOResultExercise ResultExercise, string? Error) result = GetResultExerciseFromText(text.Trim(), currentExerciseMode);
 
-                results.Add(resultExercise);
+                if (string.IsNullOrWhiteSpace(result.Error))
+                    results.Add(result.ResultExercise);
             }
             else
             {
                 foreach (string resultExerciseStr in text.Split(separator, stringSplitOptions))
                 {
-                    DTOResultExercise resultExercise = GetResultExerciseFromText(resultExerciseStr.Trim(), currentExerciseMode);
+                    (DTOResultExercise ResultExercise, string? Error) result = GetResultExerciseFromText(resultExerciseStr.Trim(), currentExerciseMode);
 
-                    results.Add(resultExercise);
+                    if (!string.IsNullOrWhiteSpace(result.Error))
+                        return (new List<DTOResultExercise>(), result.Error);
+
+                    results.Add(result.ResultExercise);
                 }
             }
 
-            return results;
+            return (results, null);
         }
 
-        private static DTOResultExercise GetResultExerciseFromText(string resultExerciseStr, ExercisesMods currentExerciseMode)
+        private static (DTOResultExercise ResultExercise, string? Error) GetResultExerciseFromText(string resultExerciseStr, ExercisesMods currentExerciseMode)
         {
             string currentType = currentExerciseMode.ToString().AddQuotes();
+
+            DTOResultExercise DTOResultExercise = new DTOResultExercise();
 
             switch (currentExerciseMode)
             {
                 case ExercisesMods.Count:
 
                     if (!int.TryParse(resultExerciseStr, out int singleCount))
-                        throw new CreateResultExerciseException("Указанное количество повторений не является цифрой");
+                        return(DTOResultExercise, "Указанное количество повторений не является цифрой");
 
-                    return new DTOResultExercise()
-                    {
-                        Count = singleCount,
-                        DateTime = DateTime.Now,
-                    };
+                    DTOResultExercise.Count = singleCount;
+                    DTOResultExercise.DateTime = DateTime.Now;
+
+                    return (DTOResultExercise, null);
 
                 case ExercisesMods.WeightCount:
 
                     string[] resultExerciseWeightCount = resultExerciseStr.Split(" ", stringSplitOptions);
 
                     if (resultExerciseWeightCount.Length != 2)
-                        throw new CreateResultExerciseException($"Некорректный ввод. Ожидаемое кол-во аргументов больше 2 для упражнения с типом {currentType}");
+                        return (DTOResultExercise, $"Некорректный ввод. Ожидаемое кол-во аргументов больше 2 для упражнения с типом {currentType}");
 
-                    string weightStr = resultExerciseWeightCount.FirstOrDefault()
-                        ?? throw new CreateResultExerciseException($"Не удалось получить указанный вес подхода для упражнения с типом {currentType}");
+                    string? weightStr = resultExerciseWeightCount.FirstOrDefault();
+
+                    if (string.IsNullOrWhiteSpace(weightStr))
+                        return (DTOResultExercise, $"Не удалось получить указанный вес подхода для упражнения с типом {currentType}");
 
                     if (!float.TryParse(weightStr, out float weight))
-                        throw new CreateResultExerciseException("Указанное значение веса подхода не является цифрой");
+                        return (DTOResultExercise, "Указанное значение веса подхода не является цифрой");
 
-                    string countStr = resultExerciseWeightCount.Skip(1).FirstOrDefault()
-                        ?? throw new CreateResultExerciseException($"Не удалось получить указанное кол-во повторений для упражнения с типом {currentType}");
+                    string? countStr = resultExerciseWeightCount.Skip(1).FirstOrDefault();
+
+                    if (string.IsNullOrWhiteSpace(countStr))
+                        return (DTOResultExercise, $"Не удалось получить указанное кол-во повторений для упражнения с типом {currentType}");
 
                     if (!int.TryParse(countStr, out int count))
-                        throw new CreateResultExerciseException("Указанное количество повторений не является цифрой");
+                        return(DTOResultExercise, "Указанное количество повторений не является цифрой");
 
-                    return new DTOResultExercise()
-                    {
-                        Weight = weight,
-                        Count = count,
-                        DateTime = DateTime.Now,
-                    };
+                    DTOResultExercise.Weight = weight;
+                    DTOResultExercise.Count = count;
+                    DTOResultExercise.DateTime = DateTime.Now;
+
+                    return (DTOResultExercise, null);
 
                 case ExercisesMods.FreeResult:
-                    return new DTOResultExercise()
-                    {
-                        FreeResult = resultExerciseStr,
-                        DateTime = DateTime.Now,
-                    };
+
+                    DTOResultExercise.FreeResult = resultExerciseStr;
+                    DTOResultExercise.DateTime = DateTime.Now;
+
+                    return (DTOResultExercise, null);
 
                 default:
-                    throw new CreateResultExerciseException($"Неподдерживаемый тип упражнения: {currentType}");
+                    return (DTOResultExercise, $"Неподдерживаемый тип упражнения: {currentType}");
             }
         }
 

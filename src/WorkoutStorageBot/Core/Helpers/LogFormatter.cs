@@ -68,6 +68,7 @@ CallStack: {Environment.StackTrace}";
             string logStr = 
                 @$"[{log.Id}] [{log.LogLevel}] [{log.EventID}] [{log.DateTime.ToString(CommonConsts.Common.DateTimeFormatDateFirst)}] [{from}] [{lastContext}]:
 {logMessage}";
+
             return logStr;
         }
     }

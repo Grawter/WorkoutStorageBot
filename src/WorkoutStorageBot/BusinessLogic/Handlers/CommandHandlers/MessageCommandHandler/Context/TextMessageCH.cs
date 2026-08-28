@@ -4,7 +4,6 @@ using Telegram.Bot.Types.Enums;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Enums;
-using WorkoutStorageBot.BusinessLogic.Exceptions;
 using WorkoutStorageBot.BusinessLogic.Extensions;
 using WorkoutStorageBot.BusinessLogic.Helpers.Converters;
 using WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic;
@@ -34,13 +33,13 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                { MessageNavigationTarget.ChangeNameCycle, (x) => x.ChangeNameCommand(domainType: DomainType.Cycle) },
                { MessageNavigationTarget.ChangeNameDay, (x) => x.ChangeNameCommand(domainType: DomainType.Day) },
                { MessageNavigationTarget.ChangeNameExercise, (x) => x.ChangeNameCommand(domainType: DomainType.Exercise) },
-               { MessageNavigationTarget.FindResultsByDate, (x) => x.FindResultByDateCommand(isNeedFindByCurrentDay: false) },
-               { MessageNavigationTarget.FindResultsByDateInDay, (x) => x.FindResultByDateCommand(isNeedFindByCurrentDay: true) },
+               { MessageNavigationTarget.FindResultsByDate, (x) => x.FindResultsByDateCommand(isNeedFindByCurrentDay: false) },
+               { MessageNavigationTarget.FindResultsByDateInDay, (x) => x.FindResultsByDateCommand(isNeedFindByCurrentDay: true) },
                { MessageNavigationTarget.FindLogByID, (x) => x.FindLogByIDCommand(isEventID: false) },
                { MessageNavigationTarget.FindLogByEventID, (x) => x.FindLogByIDCommand(isEventID: true) },
                { MessageNavigationTarget.SendMessageToUser, (x) => x.SendMessageToUserCommand() },
-               { MessageNavigationTarget.SendMessagesToActiveUsers, (x) => x.MassiveSendMessagesToUsers(isNeedFromDB: false) },
-               { MessageNavigationTarget.SendMessagesToAllUsers, (x) => x.MassiveSendMessagesToUsers(isNeedFromDB: true) },
+               { MessageNavigationTarget.SendMessagesToActiveUsers, (x) => x.MassiveSendMessagesToUsersCommand(isNeedFromDB: false) },
+               { MessageNavigationTarget.SendMessagesToAllUsers, (x) => x.MassiveSendMessagesToUsersCommand(isNeedFromDB: true) },
                { MessageNavigationTarget.ChangeUserState, (x) => x.ChangeUserStateCommand() },
                { MessageNavigationTarget.DeleteUser, (x) => x.DeleteUserCommand() },
                { MessageNavigationTarget.DeleteResultsExercise, (x) => x.DeleteResultsExerciseCommand() },
@@ -112,7 +111,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             {
                 responseTextBuilder = new ResponseTextBuilder("Ошибка при добавлении названия!", $"Цикл с названием {domainName.AddBoldAndQuotes()} уже существует",
                     "Ввведите другое название тренировочного цикла");
-                buttonsSets = (ButtonsSet.None, ButtonsSet.SettingCycles);
+                buttonsSets = GetButtonsSetIfFailedSaveNewDomainValue(ButtonsSet.SettingCycles);
 
                 informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
@@ -192,7 +191,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 case QueryFrom.Start:
                     this.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.AddExercises);
 
-                    responseTextBuilder = new ResponseTextBuilder($"День {currentDay.Name.AddBoldAndQuotes()} сохранён!",
+                    responseTextBuilder = new ResponseTextBuilder($"День {currentDay.Name.AddBoldAndQuotes()} сохранён в цикле {this.CurrentUserContext.DataManager.CurrentCycle.Name}!",
                         $"Введите название упражения для этого дня.{Environment.NewLine}{CommonConsts.Exercise.ExamplesTypesExercise}", 
                         CommonConsts.Exercise.InputFormatExercise);
                     buttonsSets = (ButtonsSet.None, ButtonsSet.None);
@@ -201,7 +200,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 case QueryFrom.Settings:
                     this.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
-                    responseTextBuilder = new ResponseTextBuilder($"День {currentDay.Name.AddBoldAndQuotes()} сохранён!");
+                    responseTextBuilder = new ResponseTextBuilder($"День {currentDay.Name.AddBoldAndQuotes()} сохранён в цикле {this.CurrentUserContext.DataManager.CurrentCycle.Name}!");
                     buttonsSets = (ButtonsSet.AddExercises, ButtonsSet.SettingDays);
 
                     break;
@@ -219,39 +218,31 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             ResponseTextBuilder responseTextBuilder;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
+            this.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull();
+
             Dictionary<string, string>? additionalParameters = new Dictionary<string, string>();
 
             requestTextBuilder.RemoveCompletely(80).WithoutServiceSymbol();
 
-            List<DTOExercise> exercises = new List<DTOExercise>();
+            string? error = null;
 
-            string exceptionMessage = string.Empty;
+            (List<DTOExercise> Exercises, string? Error) resultGettingExerciseFromText = SharedExercisesAndResultsLogicHelper.GetExercisesFromText(requestTextBuilder.Build());
+            error = resultGettingExerciseFromText.Error;
 
-            try
+            if (string.IsNullOrWhiteSpace(error))
             {
-                exercises = SharedExercisesAndResultsLogicHelper.GetExercisesFromText(requestTextBuilder.Build());
-            }
-            catch (CreateExerciseException ex)
-            {
-                exceptionMessage = ex.Message;
-            }
-
-            // Сначала нужно чтобы была общая проверка, есть ли в текущем дне добавляемое упражнение
-            foreach (DTOExercise exercise in exercises)
-            {
-                if (AlreadyExistDomainWithName(exercise.Name, DomainType.Exercise))
-                    exceptionMessage = $"В этом дне уже существует упражнение с названием {exercise.Name.AddBoldAndQuotes()}";
+                // Сначала нужна общая проверка, есть ли в текущем дне добавляемое упражнение
+                foreach (DTOExercise exercise in resultGettingExerciseFromText.Exercises)
+                {
+                    if (AlreadyExistDomainWithName(exercise.Name, DomainType.Exercise))
+                    {
+                        error = $"В этом дне уже существует упражнение с названием {exercise.Name.AddBoldAndQuotes()}";
+                        break;
+                    }
+                }
             }
 
-            if (string.IsNullOrWhiteSpace(exceptionMessage))
-            {
-                if (!this.CurrentUserContext.DataManager.TryAddTempExercises(exercises, out string existingExerciseName))
-                    exceptionMessage = $"В списке фиксаций уже существует упражнение с названием {existingExerciseName.AddBoldAndQuotes()}";
-            }
-
-            this.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull();
-
-            if (string.IsNullOrWhiteSpace(exceptionMessage))
+            if (string.IsNullOrWhiteSpace(error) && this.CurrentUserContext.DataManager.TryAddTempExercises(resultGettingExerciseFromText.Exercises, out error))
             {
                 responseTextBuilder = new ResponseTextBuilder("Упражнение(я) зафиксировано(ы)!",
                     $"Введите след. упражнение(я) для дня {this.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldAndQuotes()} либо нажмите {"Сохранить".AddQuotes()} для сохранения зафиксированных упражнений");
@@ -259,8 +250,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             }
             else
             {
-                responseTextBuilder = new ResponseTextBuilder("Упражнение(я) не зафиксировано(ы)!",
-                    exceptionMessage, string.Empty);
+                responseTextBuilder = new ResponseTextBuilder("Упражнение(я) не зафиксировано(ы)!", error, "textForReplace");
 
                 switch (this.CurrentUserContext.Navigation.QueryFrom)
                 {
@@ -303,19 +293,19 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             ResponseTextBuilder responseTextBuilder;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
-            try
-            {
-                List<DTOResultExercise> resultsExercise = SharedExercisesAndResultsLogicHelper.GetResultsExerciseFromText(requestTextBuilder.Build(), currentExercise.Mode);
+            (List<DTOResultExercise> ResultsExercise, string? Error) result = SharedExercisesAndResultsLogicHelper.GetResultsExerciseFromText(requestTextBuilder.Build(), currentExercise.Mode);
 
-                this.CurrentUserContext.DataManager.AddTempResultsExercise(resultsExercise);
+            if (string.IsNullOrWhiteSpace(result.Error))
+            {
+                this.CurrentUserContext.DataManager.AddTempResultsExercise(result.ResultsExercise);
 
                 responseTextBuilder = new ResponseTextBuilder("Подход(ы) зафиксирован(ы)",
-                @$"Введите результат след. подхода для упражения {this.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldAndQuotes()} 
+                @$"Введите результат след. подхода для упражения {this.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldAndQuotes()}
 либо нажмите {"Сохранить".AddQuotes()} для сохранения указанных подходов");
 
                 buttonsSets = (ButtonsSet.SaveResultsExercise, ButtonsSet.None);
             }
-            catch (CreateResultExerciseException ex)
+            else
             {
                 string inputFormatExerciseResult = currentExercise.Mode switch
                 {
@@ -326,7 +316,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                     _ => throw new NotImplementedException($"Неожиданный тип упражнения: {currentExercise.Mode.ToString()}")
                 };
 
-                responseTextBuilder = new ResponseTextBuilder(ex.Message,
+                responseTextBuilder = new ResponseTextBuilder(result.Error,
                     inputFormatExerciseResult,
                     $"Сбросьте текущие результаты, чтобы вернуться обратно или введите результат заново для упражения {this.CurrentUserContext.DataManager.CurrentExercise.Name.AddBoldAndQuotes()}");
                 buttonsSets = (ButtonsSet.ResetResultsExercise, ButtonsSet.None);
@@ -377,7 +367,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                     {
                         responseTextBuilder = new ResponseTextBuilder("Ошибка при добавлении названия!", $"Цикл с названием {domainName.AddBoldAndQuotes()} уже существует",
                             "Ввведите другое название тренировочного цикла");
-                        buttonsSets = (ButtonsSet.None, ButtonsSet.SettingCycles);
+                        buttonsSets = GetButtonsSetIfFailedSaveNewDomainValue(ButtonsSet.SettingCycles);
 
                         informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
@@ -410,7 +400,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                     if (AlreadyExistDomainWithName(domainName, DomainType.Exercise))
                     {
                         responseTextBuilder = new ResponseTextBuilder("Ошибка при сохранении!", $"В этом дне уже существует упражнение с названием {domainName.AddBoldAndQuotes()}",
-                        $"Введите другое(ие) название(я) упражнение(ий) для дня {this.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name}");
+                        $"Введите другое(ие) название(я) упражнение(ий) для дня {this.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()}");
 
                         buttonsSets = GetButtonsSetIfFailedSaveNewDomainValue(ButtonsSet.SettingExercises);
 
@@ -419,7 +409,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                         return informationSet;
                     }
 
-                    responseTextBuilder = new ResponseTextBuilder("Название сохранено!", "Выберите интересующую настройку для указанного упражнения");
+                    responseTextBuilder = new ResponseTextBuilder("Название упражнения сохранено!", "Выберите интересующую настройку для указанного упражнения");
                     buttonsSets = (ButtonsSet.SettingExercise, ButtonsSet.ExercisesList);
                     break;
                 default:
@@ -471,7 +461,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             }
         }
 
-        private async Task<IInformationSet> FindResultByDateCommand(bool isNeedFindByCurrentDay)
+        private async Task<IInformationSet> FindResultsByDateCommand(bool isNeedFindByCurrentDay)
         {
             IInformationSet informationSet;
 
@@ -607,7 +597,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             return informationSet;
         }
 
-        private async Task<IInformationSet> MassiveSendMessagesToUsers(bool isNeedFromDB)
+        private async Task<IInformationSet> MassiveSendMessagesToUsersCommand(bool isNeedFromDB)
         {
             if (AccessDenied(out IInformationSet? informationSet))
                 return informationSet;
@@ -615,6 +605,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             string text = requestTextBuilder.RemoveCompletely(300).WithoutServiceSymbol().Build();
 
             int counter = 0;
+
             foreach (var userID in isNeedFromDB 
                 ? this.Db.UsersInformation.AsNoTracking().Select(x => x.UserId)
                 : this.ContextKeeper.GetAllKeys())
@@ -642,13 +633,14 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             requestTextBuilder.RemoveCompletely(35).WithoutServiceSymbol();
 
-            string[] parameters = requestTextBuilder.Build().Split(" ", StringSplitOptions.RemoveEmptyEntries);
+            string[] parameters = requestTextBuilder.Build().Split("-", StringSplitOptions.RemoveEmptyEntries);
 
             bool isInvalidParameters = parameters.Length != 2 || string.IsNullOrWhiteSpace(parameters[0]) || string.IsNullOrWhiteSpace(parameters[1]);
 
             if (isInvalidParameters)
             {
-                responseTextBuilder = new ResponseTextBuilder("Некорректные параметры для изменения состояния пользователя", "Введите параметры повторно");
+                responseTextBuilder = new ResponseTextBuilder("Некорректные параметры для изменения состояния пользователя", "Пример: @TestUser-bl", 
+                    "Введите параметры повторно");
                 buttonsSets = (ButtonsSet.None, ButtonsSet.AdminUsers);
                 
                 informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
@@ -722,7 +714,14 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             string userIdentity = requestTextBuilder.RemoveCompletely(35).WithoutServiceSymbol().Build();
 
             if (string.IsNullOrWhiteSpace(userIdentity))
-                throw new NotImplementedException("Некорректные параметры для изменения состояния пользователя");
+            {
+                responseTextBuilder = new ResponseTextBuilder("Некорректные параметры для удаления пользователя", "Пример: @TestUser",
+                    "Введите параметры повторно");
+                buttonsSets = (ButtonsSet.None, ButtonsSet.AdminUsers);
+
+                informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
+                return informationSet;
+            }
 
             UserInformation? user;
 
@@ -743,10 +742,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             }
 
             this.ContextKeeper.RemoveContext(user.UserId);
-
             await adminWrapper.DeleteAccount(user);
-            responseTextBuilder = new ResponseTextBuilder($"Пользователь {user.Username.AddBoldAndQuotes()} ({user.UserId}) был успешно удалён", "Выберите интересующее действие");
 
+            responseTextBuilder = new ResponseTextBuilder($"Пользователь {user.Username.AddBoldAndQuotes()} ({user.UserId}) был успешно удалён", "Выберите интересующее действие");
             buttonsSets = (ButtonsSet.AdminUsers, ButtonsSet.Admin);
 
             informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
@@ -761,22 +759,35 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             ResponseTextBuilder responseTextBuilder;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
+            IInformationSet informationSet;
+
             if (!int.TryParse(countToDeleteStr, out int countToDelete))
             {
                 responseTextBuilder = new ResponseTextBuilder($"Не удалось получить кол-во записей для удаления из текста '{countToDeleteStr}'",
                     "Для удаления введите кол-во последних записей, которые требуется удалить");
-
                 buttonsSets = (ButtonsSet.None, ButtonsSet.SettingExercise);
+
+                informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
+                return informationSet;
             }
-            else
+
+            if (countToDelete < 1)
             {
-                DTOExercise currentExercise = this.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull();
+                responseTextBuilder = new ResponseTextBuilder($"Нельзя удалить меньше одной записи",
+                    "Для удаления введите кол-во последних записей, которые требуется удалить");
+                buttonsSets = (ButtonsSet.None, ButtonsSet.SettingExercise);
 
-                string dbProvider = this.Db.GetDBProvider();
+                informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
+                return informationSet;
+            }
 
-                if (dbProvider == "Microsoft.EntityFrameworkCore.Sqlite")
-                {
-                    string sqlQuery = $@"
+            DTOExercise currentExercise = this.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull();
+
+            string dbProvider = this.Db.GetDBProvider();
+
+            if (dbProvider == "Microsoft.EntityFrameworkCore.Sqlite")
+            {
+                string sqlQuery = $@"
 DELETE FROM [ResultsExercises]
 WHERE Id IN (
     SELECT Id 
@@ -786,20 +797,19 @@ WHERE Id IN (
     LIMIT {countToDelete}
 )";
 
-                    int numberOfRowsAffected = await this.Db.ExecuteSQL(sqlQuery);
+                int numberOfRowsAffected = await this.Db.ExecuteSQL(sqlQuery);
 
-                    responseTextBuilder = new ResponseTextBuilder($"Было удалено {numberOfRowsAffected} строк",
-                        $"Выберите интересуюущую настройку для упражения {currentExercise.Name.AddBoldAndQuotes()}");
+                responseTextBuilder = new ResponseTextBuilder($"Было удалено {numberOfRowsAffected} строк",
+                    $"Выберите интересуюущую настройку для упражения {currentExercise.Name.AddBoldAndQuotes()}");
 
-                    buttonsSets = (ButtonsSet.SettingExercise, ButtonsSet.ExercisesList);
-                }
-                else
-                    throw new NotImplementedException($"Операция не поддерживается для DBProvider {dbProvider}");
+                buttonsSets = (ButtonsSet.SettingExercise, ButtonsSet.ExercisesList);
             }
+            else
+                throw new NotImplementedException($"Операция не поддерживается для DBProvider {dbProvider}");
 
             this.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
-            IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
+            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }

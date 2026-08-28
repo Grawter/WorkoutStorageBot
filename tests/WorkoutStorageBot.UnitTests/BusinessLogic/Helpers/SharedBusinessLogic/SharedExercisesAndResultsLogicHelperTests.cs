@@ -1,7 +1,6 @@
 ﻿using FluentAssertions;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Enums;
-using WorkoutStorageBot.BusinessLogic.Exceptions;
 using WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.UnitTests.Helpers;
@@ -40,42 +39,59 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Helpers.SharedBusinessLogic
         }
 
         [Fact]
-        public void GetExercisesFromText_WithEmptyText_ShouldThrowCreateExerciseException()
+        public void GetExercisesFromText_WithEmptyText_ShouldReturnError()
         {
             // Arrange
             string text = string.Empty;
 
             // Act
-            Action act = () => SharedExercisesAndResultsLogicHelper.GetExercisesFromText(text);
+            (List<DTOExercise> DTOExercises, string? Error) = SharedExercisesAndResultsLogicHelper.GetExercisesFromText(text);
 
             // Assert
-            act.Should().Throw<CreateExerciseException>();
+            DTOExercises.Should().BeEmpty();
+            Error.Should().Be("Не удалось начать парсинг строки для создания упражнений, т.к. получена пустая строка");
         }
 
         [Fact]
-        public void GetExercisesFromText_WithTextWithoutExerciseType_ShouldThrowCreateExerciseException()
+        public void GetExercisesFromText_WithTextWithoutExerciseType_ShouldReturnErrorn()
         {
             // Arrange
             string text = "Exercise0-;Exercise1-1";
 
             // Act
-            Action act = () => SharedExercisesAndResultsLogicHelper.GetExercisesFromText(text);
+            (List<DTOExercise> Exercises, string? Error) = SharedExercisesAndResultsLogicHelper.GetExercisesFromText(text);
 
             // Assert
-            act.Should().Throw<CreateExerciseException>();
+            Exercises.Should().BeEmpty();
+            Error.Should().Be("Не удалось получить тип упражнения 'Exercise0'");
         }
 
         [Fact]
-        public void GetExercisesFromText_WithTextWithoutExerciseName_ShouldThrowCreateExerciseException()
+        public void GetExercisesFromText_WithTextWithoutExerciseName_ShouldReturnError()
         {
             // Arrange
             string text = "Exercise0-0;-1";
 
             // Act
-            Action act = () => SharedExercisesAndResultsLogicHelper.GetExercisesFromText(text);
+            (List<DTOExercise> DTOExercises, string? Error) = SharedExercisesAndResultsLogicHelper.GetExercisesFromText(text);
 
             // Assert
-            act.Should().Throw<CreateExerciseException>();
+            DTOExercises.Should().BeEmpty();
+            Error.Should().Be("Не удалось получить тип упражнения '1'");
+        }
+
+        [Fact]
+        public void GetExercisesFromText_WithTextWithBadExerciseType_ShouldReturnError()
+        {
+            // Arrange
+            string text = "Exercise0-10";
+
+            // Act
+            (List<DTOExercise> DTOExercises, string? Error) = SharedExercisesAndResultsLogicHelper.GetExercisesFromText(text);
+
+            // Assert
+            DTOExercises.Should().BeEmpty();
+            Error.Should().Be("Указанный тип (10) упражнения 'Exercise0' не относится к допустимым");
         }
 
         [Fact]
@@ -85,7 +101,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Helpers.SharedBusinessLogic
             string text = "Exercise0-0";
 
             // Act
-            List<DTOExercise> DTOExercises = SharedExercisesAndResultsLogicHelper.GetExercisesFromText(text);
+            (List<DTOExercise> DTOExercises, string? Error) = SharedExercisesAndResultsLogicHelper.GetExercisesFromText(text);
 
             // Assert
             DTOExercises.Should().HaveCount(1);
@@ -101,7 +117,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Helpers.SharedBusinessLogic
             string text = "Exercise0-0;Exercise1-1;Exercise2-2;Exercise3-3;";
 
             // Act
-            List<DTOExercise> DTOExercises = SharedExercisesAndResultsLogicHelper.GetExercisesFromText(text);
+            (List<DTOExercise> DTOExercises, string? Error) = SharedExercisesAndResultsLogicHelper.GetExercisesFromText(text);
 
             // Assert
             DTOExercises.Should().HaveCount(4);
@@ -130,10 +146,11 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Helpers.SharedBusinessLogic
             string text = string.Empty;
 
             // Act
-            Action act = () => SharedExercisesAndResultsLogicHelper.GetResultsExerciseFromText(text, currentExerciseMode);
+            (List<DTOResultExercise> ResultsExercise, string? Error) result = SharedExercisesAndResultsLogicHelper.GetResultsExerciseFromText(text, currentExerciseMode);
 
             // Assert
-            act.Should().Throw<CreateResultExerciseException>();
+            result.Error.Should().NotBeNullOrWhiteSpace();
+            result.ResultsExercise.Should().BeEmpty();
         }
 
         [Theory]
@@ -146,10 +163,11 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Helpers.SharedBusinessLogic
             string text = "Abc";
 
             // Act
-            Action act = () => SharedExercisesAndResultsLogicHelper.GetResultsExerciseFromText(text, currentExerciseMode);
+            (List<DTOResultExercise> ResultsExercise, string? Error) result = SharedExercisesAndResultsLogicHelper.GetResultsExerciseFromText(text, currentExerciseMode);
 
             // Assert
-            act.Should().Throw<CreateResultExerciseException>();
+            result.Error.Should().NotBeNullOrWhiteSpace();
+            result.ResultsExercise.Should().BeEmpty();
         }
 
         [Fact]
@@ -159,10 +177,11 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Helpers.SharedBusinessLogic
             string text = "11 abc 13";
 
             // Act
-            Action act = () => SharedExercisesAndResultsLogicHelper.GetResultsExerciseFromText(text, ExercisesMods.Count);
+            (List<DTOResultExercise> ResultsExercise, string? Error) result = SharedExercisesAndResultsLogicHelper.GetResultsExerciseFromText(text, ExercisesMods.Count);
 
             // Assert
-            act.Should().Throw<CreateResultExerciseException>();
+            result.Error.Should().NotBeNullOrWhiteSpace();
+            result.ResultsExercise.Should().BeEmpty();
         }
 
         [Fact]
@@ -172,25 +191,25 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Helpers.SharedBusinessLogic
             string text = "11 12 13";
 
             // Act
-            List<DTOResultExercise> results = SharedExercisesAndResultsLogicHelper.GetResultsExerciseFromText(text, ExercisesMods.Count);
+            (List<DTOResultExercise> ResultsExercise, string? Error) result = SharedExercisesAndResultsLogicHelper.GetResultsExerciseFromText(text, ExercisesMods.Count);
 
             // Assert
-            results.Should().HaveCount(3);
+            result.ResultsExercise.Should().HaveCount(3);
 
-            results[0].Count.Should().Be(11);
-            results[0].Weight.Should().BeNull();
-            results[0].DateTime.Date.Should().Be(DateTime.Now.Date);
-            results[0].FreeResult.Should().BeNull();
+            result.ResultsExercise[0].Count.Should().Be(11);
+            result.ResultsExercise[0].Weight.Should().BeNull();
+            result.ResultsExercise[0].DateTime.Date.Should().Be(DateTime.Now.Date);
+            result.ResultsExercise[0].FreeResult.Should().BeNull();
 
-            results[1].Count.Should().Be(12);
-            results[1].Weight.Should().BeNull();
-            results[1].DateTime.Date.Should().Be(DateTime.Now.Date);
-            results[1].FreeResult.Should().BeNull();
+            result.ResultsExercise[1].Count.Should().Be(12);
+            result.ResultsExercise[1].Weight.Should().BeNull();
+            result.ResultsExercise[1].DateTime.Date.Should().Be(DateTime.Now.Date);
+            result.ResultsExercise[1].FreeResult.Should().BeNull();
 
-            results[2].Count.Should().Be(13);
-            results[2].Weight.Should().BeNull();
-            results[2].DateTime.Date.Should().Be(DateTime.Now.Date);
-            results[2].FreeResult.Should().BeNull();
+            result.ResultsExercise[2].Count.Should().Be(13);
+            result.ResultsExercise[2].Weight.Should().BeNull();
+            result.ResultsExercise[2].DateTime.Date.Should().Be(DateTime.Now.Date);
+            result.ResultsExercise[2].FreeResult.Should().BeNull();
         }
 
         [Fact]
@@ -200,10 +219,11 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Helpers.SharedBusinessLogic
             string text = "11 12 13";
 
             // Act
-            Action act = () => SharedExercisesAndResultsLogicHelper.GetResultsExerciseFromText(text, ExercisesMods.WeightCount);
+            (List<DTOResultExercise> ResultsExercise, string? Error) result = SharedExercisesAndResultsLogicHelper.GetResultsExerciseFromText(text, ExercisesMods.WeightCount);
 
             // Assert
-            act.Should().Throw<CreateResultExerciseException>();
+            result.Error.Should().NotBeNullOrWhiteSpace();
+            result.ResultsExercise.Should().BeEmpty();
         }
 
         [Fact]
@@ -213,10 +233,11 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Helpers.SharedBusinessLogic
             string text = "11 12;ab 14";
 
             // Act
-            Action act = () => SharedExercisesAndResultsLogicHelper.GetResultsExerciseFromText(text, ExercisesMods.WeightCount);
+            (List<DTOResultExercise> ResultsExercise, string? Error) result = SharedExercisesAndResultsLogicHelper.GetResultsExerciseFromText(text, ExercisesMods.WeightCount);
 
             // Assert
-            act.Should().Throw<CreateResultExerciseException>();
+            result.Error.Should().NotBeNullOrWhiteSpace();
+            result.ResultsExercise.Should().BeEmpty();
         }
 
         [Fact]
@@ -226,10 +247,11 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Helpers.SharedBusinessLogic
             string text = "11 12;13 ab";
 
             // Act
-            Action act = () => SharedExercisesAndResultsLogicHelper.GetResultsExerciseFromText(text, ExercisesMods.WeightCount);
+            (List<DTOResultExercise> ResultsExercise, string? Error) result = SharedExercisesAndResultsLogicHelper.GetResultsExerciseFromText(text, ExercisesMods.WeightCount);
 
             // Assert
-            act.Should().Throw<CreateResultExerciseException>();
+            result.Error.Should().NotBeNullOrWhiteSpace();
+            result.ResultsExercise.Should().BeEmpty();
         }
 
         [Theory]
@@ -241,20 +263,20 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Helpers.SharedBusinessLogic
             string text = isNeedAdditionalSpace ? "11 12; 13 14" : "11 12;13 14";
 
             // Act
-            List<DTOResultExercise> results = SharedExercisesAndResultsLogicHelper.GetResultsExerciseFromText(text, ExercisesMods.WeightCount);
+            (List<DTOResultExercise> ResultsExercise, string? Error) result = SharedExercisesAndResultsLogicHelper.GetResultsExerciseFromText(text, ExercisesMods.WeightCount);
 
             // Assert
-            results.Should().HaveCount(2);
+            result.ResultsExercise.Should().HaveCount(2);
 
-            results[0].Weight.Should().Be(11.0f);
-            results[0].Count.Should().Be(12);
-            results[0].DateTime.Date.Should().Be(DateTime.Now.Date);
-            results[0].FreeResult.Should().BeNull();
+            result.ResultsExercise[0].Weight.Should().Be(11.0f);
+            result.ResultsExercise[0].Count.Should().Be(12);
+            result.ResultsExercise[0].DateTime.Date.Should().Be(DateTime.Now.Date);
+            result.ResultsExercise[0].FreeResult.Should().BeNull();
 
-            results[1].Weight.Should().Be(13.0f);
-            results[1].Count.Should().Be(14);
-            results[1].DateTime.Date.Should().Be(DateTime.Now.Date);
-            results[1].FreeResult.Should().BeNull();
+            result.ResultsExercise[1].Weight.Should().Be(13.0f);
+            result.ResultsExercise[1].Count.Should().Be(14);
+            result.ResultsExercise[1].DateTime.Date.Should().Be(DateTime.Now.Date);
+            result.ResultsExercise[1].FreeResult.Should().BeNull();
         }
 
         [Fact]
@@ -264,10 +286,11 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Helpers.SharedBusinessLogic
             string text = "12:34";
 
             // Act
-            Action act = () => SharedExercisesAndResultsLogicHelper.GetResultsExerciseFromText(text, ExercisesMods.Timer);
+            (List<DTOResultExercise> ResultsExercise, string? Error) result = SharedExercisesAndResultsLogicHelper.GetResultsExerciseFromText(text, ExercisesMods.Timer);
 
             // Assert
-            act.Should().Throw<CreateResultExerciseException>();
+            result.Error.Should().NotBeNullOrWhiteSpace();
+            result.ResultsExercise.Should().BeEmpty();
         }
 
         [Fact]
@@ -277,14 +300,14 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Helpers.SharedBusinessLogic
             string text = "Abcd 12:34 ...";
 
             // Act
-            List<DTOResultExercise> results = SharedExercisesAndResultsLogicHelper.GetResultsExerciseFromText(text, ExercisesMods.FreeResult);
+            (List<DTOResultExercise> ResultsExercise, string? Error) result = SharedExercisesAndResultsLogicHelper.GetResultsExerciseFromText(text, ExercisesMods.FreeResult);
 
             // Assert
-            results.Should().HaveCount(1);
-            results[0].Weight.Should().BeNull();
-            results[0].Count.Should().BeNull();
-            results[0].DateTime.Date.Should().Be(DateTime.Now.Date);
-            results[0].FreeResult.Should().Be(text);
+            result.ResultsExercise.Should().HaveCount(1);
+            result.ResultsExercise[0].Weight.Should().BeNull();
+            result.ResultsExercise[0].Count.Should().BeNull();
+            result.ResultsExercise[0].DateTime.Date.Should().Be(DateTime.Now.Date);
+            result.ResultsExercise[0].FreeResult.Should().Be(text);
         }
 
         [Fact]

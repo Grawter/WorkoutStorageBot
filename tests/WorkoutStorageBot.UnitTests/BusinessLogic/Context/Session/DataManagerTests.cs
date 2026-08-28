@@ -2,6 +2,7 @@
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Enums;
+using WorkoutStorageBot.BusinessLogic.Extensions;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.Model.Interfaces;
 using WorkoutStorageBot.UnitTests.Helpers;
@@ -159,7 +160,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Context.Session
             List<DTOExercise> exercises = new List<DTOExercise>();
 
             // Act
-            Action act = () => dataManager.TryAddTempExercises(exercises, out string existingExerciseName);
+            Action act = () => dataManager.TryAddTempExercises(exercises, out string? error);
 
             // Assert
             act.Should().Throw<InvalidOperationException>();
@@ -176,7 +177,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Context.Session
             List<DTOExercise> exercises = DTOModelBuilder.DTOTestExercises;
 
             // Act
-            Action act = () => dataManager.TryAddTempExercises(exercises, out string existingExerciseName);
+            Action act = () => dataManager.TryAddTempExercises(exercises, out string? error);
 
             // Assert
             act.Should().Throw<ArgumentNullException>();
@@ -197,7 +198,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Context.Session
             List<DTOExercise> tempExercises = DTOModelBuilder.DTOTestExercises;
 
             // Act
-            bool result = dataManager.TryAddTempExercises(tempExercises, out string existingExerciseName);
+            bool result = dataManager.TryAddTempExercises(tempExercises, out string? error);
 
             // Assert
             result.Should().BeTrue();
@@ -220,7 +221,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Context.Session
 
             List<DTOExercise> existingExercises = DTOModelBuilder.DTOTestExercises;
 
-            dataManager.TryAddTempExercises(existingExercises, out string _);
+            dataManager.TryAddTempExercises(existingExercises, out _);
 
             List<DTOExercise> newExercises = new List<DTOExercise>()
             {
@@ -231,7 +232,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Context.Session
             };
 
             // Act
-            bool result = dataManager.TryAddTempExercises(newExercises, out string existingExerciseName);
+            bool result = dataManager.TryAddTempExercises(newExercises, out string? error);
 
             // Assert
             result.Should().BeTrue();
@@ -258,12 +259,12 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Context.Session
             };
 
             // Act
-            bool result = dataManager.TryAddTempExercises(newExercises, out string existingExerciseName);
+            bool result = dataManager.TryAddTempExercises(newExercises, out string? error);
 
             // Assert
             result.Should().BeFalse();
             dataManager.TempExercises.Should().HaveCount(0);
-            existingExerciseName.Should().Be("TestExercise3");
+            error.Should().Be($"В списке фиксаций уже существует упражнение с названием {"TestExercise3".AddBoldAndQuotes()}");
         }
 
         [Fact]
@@ -280,7 +281,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Context.Session
 
             List<DTOExercise> existingExercises = DTOModelBuilder.DTOTestExercises;
 
-            dataManager.TryAddTempExercises(existingExercises, out string _);
+            dataManager.TryAddTempExercises(existingExercises, out _);
 
             List<DTOExercise> newExercises = new List<DTOExercise>()
             {
@@ -291,13 +292,13 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Context.Session
             };
 
             // Act
-            bool result = dataManager.TryAddTempExercises(newExercises, out string existingExerciseName);
+            bool result = dataManager.TryAddTempExercises(newExercises, out string? error);
 
             // Assert
             result.Should().BeFalse();
             dataManager.TempExercises.Should().HaveCount(existingExercises.Count);
             dataManager.TempExercises.Should().BeEquivalentTo(existingExercises);
-            existingExerciseName.Should().Be("TestExercise7");
+            error.Should().Be($"В списке фиксаций уже существует упражнение с названием {"TestExercise7".AddBoldAndQuotes()}");
         }
 
         [Fact]
@@ -314,7 +315,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Context.Session
 
             List<DTOExercise> existingExercises = DTOModelBuilder.DTOTestExercises;
 
-            dataManager.TryAddTempExercises(existingExercises, out string _);
+            dataManager.TryAddTempExercises(existingExercises, out _);
 
             // Act
             dataManager.ResetTempExercises();
@@ -442,7 +443,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Context.Session
             dataManager.SetCurrentDomain(DTOModelBuilder.DTOTestDay);
             dataManager.SetCurrentDomain(DTOModelBuilder.DTOTestExercise);
 
-            dataManager.TryAddTempExercises(DTOModelBuilder.DTOTestExercises, out string _);
+            dataManager.TryAddTempExercises(DTOModelBuilder.DTOTestExercises, out _);
             dataManager.AddTempResultsExercise(DTOModelBuilder.DTOTestResultExercises);
 
             dataManager.SetCurrentDateTimeToExerciseTimer();
@@ -551,7 +552,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Context.Session
             dataManager.SetCurrentDomain(DTOModelBuilder.DTOTestDay);
             dataManager.SetCurrentDomain(DTOModelBuilder.DTOTestExercise);
 
-            dataManager.TryAddTempExercises(DTOModelBuilder.DTOTestExercises, out string _);
+            dataManager.TryAddTempExercises(DTOModelBuilder.DTOTestExercises, out _);
             dataManager.AddTempResultsExercise(DTOModelBuilder.DTOTestResultExercises);
 
             dataManager.SetCurrentDateTimeToExerciseTimer();
@@ -605,7 +606,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Context.Session
             dataManager.SetCurrentDomain(DTOModelBuilder.DTOTestDay);
             dataManager.SetCurrentDomain(DTOModelBuilder.DTOTestExercise);
 
-            dataManager.TryAddTempExercises(DTOModelBuilder.DTOTestExercises, out string _);
+            dataManager.TryAddTempExercises(DTOModelBuilder.DTOTestExercises, out _);
             dataManager.AddTempResultsExercise(DTOModelBuilder.DTOTestResultExercises);
 
             dataManager.SetCurrentDateTimeToExerciseTimer();
@@ -657,7 +658,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Context.Session
 
             dataManager.SetCurrentDomain(DTOModelBuilder.DTOTestDay);
             dataManager.SetCurrentDomain(DTOModelBuilder.DTOTestExercise);
-            dataManager.TryAddTempExercises(DTOModelBuilder.DTOTestExercises, out string _);
+            dataManager.TryAddTempExercises(DTOModelBuilder.DTOTestExercises, out _);
             dataManager.AddTempResultsExercise(DTOModelBuilder.DTOTestResultExercises);
 
             dataManager.SetCurrentDateTimeToExerciseTimer();

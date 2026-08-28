@@ -1,4 +1,6 @@
-﻿using WorkoutStorageBot.BusinessLogic.Enums;
+﻿using System.Diagnostics.CodeAnalysis;
+using WorkoutStorageBot.BusinessLogic.Enums;
+using WorkoutStorageBot.BusinessLogic.Extensions;
 using WorkoutStorageBot.Core.Extensions;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.Model.Interfaces;
@@ -54,7 +56,7 @@ namespace WorkoutStorageBot.BusinessLogic.Context.Session
             CurrentExercise = exercise;
         }
 
-        internal bool TryAddTempExercises(List<DTOExercise> exercises, out string existingExerciseName)
+        internal bool TryAddTempExercises(List<DTOExercise> exercises, [NotNullWhen(false)] out string? error)
         {
             if (!exercises.HasItemsInCollection())
                 throw new InvalidOperationException($"Получена пустая коллеция {nameof(exercises)}");
@@ -62,7 +64,7 @@ namespace WorkoutStorageBot.BusinessLogic.Context.Session
             if (TempExercises == null)
                 TempExercises = new();
 
-            existingExerciseName = string.Empty;
+            error = null;
 
             CurrentDay.ThrowIfNull();
 
@@ -73,7 +75,7 @@ namespace WorkoutStorageBot.BusinessLogic.Context.Session
                 if (TempExercises.Any(e => e.Name == exercise.Name) ||
                     newTempExercises.Any(e => e.Name == exercise.Name))
                 {
-                    existingExerciseName = exercise.Name;
+                    error = $"В списке фиксаций уже существует упражнение с названием {exercise.Name.AddBoldAndQuotes()}";
 
                     return false;
                 }

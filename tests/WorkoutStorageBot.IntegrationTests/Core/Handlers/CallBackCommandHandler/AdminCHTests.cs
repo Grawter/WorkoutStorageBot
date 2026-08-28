@@ -616,6 +616,7 @@ TestLog2
         public void Dispose()
         {
             builder.Dispose();
+            cts.Dispose();
         }
     }
 }
