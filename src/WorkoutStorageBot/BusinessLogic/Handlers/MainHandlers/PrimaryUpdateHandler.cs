@@ -52,7 +52,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
             }
             else if (updateInfo is ShortUpdateInfo shortUpdateInfo)
             {
-                (UserContext? userContext, bool isNewContext) = await GetOrCreateContext(shortUpdateInfo.User);
+                (UserContext? userContext, bool isNewContext) = await TryGetOrCreateContext(shortUpdateInfo.User);
 
                 if (userContext == null)
                     return handlerResult;
@@ -73,17 +73,16 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
         private void ProcessUnknownUpdateType(UnknownUpdateInfo unknownUpdateInfo)
             => Logger.LogWarning($"Получен неизвестный update c типом {unknownUpdateInfo.UpdateType.ToString()}");
 
-        private async Task<(UserContext? userContext, bool isNewContext)> GetOrCreateContext(User user)
+        private async Task<(UserContext? userContext, bool isNewContext)> TryGetOrCreateContext(User user)
         {
             UserContext? userContext = GetExistingContext(user.Id);
 
             if (userContext == null)
-                return (await CreateNewContext(user), true);
-
-            if (AdminWrapper.UserHasAccess(userContext.UserInformation))
+                return (await TryCreateNewContext(user), true);
+            else if (AdminWrapper.UserHasAccess(userContext.UserInformation))
                 return (userContext, false);
-
-            return (null, false);
+            else
+                return (null, false);
         }
 
         private UserContext? GetExistingContext(long userID)
@@ -91,9 +90,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
                 ? ContextKeeper.GetContext(userID)
                 : null;
 
-        private async Task<UserContext?> CreateNewContext(User user)
+        private async Task<UserContext?> TryCreateNewContext(User user)
         {
-            UserInformation? userInformation = await GetOrCreateNewUserInformation(user);
+            UserInformation? userInformation = await GetOrTryCreateNewUserInformation(user);
 
             if (userInformation == null || !AdminWrapper.UserHasAccess(userInformation))
                 return null;
@@ -109,7 +108,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
             return userContext;
         }
 
-        private async Task<UserInformation?> GetOrCreateNewUserInformation(User user)
+        private async Task<UserInformation?> GetOrTryCreateNewUserInformation(User user)
             => await AdminWrapper.GetFullUserInformationWithoutTracking(user.Id) 
                 ?? await AdminWrapper.TryCreateNewUserInformation(user);
 

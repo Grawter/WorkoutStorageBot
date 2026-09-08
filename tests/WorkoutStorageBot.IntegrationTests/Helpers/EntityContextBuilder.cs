@@ -143,13 +143,15 @@ namespace WorkoutStorageBot.UnitTests.Helpers
             return this;
         }
 
-        internal EntityContextBuilder WithUserInformation()
+        internal EntityContextBuilder WithUserInformation(bool whiteList = false, bool blackList = false)
         {
             testUserInformation = new UserInformation
             {
                 FirstName = "TestFirstName",
                 Username = "@TestUsername",
                 UserId = 1,
+                WhiteList = whiteList,
+                BlackList = blackList
             };
 
             Context.UsersInformation.Add(testUserInformation);

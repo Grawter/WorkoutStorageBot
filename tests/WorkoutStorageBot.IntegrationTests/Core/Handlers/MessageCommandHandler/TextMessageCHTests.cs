@@ -77,7 +77,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
         [InlineData("/start", false)]
         [InlineData("/start", true)]
         [InlineData("Other", false)]
-        public async Task GetInformationSet_WithDefaultNavigationTargetShouldReturnExpectedIInformationSet(string data, bool hasActiveCycle)
+        public async Task GetInformationSet_WithDefaultNavigation_TargetShouldReturnExpectedIInformationSet(string data, bool hasActiveCycle)
         {
             // Arrange
             MessageNavigationTarget messageNavigationTarget = MessageNavigationTarget.Default;

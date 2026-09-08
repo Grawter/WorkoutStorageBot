@@ -38,7 +38,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
                     updateHandlerResult.InformationSet = await ProcessCallbackQuery(updateHandlerResult);
                     break;
                 default:
-                    throw new NotImplementedException($"Неожиданный update.type: {updateHandlerResult.ShortUpdateInfo.UpdateType}");
+                    throw new NotImplementedException($"Неожиданный UpdateType: {updateHandlerResult.ShortUpdateInfo.UpdateType}");
             }
 
             return updateHandlerResult;

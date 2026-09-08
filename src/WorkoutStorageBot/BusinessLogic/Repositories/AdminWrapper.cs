@@ -77,7 +77,7 @@ namespace WorkoutStorageBot.BusinessLogic.Repositories
             }
             else
             {
-                AddLogAction($"Не удалось создать нового пользователя {user.Id} ({user.Username})");
+                AddLogAction($"Не удалось создать нового пользователя {user.Id} ({user.Username}), т.к. включен режим белого списка");
                 return default;
             }
         }
