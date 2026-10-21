@@ -11,7 +11,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.Factories
 
         protected override void AddBusinessButtons(Dictionary<string, string>? additionalParameters = null)
         {
-            GetDomainsInButtons(CurrentUserContext.UserInformation.Cycles.Where(c => c.IsArchive), "UnArchive");
+            GetDomainsInButtons(CurrentUserContext.UserInformation.Cycles.Where(c => c.IsArchive), "UnArchive", true);
         }
     }
 }

@@ -217,10 +217,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
         {
             ResponseTextBuilder responseTextBuilder;
             (ButtonsSet, ButtonsSet) buttonsSets;
+            IInformationSet informationSet;
 
             this.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull();
-
-            Dictionary<string, string>? additionalParameters = new Dictionary<string, string>();
 
             requestTextBuilder.RemoveCompletely(80).WithoutServiceSymbol();
 
@@ -270,16 +269,18 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 {CommonConsts.Exercise.InputFormatExercise}");
                         buttonsSets = (ButtonsSet.ResetTempDomains, ButtonsSet.None);
 
-                        additionalParameters.Add("type", CommonConsts.DomainsAndEntities.Exercise);
+                        Dictionary<string, string> additionalParameters = new Dictionary<string, string>() { { "type", CommonConsts.DomainsAndEntities.Exercise } };
 
-                        break;
+                        informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets, additionalParameters);
+
+                        return informationSet;
 
                     default:
                         throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {this.CurrentUserContext.Navigation.QueryFrom}");
                 }
             }
 
-            IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets, additionalParameters);
+            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             return informationSet;
         }
@@ -787,17 +788,38 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             if (dbProvider == "Microsoft.EntityFrameworkCore.Sqlite")
             {
-                string sqlQuery = $@"
-DELETE FROM [ResultsExercises]
-WHERE Id IN (
-    SELECT Id 
-    FROM [ResultsExercises]
-    WHERE ExerciseId = {currentExercise.Id}
-    ORDER BY DateTime DESC, ID DESC
-    LIMIT {countToDelete}
-)";
+                string selectSql = $@"
+SELECT Id 
+FROM [ResultsExercises]
+WHERE ExerciseId = {currentExercise.Id}
+ORDER BY DateTime DESC, ID DESC
+LIMIT {countToDelete}";
 
-                int numberOfRowsAffected = await this.Db.ExecuteSQL(sqlQuery);
+                HashSet<int> idsToDelete = await this.Db.ResultsExercises.FromSqlRaw(selectSql)
+                                                                         .Select(r => r.Id)
+                                                                         .ToHashSetAsync();
+
+                int numberOfRowsAffected = 0;
+
+                if (idsToDelete.Count > 0)
+                {
+                    string ids = string.Join(",", idsToDelete);
+
+                    string deleteSql = $@"
+DELETE FROM [ResultsExercises]
+WHERE Id IN ({ids})";
+
+                    numberOfRowsAffected = await this.Db.ExecuteSQL(deleteSql);
+
+                    var tracked = this.Db.ChangeTracker.Entries<ResultExercise>()
+                        .Where(e => idsToDelete.Contains(e.Entity.Id))
+                        .ToList();
+
+                    foreach (var entry in tracked)
+                        entry.State = EntityState.Detached;
+
+                    this.CurrentUserContext.DataManager.CurrentExercise.ResultsExercise.RemoveAll(x => idsToDelete.Contains(x.Id));
+                }
 
                 responseTextBuilder = new ResponseTextBuilder($"Было удалено {numberOfRowsAffected} строк",
                     $"Выберите интересуюущую настройку для упражения {currentExercise.Name.AddBoldAndQuotes()}");

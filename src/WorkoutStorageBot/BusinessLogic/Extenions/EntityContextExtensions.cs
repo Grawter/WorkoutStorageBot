@@ -124,7 +124,8 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
             switch (DTOByEntity)
             {
                 case DTOCycle DTOCycle:
-                    Cycle cycle = await db.Cycles.FirstAsync(x => x.Id == DTOCycle.Id);
+                    Cycle? cycle = await db.Cycles.FindAsync(DTOCycle.Id)
+                        ?? throw new InvalidOperationException($"Не удалось найти цикл с Id = {DTOCycle.Id} для обновления");
 
                     if (cycle.Name != DTOCycle.Name)
                         cycle.Name = DTOCycle.Name;
@@ -140,7 +141,8 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
 
                     break;
                 case DTODay DTODay:
-                    Day day = await db.Days.FirstAsync(x => x.Id == DTODay.Id);
+                    Day? day = await db.Days.FindAsync(DTODay.Id)
+                        ?? throw new InvalidOperationException($"Не удалось найти день с Id = {DTODay.Id} для обновления");
 
                     if (day.Name != DTODay.Name)
                         day.Name = DTODay.Name;
@@ -153,7 +155,8 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
 
                     break;
                 case DTOExercise DTOExercise:
-                    Exercise exercise = await db.Exercises.FirstAsync(x => x.Id == DTOExercise.Id);
+                    Exercise exercise = await db.Exercises.FindAsync(DTOExercise.Id)
+                        ?? throw new InvalidOperationException($"Не удалось найти упражнение с Id = {DTOExercise.Id} для обновления");
 
                     if (exercise.Name != DTOExercise.Name)
                         exercise.Name = DTOExercise.Name;
@@ -170,7 +173,8 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
                     break;
                 case DTOResultExercise DTOResultExercise:
 
-                    ResultExercise resultExercise = await db.ResultsExercises.FirstAsync(x => x.Id == DTOResultExercise.Id);
+                    ResultExercise resultExercise = await db.ResultsExercises.FindAsync(DTOResultExercise.Id)
+                        ?? throw new InvalidOperationException($"Не удалось найти результат упражнение с Id = {DTOResultExercise.Id} для обновления");
 
                     if (resultExercise.Count != DTOResultExercise.Count)
                         resultExercise.Count = DTOResultExercise.Count;
@@ -214,7 +218,9 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
             ArgumentNullException.ThrowIfNull(db);
             ArgumentNullException.ThrowIfNull(DTOByEntity);
 
-            IEntity entity = ConvertDTOToEntity(DTOByEntity);
+            IEntity entity = DTOByEntity is IDTODomain domain
+                ? await db.GetDomainByDTO(domain)
+                : await db.ResultsExercises.FindAsync(DTOByEntity.Id) ?? throw new InvalidOperationException($"Not found ResultExercise with ID = {DTOByEntity.Id}");
 
             db.Remove(entity);
 

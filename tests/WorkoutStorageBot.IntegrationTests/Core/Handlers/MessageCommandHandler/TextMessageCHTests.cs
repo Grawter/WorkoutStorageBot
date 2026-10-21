@@ -684,7 +684,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
 ");
                         informationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.None));
 
-                        informationSet.AdditionalParameters.Should().BeEmpty();
+                        informationSet.AdditionalParameters.Should().BeNull();
                     }
                     else if (queryFrom == QueryFrom.Settings)
                     {
@@ -725,7 +725,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
 ");
                         informationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.None));
 
-                        informationSet.AdditionalParameters.Should().BeEmpty();
+                        informationSet.AdditionalParameters.Should().BeNull();
                     }
                     else if (queryFrom == QueryFrom.Settings)
                     {
@@ -758,7 +758,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
 ");
                     informationSet.ButtonsSets.Should().Be((ButtonsSet.SaveExercises, ButtonsSet.None));
 
-                    informationSet.AdditionalParameters.Should().BeEmpty();
+                    informationSet.AdditionalParameters.Should().BeNull();
                 }
 
                 localCommandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);

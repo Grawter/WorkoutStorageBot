@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorkoutStorageBot.UnitTests
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorkoutStorageBot.IntegrationTests", "tests\WorkoutStorageBot.IntegrationTests\WorkoutStorageBot.IntegrationTests.csproj", "{7CDC0744-928C-4587-A9B6-85AD17267937}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorkoutStorageBot.E2ETests", "tests\WorkoutStorageBot.E2ETests\WorkoutStorageBot.E2ETests.csproj", "{2590E683-03DA-472E-B30F-65C3B3019105}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,6 +45,10 @@ Global
 		{7CDC0744-928C-4587-A9B6-85AD17267937}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7CDC0744-928C-4587-A9B6-85AD17267937}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7CDC0744-928C-4587-A9B6-85AD17267937}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2590E683-03DA-472E-B30F-65C3B3019105}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2590E683-03DA-472E-B30F-65C3B3019105}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2590E683-03DA-472E-B30F-65C3B3019105}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2590E683-03DA-472E-B30F-65C3B3019105}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -53,6 +59,7 @@ Global
 		{363E83D6-EDA2-4270-A6E5-1421B84B6AE5} = {36D591C7-65C7-A0D1-1CBC-10CDE441BDC8}
 		{CEDC362C-F803-46AD-BBE3-B6990E4DECDF} = {D534C5AD-4E17-48CE-950B-112809036275}
 		{7CDC0744-928C-4587-A9B6-85AD17267937} = {D534C5AD-4E17-48CE-950B-112809036275}
+		{2590E683-03DA-472E-B30F-65C3B3019105} = {D534C5AD-4E17-48CE-950B-112809036275}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {BA179F91-DEC2-4110-AF15-8ADA6962B516}
