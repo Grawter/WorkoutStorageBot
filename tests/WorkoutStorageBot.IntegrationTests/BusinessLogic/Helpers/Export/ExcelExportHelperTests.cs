@@ -1,8 +1,11 @@
 ﻿using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IO;
 using OfficeOpenXml;
+using WorkoutStorageBot.BusinessLogic.Extenions;
 using WorkoutStorageBot.BusinessLogic.Helpers.Export;
-using WorkoutStorageBot.Model.DTO.BusinessLogic;
+using WorkoutStorageBot.Model.AppContext;
+using WorkoutStorageBot.UnitTests.Helpers;
 using WorkoutStorageModels.Entities.BusinessLogic;
 
 namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Helpers.Export
@@ -12,13 +15,18 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Helpers.Export
         [Fact]
         public async Task GetExcelFile_WithCyclesAndResultExercises_ShouldReturnExpectedExcelFile()
         {
-            // Arrange
-            DTOUserInformation DTOTestUserInformation = GetDTOUserInformationWithCycles();
+            // Arrange 
+            using EntityContextBuilder entityContextBuilder = new EntityContextBuilder();
+            EntityContext entityContext = entityContextBuilder.Create()
+                                                              .Build();
 
-            IQueryable<ResultExercise> results = GetResultExercises();
+            // Arrange
+            UserInformation testUserInformation = await GetUserInformationWithCycles(entityContext);
+
+            IQueryable<ResultExercise> results = await GetResultExercises(entityContext);
 
             // Act
-            RecyclableMemoryStream excelFileStream  = await ExcelExportHelper.GetExcelFile(DTOTestUserInformation.Cycles, results, 0);
+            RecyclableMemoryStream excelFileStream  = await ExcelExportHelper.GetExcelFile(testUserInformation.ToDTOUserInformation().Cycles, results, 0, TestContext.Current.CancellationToken);
 
             using ExcelPackage excelPackage = new ExcelPackage(excelFileStream);
 
@@ -27,21 +35,21 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Helpers.Export
 
             #region cycle1 одинаковая дата у упражнений
 
-            DTOCycle cycle1 = DTOTestUserInformation.Cycles[0];
-            DTODay day11 = cycle1.Days[0];
-            DTOExercise exercise111 = day11.Exercises[0];
-            DTOExercise exercise112 = day11.Exercises[1];
-            DTOExercise exercise113 = day11.Exercises[2];
+            Cycle cycle1 = testUserInformation.Cycles[0];
+            Day day11 = cycle1.Days[0];
+            Exercise exercise111 = day11.Exercises[0];
+            Exercise exercise112 = day11.Exercises[1];
+            Exercise exercise113 = day11.Exercises[2];
 
-            DTODay day12 = cycle1.Days[1];
-            DTOExercise exercise121 = day12.Exercises[0];
-            DTOExercise exercise122 = day12.Exercises[1];
-            DTOExercise exercise123 = day12.Exercises[2];
+            Day day12 = cycle1.Days[1];
+            Exercise exercise121 = day12.Exercises[0];
+            Exercise exercise122 = day12.Exercises[1];
+            Exercise exercise123 = day12.Exercises[2];
 
-            DTODay day13 = cycle1.Days[2];
-            DTOExercise exercise131 = day13.Exercises[0];
-            DTOExercise exercise132 = day13.Exercises[1];
-            DTOExercise exercise133 = day13.Exercises[2];
+            Day day13 = cycle1.Days[2];
+            Exercise exercise131 = day13.Exercises[0];
+            Exercise exercise132 = day13.Exercises[1];
+            Exercise exercise133 = day13.Exercises[2];
 
             cells.GetCellValue<string>(3, 0).Should().Be(cycle1.Name);
 
@@ -110,21 +118,21 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Helpers.Export
 
             #region cycle2 одинаковая дата у упражнений
 
-            DTOCycle cycle2 = DTOTestUserInformation.Cycles[1];
-            DTODay day21 = cycle2.Days[0];
-            DTOExercise exercise211 = day21.Exercises[0];
-            DTOExercise exercise212 = day21.Exercises[1];
-            DTOExercise exercise213 = day21.Exercises[2];
+            Cycle cycle2 = testUserInformation.Cycles[1];
+            Day day21 = cycle2.Days[0];
+            Exercise exercise211 = day21.Exercises[0];
+            Exercise exercise212 = day21.Exercises[1];
+            Exercise exercise213 = day21.Exercises[2];
 
-            DTODay day22 = cycle2.Days[1];
-            DTOExercise exercise221 = day22.Exercises[0];
-            DTOExercise exercise222 = day22.Exercises[1];
-            DTOExercise exercise223 = day22.Exercises[2];
+            Day day22 = cycle2.Days[1];
+            Exercise exercise221 = day22.Exercises[0];
+            Exercise exercise222 = day22.Exercises[1];
+            Exercise exercise223 = day22.Exercises[2];
 
-            DTODay day23 = cycle2.Days[2];
-            DTOExercise exercise231 = day23.Exercises[0];
-            DTOExercise exercise232 = day23.Exercises[1];
-            DTOExercise exercise233 = day23.Exercises[2];
+            Day day23 = cycle2.Days[2];
+            Exercise exercise231 = day23.Exercises[0];
+            Exercise exercise232 = day23.Exercises[1];
+            Exercise exercise233 = day23.Exercises[2];
 
             cells.GetCellValue<string>(13, 0).Should().Be(cycle2.Name);
 
@@ -193,21 +201,21 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Helpers.Export
 
             #region cycle3 разная дата у упражнений
 
-            DTOCycle cycle3 = DTOTestUserInformation.Cycles[2];
-            DTODay day31 = cycle3.Days[0];
-            DTOExercise exercise311 = day31.Exercises[0];
-            DTOExercise exercise312 = day31.Exercises[1];
-            DTOExercise exercise313 = day31.Exercises[2];
+            Cycle cycle3 = testUserInformation.Cycles[2];
+            Day day31 = cycle3.Days[0];
+            Exercise exercise311 = day31.Exercises[0];
+            Exercise exercise312 = day31.Exercises[1];
+            Exercise exercise313 = day31.Exercises[2];
 
-            DTODay day32 = cycle3.Days[1];
-            DTOExercise exercise321 = day32.Exercises[0];
-            DTOExercise exercise322 = day32.Exercises[1];
-            DTOExercise exercise323 = day32.Exercises[2];
+            Day day32 = cycle3.Days[1];
+            Exercise exercise321 = day32.Exercises[0];
+            Exercise exercise322 = day32.Exercises[1];
+            Exercise exercise323 = day32.Exercises[2];
 
-            DTODay day33 = cycle3.Days[2];
-            DTOExercise exercise331 = day33.Exercises[0];
-            DTOExercise exercise332 = day33.Exercises[1];
-            DTOExercise exercise333 = day33.Exercises[2];
+            Day day33 = cycle3.Days[2];
+            Exercise exercise331 = day33.Exercises[0];
+            Exercise exercise332 = day33.Exercises[1];
+            Exercise exercise333 = day33.Exercises[2];
 
             cells.GetCellValue<string>(23, 0).Should().Be(cycle3.Name);
 
@@ -291,829 +299,241 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Helpers.Export
             #endregion
         }
 
-        private DTOUserInformation GetDTOUserInformationWithCycles()
+        private async Task<UserInformation> GetUserInformationWithCycles(EntityContext entityContext)
         {
-            DTOUserInformation DTOUserInformation = new DTOUserInformation()
+            UserInformation userInformation = new UserInformation
             {
                 FirstName = "FirstName",
                 Username = "Username",
-
-                Cycles = new List<DTOCycle>()
+                Cycles = new List<Cycle>
                 {
-                    new DTOCycle()
+                    new Cycle
                     {
                         Name = "Cycle1",
-                        Days = new List<DTODay>()
+                        Days = new List<Day>
                         {
-                            new DTODay()
+                            new Day
                             {
                                 Name = "Day11",
-                                Exercises = new List<DTOExercise>()
+                                Exercises = new List<Exercise>
                                 {
-                                    new DTOExercise()
-                                    {
-                                        Id = 1,
-                                        Mode = ExercisesMods.Count,
-                                        Name = "Exercise111",
-                                    },
-                                    new DTOExercise()
-                                    {
-                                        Id = 2,
-                                        Mode = ExercisesMods.Count,
-                                        Name = "Exercise112",
-                                    },
-                                    new DTOExercise()
-                                    {
-                                        Id = 3,
-                                        Mode = ExercisesMods.Count,
-                                        Name = "Exercise113",
-                                    },
-
+                                    new Exercise { Mode = ExercisesMods.Count, Name = "Exercise111" },
+                                    new Exercise { Mode = ExercisesMods.Count, Name = "Exercise112" },
+                                    new Exercise { Mode = ExercisesMods.Count, Name = "Exercise113" },
                                 }
                             },
-                            new DTODay()
+                            new Day
                             {
                                 Name = "Day12",
-                                Exercises = new List<DTOExercise>()
+                                Exercises = new List<Exercise>
                                 {
-                                    new DTOExercise()
-                                    {
-                                        Id = 4,
-                                        Mode = ExercisesMods.Count,
-                                        Name = "Exercise121",
-                                    },
-                                    new DTOExercise()
-                                    {
-                                        Id = 5,
-                                        Mode = ExercisesMods.Count,
-                                        Name = "Exercise122",
-                                    },
-                                    new DTOExercise()
-                                    {
-                                        Id = 6,
-                                        Mode = ExercisesMods.Count,
-                                        Name = "Exercise123",
-                                    },
-
+                                    new Exercise { Mode = ExercisesMods.Count, Name = "Exercise121" },
+                                    new Exercise { Mode = ExercisesMods.Count, Name = "Exercise122" },
+                                    new Exercise { Mode = ExercisesMods.Count, Name = "Exercise123" },
                                 }
                             },
-                            new DTODay()
+                            new Day
                             {
                                 Name = "Day13",
-                                Exercises = new List<DTOExercise>()
+                                Exercises = new List<Exercise>
                                 {
-                                    new DTOExercise()
-                                    {
-                                        Id = 7,
-                                        Mode = ExercisesMods.Count,
-                                        Name = "Exercise131",
-                                    },
-                                    new DTOExercise()
-                                    {
-                                        Id = 8,
-                                        Mode = ExercisesMods.Count,
-                                        Name = "Exercise132",
-                                    },
-                                    new DTOExercise()
-                                    {
-                                        Id = 9,
-                                        Mode = ExercisesMods.Count,
-                                        Name = "Exercise133",
-                                    }
+                                    new Exercise { Mode = ExercisesMods.Count, Name = "Exercise131" },
+                                    new Exercise { Mode = ExercisesMods.Count, Name = "Exercise132" },
+                                    new Exercise { Mode = ExercisesMods.Count, Name = "Exercise133" },
                                 }
                             }
                         }
                     },
-
-                    new DTOCycle()
+                    new Cycle
                     {
                         Name = "Cycle2",
-                        Days = new List<DTODay>()
+                        Days = new List<Day>
                         {
-                            new DTODay()
+                            new Day
                             {
                                 Name = "Day21",
-                                Exercises = new List<DTOExercise>()
+                                Exercises = new List<Exercise>
                                 {
-                                    new DTOExercise()
-                                    {
-                                        Id = 10,
-                                        Mode = ExercisesMods.Count,
-                                        Name = "Exercise211",
-                                    },
-                                    new DTOExercise()
-                                    {
-                                        Id = 11,
-                                        Mode = ExercisesMods.Count,
-                                        Name = "Exercise212",
-                                    },
-                                    new DTOExercise()
-                                    {
-                                        Id = 12,
-                                        Mode = ExercisesMods.Count,
-                                        Name = "Exercise213",
-                                    },
-
+                                    new Exercise { Mode = ExercisesMods.Count, Name = "Exercise211" },
+                                    new Exercise { Mode = ExercisesMods.Count, Name = "Exercise212" },
+                                    new Exercise { Mode = ExercisesMods.Count, Name = "Exercise213" },
                                 }
                             },
-                            new DTODay()
+                            new Day
                             {
                                 Name = "Day22",
-                                Exercises = new List<DTOExercise>()
+                                Exercises = new List<Exercise>
                                 {
-                                    new DTOExercise()
-                                    {
-                                        Id = 13,
-                                        Mode = ExercisesMods.Count,
-                                        Name = "Exercise221",
-                                    },
-                                    new DTOExercise()
-                                    {
-                                        Id = 14,
-                                        Mode = ExercisesMods.Count,
-                                        Name = "Exercise222",
-                                    },
-                                    new DTOExercise()
-                                    {
-                                        Id = 15,
-                                        Mode = ExercisesMods.Count,
-                                        Name = "Exercise223",
-                                    },
-
+                                    new Exercise { Mode = ExercisesMods.Count, Name = "Exercise221" },
+                                    new Exercise { Mode = ExercisesMods.Count, Name = "Exercise222" },
+                                    new Exercise { Mode = ExercisesMods.Count, Name = "Exercise223" },
                                 }
                             },
-                            new DTODay()
+                            new Day
                             {
                                 Name = "Day23",
-                                Exercises = new List<DTOExercise>()
+                                Exercises = new List<Exercise>
                                 {
-                                    new DTOExercise()
-                                    {
-                                        Id = 16,
-                                        Mode = ExercisesMods.Count,
-                                        Name = "Exercise231",
-                                    },
-                                    new DTOExercise()
-                                    {
-                                        Id = 17,
-                                        Mode = ExercisesMods.Count,
-                                        Name = "Exercise232",
-                                    },
-                                    new DTOExercise()
-                                    {
-                                        Id= 18,
-                                        Mode = ExercisesMods.Count,
-                                        Name = "Exercise233",
-                                    }
+                                    new Exercise { Mode = ExercisesMods.Count, Name = "Exercise231" },
+                                    new Exercise { Mode = ExercisesMods.Count, Name = "Exercise232" },
+                                    new Exercise { Mode = ExercisesMods.Count, Name = "Exercise233" },
                                 }
                             }
                         }
                     },
-
-                    new DTOCycle()
+                    new Cycle
                     {
                         Name = "Cycle3",
-                        Days = new List<DTODay>()
+                        Days = new List<Day>
                         {
-                            new DTODay()
+                            new Day
                             {
                                 Name = "Day31",
-                                Exercises = new List<DTOExercise>()
+                                Exercises = new List<Exercise>
                                 {
-                                    new DTOExercise()
-                                    {
-                                        Id = 19,
-                                        Mode = ExercisesMods.Count,
-                                        Name = "Exercise311",
-                                    },
-                                    new DTOExercise()
-                                    {
-                                        Id = 20,
-                                        Mode = ExercisesMods.Count,
-                                        Name = "Exercise312",
-                                    },
-                                    new DTOExercise()
-                                    {
-                                        Id = 21,
-                                        Mode = ExercisesMods.Count,
-                                        Name = "Exercise313",
-                                    },
-
+                                    new Exercise { Mode = ExercisesMods.Count, Name = "Exercise311" },
+                                    new Exercise { Mode = ExercisesMods.Count, Name = "Exercise312" },
+                                    new Exercise { Mode = ExercisesMods.Count, Name = "Exercise313" },
                                 }
                             },
-                            new DTODay()
+                            new Day
                             {
                                 Name = "Day32",
-                                Exercises = new List<DTOExercise>()
+                                Exercises = new List<Exercise>
                                 {
-                                    new DTOExercise()
-                                    {
-                                        Id = 22,
-                                        Mode = ExercisesMods.Count,
-                                        Name = "Exercise321",
-                                    },
-                                    new DTOExercise()
-                                    {
-                                        Id = 23,
-                                        Mode = ExercisesMods.Count,
-                                        Name = "Exercise322",
-                                    },
-                                    new DTOExercise()
-                                    {
-                                        Id = 24,
-                                        Mode = ExercisesMods.Count,
-                                        Name = "Exercise323",
-                                    },
-
+                                    new Exercise { Mode = ExercisesMods.Count, Name = "Exercise321" },
+                                    new Exercise { Mode = ExercisesMods.Count, Name = "Exercise322" },
+                                    new Exercise { Mode = ExercisesMods.Count, Name = "Exercise323" },
                                 }
                             },
-                            new DTODay()
+                            new Day
                             {
                                 Name = "Day33",
-                                Exercises = new List<DTOExercise>()
+                                Exercises = new List<Exercise>
                                 {
-                                    new DTOExercise()
-                                    {
-                                        Id = 25,
-                                        Mode = ExercisesMods.Count,
-                                        Name = "Exercise331",
-                                    },
-                                    new DTOExercise()
-                                    {
-                                        Id = 26,
-                                        Mode = ExercisesMods.Count,
-                                        Name = "Exercise332",
-                                    },
-                                    new DTOExercise()
-                                    {
-                                        Id = 27,
-                                        Mode = ExercisesMods.Count,
-                                        Name = "Exercise333",
-                                    }
+                                    new Exercise { Mode = ExercisesMods.Count, Name = "Exercise331" },
+                                    new Exercise { Mode = ExercisesMods.Count, Name = "Exercise332" },
+                                    new Exercise { Mode = ExercisesMods.Count, Name = "Exercise333" },
                                 }
                             }
                         }
-                    },
+                    }
                 }
             };
 
-            return DTOUserInformation;
+            await entityContext.UsersInformation.AddAsync(userInformation, TestContext.Current.CancellationToken);
+
+            // Сохраняем один раз — EF вставит граф в правильном порядке
+            // и проставит сгенерированные ключи (Exercise.Id, Day.Id, Cycle.Id, UserInformation.Id).
+            await entityContext.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+            return userInformation;
         }
 
-        private IQueryable<ResultExercise> GetResultExercises()
+        private async Task<IQueryable<ResultExercise>> GetResultExercises(EntityContext entityContext)
         {
-            IQueryable<ResultExercise> results = new List<ResultExercise>()
+            IList<int> exerciseIds = await entityContext.Exercises
+                .OrderBy(e => e.Id)
+                .Select(e => e.Id)
+                .Take(27)
+                .ToListAsync(TestContext.Current.CancellationToken);
+
+            if (exerciseIds.Count < 27)
             {
-                new ResultExercise()
-                {
-                    ExerciseId = 1,
-                    DateTime = DateTime.Now,
-                    Count = 10,
-                },
+                throw new InvalidOperationException(
+                    "Ожидалось 27 упражнений в БД. Сначала вызовите GetDTOUserInformationWithCyclesAsync.");
+            }
 
-                new ResultExercise()
-                {
-                    ExerciseId = 1,
-                    DateTime = DateTime.Now,
-                    Count = 20,
-                },
+            var results = new List<ResultExercise>
+            {
+                new ResultExercise { ExerciseId = exerciseIds[0],  DateTime = DateTime.Now, Count = 10 },
+                new ResultExercise { ExerciseId = exerciseIds[0],  DateTime = DateTime.Now, Count = 20 },
+                new ResultExercise { ExerciseId = exerciseIds[0],  DateTime = DateTime.Now, Count = 30 },
+                new ResultExercise { ExerciseId = exerciseIds[1],  DateTime = DateTime.Now, Count = 40 },
+                new ResultExercise { ExerciseId = exerciseIds[1],  DateTime = DateTime.Now, Count = 50 },
+                new ResultExercise { ExerciseId = exerciseIds[1],  DateTime = DateTime.Now, Count = 60 },
+                new ResultExercise { ExerciseId = exerciseIds[2],  DateTime = DateTime.Now, Count = 70 },
+                new ResultExercise { ExerciseId = exerciseIds[2],  DateTime = DateTime.Now, Count = 80 },
+                new ResultExercise { ExerciseId = exerciseIds[2],  DateTime = DateTime.Now, Count = 90 },
+                new ResultExercise { ExerciseId = exerciseIds[3],  DateTime = DateTime.Now, Count = 100 },
+                new ResultExercise { ExerciseId = exerciseIds[3],  DateTime = DateTime.Now, Count = 110 },
+                new ResultExercise { ExerciseId = exerciseIds[3],  DateTime = DateTime.Now, Count = 120 },
+                new ResultExercise { ExerciseId = exerciseIds[4],  DateTime = DateTime.Now, Count = 130 },
+                new ResultExercise { ExerciseId = exerciseIds[4],  DateTime = DateTime.Now, Count = 140 },
+                new ResultExercise { ExerciseId = exerciseIds[4],  DateTime = DateTime.Now, Count = 150 },
+                new ResultExercise { ExerciseId = exerciseIds[5],  DateTime = DateTime.Now, Count = 160 },
+                new ResultExercise { ExerciseId = exerciseIds[5],  DateTime = DateTime.Now, Count = 170 },
+                new ResultExercise { ExerciseId = exerciseIds[5],  DateTime = DateTime.Now, Count = 180 },
+                new ResultExercise { ExerciseId = exerciseIds[6],  DateTime = DateTime.Now, Count = 190 },
+                new ResultExercise { ExerciseId = exerciseIds[6],  DateTime = DateTime.Now, Count = 200 },
+                new ResultExercise { ExerciseId = exerciseIds[6],  DateTime = DateTime.Now, Count = 210 },
+                new ResultExercise { ExerciseId = exerciseIds[7],  DateTime = DateTime.Now, Count = 220 },
+                new ResultExercise { ExerciseId = exerciseIds[7],  DateTime = DateTime.Now, Count = 230 },
+                new ResultExercise { ExerciseId = exerciseIds[7],  DateTime = DateTime.Now, Count = 240 },
+                new ResultExercise { ExerciseId = exerciseIds[8],  DateTime = DateTime.Now, Count = 250 },
+                new ResultExercise { ExerciseId = exerciseIds[8],  DateTime = DateTime.Now, Count = 260 },
+                new ResultExercise { ExerciseId = exerciseIds[8],  DateTime = DateTime.Now, Count = 270 },
+                new ResultExercise { ExerciseId = exerciseIds[9],  DateTime = DateTime.Now, Count = 280 },
+                new ResultExercise { ExerciseId = exerciseIds[9],  DateTime = DateTime.Now, Count = 290 },
+                new ResultExercise { ExerciseId = exerciseIds[9],  DateTime = DateTime.Now, Count = 300 },
+                new ResultExercise { ExerciseId = exerciseIds[10], DateTime = DateTime.Now, Count = 310 },
+                new ResultExercise { ExerciseId = exerciseIds[10], DateTime = DateTime.Now, Count = 320 },
+                new ResultExercise { ExerciseId = exerciseIds[10], DateTime = DateTime.Now, Count = 330 },
+                new ResultExercise { ExerciseId = exerciseIds[11], DateTime = DateTime.Now, Count = 340 },
+                new ResultExercise { ExerciseId = exerciseIds[11], DateTime = DateTime.Now, Count = 350 },
+                new ResultExercise { ExerciseId = exerciseIds[11], DateTime = DateTime.Now, Count = 360 },
+                new ResultExercise { ExerciseId = exerciseIds[12], DateTime = DateTime.Now, Count = 370 },
+                new ResultExercise { ExerciseId = exerciseIds[12], DateTime = DateTime.Now, Count = 380 },
+                new ResultExercise { ExerciseId = exerciseIds[12], DateTime = DateTime.Now, Count = 390 },
+                new ResultExercise { ExerciseId = exerciseIds[13], DateTime = DateTime.Now, Count = 400 },
+                new ResultExercise { ExerciseId = exerciseIds[13], DateTime = DateTime.Now, Count = 410 },
+                new ResultExercise { ExerciseId = exerciseIds[13], DateTime = DateTime.Now, Count = 420 },
+                new ResultExercise { ExerciseId = exerciseIds[14], DateTime = DateTime.Now, Count = 430 },
+                new ResultExercise { ExerciseId = exerciseIds[14], DateTime = DateTime.Now, Count = 440 },
+                new ResultExercise { ExerciseId = exerciseIds[14], DateTime = DateTime.Now, Count = 450 },
+                new ResultExercise { ExerciseId = exerciseIds[15], DateTime = DateTime.Now, Count = 460 },
+                new ResultExercise { ExerciseId = exerciseIds[15], DateTime = DateTime.Now, Count = 470 },
+                new ResultExercise { ExerciseId = exerciseIds[15], DateTime = DateTime.Now, Count = 480 },
+                new ResultExercise { ExerciseId = exerciseIds[16], DateTime = DateTime.Now, Count = 490 },
+                new ResultExercise { ExerciseId = exerciseIds[16], DateTime = DateTime.Now, Count = 500 },
+                new ResultExercise { ExerciseId = exerciseIds[16], DateTime = DateTime.Now, Count = 510 },
+                new ResultExercise { ExerciseId = exerciseIds[17], DateTime = DateTime.Now, Count = 520 },
+                new ResultExercise { ExerciseId = exerciseIds[17], DateTime = DateTime.Now, Count = 530 },
+                new ResultExercise { ExerciseId = exerciseIds[17], DateTime = DateTime.Now, Count = 540 },
+                new ResultExercise { ExerciseId = exerciseIds[18], DateTime = new DateTime(2020, 4, 1),  Count = 550 },
+                new ResultExercise { ExerciseId = exerciseIds[18], DateTime = new DateTime(2020, 4, 2),  Count = 560 },
+                new ResultExercise { ExerciseId = exerciseIds[18], DateTime = new DateTime(2020, 4, 3),  Count = 570 },
+                new ResultExercise { ExerciseId = exerciseIds[19], DateTime = new DateTime(2020, 5, 1),  Count = 580 },
+                new ResultExercise { ExerciseId = exerciseIds[19], DateTime = new DateTime(2020, 5, 2),  Count = 590 },
+                new ResultExercise { ExerciseId = exerciseIds[19], DateTime = new DateTime(2020, 5, 3),  Count = 600 },
+                new ResultExercise { ExerciseId = exerciseIds[20], DateTime = new DateTime(2020, 6, 1),  Count = 610 },
+                new ResultExercise { ExerciseId = exerciseIds[20], DateTime = new DateTime(2020, 6, 2),  Count = 620 },
+                new ResultExercise { ExerciseId = exerciseIds[20], DateTime = new DateTime(2020, 6, 3),  Count = 630 },
+                new ResultExercise { ExerciseId = exerciseIds[21], DateTime = new DateTime(2020, 7, 1),  Count = 640 },
+                new ResultExercise { ExerciseId = exerciseIds[21], DateTime = new DateTime(2020, 7, 2),  Count = 650 },
+                new ResultExercise { ExerciseId = exerciseIds[21], DateTime = new DateTime(2020, 7, 3),  Count = 660 },
+                new ResultExercise { ExerciseId = exerciseIds[22], DateTime = new DateTime(2020, 8, 1),  Count = 670 },
+                new ResultExercise { ExerciseId = exerciseIds[22], DateTime = new DateTime(2020, 8, 2),  Count = 680 },
+                new ResultExercise { ExerciseId = exerciseIds[22], DateTime = new DateTime(2020, 8, 3),  Count = 690 },
+                new ResultExercise { ExerciseId = exerciseIds[23], DateTime = new DateTime(2020, 9, 1),  Count = 700 },
+                new ResultExercise { ExerciseId = exerciseIds[23], DateTime = new DateTime(2020, 9, 2),  Count = 710 },
+                new ResultExercise { ExerciseId = exerciseIds[23], DateTime = new DateTime(2020, 9, 3),  Count = 720 },
+                new ResultExercise { ExerciseId = exerciseIds[24], DateTime = new DateTime(2020, 10, 1), Count = 730 },
+                new ResultExercise { ExerciseId = exerciseIds[24], DateTime = new DateTime(2020, 10, 2), Count = 740 },
+                new ResultExercise { ExerciseId = exerciseIds[24], DateTime = new DateTime(2020, 10, 3), Count = 750 },
+                new ResultExercise { ExerciseId = exerciseIds[25], DateTime = new DateTime(2020, 11, 1), Count = 760 },
+                new ResultExercise { ExerciseId = exerciseIds[25], DateTime = new DateTime(2020, 11, 2), Count = 770 },
+                new ResultExercise { ExerciseId = exerciseIds[25], DateTime = new DateTime(2020, 11, 3), Count = 780 },
+                new ResultExercise { ExerciseId = exerciseIds[26], DateTime = new DateTime(2020, 12, 1), Count = 790 },
+                new ResultExercise { ExerciseId = exerciseIds[26], DateTime = new DateTime(2020, 12, 2), Count = 800 },
+                new ResultExercise { ExerciseId = exerciseIds[26], DateTime = new DateTime(2020, 12, 3), Count = 810 },
+            };
 
-                new ResultExercise()
-                {
-                    ExerciseId = 1,
-                    DateTime = DateTime.Now,
-                    Count = 30,
-                },
+            await entityContext.ResultsExercises.AddRangeAsync(results, TestContext.Current.CancellationToken);
 
-                new ResultExercise()
-                {
-                    ExerciseId = 2,
-                    DateTime = DateTime.Now,
-                    Count = 40,
-                },
-                new ResultExercise()
-                {
-                    ExerciseId = 2,
-                    DateTime = DateTime.Now,
-                    Count = 50,
-                },
-                new ResultExercise()
-                {
-                    ExerciseId = 2,
-                    DateTime = DateTime.Now,
-                    Count = 60,
-                },
+            await entityContext.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-                new ResultExercise()
-                {
-                    ExerciseId = 3,
-                    DateTime = DateTime.Now,
-                    Count = 70,
-                },
-                new ResultExercise()
-                {
-                    ExerciseId = 3,
-                    DateTime = DateTime.Now,
-                    Count = 80,
-                },
-                new ResultExercise()
-                {
-                    ExerciseId = 3,
-                    DateTime = DateTime.Now,
-                    Count = 90,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 4,
-                    DateTime = DateTime.Now,
-                    Count = 100,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 4,
-                    DateTime = DateTime.Now,
-                    Count = 110,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 4,
-                    DateTime = DateTime.Now,
-                    Count = 120,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 5,
-                    DateTime = DateTime.Now,
-                    Count = 130,
-                },
-                new ResultExercise()
-                {
-                    ExerciseId = 5,
-                    DateTime = DateTime.Now,
-                    Count = 140,
-                },
-                new ResultExercise()
-                {
-                    ExerciseId = 5,
-                    DateTime = DateTime.Now,
-                    Count = 150,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 6,
-                    DateTime = DateTime.Now,
-                    Count = 160,
-                },
-                new ResultExercise()
-                {
-                    ExerciseId = 6,
-                    DateTime = DateTime.Now,
-                    Count = 170,
-                },
-                new ResultExercise()
-                {
-                    ExerciseId = 6,
-                    DateTime = DateTime.Now,
-                    Count = 180,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 7,
-                    DateTime = DateTime.Now,
-                    Count = 190,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 7,
-                    DateTime = DateTime.Now,
-                    Count = 200,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 7,
-                    DateTime = DateTime.Now,
-                    Count = 210,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 8,
-                    DateTime = DateTime.Now,
-                    Count = 220,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 8,
-                    DateTime = DateTime.Now,
-                    Count = 230,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 8,
-                    DateTime = DateTime.Now,
-                    Count = 240,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 9,
-                    DateTime = DateTime.Now,
-                    Count = 250,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 9,
-                    DateTime = DateTime.Now,
-                    Count = 260,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 9,
-                    DateTime = DateTime.Now,
-                    Count = 270,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 10,
-                    DateTime = DateTime.Now,
-                    Count = 280,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 10,
-                    DateTime = DateTime.Now,
-                    Count = 290,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 10,
-                    DateTime = DateTime.Now,
-                    Count = 300,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 11,
-                    DateTime = DateTime.Now,
-                    Count = 310,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 11,
-                    DateTime = DateTime.Now,
-                    Count = 320,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 11,
-                    DateTime = DateTime.Now,
-                    Count = 330,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 12,
-                    DateTime = DateTime.Now,
-                    Count = 340,
-                },
-                new ResultExercise()
-                {
-                    ExerciseId = 12,
-                    DateTime = DateTime.Now,
-                    Count = 350,
-                },
-                new ResultExercise()
-                {
-                    ExerciseId = 12,
-                    DateTime = DateTime.Now,
-                    Count = 360,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 13,
-                    DateTime = DateTime.Now,
-                    Count = 370,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 13,
-                    DateTime = DateTime.Now,
-                    Count = 380,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 13,
-                    DateTime = DateTime.Now,
-                    Count = 390,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 14,
-                    DateTime = DateTime.Now,
-                    Count = 400,
-                },
-                new ResultExercise()
-                {
-                    ExerciseId = 14,
-                    DateTime = DateTime.Now,
-                    Count = 410,
-                },
-                new ResultExercise()
-                {
-                    ExerciseId = 14,
-                    DateTime = DateTime.Now,
-                    Count = 420,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 15,
-                    DateTime = DateTime.Now,
-                    Count = 430,
-                },
-                new ResultExercise()
-                {
-                    ExerciseId = 15,
-                    DateTime = DateTime.Now,
-                    Count = 440,
-                },
-                new ResultExercise()
-                {
-                    ExerciseId = 15,
-                    DateTime = DateTime.Now,
-                    Count = 450,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 16,
-                    DateTime = DateTime.Now,
-                    Count = 460,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 16,
-                    DateTime = DateTime.Now,
-                    Count = 470,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 16,
-                    DateTime = DateTime.Now,
-                    Count = 480,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 17,
-                    DateTime = DateTime.Now,
-                    Count = 490,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 17,
-                    DateTime = DateTime.Now,
-                    Count = 500,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 17,
-                    DateTime = DateTime.Now,
-                    Count = 510,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 18,
-                    DateTime = DateTime.Now,
-                    Count = 520,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 18,
-                    DateTime = DateTime.Now,
-                    Count = 530,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 18,
-                    DateTime = DateTime.Now,
-                    Count = 540,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 19,
-                    DateTime = new DateTime(2020, 4, 1),
-                    Count = 550,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 19,
-                    DateTime = new DateTime(2020, 4, 2),
-                    Count = 560,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 19,
-                    DateTime = new DateTime(2020, 4, 3),
-                    Count = 570,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 20,
-                    DateTime = new DateTime(2020, 5, 1),
-                    Count = 580,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 20,
-                    DateTime = new DateTime(2020, 5, 2),
-                    Count = 590,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 20,
-                    DateTime = new DateTime(2020, 5, 3),
-                    Count = 600,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 21,
-                    DateTime = new DateTime(2020, 6, 1),
-                    Count = 610,
-                },
-                new ResultExercise()
-                {
-                    ExerciseId = 21,
-                    DateTime = new DateTime(2020, 6, 2),
-                    Count = 620,
-                },
-                new ResultExercise()
-                {
-                    ExerciseId = 21,
-                    DateTime = new DateTime(2020, 6, 3),
-                    Count = 630,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 22,
-                    DateTime = new DateTime(2020, 7, 1),
-                    Count = 640,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 22,
-                    DateTime = new DateTime(2020, 7, 2),
-                    Count = 650,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 22,
-                    DateTime = new DateTime(2020, 7, 3),
-                    Count = 660,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 23,
-                    DateTime = new DateTime(2020, 8, 1),
-                    Count = 670,
-                },
-                new ResultExercise()
-                {
-                    ExerciseId = 23,
-                    DateTime = new DateTime(2020, 8, 2),
-                    Count = 680,
-                },
-                new ResultExercise()
-                {
-                    ExerciseId = 23,
-                    DateTime = new DateTime(2020, 8, 3),
-                    Count = 690,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 24,
-                    DateTime = new DateTime(2020, 9, 1),
-                    Count = 700,
-                },
-                new ResultExercise()
-                {
-                    ExerciseId = 24,
-                    DateTime = new DateTime(2020, 9, 2),
-                    Count = 710,
-                },
-                new ResultExercise()
-                {
-                    ExerciseId = 24,
-                    DateTime = new DateTime(2020, 9, 3),
-                    Count = 720,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 25,
-                    DateTime = new DateTime(2020, 10, 1),
-                    Count = 730,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 25,
-                    DateTime = new DateTime(2020, 10, 2),
-                    Count = 740,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 25,
-                    DateTime = new DateTime(2020, 10, 3),
-                    Count = 750,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 26,
-                    DateTime = new DateTime(2020, 11, 1),
-                    Count = 760,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 26,
-                    DateTime = new DateTime(2020, 11, 2),
-                    Count = 770,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 26,
-                    DateTime = new DateTime(2020, 11, 3),
-                    Count = 780,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 27,
-                    DateTime = new DateTime(2020, 12, 1),
-                    Count = 790,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 27,
-                    DateTime = new DateTime(2020, 12, 2),
-                    Count = 800,
-                },
-
-                new ResultExercise()
-                {
-                    ExerciseId = 27,
-                    DateTime = new DateTime(2020, 12, 3),
-                    Count = 810,
-                },
-
-            }.AsQueryable();
-
-            return results;
+            return entityContext.ResultsExercises;
         }
     }
 }

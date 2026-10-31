@@ -15,35 +15,35 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 {
     internal class WorkoutCH : CallBackCH
     {
-        private static IReadOnlyDictionary<string, Func<WorkoutCH, Task<IInformationSet>>> commandMap
-           = new Dictionary<string, Func<WorkoutCH, Task<IInformationSet>>>
+        private static IReadOnlyDictionary<string, Func<WorkoutCH, CancellationToken, Task<IInformationSet>>> commandMap
+           = new Dictionary<string, Func<WorkoutCH, CancellationToken, Task<IInformationSet>>>
            {
-               { "Workout", (x) => Task.FromResult(x.WorkoutCommand()) },
-               { "LastResults", (x) => x.LastResultsCommand() },
-               { "StartFindResultsByDate", (x) => Task.FromResult(x.StartFindResultsByDateCommand()) },
-               { "FindResultsByDate", (x) => x.FindResultsByDateCommand() },
-               { "StartExerciseTimer", (x) => Task.FromResult(x.StartExerciseTimerCommand()) },
-               { "StopExerciseTimer", (x) => Task.FromResult(x.StopExerciseTimerCommand()) },
-               { "ShowExerciseTimer", (x) => Task.FromResult(x.ShowExerciseTimerCommand()) },
-               { "ResetResultsExercise", (x) => Task.FromResult(x.ResetResultsExerciseCommand()) },
-               { "SaveResultsExercise", (x) => x.SaveResultsExerciseCommand() },
+               { "Workout", (x, y) => Task.FromResult(x.WorkoutCommand()) },
+               { "LastResults", (x, y) => x.LastResultsCommand(y) },
+               { "StartFindResultsByDate", (x, y) => Task.FromResult(x.StartFindResultsByDateCommand()) },
+               { "FindResultsByDate", (x, y) => x.FindResultsByDateCommand(y) },
+               { "StartExerciseTimer", (x, y) => Task.FromResult(x.StartExerciseTimerCommand()) },
+               { "StopExerciseTimer", (x, y) => Task.FromResult(x.StopExerciseTimerCommand()) },
+               { "ShowExerciseTimer", (x, y) => Task.FromResult(x.ShowExerciseTimerCommand()) },
+               { "ResetResultsExercise", (x, y) => Task.FromResult(x.ResetResultsExerciseCommand()) },
+               { "SaveResultsExercise", (x, y) => x.SaveResultsExerciseCommand(y) },
            };
 
         internal WorkoutCH(CommandHandlerTools commandHandlerTools, CallbackQueryParser callbackQueryParser) : base(commandHandlerTools, callbackQueryParser)
         { }
 
-        internal override async Task<IInformationSet> GetInformationSet()
+        protected override async Task<IInformationSet> GetInformationSet(CancellationToken cancellationToken)
         {
-            Func<WorkoutCH, Task<IInformationSet>> selectedCommand = GetSelectedCommand();
+            Func<WorkoutCH, CancellationToken, Task<IInformationSet>> selectedCommand = GetSelectedCommand();
 
-            IInformationSet informationSet = await selectedCommand(this);
+            IInformationSet informationSet = await selectedCommand(this, cancellationToken);
 
             CheckInformationSet(informationSet);
 
             return informationSet;
         }
 
-        protected Func<WorkoutCH, Task<IInformationSet>> GetSelectedCommand()
+        protected Func<WorkoutCH, CancellationToken, Task<IInformationSet>> GetSelectedCommand()
             => commandMap.GetValueOrDefault(callbackQueryParser.SubDirection)
                 ?? throw new NotImplementedException($"Неожиданный callbackQueryParser.SubDirection: {callbackQueryParser.SubDirection}");
 
@@ -62,7 +62,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             return informationSet;
         }
 
-        private async Task<IInformationSet> LastResultsCommand()
+        private async Task<IInformationSet> LastResultsCommand(CancellationToken cancellationToken)
         {
             ResponseTextBuilder responseTextBuilder;
             string information;
@@ -88,7 +88,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                                                                     Data = g.Select(x => x),
                                                                 })
                                                                 .OrderByDescending(x => x.Date)
-                                                                .FirstOrDefaultAsync();
+                                                                .FirstOrDefaultAsync(cancellationToken);
 
 
                     if (resultLastTraining == null)
@@ -105,6 +105,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                 case CommonConsts.DomainsAndEntities.Day:
                     IEnumerable<int> exercisesIDs = this.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Exercises.Where(e => !e.IsArchive)
                                                                                                                           .Select(d => d.Id);
+
                     string dbProvider = this.Db.GetDBProvider();
 
                     string query;
@@ -128,7 +129,7 @@ AND date(re.DateTime) = last.MaxDate";
 
                     IEnumerable<ResultExercise> lastResultsExercisesInCurrentDay = await this.Db.ResultsExercises.FromSqlRaw(query)
                                                                                                                  .Include(r => r.Exercise)
-                                                                                                                 .ToListAsync();
+                                                                                                                 .ToListAsync(cancellationToken);
 
                     information = SharedExercisesAndResultsLogicHelper.GetInformationAboutLastDay(lastResultsExercisesInCurrentDay);
                     responseTextBuilder = new ResponseTextBuilder("Последние результаты упражнений из этого дня:", 
@@ -177,7 +178,7 @@ AND date(re.DateTime) = last.MaxDate";
             return informationSet;
         }
 
-        private async Task<IInformationSet> FindResultsByDateCommand()
+        private async Task<IInformationSet> FindResultsByDateCommand(CancellationToken cancellationToken)
         {
             string finderDate = callbackQueryParser.AdditionalParameters.First();
 
@@ -202,7 +203,11 @@ AND date(re.DateTime) = last.MaxDate";
                 return informationSet;
             }
 
-            informationSet = await SharedExercisesAndResultsLogicHelper.GetInformationSetWithTextResultsByDateCommand(this.Db, this.CurrentUserContext, dateTime, isNeedFindByCurrentDay);
+            informationSet = await SharedExercisesAndResultsLogicHelper.GetInformationSetWithTextResultsByDateCommand(this.Db, 
+                                                                                                                      this.CurrentUserContext, 
+                                                                                                                      dateTime, 
+                                                                                                                      isNeedFindByCurrentDay,
+                                                                                                                      cancellationToken);
 
             return informationSet;
         }
@@ -268,14 +273,14 @@ AND date(re.DateTime) = last.MaxDate";
             return informationSet;
         }
 
-        private async Task<IInformationSet> SaveResultsExerciseCommand()
+        private async Task<IInformationSet> SaveResultsExerciseCommand(CancellationToken cancellationToken)
         {
             foreach (DTOResultExercise tempResultsExercise in this.CurrentUserContext.DataManager.TempResultsExercise.ThrowIfNull())
             {
                 tempResultsExercise.Exercise = this.CurrentUserContext.DataManager.CurrentExercise;
                 this.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().ResultsExercise.Add(tempResultsExercise);
             }
-            await this.Db.AddEntities(this.CurrentUserContext.DataManager.TempResultsExercise);
+            await this.Db.AddEntities(this.CurrentUserContext.DataManager.TempResultsExercise, cancellationToken);
 
             this.CurrentUserContext.DataManager.ResetTempResultsExercise();
 

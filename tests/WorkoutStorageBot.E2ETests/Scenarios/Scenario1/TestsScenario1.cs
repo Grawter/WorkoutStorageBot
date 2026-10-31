@@ -63,8 +63,6 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
 
         private readonly List<CoreHandler> handlers;
 
-        private readonly CancellationTokenSource cts;
-
         private readonly CommonTestsHelper commonTestsHelper;
 
         private IEnumerable<InlineKeyboardButton> lastSuggestedButtons;
@@ -127,8 +125,6 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
 
             customLoggerFactoryMock.Setup(x => x.CreateLogger<It.IsAnyType>()).Returns(loggerMock.Object);
 
-            cts = new CancellationTokenSource();
-
             CoreTools coreTools = new CoreTools()
             {
                 ConfigurationData = configurationData,
@@ -136,7 +132,6 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
                 ContextKeeper = contextKeeper,
                 BotResponseSender = botResponseSenderMock.Object,
                 LoggerFactory = customLoggerFactoryMock.Object,
-                AppCTS = cts,
             };
 
             RepositoriesStore repositoriesStore = new RepositoriesStore(entityContext);
@@ -1043,7 +1038,7 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
         {
             Update update = commonTestsHelper.GetMessageUpdate(text);
 
-            List<HandlerResult> handlerResults = await commonTestsHelper.StartProcess(update);
+            List<HandlerResult> handlerResults = await commonTestsHelper.StartProcess(update, TestContext.Current.CancellationToken);
 
             await assertAction.Invoke(handlerResults);
 
@@ -1074,7 +1069,7 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
         {
             Update update = commonTestsHelper.GetCallBackUpdate(data);
 
-            List<HandlerResult> handlerResults = await commonTestsHelper.StartProcess(update);
+            List<HandlerResult> handlerResults = await commonTestsHelper.StartProcess(update, TestContext.Current.CancellationToken);
 
             await assertAction.Invoke(handlerResults);
 
@@ -1140,7 +1135,6 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
         {
             dbConnection.Dispose();
             entityContext.Dispose();
-            cts.Dispose();
         }
     }
 }

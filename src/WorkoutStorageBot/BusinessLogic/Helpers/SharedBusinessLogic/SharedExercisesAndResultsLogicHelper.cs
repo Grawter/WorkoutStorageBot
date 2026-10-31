@@ -78,7 +78,7 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic
         internal static (List<DTOResultExercise> ResultsExercise, string? Error) GetResultsExerciseFromText(string text, ExercisesMods currentExerciseMode)
         {
             if (string.IsNullOrWhiteSpace(text))
-                return(new List<DTOResultExercise>(), "Не удалось начать парсинг строки для создания результатов упражнений, т.к. получена пустая строка");
+                return (new List<DTOResultExercise>(), "Не удалось начать парсинг строки для создания результатов упражнений, т.к. получена пустая строка");
 
             List<DTOResultExercise> results = new();
 
@@ -125,7 +125,7 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic
                 case ExercisesMods.Count:
 
                     if (!int.TryParse(resultExerciseStr, out int singleCount))
-                        return(DTOResultExercise, "Указанное количество повторений не является цифрой");
+                        return (DTOResultExercise, "Указанное количество повторений не является цифрой");
 
                     DTOResultExercise.Count = singleCount;
                     DTOResultExercise.DateTime = DateTime.Now;
@@ -153,7 +153,7 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic
                         return (DTOResultExercise, $"Не удалось получить указанное кол-во повторений для упражнения с типом {currentType}");
 
                     if (!int.TryParse(countStr, out int count))
-                        return(DTOResultExercise, "Указанное количество повторений не является цифрой");
+                        return (DTOResultExercise, "Указанное количество повторений не является цифрой");
 
                     DTOResultExercise.Weight = weight;
                     DTOResultExercise.Count = count;
@@ -173,17 +173,21 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic
             }
         }
 
-        internal static async Task<IInformationSet> GetInformationSetWithTextResultsByDateCommand(EntityContext db, UserContext userContext, DateTime finderDate, bool isNeedFindByCurrentDay)
+        internal static async Task<IInformationSet> GetInformationSetWithTextResultsByDateCommand(EntityContext db,
+                                                                                                  UserContext userContext,
+                                                                                                  DateTime finderDate,
+                                                                                                  bool isNeedFindByCurrentDay,
+                                                                                                  CancellationToken cancellationToken)
         {
             IInformationSet informationSet;
 
             List<int> exercisesIDs = GetNotArchivingExercisesIDs(userContext, isNeedFindByCurrentDay);
 
-            IEnumerable<ResultExercise> resultsLastTraining = await GetGetResultsExerciseByDate(db, finderDate, exercisesIDs);
+            IEnumerable<ResultExercise> resultsLastTraining = await GetGetResultsExerciseByDate(db, finderDate, exercisesIDs, cancellationToken);
 
             if (!resultsLastTraining.HasItemsInCollection())
             {
-                informationSet = await GetInformationSetWithClosestByDateTrainings(db, finderDate, exercisesIDs, isNeedFindByCurrentDay);
+                informationSet = await GetInformationSetWithClosestByDateTrainings(db, finderDate, exercisesIDs, isNeedFindByCurrentDay, cancellationToken);
 
                 return informationSet;
             }
@@ -207,32 +211,43 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic
             return informationSet;
         }
 
-        private static async Task<IEnumerable<ResultExercise>> GetGetResultsExerciseByDate(EntityContext db, UserContext userContext, DateTime finderDate, bool isNeedFindByCurrentDay)
+        private static async Task<IEnumerable<ResultExercise>> GetGetResultsExerciseByDate(EntityContext db,
+                                                                                           UserContext userContext,
+                                                                                           DateTime finderDate,
+                                                                                           bool isNeedFindByCurrentDay,
+                                                                                           CancellationToken cancellationToken)
         {
             List<int> exercisesIDs = GetNotArchivingExercisesIDs(userContext, isNeedFindByCurrentDay);
 
-            return await GetGetResultsExerciseByDate(db, finderDate, exercisesIDs);
+            return await GetGetResultsExerciseByDate(db, finderDate, exercisesIDs, cancellationToken);
         }
 
-        private static async Task<IEnumerable<ResultExercise>> GetGetResultsExerciseByDate(EntityContext db, DateTime finderDate, List<int> exercisesIDs)
+        private static async Task<IEnumerable<ResultExercise>> GetGetResultsExerciseByDate(EntityContext db,
+                                                                                           DateTime finderDate,
+                                                                                           List<int> exercisesIDs,
+                                                                                           CancellationToken cancellationToken)
         {
             IEnumerable<ResultExercise> resultsLastTraining = await db.ResultsExercises.AsNoTracking()
-                                                                                        .Where(re => exercisesIDs.Contains(re.ExerciseId)
+                                                                                       .Where(re => exercisesIDs.Contains(re.ExerciseId)
                                                                                                 && re.DateTime.Date == finderDate)
                                                                                         .Include(e => e.Exercise)
-                                                                                        .ToListAsync();
+                                                                                        .ToListAsync(cancellationToken);
 
             return resultsLastTraining;
         }
 
-        private static async Task<IInformationSet> GetInformationSetWithClosestByDateTrainings(EntityContext db, DateTime finderDate, List<int> exercisesIDs, bool isNeedFindByCurrentDay)
+        private static async Task<IInformationSet> GetInformationSetWithClosestByDateTrainings(EntityContext db,
+                                                                                               DateTime finderDate,
+                                                                                               List<int> exercisesIDs,
+                                                                                               bool isNeedFindByCurrentDay,
+                                                                                               CancellationToken cancellationToken)
         {
             ResultExercise? resultLessThanFinderDate = await db.ResultsExercises.AsNoTracking()
                                                                                     .Where(re =>
                                                                                             exercisesIDs.Contains(re.ExerciseId)
                                                                                             && re.DateTime.Date < finderDate)
                                                                                     .OrderByDescending(re => re.DateTime)
-                                                                                    .FirstOrDefaultAsync();
+                                                                                    .FirstOrDefaultAsync(cancellationToken);
 
             DateTime trainingDateLessThanFinderDate = resultLessThanFinderDate?.DateTime ?? DateTime.MinValue;
 
@@ -241,7 +256,7 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic
                                                                                                 exercisesIDs.Contains(re.ExerciseId)
                                                                                                 && re.DateTime.Date > finderDate)
                                                                                         .OrderBy(re => re.DateTime)
-                                                                                        .FirstOrDefaultAsync();
+                                                                                        .FirstOrDefaultAsync(cancellationToken);
 
             DateTime trainingDateGreaterThanFinderDate = resultDateGreaterThanFinderDate?.DateTime ?? DateTime.MinValue;
 
@@ -270,7 +285,7 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic
                     ? "Найдены ближайшие тренировки к искомой дате:"
                     : "Не удалось найти ближайших тренировок к искомой дате");
 
-            (ButtonsSet, ButtonsSet)  buttonsSets = (ButtonsSet.FoundResultsByDate, isNeedFindByCurrentDay
+            (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.FoundResultsByDate, isNeedFindByCurrentDay
                 ? ButtonsSet.ExercisesListWithLastWorkoutForDay
                 : ButtonsSet.DaysListWithLastWorkout);
 

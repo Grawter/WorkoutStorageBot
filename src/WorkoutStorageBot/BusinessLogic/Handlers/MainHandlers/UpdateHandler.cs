@@ -20,22 +20,29 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
     {
         protected override ILogger Logger { get; }
 
-        internal UpdateHandler(CoreTools coreTools, RepositoriesStore repositoriesStore) : base(coreTools, repositoriesStore, nameof(PrimaryUpdateHandler))
+        internal UpdateHandler(CoreTools coreTools, RepositoriesStore repositoriesStore) : base(coreTools, repositoriesStore, nameof(UpdateHandler))
         {
             this.Logger = CoreTools.LoggerFactory.CreateLogger<UpdateHandler>();
         }
 
-        internal override async Task<HandlerResult> Process(HandlerResult handlerResult)
+        internal override async Task<HandlerResult> Process(HandlerResult handlerResult, CancellationToken cancellationToken)
         {
             UpdateHandlerResult updateHandlerResult = CreateUpdateHandlerResult((AuthorizedHandlerResult)handlerResult);
+
+            CommandHandlerTools commandHandlerData = new CommandHandlerTools()
+            {
+                CoreTools = this.CoreTools,
+                HandlerResult = updateHandlerResult,
+                RepositoriesStore = this.RepositoriesStore,
+            };
 
             switch (updateHandlerResult.ShortUpdateInfo.UpdateType)
             {
                 case UpdateType.Message:
-                    updateHandlerResult.InformationSet = await ProcessMessage(updateHandlerResult);
+                    await ProcessMessage(commandHandlerData, cancellationToken);
                     break;
                 case UpdateType.CallbackQuery:
-                    updateHandlerResult.InformationSet = await ProcessCallbackQuery(updateHandlerResult);
+                    await ProcessCallbackQuery(commandHandlerData, cancellationToken);
                     break;
                 default:
                     throw new NotImplementedException($"Неожиданный UpdateType: {updateHandlerResult.ShortUpdateInfo.UpdateType}");
@@ -55,39 +62,27 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
             };
         }
 
-        private async Task<IInformationSet> ProcessMessage(UpdateHandlerResult updateHandlerResult)
+        private async Task ProcessMessage(CommandHandlerTools commandHandlerTools, CancellationToken cancellationToken)
         {
-            CommandHandlerTools commandHandlerData = new CommandHandlerTools()
-            {
-                ParentHandler = this,
-                CurrentUserContext = updateHandlerResult.CurrentUserContext,
-            };
+            MessageTextBuilder requestTextBuilder = new MessageTextBuilder(commandHandlerTools.HandlerResult.ShortUpdateInfo.Data);
 
-            MessageTextBuilder requestTextBuilder = new MessageTextBuilder(updateHandlerResult.ShortUpdateInfo.Data);
+            TextMessageCH commandHandler = new TextMessageCH(commandHandlerTools, requestTextBuilder);
 
-            TextMessageCH commandHandler = new TextMessageCH(commandHandlerData, requestTextBuilder);
-
-            return await commandHandler.GetInformationSet();
+            await commandHandler.Process(cancellationToken);
         }
 
-        private async Task<IInformationSet> ProcessCallbackQuery(UpdateHandlerResult updateHandlerResult)
+        private async Task ProcessCallbackQuery(CommandHandlerTools commandHandlerTools, CancellationToken cancellationToken)
         {
-            CallbackQueryParser callbackQueryParser = new CallbackQueryParser(updateHandlerResult.ShortUpdateInfo.Data);
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser(commandHandlerTools.HandlerResult.ShortUpdateInfo.Data);
 
-            if (CheckingComplianceCallBackId(updateHandlerResult.CurrentUserContext, callbackQueryParser.CallBackId, out IInformationSet? informationSet))
+            if (CheckingComplianceCallBackId(commandHandlerTools.HandlerResult.CurrentUserContext, callbackQueryParser))
             {
-                CommandHandlerTools commandHandlerData = new CommandHandlerTools()
-                {
-                    ParentHandler = this,
-                    CurrentUserContext = updateHandlerResult.CurrentUserContext,
-                };
+                CallBackCH commandHandler = GetCallBackCH(commandHandlerTools, callbackQueryParser);
 
-                CallBackCH commandHandler = GetCallBackCH(commandHandlerData, callbackQueryParser);
-
-                informationSet = await commandHandler.GetInformationSet();
+                await commandHandler.Process(cancellationToken);
             }
-
-            return informationSet;
+            else
+                SetupInformationSetForNonCheckingComplianceCallBackId(commandHandlerTools.HandlerResult);
         }
 
         private CallBackCH GetCallBackCH(CommandHandlerTools commandHandlerData, CallbackQueryParser callbackQueryParser)
@@ -115,19 +110,15 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
             return commandHandler;
         }
 
-        private bool CheckingComplianceCallBackId(UserContext currentUserContext, string currentCallBackId, [NotNullWhen(false)] out IInformationSet? informationSet)
+        private bool CheckingComplianceCallBackId(UserContext userContext, CallbackQueryParser callbackQueryParser)
+            => userContext.CallBackId == callbackQueryParser.CallBackId;
+
+        private void SetupInformationSetForNonCheckingComplianceCallBackId(AuthorizedHandlerResult handlerResult)
         {
-            if (currentUserContext.CallBackId == currentCallBackId)
-            {
-                informationSet = null;
-
-                return true;
-            }
-
             ResponseTextBuilder responseTextBuilder;
             (ButtonsSet, ButtonsSet) buttonsSets;
 
-            if (currentUserContext.ActiveCycle == null)
+            if (handlerResult.CurrentUserContext.ActiveCycle == null)
             {
                 responseTextBuilder = new ResponseTextBuilder("Начнём");
                 buttonsSets = (ButtonsSet.AddCycle, ButtonsSet.None);
@@ -138,14 +129,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
                         "Для продолжения работы используйте действия, предложенные ниже");
                 buttonsSets = (ButtonsSet.Main, ButtonsSet.None);
 
-                currentUserContext.Navigation.ResetNavigation();
+                handlerResult.CurrentUserContext.Navigation.ResetNavigation();
             }
 
-            informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
+            handlerResult.InformationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
-            currentUserContext.DataManager.ResetAll();
-
-            return false;
+            handlerResult.CurrentUserContext.DataManager.ResetAll();
         }
     }
 }

@@ -26,7 +26,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Extensions
             IDTODomain dtoCycle = new DTOCycle() { UserInformationId = entityContextBuilder.TestUserInformation.Id, Name = "TestCycle" };
 
             // Act
-            await context.AddEntity(dtoCycle, isNeedSaveChanges);
+            await context.AddEntity(dtoCycle, TestContext.Current.CancellationToken, isNeedSaveChanges);
 
             Cycle? savedCycle = context.Cycles.Find(dtoCycle.Id);
 
@@ -60,7 +60,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Extensions
             IDTODomain dtoDay = new DTODay() { CycleId = entityContextBuilder.TestUserInformation.Id, Name = "TestDay" };
 
             // Act
-            await context.AddEntity(dtoDay, isNeedSaveChanges);
+            await context.AddEntity(dtoDay, TestContext.Current.CancellationToken, isNeedSaveChanges);
 
             Day? savedDay = context.Days.Find(dtoDay.Id);
 
@@ -95,7 +95,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Extensions
             IDTODomain dtoExercise = new DTOExercise() { DayId = entityContextBuilder.TestDay.Id, Name = "TestExercise", Mode = ExercisesMods.Count };
 
             // Act
-            await context.AddEntity(dtoExercise, isNeedSaveChanges);
+            await context.AddEntity(dtoExercise, TestContext.Current.CancellationToken, isNeedSaveChanges);
 
             Exercise? savedExercise = context.Exercises.Find(dtoExercise.Id);
 
@@ -138,7 +138,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Extensions
             };
 
             // Act
-            await context.AddEntity(dtoResultExercise, isNeedSaveChanges);
+            await context.AddEntity(dtoResultExercise, TestContext.Current.CancellationToken, isNeedSaveChanges);
 
             ResultExercise? savedResultExercise = context.ResultsExercises.Find(dtoResultExercise.Id);
 
@@ -178,7 +178,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Extensions
             ];
 
             // Act
-            await context.AddEntities(dtoCycles, isNeedSaveChanges);
+            await context.AddEntities(dtoCycles, TestContext.Current.CancellationToken, isNeedSaveChanges);
 
             // Assert
             for (int i = 0; i < dtoCycles.Count; i++)
@@ -222,7 +222,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Extensions
             ];
 
             // Act
-            await context.AddEntities(dtoDays, isNeedSaveChanges);
+            await context.AddEntities(dtoDays, TestContext.Current.CancellationToken, isNeedSaveChanges);
 
             // Assert
             for (int i = 0; i < dtoDays.Count; i++)
@@ -267,7 +267,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Extensions
             ];
 
             // Act
-            await context.AddEntities(dtoExercises, isNeedSaveChanges);
+            await context.AddEntities(dtoExercises, TestContext.Current.CancellationToken, isNeedSaveChanges);
 
             // Assert
             for (int i = 0; i < dtoExercises.Count; i++)
@@ -313,7 +313,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Extensions
             ];
 
             // Act
-            await context.AddEntities(dtoResultExercises, isNeedSaveChanges);
+            await context.AddEntities(dtoResultExercises, TestContext.Current.CancellationToken, isNeedSaveChanges);
 
             // Assert
             for (int i = 0; i < dtoResultExercises.Count; i++)
@@ -358,7 +358,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Extensions
             dtoCycle.IsArchive = true;
 
             // Act
-            await context.UpdateEntity(dtoCycle, true);
+            await context.UpdateEntity(dtoCycle, TestContext.Current.CancellationToken, true);
 
             // Assert
             updatedCycle.UserInformationId.Should().Be(dtoCycle.UserInformationId);
@@ -387,7 +387,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Extensions
             dtoDay.IsArchive = true;
 
             // Act
-            await context.UpdateEntity(dtoDay, true);
+            await context.UpdateEntity(dtoDay, TestContext.Current.CancellationToken, true);
 
             // Assert
             updatedDay.CycleId.Should().Be(dtoDay.CycleId);
@@ -416,7 +416,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Extensions
             dtoExercise.IsArchive = true;
 
             // Act
-            await context.UpdateEntity(dtoExercise, true);
+            await context.UpdateEntity(dtoExercise, TestContext.Current.CancellationToken, true);
 
             // Assert
             updatedExercise.DayId.Should().Be(dtoExercise.DayId);
@@ -448,7 +448,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Extensions
             dtoResultExercise.FreeResult = "ABC";
 
             // Act
-            await context.UpdateEntity(dtoResultExercise, true);
+            await context.UpdateEntity(dtoResultExercise, TestContext.Current.CancellationToken, true);
 
             // Assert
             updatedResultExercise.ExerciseId.Should().Be(dtoResultExercise.ExerciseId);
@@ -485,7 +485,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Extensions
             }
 
             // Act
-            await context.UpdateEntities(dtoCycles, true);
+            await context.UpdateEntities(dtoCycles, TestContext.Current.CancellationToken, true);
 
             // Assert
             for (int i = 0; i < entityContextBuilder.TestCycles.Count; i++)
@@ -528,7 +528,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Extensions
             }
 
             // Act
-            await context.UpdateEntities(dtoDays, true);
+            await context.UpdateEntities(dtoDays, TestContext.Current.CancellationToken, true);
 
             // Assert
             for (int i = 0; i < entityContextBuilder.TestDays.Count; i++)
@@ -571,7 +571,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Extensions
             }
 
             // Act
-            await context.UpdateEntities(dtoExercises, true);
+            await context.UpdateEntities(dtoExercises, TestContext.Current.CancellationToken, true);
 
             // Assert
             for (int i = 0; i < entityContextBuilder.TestExercises.Count; i++)
@@ -617,7 +617,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Extensions
             }
 
             // Act
-            await context.UpdateEntities(dtoResultExercises, true);
+            await context.UpdateEntities(dtoResultExercises, TestContext.Current.CancellationToken, true);
 
             // Assert
             for (int i = 0; i < entityContextBuilder.TestResultExercises.Count; i++)
@@ -651,7 +651,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Extensions
             DTOCycle dtoCycle = entityContextBuilder.TestCycle.ToDTOCycle();
 
             // Act
-            await context.RemoveEntity(dtoCycle, isNeedSaveChanges);
+            await context.RemoveEntity(dtoCycle, TestContext.Current.CancellationToken, isNeedSaveChanges);
 
             Cycle? removedCycle = context.Cycles.Find(dtoCycle.Id);
 
@@ -680,7 +680,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Extensions
             DTODay dtoDay = entityContextBuilder.TestDay.ToDTODay();
 
             // Act
-            await context.RemoveEntity(dtoDay, isNeedSaveChanges);
+            await context.RemoveEntity(dtoDay, TestContext.Current.CancellationToken, isNeedSaveChanges);
 
             Day? removedDay = context.Days.Find(dtoDay.Id);
 
@@ -710,7 +710,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Extensions
             DTOExercise dtoExercise = entityContextBuilder.TestExercise.ToDTOExercise();
 
             // Act
-            await context.RemoveEntity(dtoExercise, isNeedSaveChanges);
+            await context.RemoveEntity(dtoExercise, TestContext.Current.CancellationToken, isNeedSaveChanges);
 
             Exercise? removedExercise = context.Exercises.Find(dtoExercise.Id);
 
@@ -741,7 +741,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Extensions
             DTOResultExercise dtoResultExercise = entityContextBuilder.TestResultExercise.ToDTOResultExercise();
 
             // Act
-            await context.RemoveEntity(dtoResultExercise, isNeedSaveChanges);
+            await context.RemoveEntity(dtoResultExercise, TestContext.Current.CancellationToken, isNeedSaveChanges);
 
             ResultExercise? removedResultExercise = context.ResultsExercises.Find(dtoResultExercise.Id);
 
@@ -776,7 +776,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Extensions
             }
 
             // Act
-            await context.RemoveEntities(cyclesToRemove, isNeedSaveChanges);
+            await context.RemoveEntities(cyclesToRemove, TestContext.Current.CancellationToken, isNeedSaveChanges);
 
             foreach (DTOCycle removedDTOCycle in cyclesToRemove)
             {
@@ -815,7 +815,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Extensions
             }
 
             // Act
-            await context.RemoveEntities(daysToRemove, isNeedSaveChanges);
+            await context.RemoveEntities(daysToRemove, TestContext.Current.CancellationToken, isNeedSaveChanges);
 
             foreach (DTODay removedDTODay in daysToRemove)
             {
@@ -855,7 +855,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Extensions
             }
 
             // Act
-            await context.RemoveEntities(exercisesToRemove, isNeedSaveChanges);
+            await context.RemoveEntities(exercisesToRemove, TestContext.Current.CancellationToken, isNeedSaveChanges);
 
             foreach (DTOExercise removedDTOExercise in exercisesToRemove)
             {
@@ -896,7 +896,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Extensions
             }
 
             // Act
-            await context.RemoveEntities(resultExercisesToRemove, isNeedSaveChanges);
+            await context.RemoveEntities(resultExercisesToRemove, TestContext.Current.CancellationToken, isNeedSaveChanges);
 
             foreach (DTOResultExercise removedDTOResultExercise in resultExercisesToRemove)
             {
@@ -923,7 +923,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Extensions
             // Act
             IDTODomain DTOCycle = entityContextBuilder.TestCycle.ToDTOCycle();
 
-            IDomain domain = await context.GetDomainByDTO(DTOCycle);
+            IDomain domain = await context.GetDomainByDTO(DTOCycle, TestContext.Current.CancellationToken);
 
             // Assert
             domain.Id.Should().NotBe(0);
@@ -944,7 +944,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Extensions
             // Act
             IDTODomain DTODay = entityContextBuilder.TestDay.ToDTODay();
 
-            IDomain domain = await context.GetDomainByDTO(DTODay);
+            IDomain domain = await context.GetDomainByDTO(DTODay, TestContext.Current.CancellationToken);
 
             // Assert
             domain.Id.Should().NotBe(0);
@@ -966,7 +966,7 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Extensions
             // Act
             IDTODomain DTOExercise = entityContextBuilder.TestExercise.ToDTOExercise();
 
-            IDomain domain = await context.GetDomainByDTO(DTOExercise);
+            IDomain domain = await context.GetDomainByDTO(DTOExercise, TestContext.Current.CancellationToken);
 
             // Assert
             domain.Id.Should().NotBe(0);

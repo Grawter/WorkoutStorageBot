@@ -4,9 +4,10 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Unicode;
+using WorkoutStorageBot.BusinessLogic.Extenions;
 using WorkoutStorageBot.BusinessLogic.Helpers.Export;
-using WorkoutStorageBot.Model.DTO.BusinessLogic;
-using WorkoutStorageBot.UnitTests.Helpers;
+using WorkoutStorageBot.Model.AppContext;
+using WorkoutStorageBot.UnitTests.Builders;
 using WorkoutStorageModels.Entities.BusinessLogic;
 
 namespace WorkoutStorageBot.UnitTests.BusinessLogic.Helpers.Export
@@ -17,12 +18,16 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Helpers.Export
         public async Task GetJSONFile_ShouldReturnCorrectJsonFileWithoutSensitiveInfo()
         {
             // Arrange 
-            DTOUserInformation DTOTestUserInformation = GetDTOUserInformationWithCycles();
+            using EntityContextBuilder entityContextBuilder = new EntityContextBuilder();
 
-            IQueryable<ResultExercise> results = GetResultExercises();
+            UserInformation testUserInformation = await GetUserInformationWithFilledCycles(entityContextBuilder);
+
+            EntityContext entityContext = entityContextBuilder.Build();
+
+            IQueryable<ResultExercise> results = await GetResultExercises(entityContext);
 
             // Act
-            RecyclableMemoryStream resultStream = await JsonExportHelper.GetJSONFile(DTOTestUserInformation, results, 0);
+            RecyclableMemoryStream resultStream = await JsonExportHelper.GetJSONFile(testUserInformation.ToDTOUserInformation(), results, 0, TestContext.Current.CancellationToken);
 
             //Assert
             JsonDocument jsonDocument = JsonDocument.Parse(resultStream);
@@ -42,22 +47,26 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Helpers.Export
             JsonElement[] cyclesArray = cycles.EnumerateArray().ToArray();
             cyclesArray.Should().HaveCount(2);
 
-            cyclesArray[0].GetProperty("Name").GetString().Should().Be("DTOCycle1");
-            cyclesArray[1].GetProperty("Name").GetString().Should().Be("DTOCycle2");
+            cyclesArray[0].GetProperty("Name").GetString().Should().Be("TestCycle1");
+            cyclesArray[1].GetProperty("Name").GetString().Should().Be("TestCycle2");
         }
 
         [Fact]
         public async Task GetJSONFile_ShouldReturnCorrectJsonLikeExample()
         {
             // Arrange
-            string example = GetJsonCompletedExample(); 
+            using EntityContextBuilder entityContextBuilder = new EntityContextBuilder();
 
-            DTOUserInformation DTOTestUserInformation = GetDTOUserInformationWithCycles();
+            UserInformation testUserInformation = await GetUserInformationWithFilledCycles(entityContextBuilder);
 
-            IQueryable<ResultExercise> results = GetResultExercises();
+            EntityContext entityContext = entityContextBuilder.Build();
+
+            IQueryable<ResultExercise> results = await GetResultExercises(entityContext);
+
+            string example = GetJsonCompletedExample();
 
             // Act
-            RecyclableMemoryStream resultStream = await JsonExportHelper.GetJSONFile(DTOTestUserInformation, results, 0);
+            RecyclableMemoryStream resultStream = await JsonExportHelper.GetJSONFile(testUserInformation.ToDTOUserInformation(), results, 0, TestContext.Current.CancellationToken);
 
             //Assert
             JsonDocument jsonDocument = JsonDocument.Parse(resultStream);
@@ -74,93 +83,77 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Helpers.Export
             json.Should().Be(example);  
         }
 
-        private DTOUserInformation GetDTOUserInformationWithCycles()
+        private async Task<UserInformation> GetUserInformationWithFilledCycles(EntityContextBuilder entityContextBuilder)
         {
-            DTOModelBuilder DTOModelBuilder = new DTOModelBuilder().WithDTOUserInformation()
-                                                                   .WithDTOCyclesByDTOUserInformation();
+            EntityContext entityContext = entityContextBuilder.Create()
+                                                              .WithUserInformation()
+                                                              .WithCycles()
+                                                              .Build();
 
-            List<DTOCycle> DTOTestCycles = DTOModelBuilder.DTOTestCycles;
+            List<Cycle> testCycles = entityContextBuilder.TestCycles;
 
-            DTOCycle DTOCycle1 = DTOTestCycles[0];
+            Cycle testCycle1 = testCycles[0];
 
-            DTOCycle1.Days =
-                [
-                    new DTODay()
-                    {
-                        Id = 1,
-                        Name = "DTODay1",
-                        CycleId = DTOCycle1.Id,
-                        Exercises =
-                        [
-                            new DTOExercise() { Id = 1, Name = "DTOExercise1" , Mode = ExercisesMods.Count },
-                            new DTOExercise() { Id = 2, Name = "DTOExercise2" , Mode = ExercisesMods.WeightCount },
-                        ]
-                    },
-                    new DTODay()
-                    {
-                        Id = 2,
-                        Name = "DTODay2",
-                        CycleId = DTOCycle1.Id,
-                        Exercises =
-                        [
-                            new DTOExercise() { Id = 3, Name = "DTOExercise3" , Mode = ExercisesMods.Timer },
-                            new DTOExercise() { Id = 4, Name = "DTOExercise4" , Mode = ExercisesMods.FreeResult },
-                        ]
-                    },
-                ];
+            Day day1 = new Day { Name = "TestDay1", CycleId = testCycle1.Id };
+            Day day2 = new Day { Name = "TestDay2", CycleId = testCycle1.Id };
 
-            DTOCycle DTOCycle2 = DTOTestCycles[1];
+            await entityContext.Days.AddRangeAsync([day1, day2], TestContext.Current.CancellationToken);
 
-            DTOCycle2.Days =
-                [
-                    new DTODay()
-                    {
-                        Id = 3,
-                        Name = "DTODay3",
-                        CycleId = DTOCycle1.Id,
-                        Exercises =
-                        [
-                            new DTOExercise() { Id = 5, Name = "DTOExercise5" , Mode = ExercisesMods.Count },
-                            new DTOExercise() { Id = 6, Name = "DTOExercise6" , Mode = ExercisesMods.Count },
-                        ]
-                    },
-                    new DTODay()
-                    {
-                        Id = 4,
-                        Name = "DTODay4",
-                        CycleId = DTOCycle1.Id,
-                        Exercises =
-                        [
-                            new DTOExercise() { Id = 7, Name = "DTOExercise7" , Mode = ExercisesMods.Count },
-                            new DTOExercise() { Id = 8, Name = "DTOExercise8" , Mode = ExercisesMods.Count },
-                        ]
-                    },
-                ];
+            await entityContext.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-            return DTOModelBuilder.DTOTestUserInformation;
+            await entityContext.Exercises.AddRangeAsync([
+                    new Exercise { Name = "TestExercise1", Mode = ExercisesMods.Count, DayId = day1.Id },
+                    new Exercise { Name = "TestExercise2", Mode = ExercisesMods.WeightCount, DayId = day1.Id },
+                    new Exercise { Name = "TestExercise3", Mode = ExercisesMods.Timer, DayId = day2.Id },
+                    new Exercise { Name = "TestExercise4", Mode = ExercisesMods.FreeResult, DayId = day2.Id }
+                ], TestContext.Current.CancellationToken);
+
+            await entityContext.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+            Cycle testCycle2 = testCycles[1];
+
+            Day day3 = new Day { Name = "TestDay3", CycleId = testCycle2.Id };
+            Day day4 = new Day { Name = "TestDay4", CycleId = testCycle2.Id };
+
+            await entityContext.Days.AddRangeAsync([day3, day4], TestContext.Current.CancellationToken);
+
+            await entityContext.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+            await entityContext.Exercises.AddRangeAsync([
+                    new Exercise { Name = "TestExercise5", Mode = ExercisesMods.Count, DayId = day3.Id },
+                    new Exercise { Name = "TestExercise6", Mode = ExercisesMods.WeightCount, DayId = day3.Id },
+                    new Exercise { Name = "TestExercise7", Mode = ExercisesMods.Timer, DayId = day4.Id },
+                    new Exercise { Name = "TestExercise8", Mode = ExercisesMods.Count, DayId = day4.Id }
+                ], TestContext.Current.CancellationToken);
+
+            await entityContext.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+            return entityContextBuilder.TestUserInformation;
         }
 
-        private IQueryable<ResultExercise> GetResultExercises()
+        private async Task<IQueryable<ResultExercise>> GetResultExercises(EntityContext entityContext)
         {
-            IQueryable<ResultExercise> results = new List<ResultExercise>()
+            ResultExercise resultExercise1 = new ResultExercise()
             {
-                new ResultExercise()
-                {
-                    Id = 1,
-                    Count = 100,
-                    DateTime = new DateTime(2020, 7, 1),
-                    ExerciseId = 5
-                },
-                new ResultExercise()
-                {
-                    Id = 2,
-                    Count = 200,
-                    DateTime = new DateTime(2020, 7, 1),
-                    ExerciseId = 8
-                }
-            }.AsQueryable();
+                Id = 1,
+                Count = 100,
+                DateTime = new DateTime(2020, 7, 1),
+                ExerciseId = 5
+            };
 
-            return results;
+            ResultExercise resultExercise2 = new ResultExercise()
+            {
+                Id = 2,
+                Count = 200,
+                DateTime = new DateTime(2020, 7, 1),
+                ExerciseId = 8
+            };
+
+            await entityContext.ResultsExercises.AddRangeAsync([resultExercise1, resultExercise2], TestContext.Current.CancellationToken);
+
+            await entityContext.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+            return entityContext.ResultsExercises;
         }
 
         private string GetJsonCompletedExample()
@@ -170,26 +163,26 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Helpers.Export
   ""Cycles"": [
     {
       ""Id"": 1,
-      ""Name"": ""DTOCycle1"",
+      ""Name"": ""TestCycle1"",
       ""Days"": [
         {
           ""Id"": 1,
-          ""Name"": ""DTODay1"",
+          ""Name"": ""TestDay1"",
           ""Exercises"": [
             {
               ""Id"": 1,
-              ""Name"": ""DTOExercise1"",
+              ""Name"": ""TestExercise1"",
               ""Mode"": 0,
               ""ResultsExercise"": [],
-              ""DayId"": 0,
+              ""DayId"": 1,
               ""IsArchive"": false
             },
             {
               ""Id"": 2,
-              ""Name"": ""DTOExercise2"",
+              ""Name"": ""TestExercise2"",
               ""Mode"": 1,
               ""ResultsExercise"": [],
-              ""DayId"": 0,
+              ""DayId"": 1,
               ""IsArchive"": false
             }
           ],
@@ -198,22 +191,22 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Helpers.Export
         },
         {
           ""Id"": 2,
-          ""Name"": ""DTODay2"",
+          ""Name"": ""TestDay2"",
           ""Exercises"": [
             {
               ""Id"": 3,
-              ""Name"": ""DTOExercise3"",
+              ""Name"": ""TestExercise3"",
               ""Mode"": 2,
               ""ResultsExercise"": [],
-              ""DayId"": 0,
+              ""DayId"": 2,
               ""IsArchive"": false
             },
             {
               ""Id"": 4,
-              ""Name"": ""DTOExercise4"",
+              ""Name"": ""TestExercise4"",
               ""Mode"": 3,
               ""ResultsExercise"": [],
-              ""DayId"": 0,
+              ""DayId"": 2,
               ""IsArchive"": false
             }
           ],
@@ -227,15 +220,15 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Helpers.Export
     },
     {
       ""Id"": 2,
-      ""Name"": ""DTOCycle2"",
+      ""Name"": ""TestCycle2"",
       ""Days"": [
         {
           ""Id"": 3,
-          ""Name"": ""DTODay3"",
+          ""Name"": ""TestDay3"",
           ""Exercises"": [
             {
               ""Id"": 5,
-              ""Name"": ""DTOExercise5"",
+              ""Name"": ""TestExercise5"",
               ""Mode"": 0,
               ""ResultsExercise"": [
                 {
@@ -245,36 +238,36 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Helpers.Export
                   ""ExerciseId"": 5
                 }
               ],
-              ""DayId"": 0,
+              ""DayId"": 3,
               ""IsArchive"": false
             },
             {
               ""Id"": 6,
-              ""Name"": ""DTOExercise6"",
-              ""Mode"": 0,
+              ""Name"": ""TestExercise6"",
+              ""Mode"": 1,
               ""ResultsExercise"": [],
-              ""DayId"": 0,
+              ""DayId"": 3,
               ""IsArchive"": false
             }
           ],
-          ""CycleId"": 1,
+          ""CycleId"": 2,
           ""IsArchive"": false
         },
         {
           ""Id"": 4,
-          ""Name"": ""DTODay4"",
+          ""Name"": ""TestDay4"",
           ""Exercises"": [
             {
               ""Id"": 7,
-              ""Name"": ""DTOExercise7"",
-              ""Mode"": 0,
+              ""Name"": ""TestExercise7"",
+              ""Mode"": 2,
               ""ResultsExercise"": [],
-              ""DayId"": 0,
+              ""DayId"": 4,
               ""IsArchive"": false
             },
             {
               ""Id"": 8,
-              ""Name"": ""DTOExercise8"",
+              ""Name"": ""TestExercise8"",
               ""Mode"": 0,
               ""ResultsExercise"": [
                 {
@@ -284,11 +277,11 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Helpers.Export
                   ""ExerciseId"": 8
                 }
               ],
-              ""DayId"": 0,
+              ""DayId"": 4,
               ""IsArchive"": false
             }
           ],
-          ""CycleId"": 1,
+          ""CycleId"": 2,
           ""IsArchive"": false
         }
       ],

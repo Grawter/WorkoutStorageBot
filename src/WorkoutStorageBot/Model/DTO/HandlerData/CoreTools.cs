@@ -13,6 +13,5 @@ namespace WorkoutStorageBot.Model.DTO.HandlerData
         internal required IContextKeeper ContextKeeper { get; init; }
         internal required IBotResponseSender BotResponseSender { get; init; }
         internal required ICustomLoggerFactory LoggerFactory { get; init; }
-        internal required CancellationTokenSource AppCTS { get; init; }
     }
 }

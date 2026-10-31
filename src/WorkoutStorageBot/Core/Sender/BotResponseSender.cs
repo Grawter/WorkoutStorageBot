@@ -17,7 +17,7 @@ namespace WorkoutStorageBot.Core.Sender
 
         private readonly ITelegramBotClient botClient;
 
-        public async Task SendResponse(long chatId, IInformationSet messageInformationSetting, UserContext currentUserContext)
+        public async Task SendResponse(long chatId, IInformationSet messageInformationSetting, UserContext currentUserContext, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(messageInformationSetting);
             ArgumentNullException.ThrowIfNull(currentUserContext);
@@ -33,17 +33,21 @@ namespace WorkoutStorageBot.Core.Sender
                     await botClient.SendMessage(chatId: chatId,
                                                 text: resultText,
                                                 parseMode: messageInformationSetting.ParseMode,
-                                                replyMarkup: buttons);
+                                                replyMarkup: buttons,
+                                                cancellationToken: cancellationToken);
                     break;
 
                 case FileInformationSet FISet:
-                    await botClient.SendDocument(chatId: chatId,
-                                                 document: InputFile.FromStream(stream: FISet.Stream, fileName: FISet.FileName),
-                                                 caption: resultText,
-                                                 parseMode: messageInformationSetting.ParseMode,
-                                                 replyMarkup: buttons);
+                    using (FISet.Stream)
+                    {
+                        await botClient.SendDocument(chatId: chatId,
+                                                     document: InputFile.FromStream(stream: FISet.Stream, fileName: FISet.FileName),
+                                                     caption: resultText,
+                                                     parseMode: messageInformationSetting.ParseMode,
+                                                     replyMarkup: buttons,
+                                                     cancellationToken: cancellationToken);
+                    }
 
-                    FISet.Stream.Dispose();
                     break;
 
                 default:
@@ -51,45 +55,45 @@ namespace WorkoutStorageBot.Core.Sender
             }
         }
 
-        public async Task SendSimpleMassiveNotification(IEnumerable<string> chatIDs, string message)
+        public async Task SendSimpleMassiveNotification(IEnumerable<string> chatIDs, string message, CancellationToken cancellationToken)
         {
             foreach (string ownerChatId in chatIDs)
             {
-                await SendSimpleNotification(ownerChatId, message);
+                await SendSimpleNotification(ownerChatId, message, cancellationToken);
             }
         }
 
-        public async Task SendSimpleMassiveNotification(IEnumerable<long> chatIDs, string message)
+        public async Task SendSimpleMassiveNotification(IEnumerable<long> chatIDs, string message, CancellationToken cancellationToken)
         {
             foreach (long ownerChatId in chatIDs)
             {
-                await SendSimpleNotification(ownerChatId, message);
+                await SendSimpleNotification(ownerChatId, message, cancellationToken);
             }
         }
 
-        public async Task SendSimpleNotification(string chatID, string message)
+        public async Task SendSimpleNotification(string chatID, string message, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNullOrWhiteSpace(chatID);
             ArgumentNullException.ThrowIfNullOrWhiteSpace(message);
 
-            await botClient.SendMessage(chatID, message);
+            await botClient.SendMessage(chatID, message, cancellationToken: cancellationToken);
         }
 
-        public async Task SendSimpleNotification(long chatID, string message)
+        public async Task SendSimpleNotification(long chatID, string message, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNullOrWhiteSpace(message);
 
-            await botClient.SendMessage(chatID, message);
+            await botClient.SendMessage(chatID, message, cancellationToken: cancellationToken);
         }
 
         /// <summary>
         /// Не обязательно. Чтобы не было анимации "зависание кнопки" в ТГ боте
         /// </summary>
-        public async Task AnswerCallbackQuery(string callbackQueryID)
+        public async Task AnswerCallbackQuery(string callbackQueryID, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNullOrWhiteSpace(callbackQueryID);
 
-            await botClient.AnswerCallbackQuery(callbackQueryID);
+            await botClient.AnswerCallbackQuery(callbackQueryID, cancellationToken: cancellationToken);
         }
 
         private string GetResultText(string originalText, bool allVerticalButtonsDisplayed, bool allHorizontalButtonsDisplayed)

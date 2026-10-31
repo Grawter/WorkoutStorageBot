@@ -92,11 +92,11 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Repositories
         public async Task ChangeBlackListByUser_ShouldChangeBlackListByUserAndWriteWarningLog()
         {
             // Arrange
-            UserInformation userInformation = await entityContext.UsersInformation.FirstAsync();
+            UserInformation userInformation = await entityContext.UsersInformation.FirstAsync(TestContext.Current.CancellationToken);
             bool currentBlackListUserMode = userInformation.BlackList;
 
             // Act
-            await adminWrapper.ChangeBlackListByUser(userInformation);
+            await adminWrapper.ChangeBlackListByUser(userInformation, TestContext.Current.CancellationToken);
 
             // Assert
             userInformation.BlackList.Should().Be(!currentBlackListUserMode);
@@ -114,11 +114,11 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Repositories
         public async Task ChangeWhiteListByUser_ShouldChangeWhiteListByUserAndWriteWarningLog()
         {
             // Arrange
-            UserInformation userInformation = await entityContext.UsersInformation.FirstAsync();
+            UserInformation userInformation = await entityContext.UsersInformation.FirstAsync(TestContext.Current.CancellationToken);
             bool currentWhiteListUserMode = userInformation.WhiteList;
 
             // Act
-            await adminWrapper.ChangeWhiteListByUser(userInformation);
+            await adminWrapper.ChangeWhiteListByUser(userInformation, TestContext.Current.CancellationToken);
 
             // Assert
             userInformation.WhiteList.Should().Be(!currentWhiteListUserMode);
@@ -136,10 +136,10 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Repositories
         public async Task DeleteAccount_ShouldDeleteAccountAndWriteWarningLog()
         {
             // Arrange
-            UserInformation userInformation = await entityContext.UsersInformation.FirstAsync();
+            UserInformation userInformation = await entityContext.UsersInformation.FirstAsync(TestContext.Current.CancellationToken);
 
             // Act
-            await adminWrapper.DeleteAccount(userInformation);
+            await adminWrapper.DeleteAccount(userInformation, TestContext.Current.CancellationToken);
 
             // Assert
             entityContext.UsersInformation.Should().BeEmpty();
@@ -165,7 +165,7 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Repositories
             };
 
             // Act 
-            UserInformation? userInformation = await adminWrapper.TryCreateNewUserInformation(newUser);
+            UserInformation? userInformation = await adminWrapper.TryCreateNewUserInformation(newUser, TestContext.Current.CancellationToken);
 
             // Assert
             userInformation.Should().NotBeNull();
@@ -195,7 +195,7 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Repositories
             adminWrapper.ChangeWhiteListMode();
 
             // Act 
-            UserInformation? userInformation = await adminWrapper.TryCreateNewUserInformation(newUser);
+            UserInformation? userInformation = await adminWrapper.TryCreateNewUserInformation(newUser, TestContext.Current.CancellationToken);
 
             // Assert
             userInformation.Should().BeNull();
@@ -217,7 +217,7 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Repositories
             // Arrange
             bool userIsOwner = false;
 
-            UserInformation userInformation = await entityContext.UsersInformation.FirstAsync();
+            UserInformation userInformation = await entityContext.UsersInformation.FirstAsync(TestContext.Current.CancellationToken);
 
             if (userWasContainsInOwners)
             {
@@ -248,7 +248,7 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Repositories
             // Arrange
             bool userHasAccess = false;
 
-            UserInformation userInformation = await entityContext.UsersInformation.FirstAsync();
+            UserInformation userInformation = await entityContext.UsersInformation.FirstAsync(TestContext.Current.CancellationToken);
 
             switch (testCase)
             {
@@ -332,7 +332,7 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Repositories
             // Arrange
             bool userHasAccess = false;
 
-            UserInformation userInformation = await entityContext.UsersInformation.FirstAsync();
+            UserInformation userInformation = await entityContext.UsersInformation.FirstAsync(TestContext.Current.CancellationToken);
 
             DTOUserInformation DTOuserInformation = userInformation.ToDTOUserInformation();
 

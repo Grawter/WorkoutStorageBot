@@ -11,28 +11,28 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 {
     internal class CommonCH : CallBackCH
     {
-        private static IReadOnlyDictionary<string, Func<CommonCH, Task<IInformationSet>>> commandMap
-            = new Dictionary<string, Func<CommonCH, Task<IInformationSet>>>
+        private static IReadOnlyDictionary<string, Func<CommonCH, CancellationToken, Task<IInformationSet>>> commandMap
+            = new Dictionary<string, Func<CommonCH, CancellationToken, Task<IInformationSet>>>
             {
-                { "ToMain", (x) => Task.FromResult(x.ToMainCommand()) },
-                { "Back", (x) => Task.FromResult(x.BackCommand()) },
+                { "ToMain", (x, y) => Task.FromResult(x.ToMainCommand()) },
+                { "Back", (x, y) => Task.FromResult(x.BackCommand()) },
             };
 
         internal CommonCH(CommandHandlerTools commandHandlerTools, CallbackQueryParser callbackQueryParser) : base(commandHandlerTools, callbackQueryParser)
         { }
 
-        internal override async Task<IInformationSet> GetInformationSet()
+        protected override async Task<IInformationSet> GetInformationSet(CancellationToken cancellationToken)
         {
-            Func<CommonCH, Task<IInformationSet>> selectedCommand = GetSelectedCommand();
+            Func<CommonCH, CancellationToken, Task<IInformationSet>> selectedCommand = GetSelectedCommand();
 
-            IInformationSet informationSet = await selectedCommand(this);
+            IInformationSet informationSet = await selectedCommand(this, cancellationToken);
 
             CheckInformationSet(informationSet);
 
             return informationSet;
         }
 
-        protected Func<CommonCH, Task<IInformationSet>> GetSelectedCommand()
+        protected Func<CommonCH, CancellationToken, Task<IInformationSet>> GetSelectedCommand()
             => commandMap.GetValueOrDefault(callbackQueryParser.SubDirection)
                 ?? throw new NotImplementedException($"Неожиданный callbackQueryParser.SubDirection: {callbackQueryParser.SubDirection}");
 

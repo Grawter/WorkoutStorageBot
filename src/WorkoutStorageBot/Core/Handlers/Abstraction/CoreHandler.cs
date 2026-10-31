@@ -22,16 +22,6 @@ namespace WorkoutStorageBot.Core.Handlers.Abstraction
             Logger = CoreTools.LoggerFactory.CreateLogger<CoreHandler>();
         }
 
-        internal abstract Task<HandlerResult> Process(HandlerResult handlerResult);
-
-        internal void CloseApp(TimeSpan timeSpan)
-        {
-            if (timeSpan.TotalSeconds < 2)
-                timeSpan = TimeSpan.FromSeconds(2);
-
-            Logger.LogWarning("Инициировано отключение бота");
-
-            this.CoreTools.AppCTS.CancelAfter(timeSpan);
-        }
+        internal abstract Task<HandlerResult> Process(HandlerResult handlerResult, CancellationToken cancellationToken);
     }
 }

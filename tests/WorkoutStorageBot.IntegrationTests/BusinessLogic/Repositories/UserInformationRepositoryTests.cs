@@ -42,7 +42,7 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Repositories
             long userID = 1;
 
             // Act
-            UserInformation? userInformation = await userInformationRepository.GetUserInformationWithoutTracking(userID);
+            UserInformation? userInformation = await userInformationRepository.GetUserInformationWithoutTracking(userID, TestContext.Current.CancellationToken);
 
             // Assert
             userInformation.Should().NotBeNull();
@@ -56,7 +56,7 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Repositories
             string userName = "@TestUsername";
 
             // Act 
-            UserInformation? userInformation = await userInformationRepository.GetUserInformationWithoutTracking(userName);
+            UserInformation? userInformation = await userInformationRepository.GetUserInformationWithoutTracking(userName, TestContext.Current.CancellationToken);
 
             // Assert
             userInformation.Should().NotBeNull();
@@ -70,7 +70,7 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Repositories
             long userID = 1;
 
             // Act 
-            UserInformation userInformation = await userInformationRepository.GetRequiredUserInformation(userID);
+            UserInformation userInformation = await userInformationRepository.GetRequiredUserInformation(userID, TestContext.Current.CancellationToken);
 
             // Assert
             userInformation.Should().NotBeNull();
@@ -84,7 +84,7 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Repositories
             long userID = 1;
 
             // Act 
-            UserInformation? userInformation = await userInformationRepository.GetUserInformation(userID);
+            UserInformation? userInformation = await userInformationRepository.GetUserInformation(userID, TestContext.Current.CancellationToken);
 
             // Assert
             userInformation.Should().NotBeNull();
@@ -98,7 +98,7 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Repositories
             string userName = "@TestUsername";
 
             // Act
-            UserInformation userInformation = await userInformationRepository.GetRequiredUserInformation(userName);
+            UserInformation userInformation = await userInformationRepository.GetRequiredUserInformation(userName, TestContext.Current.CancellationToken);
 
             // Assert
             userInformation.Should().NotBeNull();
@@ -112,7 +112,7 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Repositories
             string userName = "@TestUsername";
 
             // Act
-            UserInformation? userInformation = await userInformationRepository.GetUserInformation(userName);
+            UserInformation? userInformation = await userInformationRepository.GetUserInformation(userName, TestContext.Current.CancellationToken);
 
             // Assert
             userInformation.Should().NotBeNull();
@@ -126,7 +126,7 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Repositories
             long userID = 1;
 
             // Act 
-            UserInformation? userInformation = await userInformationRepository.GetFullUserInformationWithoutTracking(userID);
+            UserInformation? userInformation = await userInformationRepository.GetFullUserInformationWithoutTracking(userID, TestContext.Current.CancellationToken);
 
             // Assert
             userInformation.Should().NotBeNull();
@@ -142,7 +142,7 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Repositories
             string userName = "@TestUsername";
 
             // Act 
-            UserInformation? userInformation = await userInformationRepository.GetFullUserInformationWithoutTracking(userName);
+            UserInformation? userInformation = await userInformationRepository.GetFullUserInformationWithoutTracking(userName, TestContext.Current.CancellationToken);
 
             // Assert
             userInformation.Should().NotBeNull();

@@ -37,16 +37,12 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MainHandlers
 
         private readonly Mock<ILogger> loggerMock;
 
-        private readonly CancellationTokenSource cts;
-
         public PrimaryUpdateHandlerTests()
         {
             contextKeeperMock = new();
             botResponseSenderMock = new();
             customLoggerFactoryMock = new();
             loggerMock = new();
-
-            cts = new CancellationTokenSource();
 
             customLoggerFactoryMock.Setup(x => x.CreateLogger<It.IsAnyType>()).Returns(loggerMock.Object);
         }
@@ -87,7 +83,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MainHandlers
             };
 
             // Act
-            HandlerResult handlerResult = await primaryUpdateHandler.Process(startHandlerResult);
+            HandlerResult handlerResult = await primaryUpdateHandler.Process(startHandlerResult, TestContext.Current.CancellationToken);
 
             // Assert
             if(scenario == "UnknownUpdateInfo")
@@ -148,7 +144,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MainHandlers
             };
 
             // Act
-            HandlerResult handlerResult = await primaryUpdateHandler.Process(startHandlerResult);
+            HandlerResult handlerResult = await primaryUpdateHandler.Process(startHandlerResult, TestContext.Current.CancellationToken);
 
             // Assert
             if (scenario == "UnknownUpdateInfo")
@@ -202,7 +198,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MainHandlers
             };
 
             // Act
-            HandlerResult handlerResult = await primaryUpdateHandler.Process(startHandlerResult);
+            HandlerResult handlerResult = await primaryUpdateHandler.Process(startHandlerResult, TestContext.Current.CancellationToken);
 
             // Assert
             if (scenario == "UnknownUpdateInfo")
@@ -260,7 +256,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MainHandlers
             };
 
             // Act
-            HandlerResult handlerResult = await primaryUpdateHandler.Process(startHandlerResult);
+            HandlerResult handlerResult = await primaryUpdateHandler.Process(startHandlerResult, TestContext.Current.CancellationToken);
 
             // Assert
             if (scenario == "UnknownUpdateInfo")
@@ -309,7 +305,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MainHandlers
                 ContextKeeper = contextKeeperMock.Object,
                 BotResponseSender = botResponseSenderMock.Object,
                 LoggerFactory = customLoggerFactoryMock.Object,
-                AppCTS = cts,
             };
 
             PrimaryUpdateHandler primaryUpdateHandler = new PrimaryUpdateHandler(coreTools, new RepositoriesStore(entityContext));
@@ -375,7 +370,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MainHandlers
                                     LogLevel.Warning,
                                     It.IsAny<EventId>(),
                                     It.Is<It.IsAnyType>((v, t) =>
-                                    v.ToString() == "Получен неизвестный update c типом Unknown"),
+                                    v != null && v.ToString() == "Получен неизвестный update c типом Unknown"),
                                     It.IsAny<Exception>(),
                                     (Func<It.IsAnyType, Exception?, string>)It.IsAny<object>()
                                 ),
@@ -396,7 +391,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MainHandlers
                                     LogLevel.Warning,
                                     It.IsAny<EventId>(),
                                     It.Is<It.IsAnyType>((v, t) =>
-                                    v.ToString() == checkingLogMessage),
+                                    v != null && v.ToString() == checkingLogMessage),
                                     It.IsAny<Exception>(),
                                     (Func<It.IsAnyType, Exception?, string>)It.IsAny<object>()
                                 ),
@@ -563,7 +558,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MainHandlers
         public void Dispose()
         {
             builder?.Dispose();
-            cts?.Dispose();
         }
     }
 }

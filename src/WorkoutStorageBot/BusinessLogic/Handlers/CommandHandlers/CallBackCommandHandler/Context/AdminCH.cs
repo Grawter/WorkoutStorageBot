@@ -18,26 +18,26 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 {
     internal class AdminCH : CallBackCH
     {
-        private static IReadOnlyDictionary<string, Func<AdminCH, Task<IInformationSet>>> commandMap
-            = new Dictionary<string, Func<AdminCH, Task<IInformationSet>>>
+        private static IReadOnlyDictionary<string, Func<AdminCH, CancellationToken, Task<IInformationSet>>> commandMap
+            = new Dictionary<string, Func<AdminCH, CancellationToken, Task<IInformationSet>>>
             {
-                { "Admin", (x) => Task.FromResult(x.AdminCommand()) },
-                { "Logs", (x) => Task.FromResult(x.LogsCommand()) },
-                { "ShowLastLog", (x) => x.ShowLastLogCommand() },
-                { "ShowLastExceptionLogs", (x) => x.ShowLastExceptionLogsCommand() },
-                { "FindLogByID", (x) => Task.FromResult(x.FindLogByIDCommand(isEventID: false)) },
-                { "FindLogByEventID", (x) => Task.FromResult(x.FindLogByIDCommand(isEventID: true)) },
-                { "AdminUsers", (x) => Task.FromResult(x.AdminUsersCommand()) },
-                { "ShowCountActiveSessions", (x) => Task.FromResult(x.ShowCountActiveSessionsCommand()) },
-                { "SendMessageToUser", (x) => Task.FromResult(x.SendMessageToUsersCommand(mode: 1)) },
-                { "SendMessagesToActiveUsers", (x) => Task.FromResult(x.SendMessageToUsersCommand(mode: 2)) },
-                { "SendMessagesToAllUsers", (x) => Task.FromResult(x.SendMessageToUsersCommand(mode: 3)) },
-                { "ChangeUserState", (x) => Task.FromResult(x.ChangeUserStateCommand()) },
-                { "DeleteUser", (x) => Task.FromResult(x.DeleteUserCommand()) },
-                { "ShowStartConfiguration", (x) => Task.FromResult(x.ShowStartConfigurationCommand()) },
-                { "ChangeLimitsMods", (x) => Task.FromResult(x.ChangeLimitsModsCommand()) },
-                { "ChangeWhiteListMode", (x) => Task.FromResult(x.ChangeWhiteListModeCommand()) },
-                { "DisableBot", (x) => Task.FromResult(x.DisableBotCommand()) },
+                { "Admin", (x, y) => Task.FromResult(x.AdminCommand()) },
+                { "Logs", (x, y) => Task.FromResult(x.LogsCommand()) },
+                { "ShowLastLog", (x, y) => x.ShowLastLogCommand(y) },
+                { "ShowLastExceptionLogs", (x, y) => x.ShowLastExceptionLogsCommand(y) },
+                { "FindLogByID", (x, y) => Task.FromResult(x.FindLogByIDCommand(isEventID: false)) },
+                { "FindLogByEventID", (x, y) => Task.FromResult(x.FindLogByIDCommand(isEventID: true)) },
+                { "AdminUsers", (x, y) => Task.FromResult(x.AdminUsersCommand()) },
+                { "ShowCountActiveSessions", (x, y) => Task.FromResult(x.ShowCountActiveSessionsCommand()) },
+                { "SendMessageToUser", (x, y) => Task.FromResult(x.SendMessageToUsersCommand(mode: 1)) },
+                { "SendMessagesToActiveUsers", (x, y) => Task.FromResult(x.SendMessageToUsersCommand(mode: 2)) },
+                { "SendMessagesToAllUsers", (x, y) => Task.FromResult(x.SendMessageToUsersCommand(mode: 3)) },
+                { "ChangeUserState", (x, y) => Task.FromResult(x.ChangeUserStateCommand()) },
+                { "DeleteUser", (x, y) => Task.FromResult(x.DeleteUserCommand()) },
+                { "ShowStartConfiguration", (x, y) => Task.FromResult(x.ShowStartConfigurationCommand()) },
+                { "ChangeLimitsMods", (x, y) => Task.FromResult(x.ChangeLimitsModsCommand()) },
+                { "ChangeWhiteListMode", (x, y) => Task.FromResult(x.ChangeWhiteListModeCommand()) },
+                { "DisableBot", (x, y) => Task.FromResult(x.DisableBotCommand()) },
             };
 
         private AdminWrapper AdminWrapper { get; }
@@ -49,21 +49,21 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             LogsRepository = this.RepositoriesHub.GetRequiredRepository<LogsRepository>();
         }
 
-        internal override async Task<IInformationSet> GetInformationSet()
+        protected override async Task<IInformationSet> GetInformationSet(CancellationToken cancellationToken)
         {
             if (AccessDenied(out IInformationSet? informationSet))
                 return informationSet;
 
-            Func<AdminCH, Task<IInformationSet>> selectedCommand = GetSelectedCommand();
+            Func<AdminCH, CancellationToken, Task<IInformationSet>> selectedCommand = GetSelectedCommand();
 
-            informationSet = await selectedCommand(this);
+            informationSet = await selectedCommand(this, cancellationToken);
 
             CheckInformationSet(informationSet);
 
             return informationSet;
         }
 
-        protected Func<AdminCH, Task<IInformationSet>> GetSelectedCommand()
+        protected Func<AdminCH, CancellationToken, Task<IInformationSet>> GetSelectedCommand()
             => commandMap.GetValueOrDefault(callbackQueryParser.SubDirection)
                 ?? throw new NotImplementedException($"Неожиданный callbackQueryParser.SubDirection: {callbackQueryParser.SubDirection}");
 
@@ -87,12 +87,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             return informationSet;
         }
 
-        private async Task<IInformationSet> ShowLastLogCommand()
+        private async Task<IInformationSet> ShowLastLogCommand(CancellationToken cancellationToken)
         {
             ResponseTextBuilder responseTextBuilder;
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.AdminLogs, ButtonsSet.Admin);
 
-            Log? lastLog = await LogsRepository.GetLastLogs(1).FirstOrDefaultAsync();
+            Log? lastLog = await LogsRepository.GetLastLogs(1).FirstOrDefaultAsync(cancellationToken);
 
             if (lastLog == null)
                 responseTextBuilder = new ResponseTextBuilder("Логов не найдено", "Выберите интересующее действие с логами");
@@ -108,10 +108,10 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             return informationSet;
         }
 
-        private async Task<IInformationSet> ShowLastExceptionLogsCommand()
+        private async Task<IInformationSet> ShowLastExceptionLogsCommand(CancellationToken cancellationToken)
         {
-            Log? lastErrorLog = await LogsRepository.GetLastLogs(LogLevel.Error.ToString(), 1).FirstOrDefaultAsync();
-            Log? lastCriticalLog = await LogsRepository.GetLastLogs(LogLevel.Critical.ToString(), 1).FirstOrDefaultAsync();
+            Log? lastErrorLog = await LogsRepository.GetLastLogs(LogLevel.Error.ToString(), 1).FirstOrDefaultAsync(cancellationToken);
+            Log? lastCriticalLog = await LogsRepository.GetLastLogs(LogLevel.Critical.ToString(), 1).FirstOrDefaultAsync(cancellationToken);
 
             List<Log?> exceptionLogs = new List<Log?>() { lastErrorLog, lastCriticalLog };
 
@@ -290,7 +290,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
         {
             IInformationSet informationSet = new MessageInformationSet("Бот отключён");
 
-            this.CloseApp(TimeSpan.FromSeconds(2));
+            this.HandlerResult.StopBot = true;
 
             return informationSet;
         }

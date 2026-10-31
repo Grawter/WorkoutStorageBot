@@ -2,7 +2,7 @@
 using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
-using WorkoutStorageBot.UnitTests.Helpers;
+using WorkoutStorageBot.UnitTests.Builders;
 
 namespace WorkoutStorageBot.UnitTests.BusinessLogic.Context.Session
 {

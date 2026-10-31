@@ -3,7 +3,7 @@ using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
-using WorkoutStorageBot.UnitTests.Helpers;
+using WorkoutStorageBot.UnitTests.Builders;
 using WorkoutStorageModels.Entities.BusinessLogic;
 
 namespace WorkoutStorageBot.UnitTests.BusinessLogic.Helpers.SharedBusinessLogic

@@ -78,7 +78,11 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Helpers.SharedBusines
 
             // Act
             IInformationSet informationSet =
-                await SharedExercisesAndResultsLogicHelper.GetInformationSetWithTextResultsByDateCommand(entityContext, userContext, finderDate, true);
+                await SharedExercisesAndResultsLogicHelper.GetInformationSetWithTextResultsByDateCommand(entityContext, 
+                                                                                                         userContext, 
+                                                                                                         finderDate, 
+                                                                                                         true, 
+                                                                                                         TestContext.Current.CancellationToken);
 
             // Assert
             informationSet.Message.Should().Be(expectedText);
@@ -119,7 +123,8 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Helpers.SharedBusines
 
             // Act
             IInformationSet informationSet =
-                await SharedExercisesAndResultsLogicHelper.GetInformationSetWithTextResultsByDateCommand(entityContext, userContext, finderDate, true);
+                await SharedExercisesAndResultsLogicHelper.GetInformationSetWithTextResultsByDateCommand(entityContext, 
+                                                                                                         userContext, finderDate, true, TestContext.Current.CancellationToken);
 
             // Assert
             informationSet.Message.Should().Be(expectedText);
@@ -164,7 +169,11 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Helpers.SharedBusines
 
             // Act
             IInformationSet informationSet =
-                await SharedExercisesAndResultsLogicHelper.GetInformationSetWithTextResultsByDateCommand(entityContext, userContext, finderDate, true);
+                await SharedExercisesAndResultsLogicHelper.GetInformationSetWithTextResultsByDateCommand(entityContext, 
+                                                                                                         userContext, 
+                                                                                                         finderDate, 
+                                                                                                         true, 
+                                                                                                         TestContext.Current.CancellationToken);
 
             // Assert
             informationSet.Message.Should().Be(expectedText);
@@ -208,7 +217,11 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Helpers.SharedBusines
 
             // Act
             IInformationSet informationSet =
-                await SharedExercisesAndResultsLogicHelper.GetInformationSetWithTextResultsByDateCommand(entityContext, userContext, finderDate, true);
+                await SharedExercisesAndResultsLogicHelper.GetInformationSetWithTextResultsByDateCommand(entityContext, 
+                                                                                                         userContext, 
+                                                                                                         finderDate, 
+                                                                                                         true, 
+                                                                                                         TestContext.Current.CancellationToken);
 
             // Assert
             informationSet.Message.Should().Be(expectedText);
@@ -260,7 +273,11 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Helpers.SharedBusines
 
             // Act
             IInformationSet informationSet =
-                await SharedExercisesAndResultsLogicHelper.GetInformationSetWithTextResultsByDateCommand(entityContext, userContext, finderDate, false);
+                await SharedExercisesAndResultsLogicHelper.GetInformationSetWithTextResultsByDateCommand(entityContext, 
+                                                                                                         userContext, 
+                                                                                                         finderDate, 
+                                                                                                         false, 
+                                                                                                         TestContext.Current.CancellationToken);
 
             // Assert
             informationSet.Message.Should().Be(expectedText);
@@ -299,7 +316,11 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Helpers.SharedBusines
 
             // Act
             IInformationSet informationSet =
-                await SharedExercisesAndResultsLogicHelper.GetInformationSetWithTextResultsByDateCommand(entityContext, userContext, finderDate, false);
+                await SharedExercisesAndResultsLogicHelper.GetInformationSetWithTextResultsByDateCommand(entityContext, 
+                                                                                                         userContext, 
+                                                                                                         finderDate, 
+                                                                                                         false, 
+                                                                                                         TestContext.Current.CancellationToken);
 
             // Assert
             informationSet.Message.Should().Be(expectedText);
@@ -342,7 +363,11 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Helpers.SharedBusines
 
             // Act
             IInformationSet informationSet =
-                await SharedExercisesAndResultsLogicHelper.GetInformationSetWithTextResultsByDateCommand(entityContext, userContext, finderDate, false);
+                await SharedExercisesAndResultsLogicHelper.GetInformationSetWithTextResultsByDateCommand(entityContext, 
+                                                                                                         userContext, 
+                                                                                                         finderDate, 
+                                                                                                         false, 
+                                                                                                         TestContext.Current.CancellationToken);
 
             // Assert
             informationSet.Message.Should().Be(expectedText);
@@ -384,7 +409,11 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Helpers.SharedBusines
 
             // Act
             IInformationSet informationSet =
-                await SharedExercisesAndResultsLogicHelper.GetInformationSetWithTextResultsByDateCommand(entityContext, userContext, finderDate, false);
+                await SharedExercisesAndResultsLogicHelper.GetInformationSetWithTextResultsByDateCommand(entityContext, 
+                                                                                                         userContext, 
+                                                                                                         finderDate, 
+                                                                                                         false, 
+                                                                                                         TestContext.Current.CancellationToken);
 
             // Assert
             informationSet.Message.Should().Be(expectedText);
@@ -425,7 +454,11 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Helpers.SharedBusines
 
             // Act
             IInformationSet informationSet =
-                await SharedExercisesAndResultsLogicHelper.GetInformationSetWithTextResultsByDateCommand(entityContext, userContext, finderDate, false);
+                await SharedExercisesAndResultsLogicHelper.GetInformationSetWithTextResultsByDateCommand(entityContext, 
+                                                                                                         userContext, 
+                                                                                                         finderDate, 
+                                                                                                         false, 
+                                                                                                         TestContext.Current.CancellationToken);
 
             // Assert
             informationSet.Message.Should().Be(expectedText);

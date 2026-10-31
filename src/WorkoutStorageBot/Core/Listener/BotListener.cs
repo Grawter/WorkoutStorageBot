@@ -56,10 +56,10 @@ namespace WorkoutStorageBot.Core.BotTools.Listener
 
             ILogger logger = GetLoggerOnScope(scope);
 
-            User bot = await botClient.GetMe();
+            User bot = await botClient.GetMe(CancellationToken);
 
             if (configurationData.DB.EnsureCreated)
-                EnsureCreatedDB(scope);
+                await EnsureCreatedDBAsync(scope);
 
             logger.LogInformation(EventIDHelper.GetNextEventId(CommonConsts.EventNames.StartingBot), $"Телеграм бот @{bot.Username} запущен");
 
@@ -74,7 +74,23 @@ namespace WorkoutStorageBot.Core.BotTools.Listener
             botClient.StartReceiving(updateHandler: HandleUpdateAsync,
                                      errorHandler: HandleErrorAsync,
                                      receiverOptions: receiverOptions,
-                                     cancellationToken: this.cancellationTokenSource.Token);
+                                     cancellationToken: CancellationToken);
+        }
+
+        internal void StopListen()
+        {
+            if (!cancellationTokenSource.IsCancellationRequested)
+            {
+                cancellationTokenSource.Cancel();
+            }
+        }
+
+        internal void StopListenAfter(TimeSpan timeSpan)
+        {
+            if (!cancellationTokenSource.IsCancellationRequested)
+            {
+                cancellationTokenSource.CancelAfter(timeSpan);
+            }
         }
 
         private async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
@@ -91,12 +107,11 @@ namespace WorkoutStorageBot.Core.BotTools.Listener
                 ContextKeeper = contextKeeper,
                 BotResponseSender = botSender,
                 LoggerFactory = loggerFactory,
-                AppCTS = cancellationTokenSource,
             };
 
             CoreManager coreManager = new CoreManager(coreTools);
 
-            await coreManager.ProcessUpdate(update);
+            await coreManager.ProcessUpdate(update, StopListenAfter, cancellationToken);
         }
 
         private async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
@@ -117,13 +132,15 @@ namespace WorkoutStorageBot.Core.BotTools.Listener
                     exMessage = $"{exMessage.Substring(0, CoreConsts.Log.ShowLimit - 3)}...";
 
                 if (configurationData.Notifications.NotifyOwnersAboutCriticalErrors)
-                    await botSender.SendSimpleMassiveNotification(configurationData.Bot.OwnersChatIDs, @$"!!!Необработанная ошибка!!!:
+                    await botSender.SendSimpleMassiveNotification(configurationData.Bot.OwnersChatIDs, 
+                                                                  @$"!!!Необработанная ошибка!!!:
 ======================
-{exMessage}");
+{exMessage}",
+                                                                  cancellationToken);
             }
             finally
             {
-                cancellationTokenSource.Cancel();
+                StopListen();
             }
         }
 
@@ -135,14 +152,15 @@ namespace WorkoutStorageBot.Core.BotTools.Listener
             return logger;
         }
 
-        private void EnsureCreatedDB(IServiceScope scope)
+        private async Task EnsureCreatedDBAsync(IServiceScope scope)
         {
             EntityContext db = scope.ServiceProvider.GetRequiredService<EntityContext>();
-            db.Database.EnsureCreated();
+            await db.Database.EnsureCreatedAsync(CancellationToken);
         }
 
         public void Dispose()
         {
+            StopListen();
             cancellationTokenSource.Dispose();
         }
     }

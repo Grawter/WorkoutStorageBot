@@ -21,45 +21,45 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 {
     internal class TextMessageCH : MessageCH
     {
-        private static IReadOnlyDictionary<MessageNavigationTarget, Func<TextMessageCH, Task<IInformationSet>>> commandMap
-           = new Dictionary<MessageNavigationTarget, Func<TextMessageCH, Task<IInformationSet>>>
+        private static IReadOnlyDictionary<MessageNavigationTarget, Func<TextMessageCH, CancellationToken, Task<IInformationSet>>> commandMap
+           = new Dictionary<MessageNavigationTarget, Func<TextMessageCH, CancellationToken, Task<IInformationSet>>>
            {
-               { MessageNavigationTarget.Default, (x) => Task.FromResult(x.DefaultCommand()) },
-               { MessageNavigationTarget.AddCycle, (x) => x.AddCycleCommand() },
-               { MessageNavigationTarget.AddDays, (x) => x.AddDaysCommand() },
-               { MessageNavigationTarget.AddExercises, (x) => Task.FromResult(x.AddExercisesCommand()) },
-               { MessageNavigationTarget.AddResultForExercise, (x) => Task.FromResult(x.AddResultForExerciseCommand()) },
-               { MessageNavigationTarget.AddCommentForExerciseTimer, (x) => x.AddCommentForExerciseTimerCommand() },
-               { MessageNavigationTarget.ChangeNameCycle, (x) => x.ChangeNameCommand(domainType: DomainType.Cycle) },
-               { MessageNavigationTarget.ChangeNameDay, (x) => x.ChangeNameCommand(domainType: DomainType.Day) },
-               { MessageNavigationTarget.ChangeNameExercise, (x) => x.ChangeNameCommand(domainType: DomainType.Exercise) },
-               { MessageNavigationTarget.FindResultsByDate, (x) => x.FindResultsByDateCommand(isNeedFindByCurrentDay: false) },
-               { MessageNavigationTarget.FindResultsByDateInDay, (x) => x.FindResultsByDateCommand(isNeedFindByCurrentDay: true) },
-               { MessageNavigationTarget.FindLogByID, (x) => x.FindLogByIDCommand(isEventID: false) },
-               { MessageNavigationTarget.FindLogByEventID, (x) => x.FindLogByIDCommand(isEventID: true) },
-               { MessageNavigationTarget.SendMessageToUser, (x) => x.SendMessageToUserCommand() },
-               { MessageNavigationTarget.SendMessagesToActiveUsers, (x) => x.MassiveSendMessagesToUsersCommand(isNeedFromDB: false) },
-               { MessageNavigationTarget.SendMessagesToAllUsers, (x) => x.MassiveSendMessagesToUsersCommand(isNeedFromDB: true) },
-               { MessageNavigationTarget.ChangeUserState, (x) => x.ChangeUserStateCommand() },
-               { MessageNavigationTarget.DeleteUser, (x) => x.DeleteUserCommand() },
-               { MessageNavigationTarget.DeleteResultsExercise, (x) => x.DeleteResultsExerciseCommand() },
+               { MessageNavigationTarget.Default, (x, y) => Task.FromResult(x.DefaultCommand()) },
+               { MessageNavigationTarget.AddCycle, (x, y)  => x.AddCycleCommand(y) },
+               { MessageNavigationTarget.AddDays, (x, y)  => x.AddDaysCommand(y) },
+               { MessageNavigationTarget.AddExercises, (x, y)  => Task.FromResult(x.AddExercisesCommand()) },
+               { MessageNavigationTarget.AddResultForExercise, (x, y)  => Task.FromResult(x.AddResultForExerciseCommand()) },
+               { MessageNavigationTarget.AddCommentForExerciseTimer, (x, y)  => x.AddCommentForExerciseTimerCommand(y) },
+               { MessageNavigationTarget.ChangeNameCycle, (x, y)  => x.ChangeNameCommand(domainType: DomainType.Cycle, y) },
+               { MessageNavigationTarget.ChangeNameDay, (x, y)  => x.ChangeNameCommand(domainType: DomainType.Day, y) },
+               { MessageNavigationTarget.ChangeNameExercise, (x, y)  => x.ChangeNameCommand(domainType: DomainType.Exercise, y) },
+               { MessageNavigationTarget.FindResultsByDate, (x, y)  => x.FindResultsByDateCommand(isNeedFindByCurrentDay: false, y) },
+               { MessageNavigationTarget.FindResultsByDateInDay, (x, y)  => x.FindResultsByDateCommand(isNeedFindByCurrentDay: true, y) },
+               { MessageNavigationTarget.FindLogByID, (x, y)  => x.FindLogByIDCommand(isEventID: false, y) },
+               { MessageNavigationTarget.FindLogByEventID, (x, y)  => x.FindLogByIDCommand(isEventID: true, y) },
+               { MessageNavigationTarget.SendMessageToUser, (x, y)  => x.SendMessageToUserCommand(y) },
+               { MessageNavigationTarget.SendMessagesToActiveUsers, (x, y)  => x.MassiveSendMessagesToUsersCommand(isNeedFromDB: false, y) },
+               { MessageNavigationTarget.SendMessagesToAllUsers, (x, y)  => x.MassiveSendMessagesToUsersCommand(isNeedFromDB: true, y) },
+               { MessageNavigationTarget.ChangeUserState, (x, y)  => x.ChangeUserStateCommand(y) },
+               { MessageNavigationTarget.DeleteUser, (x, y)  => x.DeleteUserCommand(y) },
+               { MessageNavigationTarget.DeleteResultsExercise, (x, y)  => x.DeleteResultsExerciseCommand(y) },
            };
 
         internal TextMessageCH(CommandHandlerTools commandHandlerTools, MessageTextBuilder requestTextBuilder) : base(commandHandlerTools, requestTextBuilder)
         { }
 
-        internal override async Task<IInformationSet> GetInformationSet()
+        protected override async Task<IInformationSet> GetInformationSet(CancellationToken cancellationToken)
         {
-            Func<TextMessageCH, Task<IInformationSet>> selectedCommand = GetSelectedCommand();
+            Func<TextMessageCH, CancellationToken, Task<IInformationSet>> selectedCommand = GetSelectedCommand();
 
-            IInformationSet informationSet = await selectedCommand(this);
+            IInformationSet informationSet = await selectedCommand(this, cancellationToken);
 
             CheckInformationSet(informationSet);
 
             return informationSet;
         }
 
-        protected Func<TextMessageCH, Task<IInformationSet>> GetSelectedCommand()
+        protected Func<TextMessageCH, CancellationToken, Task<IInformationSet>> GetSelectedCommand()
             => commandMap.GetValueOrDefault(this.CurrentUserContext.Navigation.MessageNavigationTarget) 
             ?? throw new NotImplementedException($"Неожиданный CurrentUserContext.Navigation.MessageNavigationTarget: {this.CurrentUserContext.Navigation.MessageNavigationTarget}");
         
@@ -97,7 +97,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             return informationSet;
         }
 
-        private async Task<IInformationSet> AddCycleCommand()
+        private async Task<IInformationSet> AddCycleCommand(CancellationToken cancellationToken)
         {
             requestTextBuilder.RemoveCompletely().WithoutServiceSymbol();
 
@@ -125,7 +125,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 this.CurrentUserContext.SetNewActiveCycleForce(currentCycle);
 
             this.CurrentUserContext.UserInformation.Cycles.Add(currentCycle);
-            await this.Db.AddEntity(currentCycle);
+            await this.Db.AddEntity(currentCycle, cancellationToken);
 
             this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull();
 
@@ -156,7 +156,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             return informationSet;
         }
 
-        private async Task<IInformationSet> AddDaysCommand()
+        private async Task<IInformationSet> AddDaysCommand(CancellationToken cancellationToken)
         {
             requestTextBuilder.RemoveCompletely().WithoutServiceSymbol();
 
@@ -184,7 +184,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             this.CurrentUserContext.DataManager.CurrentCycle.Days.Add(currentDay);
 
-            await this.Db.AddEntity(currentDay);
+            await this.Db.AddEntity(currentDay, cancellationToken);
 
             switch (this.CurrentUserContext.Navigation.QueryFrom)
             {
@@ -328,7 +328,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             return informationSet;
         }
 
-        private async Task<IInformationSet> AddCommentForExerciseTimerCommand()
+        private async Task<IInformationSet> AddCommentForExerciseTimerCommand(CancellationToken cancellationToken)
         {
             string comment = requestTextBuilder.RemoveCompletely(50).WithoutServiceSymbol().Build();
 
@@ -337,7 +337,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             resultExercise.Exercise = this.CurrentUserContext.DataManager.CurrentExercise;
             this.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().ResultsExercise.Add(resultExercise);
-            await this.Db.AddEntity(resultExercise);
+            await this.Db.AddEntity(resultExercise, cancellationToken);
 
             this.CurrentUserContext.DataManager.ResetTempResultsExercise();
 
@@ -351,7 +351,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             return informationSet;
         }
 
-        private async Task<IInformationSet> ChangeNameCommand(DomainType domainType)
+        private async Task<IInformationSet> ChangeNameCommand(DomainType domainType, CancellationToken cancellationToken)
         {
             requestTextBuilder.RemoveCompletely(25).WithoutServiceSymbol();
 
@@ -420,7 +420,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             IDTODomain DTODomain = this.CurrentUserContext.DataManager.GetRequiredCurrentDomain(domainType);
             DTODomain.Name = domainName;
 
-            await this.Db.UpdateEntity(DTODomain);
+            await this.Db.UpdateEntity(DTODomain, cancellationToken);
 
             informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
@@ -462,7 +462,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             }
         }
 
-        private async Task<IInformationSet> FindResultsByDateCommand(bool isNeedFindByCurrentDay)
+        private async Task<IInformationSet> FindResultsByDateCommand(bool isNeedFindByCurrentDay, CancellationToken cancellationToken)
         {
             IInformationSet informationSet;
 
@@ -484,12 +484,16 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 return informationSet;
             }
 
-            informationSet = await SharedExercisesAndResultsLogicHelper.GetInformationSetWithTextResultsByDateCommand(this.Db, this.CurrentUserContext, dateTime, isNeedFindByCurrentDay);
+            informationSet = await SharedExercisesAndResultsLogicHelper.GetInformationSetWithTextResultsByDateCommand(this.Db, 
+                                                                                                                      this.CurrentUserContext, 
+                                                                                                                      dateTime, 
+                                                                                                                      isNeedFindByCurrentDay,
+                                                                                                                      cancellationToken);
 
             return informationSet;
         }
 
-        private async Task<IInformationSet> FindLogByIDCommand(bool isEventID)
+        private async Task<IInformationSet> FindLogByIDCommand(bool isEventID, CancellationToken cancellationToken)
         {
             this.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
@@ -519,9 +523,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             Log? log;
 
             if (isEventID)
-                log = await logsRepository.GetLogByEventId(Id);
+                log = await logsRepository.GetLogByEventId(Id, cancellationToken);
             else
-                log = await logsRepository.GetLogById(Id);
+                log = await logsRepository.GetLogById(Id, cancellationToken);
 
             if (log == null)
             {
@@ -541,7 +545,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             return informationSet;
         }
 
-        private async Task<IInformationSet> SendMessageToUserCommand()
+        private async Task<IInformationSet> SendMessageToUserCommand(CancellationToken cancellationToken)
         {
             if (AccessDenied(out IInformationSet? informationSet))
                 return informationSet;
@@ -573,9 +577,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             UserInformationRepository userInformationRepository = this.RepositoriesHub.GetRequiredRepository<UserInformationRepository>();
 
             if (long.TryParse(userIdentity, out long userID))
-                user = await userInformationRepository.GetUserInformation(userID);
+                user = await userInformationRepository.GetUserInformation(userID, cancellationToken);
             else
-                user = await userInformationRepository.GetUserInformation(userIdentity);
+                user = await userInformationRepository.GetUserInformation(userIdentity, cancellationToken);
 
             if (user == null)
             {
@@ -587,7 +591,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 return informationSet;
             }
 
-            await this.BotResponseSender.SendSimpleNotification(user.UserId, text);
+            await this.BotResponseSender.SendSimpleNotification(user.UserId, text, cancellationToken);
 
             responseTextBuilder = new ResponseTextBuilder($"Сообщение отправлено пользователю {userIdentity.AddBoldAndQuotes()}",
                     "Выберите интересующее действие");
@@ -598,7 +602,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             return informationSet;
         }
 
-        private async Task<IInformationSet> MassiveSendMessagesToUsersCommand(bool isNeedFromDB)
+        private async Task<IInformationSet> MassiveSendMessagesToUsersCommand(bool isNeedFromDB, CancellationToken cancellationToken)
         {
             if (AccessDenied(out IInformationSet? informationSet))
                 return informationSet;
@@ -608,10 +612,10 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             int counter = 0;
 
             foreach (var userID in isNeedFromDB 
-                ? this.Db.UsersInformation.AsNoTracking().Select(x => x.UserId)
+                ? await this.Db.UsersInformation.AsNoTracking().Select(x => x.UserId).ToListAsync(cancellationToken)
                 : this.ContextKeeper.GetAllKeys())
             {
-                await this.BotResponseSender.SendSimpleNotification(userID, text);
+                await this.BotResponseSender.SendSimpleNotification(userID, text, cancellationToken);
                 ++counter;
             }
 
@@ -624,7 +628,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             return informationSet;
         }
 
-        private async Task<IInformationSet> ChangeUserStateCommand()
+        private async Task<IInformationSet> ChangeUserStateCommand(CancellationToken cancellationToken)
         {
             if (AccessDenied(out IInformationSet? informationSet))
                 return informationSet;
@@ -656,9 +660,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             AdminWrapper adminWrapper = this.RepositoriesHub.InitRepository(x => new AdminWrapper(x, this.GetConfigurationData(), this.CreateLogger<AdminWrapper>()));
 
             if (long.TryParse(userIdentity, out long userID))
-                user = await adminWrapper.GetUserInformation(userID);
+                user = await adminWrapper.GetUserInformation(userID, cancellationToken);
             else
-                user = await adminWrapper.GetUserInformation(userIdentity);
+                user = await adminWrapper.GetUserInformation(userIdentity, cancellationToken);
 
             if (user == null)
             {
@@ -678,7 +682,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                     if (userContext != null)
                         userContext.UserInformation.WhiteList = !userContext.UserInformation.WhiteList;
 
-                    await adminWrapper.ChangeWhiteListByUser(user);
+                    await adminWrapper.ChangeWhiteListByUser(user, cancellationToken);
 
                     responseTextBuilder = new ResponseTextBuilder($"WhiteList для {user.Username.AddBoldAndQuotes()} ({user.UserId}) установлен в: {user.WhiteList.ToString().AddBold()}",
                         "Выберите интересующее действие");
@@ -689,7 +693,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                     if (userContext != null)
                         userContext.UserInformation.BlackList = !userContext.UserInformation.BlackList;
 
-                    await adminWrapper.ChangeBlackListByUser(user);
+                    await adminWrapper.ChangeBlackListByUser(user, cancellationToken);
 
                     responseTextBuilder = new ResponseTextBuilder($"BlackList для {user.Username.AddBoldAndQuotes()} ({user.UserId}) установлен в: {user.BlackList.ToString().AddBold()}",
                         "Выберите интересующее действие");
@@ -704,7 +708,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             return informationSet;
         }
 
-        private async Task<IInformationSet> DeleteUserCommand()
+        private async Task<IInformationSet> DeleteUserCommand(CancellationToken cancellationToken)
         {
             if (AccessDenied(out IInformationSet? informationSet))
                 return informationSet;
@@ -729,9 +733,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             AdminWrapper adminWrapper = this.RepositoriesHub.InitRepository(x => new AdminWrapper(x, this.GetConfigurationData(), this.CreateLogger<AdminWrapper>()));
 
             if (long.TryParse(userIdentity, out long userID))
-                user = await adminWrapper.GetUserInformation(userID);
+                user = await adminWrapper.GetUserInformation(userID, cancellationToken);
             else
-                user = await adminWrapper.GetUserInformation(userIdentity);
+                user = await adminWrapper.GetUserInformation(userIdentity, cancellationToken);
 
             if (user == null)
             {
@@ -743,7 +747,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             }
 
             this.ContextKeeper.RemoveContext(user.UserId);
-            await adminWrapper.DeleteAccount(user);
+            await adminWrapper.DeleteAccount(user, cancellationToken);
 
             responseTextBuilder = new ResponseTextBuilder($"Пользователь {user.Username.AddBoldAndQuotes()} ({user.UserId}) был успешно удалён", "Выберите интересующее действие");
             buttonsSets = (ButtonsSet.AdminUsers, ButtonsSet.Admin);
@@ -753,7 +757,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
             return informationSet;
         }
 
-        private async Task<IInformationSet> DeleteResultsExerciseCommand()
+        private async Task<IInformationSet> DeleteResultsExerciseCommand(CancellationToken cancellationToken)
         {
             string countToDeleteStr = requestTextBuilder.RemoveCompletely(35).WithoutServiceSymbol().Build();
 
@@ -797,7 +801,7 @@ LIMIT {countToDelete}";
 
                 HashSet<int> idsToDelete = await this.Db.ResultsExercises.FromSqlRaw(selectSql)
                                                                          .Select(r => r.Id)
-                                                                         .ToHashSetAsync();
+                                                                         .ToHashSetAsync(cancellationToken);
 
                 int numberOfRowsAffected = 0;
 
@@ -809,7 +813,7 @@ LIMIT {countToDelete}";
 DELETE FROM [ResultsExercises]
 WHERE Id IN ({ids})";
 
-                    numberOfRowsAffected = await this.Db.ExecuteSQL(deleteSql);
+                    numberOfRowsAffected = await this.Db.ExecuteSQL(deleteSql, cancellationToken);
 
                     var tracked = this.Db.ChangeTracker.Entries<ResultExercise>()
                         .Where(e => idsToDelete.Contains(e.Entity.Id))

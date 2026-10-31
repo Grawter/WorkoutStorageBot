@@ -41,7 +41,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
             this.AdminWrapper = RepositoriesStore.InitRepository(x => new AdminWrapper(x, coreTools.ConfigurationData, coreTools.LoggerFactory));
         }
 
-        internal override async Task<HandlerResult> Process(HandlerResult handlerResult)
+        internal override async Task<HandlerResult> Process(HandlerResult handlerResult, CancellationToken cancellationToken)
         {
             IUpdateInfo updateInfo = UpdatesHelper.GetUpdateInfo(handlerResult.Update);
 
@@ -52,7 +52,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
             }
             else if (updateInfo is ShortUpdateInfo shortUpdateInfo)
             {
-                (UserContext? userContext, bool isNewContext) = await TryGetOrCreateContext(shortUpdateInfo.User);
+                (UserContext? userContext, bool isNewContext) = await TryGetOrCreateContext(shortUpdateInfo.User, cancellationToken);
 
                 if (userContext == null)
                     return handlerResult;
@@ -60,7 +60,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
                 PrimaryHandlerResult primaryHandlerResult = CreatePrimaryHandlerResult(shortUpdateInfo, userContext, isNewContext);
 
                 if (primaryHandlerResult.ShortUpdateInfo.IsExpectedType)
-                    await ProcessExpectedUpdateType(primaryHandlerResult);
+                    await ProcessExpectedUpdateType(primaryHandlerResult, cancellationToken);
                 else
                     ProcessUnexpectedUpdateType(primaryHandlerResult);
 
@@ -73,12 +73,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
         private void ProcessUnknownUpdateType(UnknownUpdateInfo unknownUpdateInfo)
             => Logger.LogWarning($"Получен неизвестный update c типом {unknownUpdateInfo.UpdateType.ToString()}");
 
-        private async Task<(UserContext? userContext, bool isNewContext)> TryGetOrCreateContext(User user)
+        private async Task<(UserContext? userContext, bool isNewContext)> TryGetOrCreateContext(User user, CancellationToken cancellationToken)
         {
             UserContext? userContext = GetExistingContext(user.Id);
 
             if (userContext == null)
-                return (await TryCreateNewContext(user), true);
+                return (await TryCreateNewContext(user, cancellationToken), true);
             else if (AdminWrapper.UserHasAccess(userContext.UserInformation))
                 return (userContext, false);
             else
@@ -90,9 +90,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
                 ? ContextKeeper.GetContext(userID)
                 : null;
 
-        private async Task<UserContext?> TryCreateNewContext(User user)
+        private async Task<UserContext?> TryCreateNewContext(User user, CancellationToken cancellationToken)
         {
-            UserInformation? userInformation = await GetOrTryCreateNewUserInformation(user);
+            UserInformation? userInformation = await GetOrTryCreateNewUserInformation(user, cancellationToken);
 
             if (userInformation == null || !AdminWrapper.UserHasAccess(userInformation))
                 return null;
@@ -108,9 +108,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
             return userContext;
         }
 
-        private async Task<UserInformation?> GetOrTryCreateNewUserInformation(User user)
-            => await AdminWrapper.GetFullUserInformationWithoutTracking(user.Id) 
-                ?? await AdminWrapper.TryCreateNewUserInformation(user);
+        private async Task<UserInformation?> GetOrTryCreateNewUserInformation(User user, CancellationToken cancellationToken)
+            => await AdminWrapper.GetFullUserInformationWithoutTracking(user.Id, cancellationToken) 
+                ?? await AdminWrapper.TryCreateNewUserInformation(user, cancellationToken);
 
         private Roles GetUserRoles(UserInformation currentUser)
         {
@@ -133,13 +133,13 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
             };
         }
 
-        private async Task ProcessExpectedUpdateType(PrimaryHandlerResult primaryHandledData)
+        private async Task ProcessExpectedUpdateType(PrimaryHandlerResult primaryHandledData, CancellationToken cancellationToken)
         {
             LoggingExpectedUpdateType(primaryHandledData.ShortUpdateInfo.User, primaryHandledData.ShortUpdateInfo.Data, primaryHandledData.ShortUpdateInfo.UpdateType);
 
             // Не обязательно. Чтобы не было анимации "зависание кнопки" в ТГ боте
             if (primaryHandledData.ShortUpdateInfo.UpdateType == UpdateType.CallbackQuery)
-                await this.BotResponseSender.AnswerCallbackQuery(primaryHandledData.Update.CallbackQuery!.Id);
+                await this.BotResponseSender.AnswerCallbackQuery(primaryHandledData.Update.CallbackQuery!.Id, cancellationToken);
 
             if (primaryHandledData.IsNewContext)
                 SetInformationSetForNewContext(primaryHandledData);

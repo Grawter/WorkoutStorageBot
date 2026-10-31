@@ -1,6 +1,7 @@
 ﻿using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using WorkoutStorageBot.Application.Configuration;
 using WorkoutStorageBot.BusinessLogic.Context.Global;
@@ -8,14 +9,16 @@ using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.Extenions;
 using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackCommandHandler.Context;
-using WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers;
 using WorkoutStorageBot.BusinessLogic.Helpers.CallbackQueryParser;
+using WorkoutStorageBot.Core.Extensions;
 using WorkoutStorageBot.Core.Logging;
 using WorkoutStorageBot.Core.Repositories.Store;
 using WorkoutStorageBot.Core.Sender;
 using WorkoutStorageBot.Model.AppContext;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.Model.DTO.HandlerData;
+using WorkoutStorageBot.Model.DTO.HandlerData.Results;
+using WorkoutStorageBot.Model.DTO.HandlerData.Results.UpdateInfo;
 using WorkoutStorageBot.Model.DTO.InformationSetForSend;
 using WorkoutStorageBot.UnitTests.Helpers;
 
@@ -37,7 +40,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 
         private readonly CommandHandlerTools commandHandlerTools;
 
-        private readonly CancellationTokenSource cts;
+        private UserContext CurrentUserContext => commandHandlerTools.HandlerResult.CurrentUserContext;
+        private IInformationSet InformationSet => commandHandlerTools.HandlerResult.InformationSet.ThrowIfNull();
 
         public AdminCHTests()
         {
@@ -51,8 +55,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             customLoggerFactoryMock = new();
             loggerMock = new();
 
-            cts = new CancellationTokenSource();
-
             customLoggerFactoryMock.Setup(x => x.CreateLogger<It.IsAnyType>()).Returns(loggerMock.Object);
 
             CoreTools coreTools = new CoreTools()
@@ -62,7 +64,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                 ContextKeeper = contextKeeperMock.Object,
                 BotResponseSender = botResponseSenderMock.Object,
                 LoggerFactory = customLoggerFactoryMock.Object,
-                AppCTS = cts,
             };
 
             DTOUserInformation DTOCurrentUser = entityContext.UsersInformation.First().ToDTOUserInformation();
@@ -70,10 +71,19 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             UserContext userContext = new UserContext(DTOCurrentUser, Roles.User | Roles.Admin);
             userContext.DataManager.CreateAndSetCurrentCycle("testCycle", true, DTOCurrentUser);
 
+            Update update = new Update();
+
             commandHandlerTools = new CommandHandlerTools()
             {
-                ParentHandler = new PrimaryUpdateHandler(coreTools, new RepositoriesStore(entityContext)),
-                CurrentUserContext = userContext,
+                CoreTools = coreTools,
+                HandlerResult = new AuthorizedHandlerResult()
+                {
+                    CurrentUserContext = userContext,
+                    HasAccess = true,
+                    Update = update,
+                    ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.CallbackQuery, true)
+                },
+                RepositoriesStore = new RepositoriesStore(entityContext),
             };
         }
 
@@ -90,7 +100,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                 ContextKeeper = contextKeeperMock.Object,
                 BotResponseSender = botResponseSenderMock.Object,
                 LoggerFactory = customLoggerFactoryMock.Object,
-                AppCTS = cts,
             };
 
             DTOUserInformation localDTOCurrentUser = entityContext.UsersInformation.First().ToDTOUserInformation();
@@ -98,10 +107,19 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             UserContext localUserContext = new UserContext(localDTOCurrentUser);
             localUserContext.DataManager.CreateAndSetCurrentCycle("testCycle", true, localDTOCurrentUser);
 
+            Update update = new Update();
+
             CommandHandlerTools localCommandHandlerTools = new CommandHandlerTools()
             {
-                ParentHandler = new PrimaryUpdateHandler(localCoreTools, new RepositoriesStore(entityContext)),
-                CurrentUserContext = localUserContext,
+                CoreTools = localCoreTools,
+                HandlerResult = new AuthorizedHandlerResult()
+                {
+                    CurrentUserContext = localUserContext,
+                    HasAccess = true,
+                    Update = update,
+                    ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.CallbackQuery, true)
+                },
+                RepositoriesStore = new RepositoriesStore(entityContext),
             };
 
             // Arrange
@@ -112,11 +130,14 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             AdminCH adminCH = new AdminCH(localCommandHandlerTools, callbackQueryParser);
 
             // Act
-            IInformationSet informationSet = await adminCH.GetInformationSet();
+            await adminCH.Process(TestContext.Current.CancellationToken);
+
+            IInformationSet? informationSet = localCommandHandlerTools.HandlerResult.InformationSet;
+            informationSet.Should().NotBeNull();
 
             // Assert
-            localCommandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-            localCommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
             informationSet.Message.Should().Be("Отказано в действии");
             informationSet.ButtonsSets.Should().Be((ButtonsSet.Main, ButtonsSet.None));
@@ -135,16 +156,16 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             AdminCH adminCH = new AdminCH(commandHandlerTools, callbackQueryParser);
 
             // Act
-            IInformationSet informationSet = await adminCH.GetInformationSet();
+            await adminCH.Process(TestContext.Current.CancellationToken);
 
             // Assert
-            commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-            commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+            CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+            CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
-            informationSet.Message.Should().Be("Выберите интересующее действие с админкой");
-            informationSet.ButtonsSets.Should().Be((ButtonsSet.Admin, ButtonsSet.Main));
-            informationSet.ParseMode.Should().Be(ParseMode.Html);
-            informationSet.AdditionalParameters.Should().BeNull();
+            InformationSet.Message.Should().Be("Выберите интересующее действие с админкой");
+            InformationSet.ButtonsSets.Should().Be((ButtonsSet.Admin, ButtonsSet.Main));
+            InformationSet.ParseMode.Should().Be(ParseMode.Html);
+            InformationSet.AdditionalParameters.Should().BeNull();
         }
 
         [Fact]
@@ -158,16 +179,16 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             AdminCH adminCH = new AdminCH(commandHandlerTools, callbackQueryParser);
 
             // Act
-            IInformationSet informationSet = await adminCH.GetInformationSet();
+            await adminCH.Process(TestContext.Current.CancellationToken);
 
             // Assert
-            commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-            commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+            CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+            CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
-            informationSet.Message.Should().Be("Выберите интересующее действие с логами");
-            informationSet.ButtonsSets.Should().Be((ButtonsSet.AdminLogs, ButtonsSet.Admin));
-            informationSet.ParseMode.Should().Be(ParseMode.Html);
-            informationSet.AdditionalParameters.Should().BeNull();
+            InformationSet.Message.Should().Be("Выберите интересующее действие с логами");
+            InformationSet.ButtonsSets.Should().Be((ButtonsSet.AdminLogs, ButtonsSet.Admin));
+            InformationSet.ParseMode.Should().Be(ParseMode.Html);
+            InformationSet.AdditionalParameters.Should().BeNull();
         }
 
         [Theory]
@@ -184,19 +205,24 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 
             if (withLogs)
             {
-                await entityContext.Logs.AddAsync(new WorkoutStorageModels.Entities.Core.Logging.Log() { LogLevel = LogLevel.Warning.ToString(), Message = "TestLog", SourceContext = "Abc", });
-                await entityContext.SaveChangesAsync();
+                await entityContext.Logs.AddAsync(new WorkoutStorageModels.Entities.Core.Logging.Log() 
+                    { 
+                        LogLevel = LogLevel.Warning.ToString(), 
+                        Message = "TestLog", 
+                        SourceContext = "Abc", 
+                    }, TestContext.Current.CancellationToken);
+                await entityContext.SaveChangesAsync(TestContext.Current.CancellationToken);
             }
 
             // Act
-            IInformationSet informationSet = await adminCH.GetInformationSet();
+            await adminCH.Process(TestContext.Current.CancellationToken);
 
             // Assert
-            commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-            commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+            CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+            CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
             if (withLogs)
-                informationSet.Message.Should().Be(@"Последний лог:
+                InformationSet.Message.Should().Be(@"Последний лог:
 ======================
 [1] [Warning] [] [01.01.0001 00:00:00] [Null] [Abc]:
 TestLog
@@ -205,15 +231,15 @@ TestLog
 Выберите интересующее действие с логами
 ");
             else
-                informationSet.Message.Should().Be(@"Логов не найдено
+                InformationSet.Message.Should().Be(@"Логов не найдено
 ======================
 
 Выберите интересующее действие с логами
 ");
 
-            informationSet.ButtonsSets.Should().Be((ButtonsSet.AdminLogs, ButtonsSet.Admin));
-            informationSet.ParseMode.Should().Be(ParseMode.None);
-            informationSet.AdditionalParameters.Should().BeNull();
+            InformationSet.ButtonsSets.Should().Be((ButtonsSet.AdminLogs, ButtonsSet.Admin));
+            InformationSet.ParseMode.Should().Be(ParseMode.None);
+            InformationSet.AdditionalParameters.Should().BeNull();
         }
 
         [Theory]
@@ -230,20 +256,30 @@ TestLog
 
             if (withLogs)
             {
-                await entityContext.Logs.AddAsync(new WorkoutStorageModels.Entities.Core.Logging.Log() { LogLevel = LogLevel.Error.ToString(), Message = "TestLog1", SourceContext = "Abc", });
-                await entityContext.Logs.AddAsync(new WorkoutStorageModels.Entities.Core.Logging.Log() { LogLevel = LogLevel.Critical.ToString(), Message = "TestLog2", SourceContext = "Abc", });
-                await entityContext.SaveChangesAsync();
+                await entityContext.Logs.AddAsync(new WorkoutStorageModels.Entities.Core.Logging.Log() 
+                    { 
+                        LogLevel = LogLevel.Error.ToString(), 
+                        Message = "TestLog1", 
+                        SourceContext = "Abc", 
+                    }, TestContext.Current.CancellationToken);
+                await entityContext.Logs.AddAsync(new WorkoutStorageModels.Entities.Core.Logging.Log() 
+                    { 
+                        LogLevel = LogLevel.Critical.ToString(), 
+                        Message = "TestLog2", 
+                        SourceContext = "Abc", 
+                    }, TestContext.Current.CancellationToken);
+                await entityContext.SaveChangesAsync(TestContext.Current.CancellationToken);
             }
 
             // Act
-            IInformationSet informationSet = await adminCH.GetInformationSet();
+            await adminCH.Process(TestContext.Current.CancellationToken);
 
             // Assert
-            commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-            commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+            CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+            CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
             if (withLogs)
-                informationSet.Message.Should().Be(@"Последние ошибочные логи:
+                InformationSet.Message.Should().Be(@"Последние ошибочные логи:
 ======================
 [1] [Error] [] [01.01.0001 00:00:00] [Null] [Abc]:
 TestLog1
@@ -256,7 +292,7 @@ TestLog2
 Выберите интересующее действие с логами
 ");
             else
-                informationSet.Message.Should().Be(@"Последние ошибочные логи:
+                InformationSet.Message.Should().Be(@"Последние ошибочные логи:
 ======================
 Логов не найдено
 
@@ -265,9 +301,9 @@ TestLog2
 Выберите интересующее действие с логами
 ");
 
-            informationSet.ButtonsSets.Should().Be((ButtonsSet.AdminLogs, ButtonsSet.Admin));
-            informationSet.ParseMode.Should().Be(ParseMode.None);
-            informationSet.AdditionalParameters.Should().BeNull();
+            InformationSet.ButtonsSets.Should().Be((ButtonsSet.AdminLogs, ButtonsSet.Admin));
+            InformationSet.ParseMode.Should().Be(ParseMode.None);
+            InformationSet.AdditionalParameters.Should().BeNull();
         }
 
         [Fact]
@@ -281,16 +317,16 @@ TestLog2
             AdminCH adminCH = new AdminCH(commandHandlerTools, callbackQueryParser);
             
             // Act
-            IInformationSet informationSet = await adminCH.GetInformationSet();
+            await adminCH.Process(TestContext.Current.CancellationToken);
 
             // Assert
-            commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-            commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.FindLogByID);
+            CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+            CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.FindLogByID);
             
-            informationSet.Message.Should().Be(@"Введите Id интересующего лога:");
-            informationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.AdminLogs));
-            informationSet.ParseMode.Should().Be(ParseMode.Html);
-            informationSet.AdditionalParameters.Should().BeNull();
+            InformationSet.Message.Should().Be(@"Введите Id интересующего лога:");
+            InformationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.AdminLogs));
+            InformationSet.ParseMode.Should().Be(ParseMode.Html);
+            InformationSet.AdditionalParameters.Should().BeNull();
         }
 
         [Fact]
@@ -304,16 +340,16 @@ TestLog2
             AdminCH adminCH = new AdminCH(commandHandlerTools, callbackQueryParser);
             
             // Act
-            IInformationSet informationSet = await adminCH.GetInformationSet();
+            await adminCH.Process(TestContext.Current.CancellationToken);
 
             // Assert
-            commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-            commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.FindLogByEventID);
+            CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+            CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.FindLogByEventID);
 
-            informationSet.Message.Should().Be(@"Введите eventId интересующего лога:");
-            informationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.AdminLogs));
-            informationSet.ParseMode.Should().Be(ParseMode.Html);
-            informationSet.AdditionalParameters.Should().BeNull();
+            InformationSet.Message.Should().Be(@"Введите eventId интересующего лога:");
+            InformationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.AdminLogs));
+            InformationSet.ParseMode.Should().Be(ParseMode.Html);
+            InformationSet.AdditionalParameters.Should().BeNull();
         }
 
         [Fact]
@@ -327,16 +363,16 @@ TestLog2
             AdminCH adminCH = new AdminCH(commandHandlerTools, callbackQueryParser);
             
             // Act
-            IInformationSet informationSet = await adminCH.GetInformationSet();
+            await adminCH.Process(TestContext.Current.CancellationToken);
 
             // Assert
-            commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-            commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+            CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+            CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
-            informationSet.Message.Should().Be("Выберите интересующее действие с пользователями");
-            informationSet.ButtonsSets.Should().Be((ButtonsSet.AdminUsers, ButtonsSet.Admin));
-            informationSet.ParseMode.Should().Be(ParseMode.Html);
-            informationSet.AdditionalParameters.Should().BeNull();
+            InformationSet.Message.Should().Be("Выберите интересующее действие с пользователями");
+            InformationSet.ButtonsSets.Should().Be((ButtonsSet.AdminUsers, ButtonsSet.Admin));
+            InformationSet.ParseMode.Should().Be(ParseMode.Html);
+            InformationSet.AdditionalParameters.Should().BeNull();
         }
 
         [Fact]
@@ -353,16 +389,16 @@ TestLog2
             AdminCH adminCH = new AdminCH(commandHandlerTools, callbackQueryParser);
             
             // Act
-            IInformationSet informationSet = await adminCH.GetInformationSet();
+            await adminCH.Process(TestContext.Current.CancellationToken);
 
             // Assert
-            commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-            commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+            CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+            CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
-            informationSet.Message.Should().Contain($"<b>{countActiveSessions}</b>").And.Contain("Выберите интересующее действие с пользователями");
-            informationSet.ButtonsSets.Should().Be((ButtonsSet.AdminUsers, ButtonsSet.Admin));
-            informationSet.ParseMode.Should().Be(ParseMode.Html);
-            informationSet.AdditionalParameters.Should().BeNull();
+            InformationSet.Message.Should().Contain($"<b>{countActiveSessions}</b>").And.Contain("Выберите интересующее действие с пользователями");
+            InformationSet.ButtonsSets.Should().Be((ButtonsSet.AdminUsers, ButtonsSet.Admin));
+            InformationSet.ParseMode.Should().Be(ParseMode.Html);
+            InformationSet.AdditionalParameters.Should().BeNull();
         }
 
         [Fact]
@@ -376,20 +412,20 @@ TestLog2
             AdminCH adminCH = new AdminCH(commandHandlerTools, callbackQueryParser);
             
             // Act
-            IInformationSet informationSet = await adminCH.GetInformationSet();
+            await adminCH.Process(TestContext.Current.CancellationToken);
 
             // Assert
-            commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-            commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.SendMessageToUser);
+            CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+            CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.SendMessageToUser);
 
-            informationSet.Message.Should().Be(@"Введите [UserId/@userLogin]-[Сообщение] для отправки сообщения пользователю
+            InformationSet.Message.Should().Be(@"Введите [UserId/@userLogin]-[Сообщение] для отправки сообщения пользователю
 ======================
 
 Пример: @TestUser-Тест
 ");
-            informationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.AdminUsers));
-            informationSet.ParseMode.Should().Be(ParseMode.Html);
-            informationSet.AdditionalParameters.Should().BeNull();
+            InformationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.AdminUsers));
+            InformationSet.ParseMode.Should().Be(ParseMode.Html);
+            InformationSet.AdditionalParameters.Should().BeNull();
         }
 
         [Fact]
@@ -403,16 +439,16 @@ TestLog2
             AdminCH adminCH = new AdminCH(commandHandlerTools, callbackQueryParser);
             
             // Act
-            IInformationSet informationSet = await adminCH.GetInformationSet();
+            await adminCH.Process(TestContext.Current.CancellationToken);
 
             // Assert
-            commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-            commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.SendMessagesToActiveUsers);
+            CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+            CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.SendMessagesToActiveUsers);
 
-            informationSet.Message.Should().Be($"Введите сообщение для отправки его всем пользователям с активной сессией");
-            informationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.AdminUsers));
-            informationSet.ParseMode.Should().Be(ParseMode.Html);
-            informationSet.AdditionalParameters.Should().BeNull();
+            InformationSet.Message.Should().Be($"Введите сообщение для отправки его всем пользователям с активной сессией");
+            InformationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.AdminUsers));
+            InformationSet.ParseMode.Should().Be(ParseMode.Html);
+            InformationSet.AdditionalParameters.Should().BeNull();
         }
 
         [Fact]
@@ -426,16 +462,16 @@ TestLog2
             AdminCH adminCH = new AdminCH(commandHandlerTools, callbackQueryParser);
             
             // Act
-            IInformationSet informationSet = await adminCH.GetInformationSet();
+            await adminCH.Process(TestContext.Current.CancellationToken);
 
             // Assert
-            commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-            commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.SendMessagesToAllUsers);
+            CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+            CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.SendMessagesToAllUsers);
 
-            informationSet.Message.Should().Be($"Введите сообщение для отправки его всем пользователям из БД");
-            informationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.AdminUsers));
-            informationSet.ParseMode.Should().Be(ParseMode.Html);
-            informationSet.AdditionalParameters.Should().BeNull();
+            InformationSet.Message.Should().Be($"Введите сообщение для отправки его всем пользователям из БД");
+            InformationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.AdminUsers));
+            InformationSet.ParseMode.Should().Be(ParseMode.Html);
+            InformationSet.AdditionalParameters.Should().BeNull();
         }
 
         [Fact]
@@ -449,20 +485,20 @@ TestLog2
             AdminCH adminCH = new AdminCH(commandHandlerTools, callbackQueryParser);
             
             // Act
-            IInformationSet informationSet = await adminCH.GetInformationSet();
+            await adminCH.Process(TestContext.Current.CancellationToken);
 
             // Assert
-            commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-            commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.ChangeUserState);
+            CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+            CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.ChangeUserState);
 
-            informationSet.Message.Should().Be(@$"Изменение black/white list у пользователя:
+            InformationSet.Message.Should().Be(@$"Изменение black/white list у пользователя:
 ======================
 
 Введите [UserID/@TestUser] [bl/wl]
 ");
-            informationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.AdminUsers));
-            informationSet.ParseMode.Should().Be(ParseMode.Html);
-            informationSet.AdditionalParameters.Should().BeNull();
+            InformationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.AdminUsers));
+            InformationSet.ParseMode.Should().Be(ParseMode.Html);
+            InformationSet.AdditionalParameters.Should().BeNull();
         }
 
         [Fact]
@@ -476,22 +512,22 @@ TestLog2
             AdminCH adminCH = new AdminCH(commandHandlerTools, callbackQueryParser);
             
             // Act
-            IInformationSet informationSet = await adminCH.GetInformationSet();
+            await adminCH.Process(TestContext.Current.CancellationToken);
 
             // Assert
-            commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-            commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.DeleteUser);
+            CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+            CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.DeleteUser);
 
-            informationSet.Message.Should().Be(@$"Удаление пользователя:
+            InformationSet.Message.Should().Be(@$"Удаление пользователя:
 ======================
 <b>Внимание, пользователь будет удалён без возможности восстановления!</b>
 ======================
 
 Введите [UserID/@TestUser]
 ");
-            informationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.AdminUsers));
-            informationSet.ParseMode.Should().Be(ParseMode.Html);
-            informationSet.AdditionalParameters.Should().BeNull();
+            InformationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.AdminUsers));
+            InformationSet.ParseMode.Should().Be(ParseMode.Html);
+            InformationSet.AdditionalParameters.Should().BeNull();
         }
 
         [Fact]
@@ -505,13 +541,13 @@ TestLog2
             AdminCH adminCH = new AdminCH(commandHandlerTools, callbackQueryParser);
             
             // Act
-            IInformationSet informationSet = await adminCH.GetInformationSet();
+            await adminCH.Process(TestContext.Current.CancellationToken);
 
             // Assert
-            commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-            commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+            CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+            CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
-            informationSet.Message.Should().Be(@"Текущая настройка:
+            InformationSet.Message.Should().Be(@"Текущая настройка:
 {
   ""DB"": {
     ""EnsureCreated"": false,
@@ -546,9 +582,9 @@ TestLog2
 
 Выберите интересующее действие
 ");
-            informationSet.ButtonsSets.Should().Be((ButtonsSet.Admin, ButtonsSet.Main));
-            informationSet.ParseMode.Should().Be(ParseMode.Html);
-            informationSet.AdditionalParameters.Should().BeNull();
+            InformationSet.ButtonsSets.Should().Be((ButtonsSet.Admin, ButtonsSet.Main));
+            InformationSet.ParseMode.Should().Be(ParseMode.Html);
+            InformationSet.AdditionalParameters.Should().BeNull();
         }
 
         [Fact]
@@ -562,28 +598,26 @@ TestLog2
             AdminCH adminCH = new AdminCH(commandHandlerTools, callbackQueryParser);
 
             // Act
-            IInformationSet informationSet = await adminCH.GetInformationSet();
+            await adminCH.Process(TestContext.Current.CancellationToken);
 
             // Assert
-            commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-            commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+            CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+            CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
-            informationSet.Message.Should().Be(@$"Режим использования лимитов переключён в: <b>False</b>
+            InformationSet.Message.Should().Be(@$"Режим использования лимитов переключён в: <b>False</b>
 ======================
 
 Выберите интересующее действие
 ");
-            commandHandlerTools.CurrentUserContext.LimitsManager.IsEnableLimit.Should().BeFalse();
+            CurrentUserContext.LimitsManager.IsEnableLimit.Should().BeFalse();
 
-            informationSet.ButtonsSets.Should().Be((ButtonsSet.Admin, ButtonsSet.Main));
-            informationSet.ParseMode.Should().Be(ParseMode.Html);
-            informationSet.AdditionalParameters.Should().BeNull();
+            InformationSet.ButtonsSets.Should().Be((ButtonsSet.Admin, ButtonsSet.Main));
+            InformationSet.ParseMode.Should().Be(ParseMode.Html);
+            InformationSet.AdditionalParameters.Should().BeNull();
         }
 
-        [Theory]
-        [InlineData(1000)]
-        [InlineData(2000)]
-        public async Task GetInformationSet_WithDisableBotSubDirection_ShouldReturnExpectedIInformationSet(int ms)
+        [Fact]
+        public async Task GetInformationSet_WithDisableBotSubDirection_ShouldReturnExpectedIInformationSet()
         {
             // Arrange
             string subDirection = "DisableBot";
@@ -592,31 +626,27 @@ TestLog2
 
             AdminCH adminCH = new AdminCH(commandHandlerTools, callbackQueryParser);
 
+            commandHandlerTools.HandlerResult.StopBot.Should().BeFalse();
+
             // Act
-            IInformationSet informationSet = await adminCH.GetInformationSet();
+            await adminCH.Process(TestContext.Current.CancellationToken);
 
             // Assert
-            commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-            commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+            CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+            CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
-            await Task.Delay(ms);
+            commandHandlerTools.HandlerResult.StopBot.Should().BeTrue();
 
-            if (ms >= 2000)
-                cts.IsCancellationRequested.Should().BeTrue();
-            else
-                cts.IsCancellationRequested.Should().BeFalse();
+            InformationSet.Message.Should().Be(@$"Бот отключён");
 
-            informationSet.Message.Should().Be(@$"Бот отключён");
-
-            informationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.None));
-            informationSet.ParseMode.Should().Be(ParseMode.Html);
-            informationSet.AdditionalParameters.Should().BeNull();
+            InformationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.None));
+            InformationSet.ParseMode.Should().Be(ParseMode.Html);
+            InformationSet.AdditionalParameters.Should().BeNull();
         }
 
         public void Dispose()
         {
             builder.Dispose();
-            cts.Dispose();
         }
     }
 }

@@ -21,12 +21,12 @@ namespace WorkoutStorageBot.BusinessLogic.Repositories
                       .OrderByDescending(x => x.Id)
                       .Take(count);
 
-        internal async Task<Log?> GetLogByEventId(int eventID)
+        internal async Task<Log?> GetLogByEventId(int eventID, CancellationToken cancellationToken)
            => await db.Logs.AsNoTracking()
-                           .FirstOrDefaultAsync(x => x.EventID == eventID);
+                           .FirstOrDefaultAsync(x => x.EventID == eventID, cancellationToken);
 
-        internal async Task<Log?> GetLogById(int id)
+        internal async Task<Log?> GetLogById(int id, CancellationToken cancellationToken)
             => await db.Logs.AsNoTracking()
-                            .FirstOrDefaultAsync(x => x.Id == id);
+                            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
 }

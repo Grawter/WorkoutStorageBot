@@ -3,7 +3,7 @@
 ﻿using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageModels.Entities.BusinessLogic;
 
-namespace WorkoutStorageBot.UnitTests.Helpers
+namespace WorkoutStorageBot.UnitTests.Builders
 {
     internal class DTOModelBuilder
     {

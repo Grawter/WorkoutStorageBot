@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using WorkoutStorageBot.BusinessLogic.Enums;
+﻿using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.Extenions;
 using WorkoutStorageBot.Model.AppContext;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
@@ -11,24 +10,24 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
 {
     internal static class EntityContextExtensions
     {
-        internal static async Task AddEntity(this EntityContext db, IDTOByEntity DTOByEntity, bool isNeedSaveChanges = true)
+        internal static async Task AddEntity(this EntityContext db, IDTOByEntity DTOByEntity, CancellationToken cancellationToken, bool isNeedSaveChanges = true)
         {
             ArgumentNullException.ThrowIfNull(db);
             ArgumentNullException.ThrowIfNull(DTOByEntity);
 
             IEntity entity = ConvertDTOToEntity(DTOByEntity);
 
-            await db.AddAsync(entity);
+            await db.AddAsync(entity, cancellationToken);
 
             if (isNeedSaveChanges)
             {
-                await db.SaveChangesAsync();
+                await db.SaveChangesAsync(cancellationToken);
 
                 DTOByEntity.Id = entity.Id;
             }
         }
 
-        internal static async Task AddEntities(this EntityContext db, IEnumerable<IDTODomain> DTODomains, bool isNeedSaveChanges = true)
+        internal static async Task AddEntities(this EntityContext db, IEnumerable<IDTODomain> DTODomains, CancellationToken cancellationToken, bool isNeedSaveChanges = true)
         {
             ArgumentNullException.ThrowIfNull(db);
             ArgumentNullException.ThrowIfNull(DTODomains);
@@ -45,11 +44,11 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
                 var pairs = DTOCycles.Select(x => new { DTO = x, Entity = x.ToCycle() })
                                      .ToList();
 
-                await db.Cycles.AddRangeAsync(pairs.Select(p => p.Entity));
+                await db.Cycles.AddRangeAsync(pairs.Select(p => p.Entity), cancellationToken);
 
                 if (isNeedSaveChanges)
                 {
-                    await db.SaveChangesAsync();
+                    await db.SaveChangesAsync(cancellationToken);
 
                     foreach (var pair in pairs)
                     {
@@ -63,11 +62,11 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
                 var pairs = DTODays.Select(x => new { DTO = x, Entity = x.ToDay() })
                                    .ToList();
 
-                await db.Days.AddRangeAsync(pairs.Select(p => p.Entity));
+                await db.Days.AddRangeAsync(pairs.Select(p => p.Entity), cancellationToken);
 
                 if (isNeedSaveChanges)
                 {
-                    await db.SaveChangesAsync();
+                    await db.SaveChangesAsync(cancellationToken);
 
                     foreach (var pair in pairs)
                     {
@@ -81,11 +80,11 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
                 var pairs = DTOExercises.Select(x => new { DTO = x, Entity = x.ToExercise() })
                                         .ToList();
 
-                await db.Exercises.AddRangeAsync(pairs.Select(p => p.Entity));
+                await db.Exercises.AddRangeAsync(pairs.Select(p => p.Entity), cancellationToken);
 
                 if (isNeedSaveChanges)
                 {
-                    await db.SaveChangesAsync();
+                    await db.SaveChangesAsync(cancellationToken);
 
                     foreach (var pair in pairs)
                     {
@@ -95,7 +94,7 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
             }
         }
 
-        internal static async Task AddEntities(this EntityContext db, IEnumerable<DTOResultExercise> DTOResultExercises, bool isNeedSaveChanges = true)
+        internal static async Task AddEntities(this EntityContext db, IEnumerable<DTOResultExercise> DTOResultExercises, CancellationToken cancellationToken, bool isNeedSaveChanges = true)
         {
             ArgumentNullException.ThrowIfNull(db);
             ArgumentNullException.ThrowIfNull(DTOResultExercises);
@@ -103,11 +102,11 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
             var pairs = DTOResultExercises.Select(x => new { DTO = x, Entity = x.ToResultExercise() })
                                           .ToList();
 
-            await db.ResultsExercises.AddRangeAsync(pairs.Select(p => p.Entity));
+            await db.ResultsExercises.AddRangeAsync(pairs.Select(p => p.Entity), cancellationToken);
 
             if (isNeedSaveChanges)
             {
-                await db.SaveChangesAsync();
+                await db.SaveChangesAsync(cancellationToken);
 
                 foreach (var pair in pairs)
                 {
@@ -116,7 +115,7 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
             }
         }
 
-        internal static async Task UpdateEntity(this EntityContext db, IDTOByEntity DTOByEntity, bool isNeedSaveChanges = true)
+        internal static async Task UpdateEntity(this EntityContext db, IDTOByEntity DTOByEntity, CancellationToken cancellationToken, bool isNeedSaveChanges = true)
         {
             ArgumentNullException.ThrowIfNull(db);
             ArgumentNullException.ThrowIfNull(DTOByEntity);
@@ -124,7 +123,7 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
             switch (DTOByEntity)
             {
                 case DTOCycle DTOCycle:
-                    Cycle? cycle = await db.Cycles.FindAsync(DTOCycle.Id)
+                    Cycle? cycle = await db.Cycles.FindAsync(DTOCycle.Id, cancellationToken)
                         ?? throw new InvalidOperationException($"Не удалось найти цикл с Id = {DTOCycle.Id} для обновления");
 
                     if (cycle.Name != DTOCycle.Name)
@@ -141,7 +140,7 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
 
                     break;
                 case DTODay DTODay:
-                    Day? day = await db.Days.FindAsync(DTODay.Id)
+                    Day? day = await db.Days.FindAsync(DTODay.Id, cancellationToken)
                         ?? throw new InvalidOperationException($"Не удалось найти день с Id = {DTODay.Id} для обновления");
 
                     if (day.Name != DTODay.Name)
@@ -155,7 +154,7 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
 
                     break;
                 case DTOExercise DTOExercise:
-                    Exercise exercise = await db.Exercises.FindAsync(DTOExercise.Id)
+                    Exercise exercise = await db.Exercises.FindAsync(DTOExercise.Id, cancellationToken)
                         ?? throw new InvalidOperationException($"Не удалось найти упражнение с Id = {DTOExercise.Id} для обновления");
 
                     if (exercise.Name != DTOExercise.Name)
@@ -173,7 +172,7 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
                     break;
                 case DTOResultExercise DTOResultExercise:
 
-                    ResultExercise resultExercise = await db.ResultsExercises.FindAsync(DTOResultExercise.Id)
+                    ResultExercise resultExercise = await db.ResultsExercises.FindAsync(DTOResultExercise.Id, cancellationToken)
                         ?? throw new InvalidOperationException($"Не удалось найти результат упражнение с Id = {DTOResultExercise.Id} для обновления");
 
                     if (resultExercise.Count != DTOResultExercise.Count)
@@ -197,78 +196,78 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
             }
 
             if (isNeedSaveChanges)
-                await db.SaveChangesAsync();
+                await db.SaveChangesAsync(cancellationToken);
         }
 
-        internal static async Task UpdateEntities(this EntityContext db, IEnumerable<IDTOByEntity> DTOByEntities, bool isNeedSaveChanges = true)
+        internal static async Task UpdateEntities(this EntityContext db, IEnumerable<IDTOByEntity> DTOByEntities, CancellationToken cancellationToken, bool isNeedSaveChanges = true)
         {
             ArgumentNullException.ThrowIfNull(DTOByEntities);
 
             foreach (IDTOByEntity DTOByEntity in DTOByEntities)
             {
-                await db.UpdateEntity(DTOByEntity, false);
+                await db.UpdateEntity(DTOByEntity, cancellationToken, false);
             }
 
             if (isNeedSaveChanges)
-                await db.SaveChangesAsync();
+                await db.SaveChangesAsync(cancellationToken);
         }
 
-        internal static async Task RemoveEntity(this EntityContext db, IDTOByEntity DTOByEntity, bool isNeedSaveChanges = true)
+        internal static async Task RemoveEntity(this EntityContext db, IDTOByEntity DTOByEntity, CancellationToken cancellationToken, bool isNeedSaveChanges = true)
         {
             ArgumentNullException.ThrowIfNull(db);
             ArgumentNullException.ThrowIfNull(DTOByEntity);
 
             IEntity entity = DTOByEntity is IDTODomain domain
-                ? await db.GetDomainByDTO(domain)
-                : await db.ResultsExercises.FindAsync(DTOByEntity.Id) ?? throw new InvalidOperationException($"Not found ResultExercise with ID = {DTOByEntity.Id}");
+                ? await db.GetDomainByDTO(domain, cancellationToken)
+                : await db.ResultsExercises.FindAsync(DTOByEntity.Id, cancellationToken) ?? throw new InvalidOperationException($"Not found ResultExercise with ID = {DTOByEntity.Id}");
 
             db.Remove(entity);
 
             if (isNeedSaveChanges)
-                await db.SaveChangesAsync();
+                await db.SaveChangesAsync(cancellationToken);
         }
 
-        internal static async Task RemoveEntities(this EntityContext db, IEnumerable<IDTOByEntity> DTOByEntities, bool isNeedSaveChanges = true)
+        internal static async Task RemoveEntities(this EntityContext db, IEnumerable<IDTOByEntity> DTOByEntities, CancellationToken cancellationToken, bool isNeedSaveChanges = true)
         {
             ArgumentNullException.ThrowIfNull(DTOByEntities);
 
             foreach (IDTOByEntity entity in DTOByEntities)
             {
-                await db.RemoveEntity(entity, false);
+                await db.RemoveEntity(entity, cancellationToken, false);
             }
 
             if (isNeedSaveChanges)
-                await db.SaveChangesAsync();
+                await db.SaveChangesAsync(cancellationToken);
         }
 
-        internal static async Task<IDomain> GetDomainByDTO(this EntityContext db, IDTODomain DTODomain)
+        internal static async Task<IDomain> GetDomainByDTO(this EntityContext db, IDTODomain DTODomain, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(DTODomain);
 
             return DTODomain switch
             {
                 DTOCycle DTOCycle
-                    => await db.GetDomainWithId(DTOCycle.Id, DomainType.Cycle),
+                    => await db.GetDomainWithId(DTOCycle.Id, DomainType.Cycle, cancellationToken),
                 DTODay DTODay
-                    => await db.GetDomainWithId(DTODay.Id, DomainType.Day),
+                    => await db.GetDomainWithId(DTODay.Id, DomainType.Day, cancellationToken),
                 DTOExercise DTOExercise
-                    => await db.GetDomainWithId(DTOExercise.Id, DomainType.Exercise),
+                    => await db.GetDomainWithId(DTOExercise.Id, DomainType.Exercise, cancellationToken),
                 _ => throw new NotImplementedException($"Неожиданный DTODomain: {DTODomain.GetType().Name}")
             };
         }
 
-        private static async Task<IDomain> GetDomainWithId(this EntityContext db, int id, DomainType domainType)
+        private static async Task<IDomain> GetDomainWithId(this EntityContext db, int id, DomainType domainType, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(db);
 
             return domainType switch
             {
                 DomainType.Cycle
-                    => await db.Cycles.FindAsync(id) ?? throw new InvalidOperationException($"Not found cycle with ID = {id}"),
+                    => await db.Cycles.FindAsync(id, cancellationToken) ?? throw new InvalidOperationException($"Not found cycle with ID = {id}"),
                 DomainType.Day
-                    => await db.Days.FindAsync(id) ?? throw new InvalidOperationException($"Not found day with ID = {id}"),
+                    => await db.Days.FindAsync(id, cancellationToken) ?? throw new InvalidOperationException($"Not found day with ID = {id}"),
                 DomainType.Exercise
-                    => await db.Exercises.FindAsync(id) ?? throw new InvalidOperationException($"Not found Exercise with ID = {id}"),
+                    => await db.Exercises.FindAsync(id, cancellationToken) ?? throw new InvalidOperationException($"Not found Exercise with ID = {id}"),
                 _ => throw new NotImplementedException($"Неожиданный domainTyped: {domainType}")
             };
         }

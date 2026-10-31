@@ -3,6 +3,7 @@ using FluentAssertions.Specialized;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using WorkoutStorageBot.Application.Configuration;
 using WorkoutStorageBot.BusinessLogic.Consts;
@@ -21,6 +22,8 @@ using WorkoutStorageBot.Core.Sender;
 using WorkoutStorageBot.Model.AppContext;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.Model.DTO.HandlerData;
+using WorkoutStorageBot.Model.DTO.HandlerData.Results;
+using WorkoutStorageBot.Model.DTO.HandlerData.Results.UpdateInfo;
 using WorkoutStorageBot.Model.DTO.InformationSetForSend;
 using WorkoutStorageBot.UnitTests.Helpers;
 using WorkoutStorageModels.Entities.BusinessLogic;
@@ -42,8 +45,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
 
         private readonly Mock<ILogger> loggerMock;
 
-        private readonly CancellationTokenSource cts;
-
         private readonly CoreTools coreTools;
 
         public TextMessageCHTests()
@@ -58,8 +59,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
             customLoggerFactoryMock = new();
             loggerMock = new();
 
-            cts = new CancellationTokenSource();
-
             customLoggerFactoryMock.Setup(x => x.CreateLogger<It.IsAnyType>()).Returns(loggerMock.Object);
 
             coreTools = new CoreTools()
@@ -69,7 +68,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                 ContextKeeper = contextKeeperMock.Object,
                 BotResponseSender = botResponseSenderMock.Object,
                 LoggerFactory = customLoggerFactoryMock.Object,
-                AppCTS = cts,
             };
         }
 
@@ -90,20 +88,32 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
             DTOUserInformation localDTOCurrentUser = entityContext.UsersInformation.First().ToDTOUserInformation();
             UserContext localUserContext = new UserContext(localDTOCurrentUser, Roles.User | Roles.Admin, false);
 
+            Update update = new Update();
+
             CommandHandlerTools localCommandHandlerTools = new CommandHandlerTools()
             {
-                ParentHandler = new PrimaryUpdateHandler(coreTools, new RepositoriesStore(entityContext)),
-                CurrentUserContext = localUserContext,
+                CoreTools = coreTools,
+                HandlerResult = new AuthorizedHandlerResult()
+                {
+                    CurrentUserContext = localUserContext,
+                    HasAccess = true,
+                    Update = update,
+                    ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.Message, true)
+                },
+                RepositoriesStore = new RepositoriesStore(entityContext),
             };
 
-            localCommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(messageNavigationTarget);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.SetMessageNavigationTarget(messageNavigationTarget);
 
             MessageTextBuilder requestTextBuilder = new MessageTextBuilder(data);
 
             TextMessageCH textMessageCH = new TextMessageCH(localCommandHandlerTools, requestTextBuilder);
 
             // Act
-            IInformationSet informationSet = await textMessageCH.GetInformationSet();
+            await textMessageCH.Process(TestContext.Current.CancellationToken);
+
+            IInformationSet? informationSet = localCommandHandlerTools.HandlerResult.InformationSet;
+            informationSet.Should().NotBeNull();
 
             // Assert
             if (data == "Other")
@@ -115,7 +125,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
 ");
                 informationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.None));
 
-                localCommandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+                localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
             }
             else
             {
@@ -124,17 +134,17 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                     informationSet.Message.Should().Be("Выберите интересующий раздел");
                     informationSet.ButtonsSets.Should().Be((ButtonsSet.Main, ButtonsSet.None));
 
-                    localCommandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+                    localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
                 }
                 else
                 {
                     informationSet.Message.Should().Be("Начнём");
                     informationSet.ButtonsSets.Should().Be((ButtonsSet.AddCycle, ButtonsSet.None));
 
-                    localCommandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.Start);
+                    localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.Start);
                 }
 
-                localCommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+                localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
                 informationSet.ParseMode.Should().Be(ParseMode.Html);
                 informationSet.AdditionalParameters.Should().BeNull();
@@ -170,14 +180,23 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
             DTOUserInformation localDTOCurrentUser = entityContext.UsersInformation.First().ToDTOUserInformation();
             UserContext localUserContext = new UserContext(localDTOCurrentUser, Roles.User | Roles.Admin, false);
 
+            Update update = new Update();
+
             CommandHandlerTools localCommandHandlerTools = new CommandHandlerTools()
             {
-                ParentHandler = new PrimaryUpdateHandler(coreTools, new RepositoriesStore(entityContext)),
-                CurrentUserContext = localUserContext,
+                CoreTools = coreTools,
+                HandlerResult = new AuthorizedHandlerResult()
+                {
+                    CurrentUserContext = localUserContext,
+                    HasAccess = true,
+                    Update = update,
+                    ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.Message, true)
+                },
+                RepositoriesStore = new RepositoriesStore(entityContext),
             };
 
-            localCommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(messageNavigationTarget);
-            localCommandHandlerTools.CurrentUserContext.Navigation.SetQueryFrom(queryFrom);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.SetMessageNavigationTarget(messageNavigationTarget);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.SetQueryFrom(queryFrom);
 
             string data = "newTestCycle";
             MessageTextBuilder requestTextBuilder = new MessageTextBuilder(data);
@@ -190,7 +209,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                 if (queryFrom == QueryFrom.NoMatter)
                 {
                     // Act
-                    Func<Task> func = async () => await textMessageCH.GetInformationSet();
+                    Func<Task> func = async () => await textMessageCH.Process(TestContext.Current.CancellationToken);
 
                     ExceptionAssertions<NotImplementedException> exceptionAssertions = await func.Should().ThrowAsync<NotImplementedException>();
                     exceptionAssertions.WithMessage($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {queryFrom}");
@@ -198,7 +217,10 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                 else
                 {
                     // Act
-                    IInformationSet informationSet = await textMessageCH.GetInformationSet();
+                    await textMessageCH.Process(TestContext.Current.CancellationToken);
+
+                    IInformationSet? informationSet = localCommandHandlerTools.HandlerResult.InformationSet;
+                    informationSet.Should().NotBeNull();
 
                     informationSet.Message.Should().Be(@$"Ошибка при добавлении названия!
 ======================
@@ -214,10 +236,10 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
 
 
                     if (hasActiveCycle)
-                        localCommandHandlerTools.CurrentUserContext.ActiveCycle.Should().NotBeNull();
+                        localCommandHandlerTools.HandlerResult.CurrentUserContext.ActiveCycle.Should().NotBeNull();
 
-                    localCommandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
-                    localCommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
+                    localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
+                    localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
 
                     informationSet.ParseMode.Should().Be(ParseMode.Html);
                     informationSet.AdditionalParameters.Should().BeNull();
@@ -228,7 +250,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                 if (queryFrom == QueryFrom.NoMatter)
                 {
                     // Act
-                    Func<Task> func = async () => await textMessageCH.GetInformationSet();
+                    Func<Task> func = async () => await textMessageCH.Process(TestContext.Current.CancellationToken);
 
                     ExceptionAssertions<NotImplementedException> exceptionAssertions = await func.Should().ThrowAsync<NotImplementedException>();
                     exceptionAssertions.WithMessage($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {queryFrom}");
@@ -236,16 +258,19 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                 else
                 {
                     if (!hasActiveCycle)
-                        localCommandHandlerTools.CurrentUserContext.ActiveCycle.Should().BeNull();
+                        localCommandHandlerTools.HandlerResult.CurrentUserContext.ActiveCycle.Should().BeNull();
 
                     entityContext.Cycles.FirstOrDefault(x => x.Name == data && x.UserInformationId == localDTOCurrentUser.Id).Should().BeNull();
 
                     // Act
-                    IInformationSet informationSet = await textMessageCH.GetInformationSet();
+                    await textMessageCH.Process(TestContext.Current.CancellationToken);
+
+                    IInformationSet? informationSet = localCommandHandlerTools.HandlerResult.InformationSet;
+                    informationSet.Should().NotBeNull();
 
                     if (queryFrom == QueryFrom.Start)
                     {
-                        localCommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.AddDays);
+                        localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.AddDays);
 
                         informationSet.Message.Should().Be(@$"Цикл {data.AddBoldAndQuotes()} сохранён!
 ======================
@@ -256,7 +281,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                     }
                     else
                     {
-                        localCommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+                        localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
                         informationSet.Message.Should().Be(@$"Цикл {data.AddBoldAndQuotes()} сохранён!
 ======================
@@ -269,9 +294,9 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                     entityContext.Cycles.FirstOrDefault(x => x.Name == data && x.UserInformationId == localDTOCurrentUser.Id).Should().NotBeNull();
 
                     if (!hasActiveCycle)
-                        localCommandHandlerTools.CurrentUserContext.ActiveCycle.Should().NotBeNull();
+                        localCommandHandlerTools.HandlerResult.CurrentUserContext.ActiveCycle.Should().NotBeNull();
 
-                    localCommandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
+                    localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
 
                     informationSet.ParseMode.Should().Be(ParseMode.Html);
                     informationSet.AdditionalParameters.Should().BeNull();
@@ -301,16 +326,25 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
             DTOUserInformation localDTOCurrentUser = entityContext.UsersInformation.First().ToDTOUserInformation();
             UserContext localUserContext = new UserContext(localDTOCurrentUser, Roles.User | Roles.Admin, false);
 
+            Update update = new Update();
+
             CommandHandlerTools localCommandHandlerTools = new CommandHandlerTools()
             {
-                ParentHandler = new PrimaryUpdateHandler(coreTools, new RepositoriesStore(entityContext)),
-                CurrentUserContext = localUserContext,
+                CoreTools = coreTools,
+                HandlerResult = new AuthorizedHandlerResult()
+                {
+                    CurrentUserContext = localUserContext,
+                    HasAccess = true,
+                    Update = update,
+                    ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.Message, true)
+                },
+                RepositoriesStore = new RepositoriesStore(entityContext),
             };
 
-            localCommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(messageNavigationTarget);
-            localCommandHandlerTools.CurrentUserContext.Navigation.SetQueryFrom(queryFrom);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.SetMessageNavigationTarget(messageNavigationTarget);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.SetQueryFrom(queryFrom);
 
-            localCommandHandlerTools.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestCycle.ToDTOCycle());
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestCycle.ToDTOCycle());
 
             string data = "newTestDay";
             MessageTextBuilder requestTextBuilder = new MessageTextBuilder(data);
@@ -323,7 +357,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                 if (queryFrom == QueryFrom.NoMatter)
                 {
                     // Act
-                    Func<Task> func = async () => await textMessageCH.GetInformationSet();
+                    Func<Task> func = async () => await textMessageCH.Process(TestContext.Current.CancellationToken);
 
                     ExceptionAssertions<NotImplementedException> exceptionAssertions = await func.Should().ThrowAsync<NotImplementedException>();
                     exceptionAssertions.WithMessage($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {queryFrom}");
@@ -331,7 +365,10 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                 else
                 {
                     // Act
-                    IInformationSet informationSet = await textMessageCH.GetInformationSet();
+                    await textMessageCH.Process(TestContext.Current.CancellationToken);
+
+                    IInformationSet? informationSet = localCommandHandlerTools.HandlerResult.InformationSet;
+                    informationSet.Should().NotBeNull();
 
                     informationSet.Message.Should().Be(@$"Ошибка при сохранении!
 ======================
@@ -345,8 +382,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                     else if (queryFrom == QueryFrom.Settings)
                         informationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.SettingDays));
 
-                    localCommandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
-                    localCommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
+                    localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
+                    localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
 
                     informationSet.ParseMode.Should().Be(ParseMode.Html);
                     informationSet.AdditionalParameters.Should().BeNull();
@@ -357,7 +394,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                 if (queryFrom == QueryFrom.NoMatter)
                 {
                     // Act
-                    Func<Task> func = async () => await textMessageCH.GetInformationSet();
+                    Func<Task> func = async () => await textMessageCH.Process(TestContext.Current.CancellationToken);
 
                     ExceptionAssertions<NotImplementedException> exceptionAssertions = await func.Should().ThrowAsync<NotImplementedException>();
                     exceptionAssertions.WithMessage($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {queryFrom}");
@@ -367,11 +404,14 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                     entityContext.Days.FirstOrDefault(x => x.Name == data && x.CycleId == builder.TestCycle.Id).Should().BeNull();
 
                     // Act
-                    IInformationSet informationSet = await textMessageCH.GetInformationSet();
+                    await textMessageCH.Process(TestContext.Current.CancellationToken);
+
+                    IInformationSet? informationSet = localCommandHandlerTools.HandlerResult.InformationSet;
+                    informationSet.Should().NotBeNull();
 
                     if (queryFrom == QueryFrom.Start)
                     {
-                        localCommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.AddExercises);
+                        localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.AddExercises);
 
                         informationSet.Message.Should().Be(@$"День {data.AddBoldAndQuotes()} сохранён в цикле {builder.TestCycle.Name}!
 ======================
@@ -393,7 +433,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                     }
                     else
                     {
-                        localCommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+                        localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
                         informationSet.Message.Should().Be(@$"День {data.AddBoldAndQuotes()} сохранён в цикле {builder.TestCycle.Name}!");
                         informationSet.ButtonsSets.Should().Be((ButtonsSet.AddExercises, ButtonsSet.SettingDays));
@@ -431,17 +471,26 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
             DTOUserInformation localDTOCurrentUser = entityContext.UsersInformation.First().ToDTOUserInformation();
             UserContext localUserContext = new UserContext(localDTOCurrentUser, Roles.User | Roles.Admin, false);
 
+            Update update = new Update();
+
             CommandHandlerTools localCommandHandlerTools = new CommandHandlerTools()
             {
-                ParentHandler = new PrimaryUpdateHandler(coreTools, new RepositoriesStore(entityContext)),
-                CurrentUserContext = localUserContext,
+                CoreTools = coreTools,
+                HandlerResult = new AuthorizedHandlerResult()
+                {
+                    CurrentUserContext = localUserContext,
+                    HasAccess = true,
+                    Update = update,
+                    ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.Message, true)
+                },
+                RepositoriesStore = new RepositoriesStore(entityContext),
             };
 
-            localCommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(messageNavigationTarget);
-            localCommandHandlerTools.CurrentUserContext.Navigation.SetQueryFrom(queryFrom);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.SetMessageNavigationTarget(messageNavigationTarget);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.SetQueryFrom(queryFrom);
 
-            localCommandHandlerTools.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestCycle.ToDTOCycle());
-            localCommandHandlerTools.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestDay.ToDTODay());
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestCycle.ToDTOCycle());
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestDay.ToDTODay());
 
             MessageTextBuilder requestTextBuilder = new MessageTextBuilder(data);
 
@@ -451,7 +500,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
             if (queryFrom == QueryFrom.NoMatter)
             {
                 // Act
-                Func<Task> func = async () => await textMessageCH.GetInformationSet();
+                Func<Task> func = async () => await textMessageCH.Process(TestContext.Current.CancellationToken);
 
                 ExceptionAssertions<NotImplementedException> exceptionAssertions = await func.Should().ThrowAsync<NotImplementedException>();
                 exceptionAssertions.WithMessage($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {queryFrom}");
@@ -459,7 +508,10 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
             else
             {
                 // Act
-                IInformationSet informationSet = await textMessageCH.GetInformationSet();
+                await textMessageCH.Process(TestContext.Current.CancellationToken);
+
+                IInformationSet? informationSet = localCommandHandlerTools.HandlerResult.InformationSet;
+                informationSet.Should().NotBeNull();
 
                 if (queryFrom == QueryFrom.Start)
                 {
@@ -592,8 +644,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                     item.Value.Should().Be("Exercise");
                 }
 
-                localCommandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
-                localCommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
+                localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
+                localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
 
                 informationSet.ParseMode.Should().Be(ParseMode.Html);
             }
@@ -628,23 +680,32 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
             DTOUserInformation localDTOCurrentUser = entityContext.UsersInformation.First().ToDTOUserInformation();
             UserContext localUserContext = new UserContext(localDTOCurrentUser, Roles.User | Roles.Admin, false);
 
+            Update update = new Update();
+
             CommandHandlerTools localCommandHandlerTools = new CommandHandlerTools()
             {
-                ParentHandler = new PrimaryUpdateHandler(coreTools, new RepositoriesStore(entityContext)),
-                CurrentUserContext = localUserContext,
+                CoreTools = coreTools,
+                HandlerResult = new AuthorizedHandlerResult()
+                {
+                    CurrentUserContext = localUserContext,
+                    HasAccess = true,
+                    Update = update,
+                    ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.Message, true)
+                },
+                RepositoriesStore = new RepositoriesStore(entityContext),
             };
 
-            localCommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(messageNavigationTarget);
-            localCommandHandlerTools.CurrentUserContext.Navigation.SetQueryFrom(queryFrom);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.SetMessageNavigationTarget(messageNavigationTarget);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.SetQueryFrom(queryFrom);
 
-            localCommandHandlerTools.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestCycle.ToDTOCycle());
-            localCommandHandlerTools.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestDay.ToDTODay());
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestCycle.ToDTOCycle());
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestDay.ToDTODay());
 
             string newExerciseName = "newTestExercise";
 
             if (hasAlreadyExistTempDomain)
             {
-                localCommandHandlerTools.CurrentUserContext.DataManager.TryAddTempExercises([new DTOExercise() { Name = newExerciseName, Mode = 0, DayId = builder.TestDay.Id }], out string? errMess);
+                localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.TryAddTempExercises([new DTOExercise() { Name = newExerciseName, Mode = 0, DayId = builder.TestDay.Id }], out string? errMess);
                 errMess.Should().BeNullOrWhiteSpace();
             }
 
@@ -657,7 +718,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
             if ((hasAlreadyExistDomain || hasAlreadyExistTempDomain) && queryFrom == QueryFrom.NoMatter)
             {
                 // Act
-                Func<Task> func = async () => await textMessageCH.GetInformationSet();
+                Func<Task> func = async () => await textMessageCH.Process(TestContext.Current.CancellationToken);
 
                 ExceptionAssertions<NotImplementedException> exceptionAssertions = await func.Should().ThrowAsync<NotImplementedException>();
                 exceptionAssertions.WithMessage($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {queryFrom}");
@@ -665,7 +726,10 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
             else
             {
                 // Act
-                IInformationSet informationSet = await textMessageCH.GetInformationSet();
+                await textMessageCH.Process(TestContext.Current.CancellationToken);
+
+                IInformationSet? informationSet = localCommandHandlerTools.HandlerResult.InformationSet;
+                informationSet.Should().NotBeNull();
 
                 if (hasAlreadyExistDomain)
                 {
@@ -761,8 +825,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                     informationSet.AdditionalParameters.Should().BeNull();
                 }
 
-                localCommandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
-                localCommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
+                localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
+                localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
 
                 informationSet.ParseMode.Should().Be(ParseMode.Html);
             }
@@ -789,25 +853,37 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
             DTOUserInformation localDTOCurrentUser = entityContext.UsersInformation.First().ToDTOUserInformation();
             UserContext localUserContext = new UserContext(localDTOCurrentUser, Roles.User | Roles.Admin, false);
 
+            Update update = new Update();
+
             CommandHandlerTools localCommandHandlerTools = new CommandHandlerTools()
             {
-                ParentHandler = new PrimaryUpdateHandler(coreTools, new RepositoriesStore(entityContext)),
-                CurrentUserContext = localUserContext,
+                CoreTools = coreTools,
+                HandlerResult = new AuthorizedHandlerResult()
+                {
+                    CurrentUserContext = localUserContext,
+                    HasAccess = true,
+                    Update = update,
+                    ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.Message, true)
+                },
+                RepositoriesStore = new RepositoriesStore(entityContext),
             };
 
-            localCommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(messageNavigationTarget);
-            localCommandHandlerTools.CurrentUserContext.Navigation.SetQueryFrom(QueryFrom.NoMatter);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.SetMessageNavigationTarget(messageNavigationTarget);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.SetQueryFrom(QueryFrom.NoMatter);
 
-            localCommandHandlerTools.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestCycle.ToDTOCycle());
-            localCommandHandlerTools.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestDay.ToDTODay());
-            localCommandHandlerTools.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestExercise.ToDTOExercise());
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestCycle.ToDTOCycle());
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestDay.ToDTODay());
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestExercise.ToDTOExercise());
 
             MessageTextBuilder requestTextBuilder = new MessageTextBuilder(data);
 
             TextMessageCH textMessageCH = new TextMessageCH(localCommandHandlerTools, requestTextBuilder);
 
             // Act
-            IInformationSet informationSet = await textMessageCH.GetInformationSet();
+            await textMessageCH.Process(TestContext.Current.CancellationToken);
+
+            IInformationSet? informationSet = localCommandHandlerTools.HandlerResult.InformationSet;
+            informationSet.Should().NotBeNull();
 
             // Assert
             if (data != "Other")
@@ -852,8 +928,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                 informationSet.ButtonsSets.Should().Be((ButtonsSet.ResetResultsExercise, ButtonsSet.None));
             }
 
-            localCommandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-            localCommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
 
             informationSet.ParseMode.Should().Be(ParseMode.Html);
             informationSet.AdditionalParameters.Should().BeNull();
@@ -875,38 +951,50 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
             DTOUserInformation localDTOCurrentUser = entityContext.UsersInformation.First().ToDTOUserInformation();
             UserContext localUserContext = new UserContext(localDTOCurrentUser, Roles.User | Roles.Admin, false);
 
+            Update update = new Update();
+
             CommandHandlerTools localCommandHandlerTools = new CommandHandlerTools()
             {
-                ParentHandler = new PrimaryUpdateHandler(coreTools, new RepositoriesStore(entityContext)),
-                CurrentUserContext = localUserContext,
+                CoreTools = coreTools,
+                HandlerResult = new AuthorizedHandlerResult()
+                {
+                    CurrentUserContext = localUserContext,
+                    HasAccess = true,
+                    Update = update,
+                    ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.Message, true)
+                },
+                RepositoriesStore = new RepositoriesStore(entityContext),
             };
 
-            localCommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(messageNavigationTarget);
-            localCommandHandlerTools.CurrentUserContext.Navigation.SetQueryFrom(QueryFrom.NoMatter);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.SetMessageNavigationTarget(messageNavigationTarget);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.SetQueryFrom(QueryFrom.NoMatter);
 
-            localCommandHandlerTools.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestCycle.ToDTOCycle());
-            localCommandHandlerTools.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestDay.ToDTODay());
-            localCommandHandlerTools.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestExercise.ToDTOExercise());
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestCycle.ToDTOCycle());
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestDay.ToDTODay());
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestExercise.ToDTOExercise());
 
-            localCommandHandlerTools.CurrentUserContext.DataManager.AddTempResultsExercise([new DTOResultExercise() { ExerciseId = builder.TestExercise .Id, FreeResult = freeResult }]);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.AddTempResultsExercise([new DTOResultExercise() { ExerciseId = builder.TestExercise .Id, FreeResult = freeResult }]);
 
             MessageTextBuilder requestTextBuilder = new MessageTextBuilder(data);
 
             TextMessageCH textMessageCH = new TextMessageCH(localCommandHandlerTools, requestTextBuilder);
 
-            localCommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().ResultsExercise.Should().BeEmpty();
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().ResultsExercise.Should().BeEmpty();
 
             // Act
-            IInformationSet informationSet = await textMessageCH.GetInformationSet();
+            await textMessageCH.Process(TestContext.Current.CancellationToken);
+
+            IInformationSet? informationSet = localCommandHandlerTools.HandlerResult.InformationSet;
+            informationSet.Should().NotBeNull();
 
             // Assert
-            localCommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().ResultsExercise.Should().HaveCount(1);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().ResultsExercise.Should().HaveCount(1);
 
-            localCommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().ResultsExercise.First().ExerciseId.Should().Be(builder.TestExercise.Id);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().ResultsExercise.First().ExerciseId.Should().Be(builder.TestExercise.Id);
 
-            localCommandHandlerTools.CurrentUserContext.DataManager.TempResultsExercise.Should().BeNull();
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.TempResultsExercise.Should().BeNull();
 
-            localCommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
             informationSet.Message.Should().Be(@$"<b>{freeResult} / {data}</b>
 ======================
@@ -918,7 +1006,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
 
             informationSet.ButtonsSets.Should().Be((ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout));
 
-            localCommandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
 
             informationSet.ParseMode.Should().Be(ParseMode.Html);
             informationSet.AdditionalParameters.Should().BeNull();
@@ -989,18 +1077,27 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
             DTOUserInformation localDTOCurrentUser = entityContext.UsersInformation.First().ToDTOUserInformation();
             UserContext localUserContext = new UserContext(localDTOCurrentUser, Roles.User | Roles.Admin, false);
 
+            Update update = new Update();
+
             CommandHandlerTools localCommandHandlerTools = new CommandHandlerTools()
             {
-                ParentHandler = new PrimaryUpdateHandler(coreTools, new RepositoriesStore(entityContext)),
-                CurrentUserContext = localUserContext,
+                CoreTools = coreTools,
+                HandlerResult = new AuthorizedHandlerResult()
+                {
+                    CurrentUserContext = localUserContext,
+                    HasAccess = true,
+                    Update = update,
+                    ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.Message, true)
+                },
+                RepositoriesStore = new RepositoriesStore(entityContext),
             };
 
-            localCommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(messageNavigationTarget);
-            localCommandHandlerTools.CurrentUserContext.Navigation.SetQueryFrom(queryFrom);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.SetMessageNavigationTarget(messageNavigationTarget);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.SetQueryFrom(queryFrom);
 
-            localCommandHandlerTools.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestCycle.ToDTOCycle());
-            localCommandHandlerTools.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestDay.ToDTODay());
-            localCommandHandlerTools.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestExercise.ToDTOExercise());
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestCycle.ToDTOCycle());
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestDay.ToDTODay());
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestExercise.ToDTOExercise());
 
             MessageTextBuilder requestTextBuilder = new MessageTextBuilder(data);
 
@@ -1008,15 +1105,15 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
 
             if (!hasAlreadyExistDomain)
             {
-                localCommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.Should().NotBe(data);
-                localCommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.Should().NotBe(data);
-                localCommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().Name.Should().NotBe(data);
+                localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.Should().NotBe(data);
+                localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.Should().NotBe(data);
+                localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().Name.Should().NotBe(data);
             }
 
             if (queryFrom == QueryFrom.NoMatter && hasAlreadyExistDomain)
             {
                 // Act
-                Func<Task> func = async () => await textMessageCH.GetInformationSet();
+                Func<Task> func = async () => await textMessageCH.Process(TestContext.Current.CancellationToken);
 
                 // Assert
                 ExceptionAssertions<NotImplementedException> exceptionAssertions = await func.Should().ThrowAsync<NotImplementedException>();
@@ -1025,7 +1122,10 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
             else
             {
                 // Act
-                IInformationSet informationSet = await textMessageCH.GetInformationSet();
+                await textMessageCH.Process(TestContext.Current.CancellationToken);
+
+                IInformationSet? informationSet = localCommandHandlerTools.HandlerResult.InformationSet;
+                informationSet.Should().NotBeNull();
 
                 // Assert
                 if (hasAlreadyExistDomain)
@@ -1088,13 +1188,13 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                         }
                     }
 
-                    localCommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
+                    localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
                 }
                 else
                 {
                     if (messageNavigationTarget == MessageNavigationTarget.ChangeNameCycle)
                     {
-                        localCommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.Should().Be(data);
+                        localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.Should().Be(data);
 
                         informationSet.Message.Should().Be(@$"Название цикла сохранено!");
 
@@ -1102,7 +1202,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                     }
                     else if (messageNavigationTarget == MessageNavigationTarget.ChangeNameDay)
                     {
-                        localCommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.Should().Be(data);
+                        localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.Should().Be(data);
 
                         informationSet.Message.Should().Be(@$"Название дня сохранено!
 ======================
@@ -1114,7 +1214,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                     }
                     else if (messageNavigationTarget == MessageNavigationTarget.ChangeNameExercise)
                     {
-                        localCommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().Name.Should().Be(data);
+                        localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().Name.Should().Be(data);
 
                         informationSet.Message.Should().Be(@$"Название упражнения сохранено!
 ======================
@@ -1125,10 +1225,10 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                         informationSet.ButtonsSets.Should().Be((ButtonsSet.SettingExercise, ButtonsSet.ExercisesList));
                     }
 
-                    localCommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+                    localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
                 }
 
-                localCommandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
+                localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
 
                 informationSet.ParseMode.Should().Be(ParseMode.Html);
                 informationSet.AdditionalParameters.Should().BeNull();
@@ -1167,10 +1267,19 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
             DTOUserInformation localDTOCurrentUser = entityContext.UsersInformation.First().ToDTOUserInformation();
             UserContext localUserContext = new UserContext(localDTOCurrentUser, Roles.User | Roles.Admin, false);
 
+            Update update = new Update();
+
             CommandHandlerTools localCommandHandlerTools = new CommandHandlerTools()
             {
-                ParentHandler = new PrimaryUpdateHandler(coreTools, new RepositoriesStore(entityContext)),
-                CurrentUserContext = localUserContext,
+                CoreTools = coreTools,
+                HandlerResult = new AuthorizedHandlerResult()
+                {
+                    CurrentUserContext = localUserContext,
+                    HasAccess = true,
+                    Update = update,
+                    ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.Message, true)
+                },
+                RepositoriesStore = new RepositoriesStore(entityContext),
             };
 
             QueryFrom queryFrom = QueryFrom.NoMatter;
@@ -1179,19 +1288,22 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                 ? MessageNavigationTarget.FindResultsByDateInDay
                 : MessageNavigationTarget.FindResultsByDate;
 
-            localCommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(messageNavigationTarget);
-            localCommandHandlerTools.CurrentUserContext.Navigation.SetQueryFrom(queryFrom);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.SetMessageNavigationTarget(messageNavigationTarget);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.SetQueryFrom(queryFrom);
 
-            localCommandHandlerTools.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestCycle.ToDTOCycle());
-            localCommandHandlerTools.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestDay.ToDTODay());
-            localCommandHandlerTools.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestExercise.ToDTOExercise());
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestCycle.ToDTOCycle());
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestDay.ToDTODay());
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestExercise.ToDTOExercise());
 
             MessageTextBuilder requestTextBuilder = new MessageTextBuilder(data);
 
             TextMessageCH textMessageCH = new TextMessageCH(localCommandHandlerTools, requestTextBuilder);
 
             // Act
-            IInformationSet informationSet = await textMessageCH.GetInformationSet();
+            await textMessageCH.Process(TestContext.Current.CancellationToken);
+
+            IInformationSet? informationSet = localCommandHandlerTools.HandlerResult.InformationSet;
+            informationSet.Should().NotBeNull();
 
             // Assert
             if (data == "Other")
@@ -1208,7 +1320,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                 else
                     informationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.DaysListWithLastWorkout));
 
-                localCommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
+                localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
             }
             else
             {
@@ -1241,10 +1353,10 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                     informationSet.ButtonsSets.Should().Be((ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main));
                 }
 
-                localCommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+                localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
             }
 
-            localCommandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
             
 
             informationSet.ParseMode.Should().Be(ParseMode.Html);
@@ -1277,10 +1389,19 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
             DTOUserInformation localDTOCurrentUser = entityContext.UsersInformation.First().ToDTOUserInformation();
             UserContext localUserContext = new UserContext(localDTOCurrentUser, Roles.User | Roles.Admin, false);
 
+            Update update = new Update();
+
             CommandHandlerTools localCommandHandlerTools = new CommandHandlerTools()
             {
-                ParentHandler = new PrimaryUpdateHandler(coreTools, new RepositoriesStore(entityContext)),
-                CurrentUserContext = localUserContext,
+                CoreTools = coreTools,
+                HandlerResult = new AuthorizedHandlerResult()
+                {
+                    CurrentUserContext = localUserContext,
+                    HasAccess = true,
+                    Update = update,
+                    ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.Message, true)
+                },
+                RepositoriesStore = new RepositoriesStore(entityContext),
             };
 
             QueryFrom queryFrom = QueryFrom.NoMatter;
@@ -1289,8 +1410,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                 ? MessageNavigationTarget.FindLogByEventID
                 : MessageNavigationTarget.FindLogByID;
 
-            localCommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(messageNavigationTarget);
-            localCommandHandlerTools.CurrentUserContext.Navigation.SetQueryFrom(queryFrom);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.SetMessageNavigationTarget(messageNavigationTarget);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.SetQueryFrom(queryFrom);
 
             MessageTextBuilder requestTextBuilder = new MessageTextBuilder(data);
 
@@ -1301,7 +1422,10 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                              : "Id";
 
             // Act
-            IInformationSet informationSet = await textMessageCH.GetInformationSet();
+            await textMessageCH.Process(TestContext.Current.CancellationToken);
+
+            IInformationSet? informationSet = localCommandHandlerTools.HandlerResult.InformationSet;
+            informationSet.Should().NotBeNull();
 
             // Assert
             if (data == "Other")
@@ -1350,8 +1474,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                 informationSet.ParseMode.Should().Be(ParseMode.None);
             }
 
-            localCommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
-            localCommandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
 
             informationSet.ButtonsSets.Should().Be((ButtonsSet.AdminLogs, ButtonsSet.Admin));
 
@@ -1375,24 +1499,36 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
             DTOUserInformation localDTOCurrentUser = entityContext.UsersInformation.First().ToDTOUserInformation();
             UserContext localUserContext = new UserContext(localDTOCurrentUser, Roles.User | Roles.Admin, false);
 
+            Update update = new Update();
+
             CommandHandlerTools localCommandHandlerTools = new CommandHandlerTools()
             {
-                ParentHandler = new PrimaryUpdateHandler(coreTools, new RepositoriesStore(entityContext)),
-                CurrentUserContext = localUserContext,
+                CoreTools = coreTools,
+                HandlerResult = new AuthorizedHandlerResult()
+                {
+                    CurrentUserContext = localUserContext,
+                    HasAccess = true,
+                    Update = update,
+                    ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.Message, true)
+                },
+                RepositoriesStore = new RepositoriesStore(entityContext),
             };
 
             QueryFrom queryFrom = QueryFrom.NoMatter;
             MessageNavigationTarget messageNavigationTarget = MessageNavigationTarget.SendMessageToUser;
 
-            localCommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(messageNavigationTarget);
-            localCommandHandlerTools.CurrentUserContext.Navigation.SetQueryFrom(queryFrom);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.SetMessageNavigationTarget(messageNavigationTarget);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.SetQueryFrom(queryFrom);
 
             MessageTextBuilder requestTextBuilder = new MessageTextBuilder(data);
 
             TextMessageCH textMessageCH = new TextMessageCH(localCommandHandlerTools, requestTextBuilder);
 
             // Act
-            IInformationSet informationSet = await textMessageCH.GetInformationSet();
+            await textMessageCH.Process(TestContext.Current.CancellationToken);
+
+            IInformationSet? informationSet = localCommandHandlerTools.HandlerResult.InformationSet;
+            informationSet.Should().NotBeNull();
 
             // Assert
             if (data == "Other-Bad-Arguments")
@@ -1406,7 +1542,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
 ");
                 informationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.AdminUsers));
 
-                botResponseSenderMock.Verify(x => x.SendSimpleNotification(It.IsAny<long>(), It.IsAny<string>()), Times.Never);
+                botResponseSenderMock.Verify(x => x.SendSimpleNotification(It.IsAny<long>(), It.IsAny<string>(), TestContext.Current.CancellationToken), Times.Never);
             }
             else if (data.Contains("NotFoundUser"))
             {
@@ -1418,7 +1554,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
 
                 informationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.AdminUsers));
 
-                botResponseSenderMock.Verify(x => x.SendSimpleNotification(It.IsAny<long>(), It.IsAny<string>()), Times.Never);
+                botResponseSenderMock.Verify(x => x.SendSimpleNotification(It.IsAny<long>(), It.IsAny<string>(), TestContext.Current.CancellationToken), Times.Never);
             }
             else
             {
@@ -1429,11 +1565,11 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
 ");
                 informationSet.ButtonsSets.Should().Be((ButtonsSet.AdminUsers, ButtonsSet.Admin));
 
-                botResponseSenderMock.Verify(x => x.SendSimpleNotification(It.IsAny<long>(), It.IsAny<string>()), Times.Once);
+                botResponseSenderMock.Verify(x => x.SendSimpleNotification(It.IsAny<long>(), It.IsAny<string>(), TestContext.Current.CancellationToken), Times.Once);
             }
 
-            localCommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
-            localCommandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
             
             informationSet.ParseMode.Should().Be(ParseMode.Html);
             informationSet.AdditionalParameters.Should().BeNull();
@@ -1450,8 +1586,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
             if (isNeedFromDB)
             {
                 UserInformation newUserInformation = new UserInformation() { FirstName = "NewUserInfo", Username = "@NewUserInfo" };
-                await entityContext.UsersInformation.AddAsync(newUserInformation);
-                await entityContext.SaveChangesAsync();
+                await entityContext.UsersInformation.AddAsync(newUserInformation, TestContext.Current.CancellationToken);
+                await entityContext.SaveChangesAsync(TestContext.Current.CancellationToken);
             }
             else
                 this.contextKeeperMock.Setup(x => x.GetAllKeys()).Returns([1, 2]);
@@ -1459,10 +1595,19 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
             DTOUserInformation localDTOCurrentUser = entityContext.UsersInformation.First().ToDTOUserInformation();
             UserContext localUserContext = new UserContext(localDTOCurrentUser, Roles.User | Roles.Admin, false);
 
+            Update update = new Update();
+
             CommandHandlerTools localCommandHandlerTools = new CommandHandlerTools()
             {
-                ParentHandler = new PrimaryUpdateHandler(coreTools, new RepositoriesStore(entityContext)),
-                CurrentUserContext = localUserContext,
+                CoreTools = coreTools,
+                HandlerResult = new AuthorizedHandlerResult()
+                {
+                    CurrentUserContext = localUserContext,
+                    HasAccess = true,
+                    Update = update,
+                    ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.Message, true)
+                },
+                RepositoriesStore = new RepositoriesStore(entityContext),
             };
 
             QueryFrom queryFrom = QueryFrom.NoMatter;
@@ -1471,15 +1616,18 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                 ? MessageNavigationTarget.SendMessagesToAllUsers
                 : MessageNavigationTarget.SendMessagesToActiveUsers;
 
-            localCommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(messageNavigationTarget);
-            localCommandHandlerTools.CurrentUserContext.Navigation.SetQueryFrom(queryFrom);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.SetMessageNavigationTarget(messageNavigationTarget);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.SetQueryFrom(queryFrom);
 
             MessageTextBuilder requestTextBuilder = new MessageTextBuilder(data);
 
             TextMessageCH textMessageCH = new TextMessageCH(localCommandHandlerTools, requestTextBuilder);
 
             // Act
-            IInformationSet informationSet = await textMessageCH.GetInformationSet();
+            await textMessageCH.Process(TestContext.Current.CancellationToken);
+
+            IInformationSet? informationSet = localCommandHandlerTools.HandlerResult.InformationSet;
+            informationSet.Should().NotBeNull();
 
             // Assert
             informationSet.Message.Should().Be(@$"Сообщение отправлено {2} пользователям
@@ -1489,10 +1637,10 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
 ");
             informationSet.ButtonsSets.Should().Be((ButtonsSet.AdminUsers, ButtonsSet.Admin));
 
-            botResponseSenderMock.Verify(x => x.SendSimpleNotification(It.IsAny<long>(), It.IsAny<string>()), Times.Exactly(2));
+            botResponseSenderMock.Verify(x => x.SendSimpleNotification(It.IsAny<long>(), It.IsAny<string>(), TestContext.Current.CancellationToken), Times.Exactly(2));
 
-            localCommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
-            localCommandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
 
             informationSet.ParseMode.Should().Be(ParseMode.Html);
             informationSet.AdditionalParameters.Should().BeNull();
@@ -1519,23 +1667,32 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
             DTOUserInformation localDTOCurrentUser = entityContext.UsersInformation.First().ToDTOUserInformation();
             UserContext localUserContext = new UserContext(localDTOCurrentUser, Roles.User | Roles.Admin, false);
 
+            Update update = new Update();
+
             CommandHandlerTools localCommandHandlerTools = new CommandHandlerTools()
             {
-                ParentHandler = new PrimaryUpdateHandler(coreTools, new RepositoriesStore(entityContext)),
-                CurrentUserContext = localUserContext,
+                CoreTools = coreTools,
+                HandlerResult = new AuthorizedHandlerResult()
+                {
+                    CurrentUserContext = localUserContext,
+                    HasAccess = true,
+                    Update = update,
+                    ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.Message, true)
+                },
+                RepositoriesStore = new RepositoriesStore(entityContext),
             };
 
             QueryFrom queryFrom = QueryFrom.NoMatter;
             MessageNavigationTarget messageNavigationTarget = MessageNavigationTarget.ChangeUserState;
 
-            localCommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(messageNavigationTarget);
-            localCommandHandlerTools.CurrentUserContext.Navigation.SetQueryFrom(queryFrom);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.SetMessageNavigationTarget(messageNavigationTarget);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.SetQueryFrom(queryFrom);
 
             MessageTextBuilder requestTextBuilder = new MessageTextBuilder(data);
 
             TextMessageCH textMessageCH = new TextMessageCH(localCommandHandlerTools, requestTextBuilder);
 
-            contextKeeperMock.Setup(x => x.GetContext(builder.TestUserInformation.UserId)).Returns(localCommandHandlerTools.CurrentUserContext);
+            contextKeeperMock.Setup(x => x.GetContext(builder.TestUserInformation.UserId)).Returns(localCommandHandlerTools.HandlerResult.CurrentUserContext);
 
             localUserContext.UserInformation.WhiteList.Should().BeFalse();
             localUserContext.UserInformation.BlackList.Should().BeFalse();
@@ -1544,7 +1701,10 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
             builder.TestUserInformation.BlackList.Should().BeFalse();
 
             // Act
-            IInformationSet informationSet = await textMessageCH.GetInformationSet();
+            await textMessageCH.Process(TestContext.Current.CancellationToken);
+
+            IInformationSet? informationSet = localCommandHandlerTools.HandlerResult.InformationSet;
+            informationSet.Should().NotBeNull();
 
             // Assert
             if (data == "Other-Bad-Arguments")
@@ -1612,8 +1772,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                 informationSet.ButtonsSets.Should().Be((ButtonsSet.AdminUsers, ButtonsSet.Admin));
             }
 
-            localCommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
-            localCommandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
 
             informationSet.ParseMode.Should().Be(ParseMode.Html);
             informationSet.AdditionalParameters.Should().BeNull();
@@ -1631,27 +1791,39 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
             DTOUserInformation localDTOCurrentUser = entityContext.UsersInformation.First().ToDTOUserInformation();
             UserContext localUserContext = new UserContext(localDTOCurrentUser, Roles.User | Roles.Admin, false);
 
+            Update update = new Update();
+
             CommandHandlerTools localCommandHandlerTools = new CommandHandlerTools()
             {
-                ParentHandler = new PrimaryUpdateHandler(coreTools, new RepositoriesStore(entityContext)),
-                CurrentUserContext = localUserContext,
+                CoreTools = coreTools,
+                HandlerResult = new AuthorizedHandlerResult()
+                {
+                    CurrentUserContext = localUserContext,
+                    HasAccess = true,
+                    Update = update,
+                    ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.Message, true)
+                },
+                RepositoriesStore = new RepositoriesStore(entityContext),
             };
 
             QueryFrom queryFrom = QueryFrom.NoMatter;
             MessageNavigationTarget messageNavigationTarget = MessageNavigationTarget.DeleteUser;
 
-            localCommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(messageNavigationTarget);
-            localCommandHandlerTools.CurrentUserContext.Navigation.SetQueryFrom(queryFrom);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.SetMessageNavigationTarget(messageNavigationTarget);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.SetQueryFrom(queryFrom);
 
             MessageTextBuilder requestTextBuilder = new MessageTextBuilder(data);
 
             TextMessageCH textMessageCH = new TextMessageCH(localCommandHandlerTools, requestTextBuilder);
 
-            UserInformation? userInformationForDelete = await entityContext.UsersInformation.FirstOrDefaultAsync();
+            UserInformation? userInformationForDelete = await entityContext.UsersInformation.FirstOrDefaultAsync(TestContext.Current.CancellationToken);
             userInformationForDelete.Should().NotBeNull();
 
             // Act
-            IInformationSet informationSet = await textMessageCH.GetInformationSet();
+            await textMessageCH.Process(TestContext.Current.CancellationToken);
+
+            IInformationSet? informationSet = localCommandHandlerTools.HandlerResult.InformationSet;
+            informationSet.Should().NotBeNull();
 
             // Assert
             if (string.IsNullOrEmpty(data)) // Невозможно затестить, т.к. MessageTextBuilder не допускает пустой строки
@@ -1665,7 +1837,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
 ");
                 informationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.AdminUsers));
 
-                userInformationForDelete = await entityContext.UsersInformation.FirstOrDefaultAsync();
+                userInformationForDelete = await entityContext.UsersInformation.FirstOrDefaultAsync(TestContext.Current.CancellationToken);
                 userInformationForDelete.Should().NotBeNull();
 
             }
@@ -1679,7 +1851,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
 
                 informationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.AdminUsers));
 
-                userInformationForDelete = await entityContext.UsersInformation.FirstOrDefaultAsync();
+                userInformationForDelete = await entityContext.UsersInformation.FirstOrDefaultAsync(TestContext.Current.CancellationToken);
                 userInformationForDelete.Should().NotBeNull();
             }
             else if (data.Contains("1") || data.Contains("TestUsername"))
@@ -1692,12 +1864,12 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
 
                 informationSet.ButtonsSets.Should().Be((ButtonsSet.AdminUsers, ButtonsSet.Admin));
 
-                userInformationForDelete = await entityContext.UsersInformation.FirstOrDefaultAsync();
+                userInformationForDelete = await entityContext.UsersInformation.FirstOrDefaultAsync(TestContext.Current.CancellationToken);
                 userInformationForDelete.Should().BeNull();
             }
 
-            localCommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
-            localCommandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
 
             informationSet.ParseMode.Should().Be(ParseMode.Html);
             informationSet.AdditionalParameters.Should().BeNull();
@@ -1720,25 +1892,34 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
             DTOUserInformation localDTOCurrentUser = entityContext.UsersInformation.First().ToDTOUserInformation();
             UserContext localUserContext = new UserContext(localDTOCurrentUser, Roles.User | Roles.Admin, false);
 
+            Update update = new Update();
+
             CommandHandlerTools localCommandHandlerTools = new CommandHandlerTools()
             {
-                ParentHandler = new PrimaryUpdateHandler(coreTools, new RepositoriesStore(entityContext)),
-                CurrentUserContext = localUserContext,
+                CoreTools = coreTools,
+                HandlerResult = new AuthorizedHandlerResult()
+                {
+                    CurrentUserContext = localUserContext,
+                    HasAccess = true,
+                    Update = update,
+                    ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.Message, true)
+                },
+                RepositoriesStore = new RepositoriesStore(entityContext),
             };
 
             QueryFrom queryFrom = QueryFrom.NoMatter;
             MessageNavigationTarget messageNavigationTarget = MessageNavigationTarget.DeleteResultsExercise;
 
-            localCommandHandlerTools.CurrentUserContext.Navigation.SetMessageNavigationTarget(messageNavigationTarget);
-            localCommandHandlerTools.CurrentUserContext.Navigation.SetQueryFrom(queryFrom);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.SetMessageNavigationTarget(messageNavigationTarget);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.SetQueryFrom(queryFrom);
 
-            localCommandHandlerTools.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestCycle.ToDTOCycle());
-            localCommandHandlerTools.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestDay.ToDTODay());
-            localCommandHandlerTools.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestExercise.ToDTOExercise());
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestCycle.ToDTOCycle());
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestDay.ToDTODay());
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.SetCurrentDomain(builder.TestExercise.ToDTOExercise());
 
             int allResultsCount = 3;
 
-            int resultCount = await entityContext.ResultsExercises.CountAsync();
+            int resultCount = await entityContext.ResultsExercises.CountAsync(TestContext.Current.CancellationToken);
             resultCount.Should().Be(allResultsCount);
 
             MessageTextBuilder requestTextBuilder = new MessageTextBuilder(data);
@@ -1746,7 +1927,10 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
             TextMessageCH textMessageCH = new TextMessageCH(localCommandHandlerTools, requestTextBuilder);
 
             // Act
-            IInformationSet informationSet = await textMessageCH.GetInformationSet();
+            await textMessageCH.Process(TestContext.Current.CancellationToken);
+
+            IInformationSet? informationSet = localCommandHandlerTools.HandlerResult.InformationSet;
+            informationSet.Should().NotBeNull();
 
             // Assert
             if (data == "Other")
@@ -1758,9 +1942,9 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
 ");
                 informationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.SettingExercise));
 
-                localCommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
+                localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
 
-                resultCount = await entityContext.ResultsExercises.CountAsync();
+                resultCount = await entityContext.ResultsExercises.CountAsync(TestContext.Current.CancellationToken);
                 resultCount.Should().Be(allResultsCount);
             }
             else if (data == "0")
@@ -1774,9 +1958,9 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                 informationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.SettingExercise));
 
 
-                localCommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
+                localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
 
-                resultCount = await entityContext.ResultsExercises.CountAsync();
+                resultCount = await entityContext.ResultsExercises.CountAsync(TestContext.Current.CancellationToken);
                 resultCount.Should().Be(allResultsCount);
             }
             else
@@ -1796,13 +1980,13 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
 
                 informationSet.ButtonsSets.Should().Be((ButtonsSet.SettingExercise, ButtonsSet.ExercisesList));
 
-                localCommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+                localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
-                resultCount = await entityContext.ResultsExercises.CountAsync();
+                resultCount = await entityContext.ResultsExercises.CountAsync(TestContext.Current.CancellationToken);
                 resultCount.Should().Be(remainingResultExercisesCount);
             }
                 
-            localCommandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
+            localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
 
             informationSet.ParseMode.Should().Be(ParseMode.Html);
             informationSet.AdditionalParameters.Should().BeNull();
@@ -1810,8 +1994,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
 
         public void Dispose()
         {
-            builder?.Dispose();
-            cts?.Dispose();
+            builder.Dispose();
         }
     }
 }

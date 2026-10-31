@@ -11,7 +11,7 @@ namespace WorkoutStorageBot.Model.DTO.HandlerData.Results.UpdateInfo
             Update = update.ThrowIfNull();
             User = user.ThrowIfNull();
             ChatId = chatId > 0 ? chatId : throw new ArgumentNullException(nameof(chatId));
-            UpdateType = updateType;
+            UpdateType = updateType != UpdateType.Unknown ? updateType : throw new ArgumentException($"{nameof(UpdateType.Unknown)} updateType");
             IsExpectedType = isExpectedType;
             MessageType = messageType;
 

@@ -32,8 +32,6 @@ namespace WorkoutStorageBot.Core.Manager
             };
 
             this.logger = this.coreTools.LoggerFactory.CreateLogger<CoreManager>();
-
-            this.cancellationTokenSource = this.coreTools.AppCTS;
         }
 
         private readonly CoreTools coreTools;
@@ -44,25 +42,25 @@ namespace WorkoutStorageBot.Core.Manager
 
         private readonly ILogger logger;
 
-        private readonly CancellationTokenSource cancellationTokenSource;
-
         private IBotResponseSender BotResponseSender => coreTools.BotResponseSender;
 
-        internal CancellationToken CancellationToken => cancellationTokenSource.Token;
-
-        internal async Task ProcessUpdate(Update update)
+        internal async Task ProcessUpdate(Update update, Action<TimeSpan> stopAppMethod, CancellationToken cancellationToken)
         {
             try
             {
-                await StartProcess(update);
+                await StartProcess(update, stopAppMethod, cancellationToken);
+            }
+            catch (OperationCanceledException ex)
+            {
+                logger.LogWarning(ex, "Получен OperationCanceledException");
             }
             catch (Exception ex)
             {
-                await ProcessError(ex, update);
+                await ProcessError(ex, update, cancellationToken);
             }
         }
 
-        private async Task StartProcess(Update update)
+        private async Task StartProcess(Update update, Action<TimeSpan> stopAppMethod, CancellationToken cancellationToken)
         {
             HandlerResult handlerResult = new HandlerResult()
             {
@@ -74,12 +72,15 @@ namespace WorkoutStorageBot.Core.Manager
             {
                 if (handlerResult.HasAccess)
                 {
-                    handlerResult = await handler.Process(handlerResult);
+                    handlerResult = await handler.Process(handlerResult, cancellationToken);
+
+                    if (handlerResult.StopBot)
+                        StopApp(TimeSpan.FromSeconds(2), stopAppMethod);
 
                     // Перепроверяем доступ, т.к. во время работы очередного обработчика доступ мог быть отозван
                     if (handlerResult is AuthorizedHandlerResult authorizedHandlerResult && authorizedHandlerResult.InformationSet != null && handlerResult.HasAccess)
                     {
-                        await BotResponseSender.SendResponse(authorizedHandlerResult.ShortUpdateInfo.ChatId, authorizedHandlerResult.InformationSet, authorizedHandlerResult.CurrentUserContext);
+                        await BotResponseSender.SendResponse(authorizedHandlerResult.ShortUpdateInfo.ChatId, authorizedHandlerResult.InformationSet, authorizedHandlerResult.CurrentUserContext, cancellationToken);
 
                         if (!handlerResult.IsNeedContinue)
                             return;
@@ -88,19 +89,19 @@ namespace WorkoutStorageBot.Core.Manager
             }
         }
 
-        private async Task ProcessError(Exception ex, Update update)
+        private async Task ProcessError(Exception ex, Update update, CancellationToken cancellationToken)
         {
             IUpdateInfo updateInfo = UpdatesHelper.GetUpdateInfo(update);
 
             EventId eventId = EventIDHelper.GetNextEventIdThreadSafe(CommonConsts.EventNames.RuntimeError);
 
-            await LogRuntimeError(updateInfo, eventId, ex);
+            await LogRuntimeError(updateInfo, eventId, ex, cancellationToken);
 
             if (this.coreTools.ConfigurationData.Notifications.NotifyOwnersAboutRuntimeErrors)
-                await NotifyOwnersAboutError(ex, eventId);
+                await NotifyOwnersAboutError(ex, eventId, cancellationToken);
         }
 
-        private async Task LogRuntimeError(IUpdateInfo updateInfo, EventId eventId, Exception ex)
+        private async Task LogRuntimeError(IUpdateInfo updateInfo, EventId eventId, Exception ex, CancellationToken cancellationToken)
         {
             if (updateInfo is ShortUpdateInfo shortUpdateInfo)
             {
@@ -113,32 +114,44 @@ namespace WorkoutStorageBot.Core.Manager
                            LogFormatter.SimpleFormatter);
 
                 // не отправлять EventID, если нет доступа у пользователя
-                if (shortUpdateInfo.ChatId > 0 && await IsNeedSendEventIdToUser(userId))
-                    await BotResponseSender.SendSimpleNotification(shortUpdateInfo.ChatId, $"Ошибка обработки. EventId: {eventId.Id}");
+                if (shortUpdateInfo.ChatId > 0 && await IsNeedSendEventIdToUser(userId, cancellationToken))
+                    await BotResponseSender.SendSimpleNotification(shortUpdateInfo.ChatId, $"Ошибка обработки. EventId: {eventId.Id}", cancellationToken);
             }
             else
                 logger.LogError(eventId, ex, null);
         }
 
-        private async Task<bool> IsNeedSendEventIdToUser(long userId)
+        private async Task<bool> IsNeedSendEventIdToUser(long userId, CancellationToken cancellationToken)
         {
             AdminWrapper adminWrapper = this.repositoriesStore.InitRepository(x => new AdminWrapper(x, coreTools.ConfigurationData, coreTools.LoggerFactory));
 
-            UserInformation? userInformation = await adminWrapper.GetUserInformationWithoutTracking(userId);
+            UserInformation? userInformation = await adminWrapper.GetUserInformationWithoutTracking(userId, cancellationToken);
 
             return userInformation != null && adminWrapper.UserHasAccess(userInformation);
         }
 
-        private async Task NotifyOwnersAboutError(Exception ex, EventId eventId)
+        private async Task NotifyOwnersAboutError(Exception ex, EventId eventId, CancellationToken cancellationToken)
         {
             string exMessage = ex.ToString();
 
             if (exMessage.Length > CoreConsts.Log.ShowLimit)
                 exMessage = $"{exMessage.Substring(0, CoreConsts.Log.ShowLimit)}...";
 
-            await this.BotResponseSender.SendSimpleMassiveNotification(this.coreTools.ConfigurationData.Bot.OwnersChatIDs, @$"Ошибка во время исполнения. EventID: {eventId.Id}
+            await this.BotResponseSender.SendSimpleMassiveNotification(this.coreTools.ConfigurationData.Bot.OwnersChatIDs, 
+                                                                       @$"Ошибка во время исполнения. EventID: {eventId.Id}
 ======================
-{exMessage}");    
+{exMessage}",
+                                                                       cancellationToken);    
+        }
+
+        private void StopApp(TimeSpan timeSpan, Action<TimeSpan> stopAppMethod)
+        {
+            if (timeSpan.TotalSeconds < 2)
+                timeSpan = TimeSpan.FromSeconds(2);
+
+            logger.LogWarning("Инициировано отключение бота");
+
+            stopAppMethod.Invoke(timeSpan);
         }
     }
 }

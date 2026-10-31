@@ -203,8 +203,8 @@ namespace WorkoutStorageBot.UnitTests.Helpers
         {
             testCycles =
            [
-                new Cycle() { Name = "TestExercise1", UserInformationId = UserInformationId },
-                new Cycle() { Name = "TestExercise2", UserInformationId = UserInformationId },
+                new Cycle() { Name = "TestCycle1", UserInformationId = UserInformationId },
+                new Cycle() { Name = "TestCycle2", UserInformationId = UserInformationId },
            ];
 
             Context.Cycles.AddRange(testCycles);

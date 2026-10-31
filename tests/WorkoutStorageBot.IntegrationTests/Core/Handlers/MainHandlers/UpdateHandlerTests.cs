@@ -38,16 +38,12 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MainHandlers
 
         private readonly Mock<ILogger> loggerMock;
 
-        private readonly CancellationTokenSource cts;
-
         public UpdateHandlerTests()
         {
             contextKeeperMock = new();
             botResponseSenderMock = new();
             customLoggerFactoryMock = new();
             loggerMock = new();
-
-            cts = new CancellationTokenSource();
 
             customLoggerFactoryMock.Setup(x => x.CreateLogger<It.IsAnyType>()).Returns(loggerMock.Object);
         }
@@ -91,7 +87,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MainHandlers
             if (updateType == "EditedMessageQuery")
             {
                 // Act
-                Func<Task> func = async () => await updateHandler.Process(startHandlerResult);
+                Func<Task> func = async () => await updateHandler.Process(startHandlerResult, TestContext.Current.CancellationToken);
 
                 ExceptionAssertions<NotImplementedException> exceptionAssertions = await func.Should().ThrowAsync<NotImplementedException>();
                 exceptionAssertions.WithMessage($"Неожиданный UpdateType: {updateInfo.UpdateType}");
@@ -99,7 +95,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MainHandlers
             else
             {
                 // Act
-                HandlerResult handlerResult = await updateHandler.Process(startHandlerResult);
+                HandlerResult handlerResult = await updateHandler.Process(startHandlerResult, TestContext.Current.CancellationToken);
 
                 // Assert
                 builder.Should().NotBeNull();
@@ -172,35 +168,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MainHandlers
             }
         }
 
-        [Fact]
-        public async Task CloseApp_ByUpdateHandler_ShouldReturnExpectedHandlerResult()
-        {
-            // Arrange
-            InitEntityContext();
-
-            UpdateHandler updateHandler = GetUpdateHandler();
-
-            TimeSpan waiting = TimeSpan.FromSeconds(2);
-
-            // Act
-            updateHandler.CloseApp(waiting);
-
-            await Task.Delay(waiting);
-
-            // Assert
-            cts.IsCancellationRequested.Should().BeTrue();
-
-            loggerMock.Verify(x => x.Log(
-                                   LogLevel.Warning,
-                                   It.IsAny<EventId>(),
-                                   It.Is<It.IsAnyType>((v, t) =>
-                                   v.ToString() == "Инициировано отключение бота"),
-                                   It.IsAny<Exception>(),
-                                   (Func<It.IsAnyType, Exception?, string>)It.IsAny<object>()
-                               ),
-                               Times.Once);
-        }
-
         private void InitEntityContext()
         {
             builder = new EntityContextBuilder();
@@ -228,7 +195,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MainHandlers
                 ContextKeeper = contextKeeperMock.Object,
                 BotResponseSender = botResponseSenderMock.Object,
                 LoggerFactory = customLoggerFactoryMock.Object,
-                AppCTS = cts,
             };
 
             UpdateHandler updateHandler = new UpdateHandler(coreTools, new RepositoriesStore(entityContext));
@@ -317,7 +283,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MainHandlers
         public void Dispose()
         {
             builder?.Dispose();
-            cts?.Dispose();
         }
     }
 }

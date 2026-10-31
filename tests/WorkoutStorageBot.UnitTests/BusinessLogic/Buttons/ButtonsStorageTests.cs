@@ -3,7 +3,7 @@ using WorkoutStorageBot.BusinessLogic.Buttons.Abstraction;
 using WorkoutStorageBot.BusinessLogic.Buttons.Storage;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
-using WorkoutStorageBot.UnitTests.Helpers;
+using WorkoutStorageBot.UnitTests.Builders;
 using WorkoutStorageBot.BusinessLogic.Enums;
 
 namespace WorkoutStorageBot.UnitTests.BusinessLogic.Buttons

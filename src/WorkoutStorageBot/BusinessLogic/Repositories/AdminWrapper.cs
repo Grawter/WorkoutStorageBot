@@ -44,32 +44,32 @@ namespace WorkoutStorageBot.BusinessLogic.Repositories
             AddLogAction($"Глобальный режим белого списка установлен в: {WhiteListIsEnable}");
         }
 
-        internal async Task ChangeBlackListByUser(UserInformation user)
+        internal async Task ChangeBlackListByUser(UserInformation user, CancellationToken cancellationToken)
         {
-            await base.ChangeBlackListByUser(user);
+            await base.ChangeBlackListByUser(user, cancellationToken);
 
             AddLogAction($"Режим чёрного списка для пользователя {user.Id} ({user.Username}-{user.UserId}) установлен в: {user.BlackList}");
         }
 
-        internal async Task ChangeWhiteListByUser(UserInformation user)
+        internal async Task ChangeWhiteListByUser(UserInformation user, CancellationToken cancellationToken)
         {
-            await base.ChangeWhiteListByUser(user);
+            await base.ChangeWhiteListByUser(user, cancellationToken);
 
             AddLogAction($"Режим белого списка для пользователя {user.Id} ({user.Username}-{user.UserId}) установлен в: {user.WhiteList}");
         }
 
-        internal async Task DeleteAccount(UserInformation user)
+        internal async Task DeleteAccount(UserInformation user, CancellationToken cancellationToken)
         { 
-            await base.DeleteAccount(user);
+            await base.DeleteAccount(user, cancellationToken);
 
             AddLogAction($"Пользователь {user.Id} ({user.Username}-{user.UserId}) удалён");
         }
 
-        internal async Task<UserInformation?> TryCreateNewUserInformation(User user)
+        internal async Task<UserInformation?> TryCreateNewUserInformation(User user, CancellationToken cancellationToken)
         {
             if (!WhiteListIsEnable)
             {
-                UserInformation newUser = await base.TryCreateNewUserInformation(user);
+                UserInformation newUser = await base.TryCreateNewUserInformation(user, cancellationToken);
 
                 AddLogAction($"Создан новый пользователь {newUser.Id} ({newUser.Username}-{newUser.UserId})");
 

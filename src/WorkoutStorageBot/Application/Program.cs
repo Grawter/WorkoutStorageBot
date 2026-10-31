@@ -22,9 +22,21 @@ namespace WorkoutStorageBot.Application
 
             BotListener botListener = host.Services.GetRequiredService<BotListener>();
 
+            IHostApplicationLifetime hostApplicationLifetime = host.Services.GetRequiredService<IHostApplicationLifetime>();
+
+            botListener.CancellationToken.Register(() =>
+            {
+                hostApplicationLifetime.StopApplication();
+            });
+
+            hostApplicationLifetime.ApplicationStopping.Register(() =>
+            {
+                botListener.StopListen();
+            });
+
             await botListener.StartListen();
 
-            await host.RunAsync(botListener.CancellationToken);
+            await host.RunAsync();
         }
 
         private static IHost CreateHostAndSetDI(ConfigurationData configurationData)

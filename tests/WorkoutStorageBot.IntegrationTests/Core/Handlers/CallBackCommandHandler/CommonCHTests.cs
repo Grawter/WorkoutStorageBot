@@ -1,6 +1,7 @@
 ﻿using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using WorkoutStorageBot.Application.Configuration;
 using WorkoutStorageBot.BusinessLogic.Context.Global;
@@ -8,14 +9,16 @@ using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.Extenions;
 using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackCommandHandler.Context;
-using WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers;
 using WorkoutStorageBot.BusinessLogic.Helpers.CallbackQueryParser;
+using WorkoutStorageBot.Core.Extensions;
 using WorkoutStorageBot.Core.Logging;
 using WorkoutStorageBot.Core.Repositories.Store;
 using WorkoutStorageBot.Core.Sender;
 using WorkoutStorageBot.Model.AppContext;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.Model.DTO.HandlerData;
+using WorkoutStorageBot.Model.DTO.HandlerData.Results;
+using WorkoutStorageBot.Model.DTO.HandlerData.Results.UpdateInfo;
 using WorkoutStorageBot.Model.DTO.InformationSetForSend;
 using WorkoutStorageBot.UnitTests.Helpers;
 
@@ -37,7 +40,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 
         private readonly CommandHandlerTools commandHandlerTools;
 
-        private readonly CancellationTokenSource cts;
+        private UserContext CurrentUserContext => commandHandlerTools.HandlerResult.CurrentUserContext;
+        private IInformationSet InformationSet => commandHandlerTools.HandlerResult.InformationSet.ThrowIfNull();
 
         public CommonCHTests() 
         {
@@ -53,8 +57,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 
             customLoggerFactoryMock.Setup(x => x.CreateLogger<It.IsAnyType>()).Returns(loggerMock.Object);
 
-            cts = new CancellationTokenSource();
-
             CoreTools coreTools = new CoreTools()
             {
                 ConfigurationData = new ConfigurationData(),
@@ -62,7 +64,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                 ContextKeeper = contextKeeperMock.Object,
                 BotResponseSender = botResponseSenderMock.Object,
                 LoggerFactory = customLoggerFactoryMock.Object,
-                AppCTS = cts,
             };
 
             DTOUserInformation DTOCurrentUser = entityContext.UsersInformation.First().ToDTOUserInformation();
@@ -70,10 +71,19 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             UserContext userContext = new UserContext(DTOCurrentUser);
             userContext.DataManager.CreateAndSetCurrentCycle("testCycle", true, DTOCurrentUser);
 
+            Update update = new Update();
+
             commandHandlerTools = new CommandHandlerTools()
             {
-                ParentHandler = new PrimaryUpdateHandler(coreTools, new RepositoriesStore(entityContext)),
-                CurrentUserContext = userContext,
+                CoreTools = coreTools,
+                HandlerResult = new AuthorizedHandlerResult()
+                {
+                    CurrentUserContext = userContext,
+                    HasAccess = true,
+                    Update = update,
+                    ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.CallbackQuery, true)
+                },
+                RepositoriesStore = new RepositoriesStore(entityContext),
             };
         }
 
@@ -88,16 +98,16 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             CommonCH commonCH = new CommonCH(commandHandlerTools, callbackQueryParser);
 
             // Act
-            IInformationSet informationSet = await commonCH.GetInformationSet();
+            await commonCH.Process(TestContext.Current.CancellationToken);
 
             // Assert
-            commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-            commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+            CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+            CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
-            informationSet.Message.Should().Be("Выберите интересующий раздел");
-            informationSet.ButtonsSets.Should().Be((ButtonsSet.Main, ButtonsSet.None));
-            informationSet.ParseMode.Should().Be(ParseMode.Html);
-            informationSet.AdditionalParameters.Should().BeNull();
+            InformationSet.Message.Should().Be("Выберите интересующий раздел");
+            InformationSet.ButtonsSets.Should().Be((ButtonsSet.Main, ButtonsSet.None));
+            InformationSet.ParseMode.Should().Be(ParseMode.Html);
+            InformationSet.AdditionalParameters.Should().BeNull();
         }
 
         [Fact]
@@ -111,16 +121,16 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             CommonCH commonCH = new CommonCH(commandHandlerTools, callbackQueryParser);
 
             // Act
-            IInformationSet informationSet = await commonCH.GetInformationSet();
+            await commonCH.Process(TestContext.Current.CancellationToken);
 
             // Assert
-            commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-            commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+            CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+            CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
-            informationSet.Message.Should().Be("Выберите тренировочный день из цикла \"<b>testCycle</b>\"");
-            informationSet.ButtonsSets.Should().Be((ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main));
-            informationSet.ParseMode.Should().Be(ParseMode.Html);
-            informationSet.AdditionalParameters.Should().BeNull();
+            InformationSet.Message.Should().Be("Выберите тренировочный день из цикла \"<b>testCycle</b>\"");
+            InformationSet.ButtonsSets.Should().Be((ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main));
+            InformationSet.ParseMode.Should().Be(ParseMode.Html);
+            InformationSet.AdditionalParameters.Should().BeNull();
         }
 
         [Fact]
@@ -134,7 +144,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             CommonCH commonCH = new CommonCH(commandHandlerTools, callbackQueryParser);
 
             // Act
-            Func<Task> task = async () => await commonCH.GetInformationSet();
+            Func<Task> task = async () => await commonCH.Process(TestContext.Current.CancellationToken);
 
             // Assert
             await task.Should().ThrowAsync<NotImplementedException>()
@@ -144,7 +154,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         public void Dispose()
         {
             builder.Dispose();
-            cts.Dispose();
         }
     }
 }

@@ -93,7 +93,7 @@ namespace WorkoutStorageBot.E2ETests.Scenarios
             };
         }
 
-        internal async Task<List<HandlerResult>> StartProcess(Update update)
+        internal async Task<List<HandlerResult>> StartProcess(Update update, CancellationToken cancellationToken)
         {
             HandlerResult handlerResult = new HandlerResult()
             {
@@ -107,14 +107,17 @@ namespace WorkoutStorageBot.E2ETests.Scenarios
             {
                 if (handlerResult.HasAccess)
                 {
-                    HandlerResult newHandlerResult = await handler.Process(handlerResult);
+                    HandlerResult newHandlerResult = await handler.Process(handlerResult, cancellationToken);
                     handlerResults.Add(newHandlerResult);
                     handlerResult = newHandlerResult;
+
+                    if (handlerResult.StopBot)
+                        true.Should().BeFalse("Нереализуему в тестах");
 
                     // Перепроверяем доступ, т.к. во время работы очередного обработчика доступ мог быть отозван
                     if (handlerResult is AuthorizedHandlerResult authorizedHandlerResult && authorizedHandlerResult.InformationSet != null && handlerResult.HasAccess)
                     {
-                        await botResponseSender.SendResponse(authorizedHandlerResult.ShortUpdateInfo.ChatId, authorizedHandlerResult.InformationSet, authorizedHandlerResult.CurrentUserContext);
+                        await botResponseSender.SendResponse(authorizedHandlerResult.ShortUpdateInfo.ChatId, authorizedHandlerResult.InformationSet, authorizedHandlerResult.CurrentUserContext, cancellationToken);
 
                         if (!handlerResult.IsNeedContinue)
                             return handlerResults;

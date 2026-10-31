@@ -61,7 +61,7 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Repositories
             LogsRepository logsRepository = new LogsRepository(entityContext);
 
             // Act
-            Log? log = await logsRepository.GetLogByEventId(200);
+            Log? log = await logsRepository.GetLogByEventId(200, TestContext.Current.CancellationToken);
 
             // Assert
             log.Should().NotBeNull();
@@ -81,7 +81,7 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Repositories
             LogsRepository logsRepository = new LogsRepository(entityContext);
 
             // Act
-            Log? log = await logsRepository.GetLogById(3);
+            Log? log = await logsRepository.GetLogById(3, TestContext.Current.CancellationToken);
 
             // Assert
             log.Should().NotBeNull();

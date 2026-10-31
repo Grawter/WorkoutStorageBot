@@ -7,17 +7,26 @@ using WorkoutStorageBot.BusinessLogic.Extenions;
 using WorkoutStorageBot.BusinessLogic.Helpers.Stream;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageModels.Entities.BusinessLogic;
+using Microsoft.EntityFrameworkCore;
 
 namespace WorkoutStorageBot.BusinessLogic.Helpers.Export
 {
     internal static class ExcelExportHelper
     {
-        internal static async Task<RecyclableMemoryStream> GetExcelFile(List<DTOCycle> allUserCycles, IQueryable<ResultExercise> allUserResultsExercises, int monthFilterPeriod)
+        internal static async Task<RecyclableMemoryStream> GetExcelFile(List<DTOCycle> allUserCycles,
+                                                                        IQueryable<ResultExercise> allUserResultsExercises,
+                                                                        int monthFilterPeriod,
+                                                                        CancellationToken cancellationToken)
         {
             SetLicense();
 
-            DateTime filterDateTime = CommonExportHelper.GetFilterDateTime(monthFilterPeriod, allUserResultsExercises);
+            DateTime filterDateTime = await CommonExportHelper.GetFilterDateTime(monthFilterPeriod, allUserResultsExercises, cancellationToken);
             IQueryable<ResultExercise> resultExercisesByFilterData = CommonExportHelper.GetResultExercisesByFilterDate(allUserResultsExercises, filterDateTime);
+
+            var allFilteredEntities = await resultExercisesByFilterData.ToListAsync(cancellationToken);
+
+            var resultsLookup = allFilteredEntities.Select(y => y.ToDTOResultExercise())
+                                                   .ToLookup(r => r.ExerciseId);
 
             RecyclableMemoryStream recyclableMemoryStream = StreamHelper.RecyclableMSManager.GetStream();
 
@@ -70,9 +79,7 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Export
 
                             DateTime tempDate = DateTime.MinValue;
 
-                            exercise.ResultsExercise = resultExercisesByFilterData.Where(x => x.ExerciseId == exercise.Id)
-                                                                                  .Select(y => y.ToDTOResultExercise())
-                                                                                  .ToList();
+                            exercise.ResultsExercise = resultsLookup[exercise.Id].ToList();
 
                             foreach (DTOResultExercise resultExercise in exercise.ResultsExercise)
                             {
@@ -136,9 +143,10 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Export
 
                 cells.AutoFitColumns();
 
-                await excelPackage.SaveAsAsync(recyclableMemoryStream);
+                await excelPackage.SaveAsAsync(recyclableMemoryStream, cancellationToken);
 
-                recyclableMemoryStream.Position = 0;
+                if (recyclableMemoryStream.CanSeek && recyclableMemoryStream.Position != 0)
+                    recyclableMemoryStream.Position = 0;
 
                 return recyclableMemoryStream;
             }
@@ -147,14 +155,6 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Export
         private static void SetLicense()
         {
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-
-            /*
-             * Для версий EPPlus 8 и выше. 
-             * Ставит текст в теги и комментарии к документу, что сделано при помощи EPPlus по некоммерческой лицензии
-             * для такого то проекта (указывается строка в аргументе).
-             * В целом, совсем не мешает, но пускай остаётся старая версия "без" этих доп. надписей.
-            */
-            //ExcelPackage.License.SetNonCommercialPersonal("WorkoutStorageBot");
         }
 
         private static void SetExerciseName(string exerciseName, Point exercisePoint, ExcelRange cells)

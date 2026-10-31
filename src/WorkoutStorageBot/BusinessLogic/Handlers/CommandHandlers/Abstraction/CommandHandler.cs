@@ -2,18 +2,20 @@
 using WorkoutStorageBot.Application.Configuration;
 using WorkoutStorageBot.BusinessLogic.Context.Global;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
-using WorkoutStorageBot.Core.Handlers.Abstraction;
 using WorkoutStorageBot.Core.Repositories.Store;
 using WorkoutStorageBot.Core.Sender;
 using WorkoutStorageBot.Model.AppContext;
 using WorkoutStorageBot.Model.DTO.HandlerData;
+using WorkoutStorageBot.Model.DTO.HandlerData.Results;
 using WorkoutStorageBot.Model.DTO.InformationSetForSend;
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.Abstraction
 {
     internal abstract class CommandHandler
     {
-        private CoreHandler ParentHandler { get; }
+        private CoreTools CoreTools { get; }
+
+        protected AuthorizedHandlerResult HandlerResult { get; }
 
         protected EntityContext Db { get; }
         
@@ -27,31 +29,35 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.Abstraction
 
         internal CommandHandler(CommandHandlerTools commandHandlerTools)
         {
-            this.ParentHandler = commandHandlerTools.ParentHandler;
+            this.CoreTools = commandHandlerTools.CoreTools;
 
-            this.Db = this.ParentHandler.CoreTools.Db;
+            this.HandlerResult = commandHandlerTools.HandlerResult;
 
-            this.CurrentUserContext = commandHandlerTools.CurrentUserContext;
+            this.Db = commandHandlerTools.CoreTools.Db;
 
-            this.ContextKeeper = this.ParentHandler.CoreTools.ContextKeeper;
+            this.CurrentUserContext = commandHandlerTools.HandlerResult.CurrentUserContext;
 
-            this.RepositoriesHub = this.ParentHandler.RepositoriesStore;
+            this.ContextKeeper = commandHandlerTools.CoreTools.ContextKeeper;
 
-            this.BotResponseSender = this.ParentHandler.CoreTools.BotResponseSender;
+            this.RepositoriesHub = commandHandlerTools.RepositoriesStore;
+
+            this.BotResponseSender = commandHandlerTools.CoreTools.BotResponseSender;
         }
 
-        internal abstract Task<IInformationSet> GetInformationSet();
+        internal virtual async Task Process(CancellationToken cancellationToken)
+        {
+            this.HandlerResult.InformationSet = await GetInformationSet(cancellationToken);
+        }
+
+        protected abstract Task<IInformationSet> GetInformationSet(CancellationToken cancellationToken);
 
         protected ILogger CreateLogger<T>()
-            => this.ParentHandler.CoreTools.LoggerFactory.CreateLogger<T>();
+            => this.CoreTools.LoggerFactory.CreateLogger<T>();
 
         protected string? GetBotDescription()
-            => this.ParentHandler.CoreTools.ConfigurationData.AboutBotText;
+            => this.CoreTools.ConfigurationData.AboutBotText;
 
         protected ConfigurationData GetConfigurationData()
-           => this.ParentHandler.CoreTools.ConfigurationData;
-
-        protected void CloseApp(TimeSpan timeSpan)
-            => this.ParentHandler.CloseApp(timeSpan);
+           => this.CoreTools.ConfigurationData;
     }
 }

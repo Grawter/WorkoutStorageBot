@@ -2,6 +2,7 @@
 using FluentAssertions.Specialized;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using WorkoutStorageBot.Application.Configuration;
 using WorkoutStorageBot.BusinessLogic.Context.Global;
@@ -19,6 +20,8 @@ using WorkoutStorageBot.Core.Sender;
 using WorkoutStorageBot.Model.AppContext;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.Model.DTO.HandlerData;
+using WorkoutStorageBot.Model.DTO.HandlerData.Results;
+using WorkoutStorageBot.Model.DTO.HandlerData.Results.UpdateInfo;
 using WorkoutStorageBot.Model.DTO.InformationSetForSend;
 using WorkoutStorageBot.Model.Interfaces;
 using WorkoutStorageBot.UnitTests.Helpers;
@@ -42,7 +45,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 
         private readonly CommandHandlerTools commandHandlerTools;
 
-        private readonly CancellationTokenSource cts;
+        private UserContext CurrentUserContext => commandHandlerTools.HandlerResult.CurrentUserContext;
+        private IInformationSet InformationSet => commandHandlerTools.HandlerResult.InformationSet.ThrowIfNull();
 
         public SettingsCHTests()
         {
@@ -63,8 +67,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             customLoggerFactoryMock = new();
             loggerMock = new();
 
-            cts = new CancellationTokenSource();
-
             customLoggerFactoryMock.Setup(x => x.CreateLogger<It.IsAnyType>()).Returns(loggerMock.Object);
 
             CoreTools coreTools = new CoreTools()
@@ -74,7 +76,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                 ContextKeeper = contextKeeperMock.Object,
                 BotResponseSender = botResponseSenderMock.Object,
                 LoggerFactory = customLoggerFactoryMock.Object,
-                AppCTS = cts,
             };
 
             DTOUserInformation DTOCurrentUser = entityContext.UsersInformation.First().ToDTOUserInformation();
@@ -87,10 +88,19 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             DTOExercise DTOExercise = builder.TestExercise.ToDTOExercise(DTODay);
             userContext.DataManager.SetCurrentDomain(DTOExercise);
 
+            Update update = new Update();
+
             commandHandlerTools = new CommandHandlerTools()
             {
-                ParentHandler = new PrimaryUpdateHandler(coreTools, new RepositoriesStore(entityContext)),
-                CurrentUserContext = userContext,
+                CoreTools = coreTools,
+                HandlerResult = new AuthorizedHandlerResult()
+                {
+                    CurrentUserContext = userContext,
+                    HasAccess = true,
+                    Update = update,
+                    ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.CallbackQuery, true)
+                },
+                RepositoriesStore = new RepositoriesStore(entityContext),
             };
         }
 
@@ -105,16 +115,16 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             SettingsCH settingsCH = new SettingsCH(commandHandlerTools, callbackQueryParser);
 
             // Act
-            IInformationSet informationSet = await settingsCH.GetInformationSet();
+            await settingsCH.Process(TestContext.Current.CancellationToken);
 
             // Assert
-            commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.Settings);
-            commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+            CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.Settings);
+            CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
-            informationSet.Message.Should().Be("Выберите интересующие настройки");
-            informationSet.ButtonsSets.Should().Be((ButtonsSet.Settings, ButtonsSet.Main));
-            informationSet.ParseMode.Should().Be(ParseMode.Html);
-            informationSet.AdditionalParameters.Should().BeNull();
+            InformationSet.Message.Should().Be("Выберите интересующие настройки");
+            InformationSet.ButtonsSets.Should().Be((ButtonsSet.Settings, ButtonsSet.Main));
+            InformationSet.ParseMode.Should().Be(ParseMode.Html);
+            InformationSet.AdditionalParameters.Should().BeNull();
         }
 
         [Fact]
@@ -128,16 +138,16 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             SettingsCH settingsCH = new SettingsCH(commandHandlerTools, callbackQueryParser);
 
             // Act
-            IInformationSet informationSet = await settingsCH.GetInformationSet();
+            await settingsCH.Process(TestContext.Current.CancellationToken);
 
             // Assert
-            commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-            commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+            CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+            CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
-            informationSet.Message.Should().Be("Выберите интересующий архив для разархивирования");
-            informationSet.ButtonsSets.Should().Be((ButtonsSet.ArchiveList, ButtonsSet.Settings));
-            informationSet.ParseMode.Should().Be(ParseMode.Html);
-            informationSet.AdditionalParameters.Should().BeNull();
+            InformationSet.Message.Should().Be("Выберите интересующий архив для разархивирования");
+            InformationSet.ButtonsSets.Should().Be((ButtonsSet.ArchiveList, ButtonsSet.Settings));
+            InformationSet.ParseMode.Should().Be(ParseMode.Html);
+            InformationSet.AdditionalParameters.Should().BeNull();
         }
 
         [Theory]
@@ -158,7 +168,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             if (domainType == "Other")
             {
                 // Act
-                Func<Task> func = async () => await settingsCH.GetInformationSet();
+                Func<Task> func = async () => await settingsCH.Process(TestContext.Current.CancellationToken);
                
                 ExceptionAssertions<NotImplementedException> exceptionAssertions = await func.Should().ThrowAsync<NotImplementedException>();
                 exceptionAssertions.WithMessage($"Неожиданный callbackQueryParser.DomainType: {callbackQueryParser.DomainType}");
@@ -166,30 +176,30 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             else
             {
                 // Act
-                IInformationSet informationSet = await settingsCH.GetInformationSet();
+                await settingsCH.Process(TestContext.Current.CancellationToken);
 
                 if (domainType == "Cycles")
                 {
-                    informationSet.Message.Should().Be("Выберите архивный цикл для разархивирования");
-                    informationSet.ButtonsSets.Should().Be((ButtonsSet.ArchiveCyclesList, ButtonsSet.ArchiveList));
+                    InformationSet.Message.Should().Be("Выберите архивный цикл для разархивирования");
+                    InformationSet.ButtonsSets.Should().Be((ButtonsSet.ArchiveCyclesList, ButtonsSet.ArchiveList));
                 }
                 else if (domainType == "Days")
                 {
-                    informationSet.Message.Should().Be("Выберите архивный день для разархивирования");
-                    informationSet.ButtonsSets.Should().Be((ButtonsSet.ArchiveDaysList, ButtonsSet.ArchiveList));
+                    InformationSet.Message.Should().Be("Выберите архивный день для разархивирования");
+                    InformationSet.ButtonsSets.Should().Be((ButtonsSet.ArchiveDaysList, ButtonsSet.ArchiveList));
                 }
                 else if (domainType == "Exercises")
                 {
-                    informationSet.Message.Should().Be("Выберите архивное упражнение для разархивирования");
-                    informationSet.ButtonsSets.Should().Be((ButtonsSet.ArchiveExercisesList, ButtonsSet.ArchiveList));
+                    InformationSet.Message.Should().Be("Выберите архивное упражнение для разархивирования");
+                    InformationSet.ButtonsSets.Should().Be((ButtonsSet.ArchiveExercisesList, ButtonsSet.ArchiveList));
                 }
 
                 // Assert
-                commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-                commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+                CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+                CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
-                informationSet.ParseMode.Should().Be(ParseMode.Html);
-                informationSet.AdditionalParameters.Should().BeNull();
+                InformationSet.ParseMode.Should().Be(ParseMode.Html);
+                InformationSet.AdditionalParameters.Should().BeNull();
             }
         }
 
@@ -216,7 +226,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             if (domainType == "Other")
             {
                 // Act
-                Func<Task> func = async () => await settingsCH.GetInformationSet();
+                Func<Task> func = async () => await settingsCH.Process(TestContext.Current.CancellationToken);
 
                 ExceptionAssertions<NotImplementedException> exceptionAssertions = await func.Should().ThrowAsync<NotImplementedException>();
                 exceptionAssertions.WithMessage($"Неожиданный callbackQueryParser.DomainType: {callbackQueryParser.DomainType}");
@@ -226,23 +236,23 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                 if (hasDTODomain)
                 {
                     // Act
-                    IInformationSet informationSet = await settingsCH.GetInformationSet();
+                    await settingsCH.Process(TestContext.Current.CancellationToken);
 
                     IDTODomain? DTODomain = null;
 
                     if (domainType == "Cycle")
                     {
-                        DTODomain = commandHandlerTools.CurrentUserContext.UserInformation.Cycles.First(x => x.Id == domainIDforUnArchive);
+                        DTODomain = CurrentUserContext.UserInformation.Cycles.First(x => x.Id == domainIDforUnArchive);
                     }
                     else if (domainType == "Day")
                     {
-                        IEnumerable<DTODay> allDays = commandHandlerTools.CurrentUserContext.UserInformation.Cycles.SelectMany(x => x.Days);
+                        IEnumerable<DTODay> allDays = CurrentUserContext.UserInformation.Cycles.SelectMany(x => x.Days);
 
                         DTODomain = allDays.First(x => x.Id == domainIDforUnArchive);
                     }
                     else if (domainType == "Exercise")
                     {
-                        IEnumerable<DTOExercise> allExercise = commandHandlerTools.CurrentUserContext.UserInformation.Cycles.SelectMany(x => x.Days)
+                        IEnumerable<DTOExercise> allExercise = CurrentUserContext.UserInformation.Cycles.SelectMany(x => x.Days)
                                                                                                                             .SelectMany(x => x.Exercises);
 
                         DTODomain = allExercise.FirstOrDefault(x => x.Id == domainIDforUnArchive);
@@ -251,17 +261,17 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                     DTODomain?.IsArchive.Should().BeFalse();
 
                     // Assert
-                    informationSet.Message.Should().Contain("разархивирован!");
-                    informationSet.ButtonsSets.Should().Be((ButtonsSet.ArchiveList, ButtonsSet.Settings));
-                    commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-                    commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+                    InformationSet.Message.Should().Contain("разархивирован!");
+                    InformationSet.ButtonsSets.Should().Be((ButtonsSet.ArchiveList, ButtonsSet.Settings));
+                    CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+                    CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
-                    informationSet.ParseMode.Should().Be(ParseMode.Html);
-                    informationSet.AdditionalParameters.Should().BeNull();
+                    InformationSet.ParseMode.Should().Be(ParseMode.Html);
+                    InformationSet.AdditionalParameters.Should().BeNull();
                 }
                 else
                 {
-                    Func<Task> func = async () => await settingsCH.GetInformationSet();
+                    Func<Task> func = async () => await settingsCH.Process(TestContext.Current.CancellationToken);
 
                     ExceptionAssertions<InvalidOperationException> exceptionAssertions = await func.Should().ThrowAsync<InvalidOperationException>();
                     exceptionAssertions.WithMessage($"Not found archive {domainType.ToLower()} for unarchiving with ID = {domainIDforUnArchive}");
@@ -280,16 +290,16 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             SettingsCH settingsCH = new SettingsCH(commandHandlerTools, callbackQueryParser);
 
             // Act
-            IInformationSet informationSet = await settingsCH.GetInformationSet();
+            await settingsCH.Process(TestContext.Current.CancellationToken);
 
             // Assert
-            commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-            commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+            CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+            CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
-            informationSet.Message.Should().Be("Выберите формат в котором экспортировать данные о ваших тренировках");
-            informationSet.ButtonsSets.Should().Be((ButtonsSet.Export, ButtonsSet.Settings));
-            informationSet.ParseMode.Should().Be(ParseMode.Html);
-            informationSet.AdditionalParameters.Should().BeNull();
+            InformationSet.Message.Should().Be("Выберите формат в котором экспортировать данные о ваших тренировках");
+            InformationSet.ButtonsSets.Should().Be((ButtonsSet.Export, ButtonsSet.Settings));
+            InformationSet.ParseMode.Should().Be(ParseMode.Html);
+            InformationSet.AdditionalParameters.Should().BeNull();
         }
 
         [Theory]
@@ -309,7 +319,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             if (exportFormat == "Other")
             {
                 // Act
-                Func<Task> func = async () => await settingsCH.GetInformationSet();
+                Func<Task> func = async () => await settingsCH.Process(TestContext.Current.CancellationToken);
 
                 ExceptionAssertions<NotImplementedException> exceptionAssertions = await func.Should().ThrowAsync<NotImplementedException>();
                 exceptionAssertions.WithMessage($"Неожиданный exportFormat: {exportFormat}");
@@ -317,25 +327,25 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             else
             {
                 // Act
-                IInformationSet informationSet = await settingsCH.GetInformationSet();
+                await settingsCH.Process(TestContext.Current.CancellationToken);
 
                 if (exportFormat == "Excel")
                 {
-                    informationSet.Message.Should().Be($"Выберите временной промежуток формирования данных от последней тренировки для экспорта в {"Excel".AddBold()}");
-                    informationSet.AdditionalParameters.Should().BeEquivalentTo(new Dictionary<string, string>() { { "Act", "Export/Excel" } });
+                    InformationSet.Message.Should().Be($"Выберите временной промежуток формирования данных от последней тренировки для экспорта в {"Excel".AddBold()}");
+                    InformationSet.AdditionalParameters.Should().BeEquivalentTo(new Dictionary<string, string>() { { "Act", "Export/Excel" } });
                 }
                 else if (exportFormat == "JSON")
                 {
-                    informationSet.Message.Should().Be($"Выберите временной промежуток формирования данных от последней тренировки для экспорта в {"JSON".AddBold()}");
-                    informationSet.AdditionalParameters.Should().BeEquivalentTo(new Dictionary<string, string>() { { "Act", "Export/JSON" } });
+                    InformationSet.Message.Should().Be($"Выберите временной промежуток формирования данных от последней тренировки для экспорта в {"JSON".AddBold()}");
+                    InformationSet.AdditionalParameters.Should().BeEquivalentTo(new Dictionary<string, string>() { { "Act", "Export/JSON" } });
                 }
 
                 // Assert
-                commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-                commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+                CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+                CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
-                informationSet.ButtonsSets.Should().Be((ButtonsSet.Period, ButtonsSet.Export));
-                informationSet.ParseMode.Should().Be(ParseMode.Html);
+                InformationSet.ButtonsSets.Should().Be((ButtonsSet.Period, ButtonsSet.Export));
+                InformationSet.ParseMode.Should().Be(ParseMode.Html);
             }
         }
 
@@ -363,7 +373,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                     ContextKeeper = contextKeeperMock.Object,
                     BotResponseSender = botResponseSenderMock.Object,
                     LoggerFactory = customLoggerFactoryMock.Object,
-                    AppCTS = cts,
                 };
 
                 DTOUserInformation localDTOCurrentUser = entityContext.UsersInformation.First().ToDTOUserInformation();
@@ -371,35 +380,56 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                 UserContext localUserContext = new UserContext(localDTOCurrentUser);
                 localUserContext.DataManager.CreateAndSetCurrentCycle("testCycle", true, localDTOCurrentUser);
 
+                Update update = new Update();
+
                 CommandHandlerTools localCommandHandlerTools = new CommandHandlerTools()
                 {
-                    ParentHandler = new PrimaryUpdateHandler(localCoreTools, new RepositoriesStore(entityContext)),
-                    CurrentUserContext = localUserContext,
+                    CoreTools = localCoreTools,
+                    HandlerResult = new AuthorizedHandlerResult()
+                    {
+                        CurrentUserContext = localUserContext,
+                        HasAccess = true,
+                        Update = update,
+                        ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.CallbackQuery, true)
+                    },
+                    RepositoriesStore = new RepositoriesStore(entityContext),
                 };
 
                 settingsCH = new SettingsCH(localCommandHandlerTools, callbackQueryParser);
+
+                // Act
+                await settingsCH.Process(TestContext.Current.CancellationToken);
+
+                // Assert
+                localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+                localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+
+                IInformationSet? informationSet = localCommandHandlerTools.HandlerResult.InformationSet;
+                informationSet.Should().NotBeNull();
+
+                informationSet.Message.Should().Be("test1");
+
+                informationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.Settings));
+                informationSet.ParseMode.Should().Be(ParseMode.Html);
+                informationSet.AdditionalParameters.Should().BeNull();
             }
             else
             {
                 settingsCH = new SettingsCH(commandHandlerTools, callbackQueryParser);
+
+                // Act
+                await settingsCH.Process(TestContext.Current.CancellationToken);
+
+                // Assert
+                CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+                CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+
+                InformationSet.Message.Should().Be("Информации о боте не указано");
+
+                InformationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.Settings));
+                InformationSet.ParseMode.Should().Be(ParseMode.Html);
+                InformationSet.AdditionalParameters.Should().BeNull();
             }
-
-            // Act
-            IInformationSet informationSet = await settingsCH.GetInformationSet();
-
-            // Assert
-            if (withTextAboutBot)
-                informationSet.Message.Should().Be("test1");
-            else
-                informationSet.Message.Should().Be("Информации о боте не указано");
-
-       
-            commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-            commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
-           
-            informationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.Settings));
-            informationSet.ParseMode.Should().Be(ParseMode.Html);
-            informationSet.AdditionalParameters.Should().BeNull();
         }
 
         [Theory]
@@ -419,7 +449,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             if (domainType == "Other")
             {
                 // Act
-                Func<Task> func = async () => await settingsCH.GetInformationSet();
+                Func<Task> func = async () => await settingsCH.Process(TestContext.Current.CancellationToken);
 
                 ExceptionAssertions<NotImplementedException> exceptionAssertions = await func.Should().ThrowAsync<NotImplementedException>();
                 exceptionAssertions.WithMessage($"Неожиданный callbackQueryParser.ObjectType: {callbackQueryParser.DomainType}");
@@ -427,30 +457,30 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             else
             {
                 // Act
-                IInformationSet informationSet = await settingsCH.GetInformationSet();
+                await settingsCH.Process(TestContext.Current.CancellationToken);
 
                 if (domainType == "Cycles")
                 {
-                    informationSet.Message.Should().Be("Выберите интересующие настройки для циклов");
-                    informationSet.ButtonsSets.Should().Be((ButtonsSet.SettingCycles, ButtonsSet.Settings));
+                    InformationSet.Message.Should().Be("Выберите интересующие настройки для циклов");
+                    InformationSet.ButtonsSets.Should().Be((ButtonsSet.SettingCycles, ButtonsSet.Settings));
                 }
                 else if (domainType == "Days")
                 {
-                    informationSet.Message.Should().Be($"Выберите интересующие настройки для дней из цикла {this.commandHandlerTools.CurrentUserContext.DataManager.CurrentCycle?.Name.AddBoldAndQuotes()}");
-                    informationSet.ButtonsSets.Should().Be((ButtonsSet.SettingDays, ButtonsSet.SettingCycle));
+                    InformationSet.Message.Should().Be($"Выберите интересующие настройки для дней из цикла {CurrentUserContext.DataManager.CurrentCycle?.Name.AddBoldAndQuotes()}");
+                    InformationSet.ButtonsSets.Should().Be((ButtonsSet.SettingDays, ButtonsSet.SettingCycle));
                 }
                 else if (domainType == "Exercises")
                 {
-                    informationSet.Message.Should().Be($"Выберите интересующие настройки для упражнений из дня {this.commandHandlerTools.CurrentUserContext.DataManager.CurrentDay?.Name.AddBoldAndQuotes()} ({this.commandHandlerTools.CurrentUserContext.DataManager.CurrentCycle?.Name.AddBold()})");
-                    informationSet.ButtonsSets.Should().Be((ButtonsSet.SettingExercises, ButtonsSet.SettingDay));
+                    InformationSet.Message.Should().Be($"Выберите интересующие настройки для упражнений из дня {CurrentUserContext.DataManager.CurrentDay?.Name.AddBoldAndQuotes()} ({CurrentUserContext.DataManager.CurrentCycle?.Name.AddBold()})");
+                    InformationSet.ButtonsSets.Should().Be((ButtonsSet.SettingExercises, ButtonsSet.SettingDay));
                 }
 
                 // Assert
-                commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-                commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
-               
-                informationSet.ParseMode.Should().Be(ParseMode.Html);
-                informationSet.AdditionalParameters.Should().BeNull();
+                CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+                CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+
+                InformationSet.ParseMode.Should().Be(ParseMode.Html);
+                InformationSet.AdditionalParameters.Should().BeNull();
             }
         }
 
@@ -474,13 +504,13 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 
             SettingsCH settingsCH = new SettingsCH(commandHandlerTools, callbackQueryParser);
 
-            commandHandlerTools.CurrentUserContext.Navigation.SetQueryFrom(queryFrom);
+            CurrentUserContext.Navigation.SetQueryFrom(queryFrom);
 
             // Assert
             if (domainType == "Other")
             {
                 // Act
-                Func<Task> func = async () => await settingsCH.GetInformationSet();
+                Func<Task> func = async () => await settingsCH.Process(TestContext.Current.CancellationToken);
 
                 ExceptionAssertions<NotImplementedException> exceptionAssertions = await func.Should().ThrowAsync<NotImplementedException>();
                 exceptionAssertions.WithMessage($"Неожиданный callbackQueryParser.DomainType: {callbackQueryParser.DomainType}");
@@ -492,22 +522,22 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                     if (queryFrom == QueryFrom.Start || queryFrom == QueryFrom.Settings)
                     {
                         // Act
-                        IInformationSet informationSet = await settingsCH.GetInformationSet();
+                        await settingsCH.Process(TestContext.Current.CancellationToken);
 
                         // Assert
-                        informationSet.Message.Should().Be("Введите название тренировочного цикла");
-                        commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.AddCycle);
+                        InformationSet.Message.Should().Be("Введите название тренировочного цикла");
+                        CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.AddCycle);
 
-                        informationSet.ParseMode.Should().Be(ParseMode.Html);
-                        informationSet.AdditionalParameters.Should().BeNull();
+                        InformationSet.ParseMode.Should().Be(ParseMode.Html);
+                        InformationSet.AdditionalParameters.Should().BeNull();
 
                         if (queryFrom == QueryFrom.Start)
                         {
-                            informationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.None));
+                            InformationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.None));
                         }
                         else
                         {
-                            informationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.SettingCycles));
+                            InformationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.SettingCycles));
                         }
                     }
                 }
@@ -516,22 +546,22 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                     if (queryFrom == QueryFrom.Start || queryFrom == QueryFrom.Settings)
                     {
                         // Act
-                        IInformationSet informationSet = await settingsCH.GetInformationSet();
+                        await settingsCH.Process(TestContext.Current.CancellationToken);
 
                         // Assert
-                        informationSet.Message.Should().Be($"Введите название тренирочного дня для цикла {commandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}");
-                        commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.AddDays);
+                        InformationSet.Message.Should().Be($"Введите название тренирочного дня для цикла {CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}");
+                        CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.AddDays);
 
-                        informationSet.ParseMode.Should().Be(ParseMode.Html);
-                        informationSet.AdditionalParameters.Should().BeNull();
+                        InformationSet.ParseMode.Should().Be(ParseMode.Html);
+                        InformationSet.AdditionalParameters.Should().BeNull();
 
                         if (queryFrom == QueryFrom.Start)
                         {
-                            informationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.None));
+                            InformationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.None));
                         }
                         else if (queryFrom == QueryFrom.Settings)
                         {
-                            informationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.SettingDays));
+                            InformationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.SettingDays));
                         }
                     }
                 }
@@ -540,10 +570,10 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                     if (queryFrom == QueryFrom.Start || queryFrom == QueryFrom.Settings)
                     {
                         // Act
-                        IInformationSet informationSet = await settingsCH.GetInformationSet();
+                        await settingsCH.Process(TestContext.Current.CancellationToken);
 
                         // Assert
-                        informationSet.Message.Should().Be(@$"Введите название(я) и тип(ы) упражнения(й) для дня {commandHandlerTools.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()}
+                        InformationSet.Message.Should().Be(@$"Введите название(я) и тип(ы) упражнения(й) для дня {CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()}
 ======================
 Доступные типы упражений:
 <b>0</b> - только кол-во повторений (например, подтягивания)
@@ -558,24 +588,24 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 Пример единичного ввода: Жим лёжа-0
 Пример множественного ввода: Жим лёжа-0;Становая тяга-0;Прыжки на скакалке-2;...
 ");
-                        commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.AddExercises);
+                        CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.AddExercises);
 
-                        informationSet.ParseMode.Should().Be(ParseMode.Html);
-                        informationSet.AdditionalParameters.Should().BeNull();
+                        InformationSet.ParseMode.Should().Be(ParseMode.Html);
+                        InformationSet.AdditionalParameters.Should().BeNull();
 
                         if (queryFrom == QueryFrom.Start)
                         {
-                            informationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.None));
+                            InformationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.None));
                         }
                         else if (queryFrom == QueryFrom.Settings)
                         {
-                            informationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.SettingExercises));
+                            InformationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.SettingExercises));
                         }
                     }
                 }
                 else
                 {
-                    Func<Task> func = async () => await settingsCH.GetInformationSet();
+                    Func<Task> func = async () => await settingsCH.Process(TestContext.Current.CancellationToken);
 
                     ExceptionAssertions<NotImplementedException> exceptionAssertions = await func.Should().ThrowAsync<NotImplementedException>();
                     exceptionAssertions.WithMessage($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {queryFrom}");
@@ -597,12 +627,12 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             SettingsCH settingsCH = new SettingsCH(commandHandlerTools, callbackQueryParser);
 
             List<DTOExercise> dTOExercises = new List<DTOExercise>() { new DTOExercise() { Mode = ExercisesMods.Count, Name = "TestDTOExercise01" } };
-            commandHandlerTools.CurrentUserContext.DataManager.TryAddTempExercises(dTOExercises, out string? error);
+            CurrentUserContext.DataManager.TryAddTempExercises(dTOExercises, out string? error);
 
             if (domainType == "Other")
             {
                 // Act
-                Func<Task> func = async () => await settingsCH.GetInformationSet();
+                Func<Task> func = async () => await settingsCH.Process(TestContext.Current.CancellationToken);
 
                 // Assert
                 ExceptionAssertions<NotImplementedException> exceptionAssertions = await func.Should().ThrowAsync<NotImplementedException>();
@@ -611,22 +641,22 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             else
             {
                 // Act
-                IInformationSet informationSet = await settingsCH.GetInformationSet();
+                await settingsCH.Process(TestContext.Current.CancellationToken);
 
                 // Assert
-                commandHandlerTools.CurrentUserContext.DataManager.TempExercises.Should().BeNull();
+                CurrentUserContext.DataManager.TempExercises.Should().BeNull();
 
-                commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-                commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+                CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+                CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
-                informationSet.Message.Should().Be(@"Упражнения для сохранения сброшены!
+                InformationSet.Message.Should().Be(@"Упражнения для сохранения сброшены!
 ======================
 
 Выберите интересующую настройку
 ");
-                informationSet.ButtonsSets.Should().Be((ButtonsSet.SettingExercises, ButtonsSet.None));
-                informationSet.ParseMode.Should().Be(ParseMode.Html);
-                informationSet.AdditionalParameters.Should().BeNull();
+                InformationSet.ButtonsSets.Should().Be((ButtonsSet.SettingExercises, ButtonsSet.None));
+                InformationSet.ParseMode.Should().Be(ParseMode.Html);
+                InformationSet.AdditionalParameters.Should().BeNull();
             }
         }
 
@@ -643,14 +673,14 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 
             SettingsCH settingsCH = new SettingsCH(commandHandlerTools, callbackQueryParser);
 
-            commandHandlerTools.CurrentUserContext.Navigation.SetQueryFrom(queryFrom);
+            CurrentUserContext.Navigation.SetQueryFrom(queryFrom);
             List<DTOExercise> dTOExercises = new List<DTOExercise>() { new DTOExercise() { Mode = ExercisesMods.Count, Name = "TestDTOExercise01" } };
-            commandHandlerTools.CurrentUserContext.DataManager.TryAddTempExercises(dTOExercises, out string? error);
+            CurrentUserContext.DataManager.TryAddTempExercises(dTOExercises, out string? error);
 
             if (queryFrom == QueryFrom.NoMatter)
             {
                 // Act
-                Func<Task> func = async () => await settingsCH.GetInformationSet();
+                Func<Task> func = async () => await settingsCH.Process(TestContext.Current.CancellationToken);
 
                 // Assert
                 ExceptionAssertions<NotImplementedException> exceptionAssertions = await func.Should().ThrowAsync<NotImplementedException>();
@@ -659,42 +689,42 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             else
             {
                 // Act
-                IInformationSet informationSet = await settingsCH.GetInformationSet();
+                await settingsCH.Process(TestContext.Current.CancellationToken);
 
                 if (queryFrom == QueryFrom.Start)
                 {
                     // Assert
-                    commandHandlerTools.CurrentUserContext.DataManager.TempExercises.Should().BeNull();
+                    CurrentUserContext.DataManager.TempExercises.Should().BeNull();
 
-                    commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.Start);
+                    CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.Start);
 
-                    informationSet.Message.Should().Be(@"Упражнения сохранены!
+                    InformationSet.Message.Should().Be(@"Упражнения сохранены!
 ======================
 
 Выберите дальнейшее действие
 ");
-                    informationSet.ButtonsSets.Should().Be((ButtonsSet.RedirectAfterSaveExercise, ButtonsSet.None));
+                    InformationSet.ButtonsSets.Should().Be((ButtonsSet.RedirectAfterSaveExercise, ButtonsSet.None));
 
                 }
                 else if (queryFrom == QueryFrom.Settings)
                 {
                     // Assert
-                    commandHandlerTools.CurrentUserContext.DataManager.TempExercises.Should().BeNull();
+                    CurrentUserContext.DataManager.TempExercises.Should().BeNull();
 
-                    commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.Settings);
+                    CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.Settings);
 
-                    informationSet.Message.Should().Be($@"Упражнения сохранены!
+                    InformationSet.Message.Should().Be($@"Упражнения сохранены!
 ======================
 
-Выберите интересующие настройки для упражнений из дня ""<b>{commandHandlerTools.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name}</b>"" (<b>{commandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name}</b>)
+Выберите интересующие настройки для упражнений из дня ""<b>{CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name}</b>"" (<b>{CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name}</b>)
 ");
-                    informationSet.ButtonsSets.Should().Be((ButtonsSet.SettingExercises, ButtonsSet.SettingDays));
+                    InformationSet.ButtonsSets.Should().Be((ButtonsSet.SettingExercises, ButtonsSet.SettingDays));
                 }
                 
-                commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+                CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
-                informationSet.ParseMode.Should().Be(ParseMode.Html);
-                informationSet.AdditionalParameters.Should().BeNull();
+                InformationSet.ParseMode.Should().Be(ParseMode.Html);
+                InformationSet.AdditionalParameters.Should().BeNull();
             }
         }
 
@@ -715,7 +745,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             if (domainType == "Other")
             {
                 // Act
-                Func<Task> func = async () => await settingsCH.GetInformationSet();
+                Func<Task> func = async () => await settingsCH.Process(TestContext.Current.CancellationToken);
 
                 // Assert
                 ExceptionAssertions<NotImplementedException> exceptionAssertions = await func.Should().ThrowAsync<NotImplementedException>();
@@ -724,33 +754,33 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             else
             {
                 // Act
-                IInformationSet informationSet = await settingsCH.GetInformationSet();
+                await settingsCH.Process(TestContext.Current.CancellationToken);
 
                 if (domainType == "Cycles")
                 {
                     // Assert
-                    informationSet.Message.Should().Be("Выберите интересующий цикл");
-                    informationSet.ButtonsSets.Should().Be((ButtonsSet.CycleList, ButtonsSet.SettingCycles));
+                    InformationSet.Message.Should().Be("Выберите интересующий цикл");
+                    InformationSet.ButtonsSets.Should().Be((ButtonsSet.CycleList, ButtonsSet.SettingCycles));
 
                 }
                 else if (domainType == "Days")
                 {
                     // Assert
-                    informationSet.Message.Should().Be($"Выберите интересующий день из цикла {commandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}");
-                    informationSet.ButtonsSets.Should().Be((ButtonsSet.DaysList, ButtonsSet.SettingDays));
+                    InformationSet.Message.Should().Be($"Выберите интересующий день из цикла {CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}");
+                    InformationSet.ButtonsSets.Should().Be((ButtonsSet.DaysList, ButtonsSet.SettingDays));
                 }
                 else if (domainType == "Exercises")
                 {
                     // Assert
-                    informationSet.Message.Should().Be($"Выберите интересующее упражнение из дня {commandHandlerTools.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()} ({commandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBold()})");
-                    informationSet.ButtonsSets.Should().Be((ButtonsSet.ExercisesList, ButtonsSet.SettingExercises));
+                    InformationSet.Message.Should().Be($"Выберите интересующее упражнение из дня {CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()} ({CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBold()})");
+                    InformationSet.ButtonsSets.Should().Be((ButtonsSet.ExercisesList, ButtonsSet.SettingExercises));
                 }
 
-                commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-                commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+                CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+                CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
-                informationSet.ParseMode.Should().Be(ParseMode.Html);
-                informationSet.AdditionalParameters.Should().BeNull();
+                InformationSet.ParseMode.Should().Be(ParseMode.Html);
+                InformationSet.AdditionalParameters.Should().BeNull();
             }
         }
 
@@ -769,17 +799,17 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 
             CallbackQueryParser callbackQueryParser = new CallbackQueryParser($"Direction|{subDirection}|{domainType}|{domainID}|CallBackId");
 
-            commandHandlerTools.CurrentUserContext.Navigation.SetQueryFrom(queryFrom);
+            CurrentUserContext.Navigation.SetQueryFrom(queryFrom);
 
             SettingsCH settingsCH = new SettingsCH(commandHandlerTools, callbackQueryParser);
 
-            commandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Id.Should().Be(2);
-            commandHandlerTools.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Id.Should().Be(2);
+            CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Id.Should().Be(2);
+            CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Id.Should().Be(2);
 
             if (domainType == "Other" || ((domainType == "Day" || domainType == "Exercise") && queryFrom == QueryFrom.Start))
             {
                 // Act
-                Func<Task> func = async () => await settingsCH.GetInformationSet();
+                Func<Task> func = async () => await settingsCH.Process(TestContext.Current.CancellationToken);
 
                 // Assert
                 ExceptionAssertions<NotImplementedException> exceptionAssertions = await func.Should().ThrowAsync<NotImplementedException>();
@@ -788,53 +818,53 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                     exceptionAssertions.WithMessage($"Неожиданный callbackQueryParser.DomainType: {domainType}");
 
                 if (domainType == "Day" || domainType == "Exercise")
-                    exceptionAssertions.WithMessage($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {commandHandlerTools.CurrentUserContext.Navigation.QueryFrom}");
+                    exceptionAssertions.WithMessage($"Неожиданный CurrentUserContext.Navigation.QueryFrom: {CurrentUserContext.Navigation.QueryFrom}");
             }
             else
             {
                 // Act
-                IInformationSet informationSet = await settingsCH.GetInformationSet();
+                await settingsCH.Process(TestContext.Current.CancellationToken);
 
                 if (domainType == "Cycle")
                 {
                     // Assert
-                    commandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Id.Should().Be(domainID);
+                    CurrentUserContext.DataManager.CurrentCycle.Id.Should().Be(domainID);
 
-                    informationSet.Message.Should().Be($"Выберите интересующую настройку для цикла {commandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}");
-                    informationSet.ButtonsSets.Should().Be((ButtonsSet.SettingCycle, ButtonsSet.CycleList));
+                    InformationSet.Message.Should().Be($"Выберите интересующую настройку для цикла {CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}");
+                    InformationSet.ButtonsSets.Should().Be((ButtonsSet.SettingCycle, ButtonsSet.CycleList));
                 }
                 else if (domainType == "Day")
                 {
                     // Assert
-                    commandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Id.Should().Be(domainID);
+                    CurrentUserContext.DataManager.CurrentDay.Id.Should().Be(domainID);
 
-                    switch (commandHandlerTools.CurrentUserContext.Navigation.QueryFrom)
+                    switch (CurrentUserContext.Navigation.QueryFrom)
                     {
                         case QueryFrom.NoMatter:
 
-                            informationSet.Message.Should().Be($"Выберите упражнение из дня {commandHandlerTools.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()} ({commandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBold()})");
-                            informationSet.ButtonsSets.Should().Be((ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout));
+                            InformationSet.Message.Should().Be($"Выберите упражнение из дня {CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()} ({CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBold()})");
+                            InformationSet.ButtonsSets.Should().Be((ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout));
 
-                            commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+                            CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
                             break;
 
                         case QueryFrom.Settings:
 
-                            informationSet.Message.Should().Be($"Выберите интересующую настройку для дня {commandHandlerTools.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()} ({commandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBold()})");
-                            informationSet.ButtonsSets.Should().Be((ButtonsSet.SettingDay, ButtonsSet.DaysList));
+                            InformationSet.Message.Should().Be($"Выберите интересующую настройку для дня {CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()} ({CurrentUserContext.DataManager.CurrentCycle.Name.AddBold()})");
+                            InformationSet.ButtonsSets.Should().Be((ButtonsSet.SettingDay, ButtonsSet.DaysList));
 
-                            commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.Settings);
+                            CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.Settings);
                             break;
 
                     }
 
-                    commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+                    CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
                 }
                 else if (domainType == "Exercise")
                 {
                     // Assert
-                    DTOExercise currentExercise = commandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull();
+                    DTOExercise currentExercise = CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull();
 
                     currentExercise.Id.Should().Be(domainID);
 
@@ -842,20 +872,20 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 
                     bool isNeedCheckMessageNavigationTarget = true;
 
-                    switch (commandHandlerTools.CurrentUserContext.Navigation.QueryFrom)
+                    switch (CurrentUserContext.Navigation.QueryFrom)
                     {
                         case QueryFrom.NoMatter:
 
                             if (currentExercise.Mode == ExercisesMods.Timer)
                             {
-                                informationSet.Message.Should().Be($"Включение таймера для упражнения {currentExerciseNameBoldAndQuotes}");
-                                informationSet.ButtonsSets.Should().Be((ButtonsSet.EnableExerciseTimer, ButtonsSet.ExercisesListWithLastWorkoutForDay));
+                                InformationSet.Message.Should().Be($"Включение таймера для упражнения {currentExerciseNameBoldAndQuotes}");
+                                InformationSet.ButtonsSets.Should().Be((ButtonsSet.EnableExerciseTimer, ButtonsSet.ExercisesListWithLastWorkoutForDay));
 
-                                commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.Settings);
+                                CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.Settings);
                             }
                             else
                             {
-                                informationSet.Message.Should().Be(@$"Фиксирование результатов упражнения {currentExerciseNameBoldAndQuotes}
+                                InformationSet.Message.Should().Be(@$"Фиксирование результатов упражнения {currentExerciseNameBoldAndQuotes}
 ======================
 Формат общего ввода: [кол-во повторений].
 Пример единичного ввода: 25
@@ -864,10 +894,10 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 
 Введите результат(ы) подхода(ов)
 ");
-                                informationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.ExercisesListWithLastWorkoutForDay));
+                                InformationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.ExercisesListWithLastWorkoutForDay));
 
-                                commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-                                commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.AddResultForExercise);
+                                CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+                                CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.AddResultForExercise);
 
                                 isNeedCheckMessageNavigationTarget = false;
                             }
@@ -876,20 +906,20 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 
                         case QueryFrom.Settings:
 
-                            informationSet.Message.Should().Be($"Выберите интересующую настройку для упражнения {currentExerciseNameBoldAndQuotes} ({commandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Name.AddBold()}-{commandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBold()})");
-                            informationSet.ButtonsSets.Should().Be((ButtonsSet.SettingExercise, ButtonsSet.ExercisesList));
+                            InformationSet.Message.Should().Be($"Выберите интересующую настройку для упражнения {currentExerciseNameBoldAndQuotes} ({CurrentUserContext.DataManager.CurrentDay.Name.AddBold()}-{CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBold()})");
+                            InformationSet.ButtonsSets.Should().Be((ButtonsSet.SettingExercise, ButtonsSet.ExercisesList));
 
-                            commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.Settings);
+                            CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.Settings);
                             break;
 
                     }
 
                     if (isNeedCheckMessageNavigationTarget)
-                        commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+                        CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
                 }
 
-                informationSet.ParseMode.Should().Be(ParseMode.Html);
-                informationSet.AdditionalParameters.Should().BeNull();
+                InformationSet.ParseMode.Should().Be(ParseMode.Html);
+                InformationSet.AdditionalParameters.Should().BeNull();
             }
         }
 
@@ -909,7 +939,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             if (domainType == "Other")
             {
                 // Act
-                Func<Task> func = async () => await settingsCH.GetInformationSet();
+                Func<Task> func = async () => await settingsCH.Process(TestContext.Current.CancellationToken);
 
                 // Assert
                 ExceptionAssertions<NotImplementedException> exceptionAssertions = await func.Should().ThrowAsync<NotImplementedException>();
@@ -918,56 +948,54 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             }
             else
             {
-                IInformationSet informationSet;
-
                 if (currentCycleIsActive)
                 {
-                    DTOCycle currentActiveCycle = commandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull();
+                    DTOCycle currentActiveCycle = CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull();
                     currentActiveCycle.IsActive.Should().BeTrue();
 
                     // Act
-                    informationSet = await settingsCH.GetInformationSet();
+                    await settingsCH.Process(TestContext.Current.CancellationToken);
 
                     // Assert
                     currentActiveCycle.IsActive.Should().BeTrue();
 
-                    informationSet.Message.Should().Be(@$"Выбранный цикл {commandHandlerTools.CurrentUserContext.ActiveCycle.ThrowIfNull().Name.AddBoldAndQuotes()} уже является активным!
+                    InformationSet.Message.Should().Be(@$"Выбранный цикл {CurrentUserContext.ActiveCycle.ThrowIfNull().Name.AddBoldAndQuotes()} уже является активным!
 ======================
 
-Выберите интересующую настройку для цикла {commandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()}
+Выберите интересующую настройку для цикла {CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()}
 ");
                 }
                 else
                 {
-                    DTOCycle currentActiveCycle = commandHandlerTools.CurrentUserContext.ActiveCycle.ThrowIfNull();
+                    DTOCycle currentActiveCycle = CurrentUserContext.ActiveCycle.ThrowIfNull();
                     currentActiveCycle.IsActive.Should().BeTrue();
 
                     DTOCycle newSelectedCycle = entityContext.Cycles.First().ToDTOCycle();
                     newSelectedCycle.IsActive.Should().BeFalse();
 
-                    commandHandlerTools.CurrentUserContext.DataManager.SetCurrentDomain(newSelectedCycle);
+                    CurrentUserContext.DataManager.SetCurrentDomain(newSelectedCycle);
 
                     // Act
-                    informationSet = await settingsCH.GetInformationSet();
+                    await settingsCH.Process(TestContext.Current.CancellationToken);
 
                     // Assert
                     currentActiveCycle.IsActive.Should().BeFalse();
                     newSelectedCycle.IsActive.Should().BeTrue();
 
-                    informationSet.Message.Should().Be(@$"Активный цикл изменён на {commandHandlerTools.CurrentUserContext.ActiveCycle.Name.AddBoldAndQuotes()}
+                    InformationSet.Message.Should().Be(@$"Активный цикл изменён на {CurrentUserContext.ActiveCycle.Name.AddBoldAndQuotes()}
 ======================
 
-Выберите интересующую настройку для цикла {commandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}
+Выберите интересующую настройку для цикла {CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}
 ");
                 }
 
-                informationSet.ButtonsSets.Should().Be((ButtonsSet.SettingCycle, ButtonsSet.SettingCycles));
+                InformationSet.ButtonsSets.Should().Be((ButtonsSet.SettingCycle, ButtonsSet.SettingCycles));
 
-                commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-                commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+                CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+                CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
-                informationSet.ParseMode.Should().Be(ParseMode.Html);
-                informationSet.AdditionalParameters.Should().BeNull();
+                InformationSet.ParseMode.Should().Be(ParseMode.Html);
+                InformationSet.AdditionalParameters.Should().BeNull();
             }
         }
 
@@ -989,7 +1017,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             if (domainType == "Other")
             {
                 // Act
-                Func<Task> func = async () => await settingsCH.GetInformationSet();
+                Func<Task> func = async () => await settingsCH.Process(TestContext.Current.CancellationToken);
 
                 // Assert
                 ExceptionAssertions<NotImplementedException> exceptionAssertions = await func.Should().ThrowAsync<NotImplementedException>();
@@ -998,96 +1026,94 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             }
             else
             {
-                IInformationSet informationSet;
-
                 if (domainType == "Cycle")
                 {
                     if (currentCycleIsActive)
                     {
-                        DTOCycle currentActiveCycle = commandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull();
+                        DTOCycle currentActiveCycle = CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull();
                         currentActiveCycle.IsActive.Should().BeTrue();
 
                         // Act
-                        informationSet = await settingsCH.GetInformationSet();
+                        await settingsCH.Process(TestContext.Current.CancellationToken);
 
                         // Assert
                         currentActiveCycle.IsActive.Should().BeTrue();
 
                         currentActiveCycle.IsArchive.Should().BeFalse();
 
-                        informationSet.Message.Should().Be(@$"Ошибка при архивации!
+                        InformationSet.Message.Should().Be(@$"Ошибка при архивации!
 ======================
 Нельзя архивировать цикл {currentActiveCycle.Name.AddBoldAndQuotes()}, т.к. он является активным!
 ======================
 
 Выберите интересующую настройку для цикла {currentActiveCycle.Name.AddBoldAndQuotes()}
 ");
-                        informationSet.ButtonsSets.Should().Be((ButtonsSet.SettingCycle, ButtonsSet.CycleList));
+                        InformationSet.ButtonsSets.Should().Be((ButtonsSet.SettingCycle, ButtonsSet.CycleList));
                     }
                     else
                     {
-                        DTOCycle currentActiveCycle = commandHandlerTools.CurrentUserContext.ActiveCycle.ThrowIfNull();
+                        DTOCycle currentActiveCycle = CurrentUserContext.ActiveCycle.ThrowIfNull();
                         currentActiveCycle.IsActive.Should().BeTrue();
 
-                        DTOCycle newSelectedCycle = commandHandlerTools.CurrentUserContext.UserInformation.Cycles.First();
+                        DTOCycle newSelectedCycle = CurrentUserContext.UserInformation.Cycles.First();
                         newSelectedCycle.IsActive.Should().BeFalse();
 
-                        commandHandlerTools.CurrentUserContext.DataManager.SetCurrentDomain(newSelectedCycle);
+                        CurrentUserContext.DataManager.SetCurrentDomain(newSelectedCycle);
 
                         // Act
-                        informationSet = await settingsCH.GetInformationSet();
+                        await settingsCH.Process(TestContext.Current.CancellationToken);
 
                         newSelectedCycle.IsArchive.Should().BeTrue();
 
-                        informationSet.Message.Should().Be(@$"Цикл {newSelectedCycle.Name.AddBoldAndQuotes()} был добавлен в архив
+                        InformationSet.Message.Should().Be(@$"Цикл {newSelectedCycle.Name.AddBoldAndQuotes()} был добавлен в архив
 ======================
 
 Выберите интересующий цикл
 ");
 
-                        informationSet.ButtonsSets.Should().Be((ButtonsSet.CycleList, ButtonsSet.SettingCycles));
+                        InformationSet.ButtonsSets.Should().Be((ButtonsSet.CycleList, ButtonsSet.SettingCycles));
                     }
                 }
                 else if (domainType == "Day")
                 {
-                    DTODay currentDay = commandHandlerTools.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull();
+                    DTODay currentDay = CurrentUserContext.DataManager.CurrentDay.ThrowIfNull();
 
                     // Act
-                    informationSet = await settingsCH.GetInformationSet();
+                    await settingsCH.Process(TestContext.Current.CancellationToken);
 
                     // Assert
                     currentDay.IsArchive.Should().BeTrue();
 
-                    informationSet.Message.Should().Be(@$"День {currentDay.Name.AddBoldAndQuotes()} был добавлен в архив
+                    InformationSet.Message.Should().Be(@$"День {currentDay.Name.AddBoldAndQuotes()} был добавлен в архив
 ======================
 
-Выберите интересующий день из цикла {commandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}
+Выберите интересующий день из цикла {CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}
 ");
-                    informationSet.ButtonsSets.Should().Be((ButtonsSet.DaysList, ButtonsSet.SettingDays));
+                    InformationSet.ButtonsSets.Should().Be((ButtonsSet.DaysList, ButtonsSet.SettingDays));
                 }
                 else
                 {
-                    DTOExercise currentExercise = commandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull();
+                    DTOExercise currentExercise = CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull();
 
                     // Act
-                    informationSet = await settingsCH.GetInformationSet();
+                    await settingsCH.Process(TestContext.Current.CancellationToken);
 
                     // Assert
                     currentExercise.IsArchive.Should().BeTrue();
 
-                    informationSet.Message.Should().Be(@$"Упражнение {currentExercise.Name.AddBoldAndQuotes()} было добавлено в архив
+                    InformationSet.Message.Should().Be(@$"Упражнение {currentExercise.Name.AddBoldAndQuotes()} было добавлено в архив
 ======================
 
-Выберите интересующее упражнение из дня {commandHandlerTools.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()} ({commandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBold()})
+Выберите интересующее упражнение из дня {CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()} ({CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBold()})
 ");
-                    informationSet.ButtonsSets.Should().Be((ButtonsSet.ExercisesList, ButtonsSet.SettingExercises));
+                    InformationSet.ButtonsSets.Should().Be((ButtonsSet.ExercisesList, ButtonsSet.SettingExercises));
                 }
 
-                commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-                commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+                CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+                CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
-                informationSet.ParseMode.Should().Be(ParseMode.Html);
-                informationSet.AdditionalParameters.Should().BeNull();
+                InformationSet.ParseMode.Should().Be(ParseMode.Html);
+                InformationSet.AdditionalParameters.Should().BeNull();
             }
         }
 
@@ -1107,7 +1133,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             if (domainType == "Other")
             {
                 // Act
-                Func<Task> func = async () => await settingsCH.GetInformationSet();
+                Func<Task> func = async () => await settingsCH.Process(TestContext.Current.CancellationToken);
 
                 // Assert
                 ExceptionAssertions<NotImplementedException> exceptionAssertions = await func.Should().ThrowAsync<NotImplementedException>();
@@ -1117,26 +1143,26 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             else
             {
                 // Act
-                IInformationSet informationSet = await settingsCH.GetInformationSet();
+                await settingsCH.Process(TestContext.Current.CancellationToken);
 
                 if (domainType == "Day")
                 {
                     // Assert
-                    informationSet.Message.Should().Be(@$"Выберите цикл, в который хотите перенести день {commandHandlerTools.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()}");
-                    informationSet.ButtonsSets.Should().Be((ButtonsSet.ReplaceToCycle, ButtonsSet.SettingDay));
+                    InformationSet.Message.Should().Be(@$"Выберите цикл, в который хотите перенести день {CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()}");
+                    InformationSet.ButtonsSets.Should().Be((ButtonsSet.ReplaceToCycle, ButtonsSet.SettingDay));
                 }
                 else
                 {
                     // Assert
-                    informationSet.Message.Should().Be(@$"Выберите день, в который хотите перенести упражнение {commandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().Name.AddBoldAndQuotes()}");
-                    informationSet.ButtonsSets.Should().Be((ButtonsSet.ReplaceToDay, ButtonsSet.SettingExercise));
+                    InformationSet.Message.Should().Be(@$"Выберите день, в который хотите перенести упражнение {CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().Name.AddBoldAndQuotes()}");
+                    InformationSet.ButtonsSets.Should().Be((ButtonsSet.ReplaceToDay, ButtonsSet.SettingExercise));
                 }
 
-                commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-                commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+                CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+                CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
-                informationSet.ParseMode.Should().Be(ParseMode.Html);
-                informationSet.AdditionalParameters.Should().BeNull();
+                InformationSet.ParseMode.Should().Be(ParseMode.Html);
+                InformationSet.AdditionalParameters.Should().BeNull();
             }
         }
 
@@ -1158,7 +1184,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             if (domainType == "Other")
             {
                 // Act
-                Func<Task> func = async () => await settingsCH.GetInformationSet();
+                Func<Task> func = async () => await settingsCH.Process(TestContext.Current.CancellationToken);
 
                 // Assert
                 ExceptionAssertions<NotImplementedException> exceptionAssertions = await func.Should().ThrowAsync<NotImplementedException>();
@@ -1167,96 +1193,94 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             }
             else
             {
-                IInformationSet informationSet;
-
                 if (domainType == "Cycle")
                 {
-                    if (commandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Id == targetDomainID)
+                    if (CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Id == targetDomainID)
                     {
                         // Act
-                        informationSet = await settingsCH.GetInformationSet();
+                        await settingsCH.Process(TestContext.Current.CancellationToken);
 
                         // Assert
-                        informationSet.Message.Should().Be(@$"Ошибка при переносе дня!
+                        InformationSet.Message.Should().Be(@$"Ошибка при переносе дня!
 ======================
 Нельзя перенести день в тот же самый цикл
 ======================
 
-Выберите цикл, в который хотите перенести день {commandHandlerTools.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()}
+Выберите цикл, в который хотите перенести день {CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()}
 ");
-                        informationSet.ButtonsSets.Should().Be((ButtonsSet.ReplaceToCycle, ButtonsSet.SettingDay));
+                        InformationSet.ButtonsSets.Should().Be((ButtonsSet.ReplaceToCycle, ButtonsSet.SettingDay));
                     }
                     else
                     {
-                        DTODay dayForReplacement = commandHandlerTools.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull();
+                        DTODay dayForReplacement = CurrentUserContext.DataManager.CurrentDay.ThrowIfNull();
 
-                        DTOCycle destinationCycle = commandHandlerTools.CurrentUserContext.UserInformation.Cycles.First(x => x.Id == targetDomainID);
+                        DTOCycle destinationCycle = CurrentUserContext.UserInformation.Cycles.First(x => x.Id == targetDomainID);
 
                         destinationCycle.Days.Should().BeEmpty();
-                        commandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Days.Should().Contain(x => x.Id == dayForReplacement.Id && x.Name == dayForReplacement.Name);
+                        CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Days.Should().Contain(x => x.Id == dayForReplacement.Id && x.Name == dayForReplacement.Name);
 
                         // Act
-                        informationSet = await settingsCH.GetInformationSet();
+                        await settingsCH.Process(TestContext.Current.CancellationToken);
 
                         destinationCycle.Days.Should().Contain(dayForReplacement);
-                        commandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Days.Should().NotContain(x => x.Id == dayForReplacement.Id && x.Name == dayForReplacement.Name);
+                        CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Days.Should().NotContain(x => x.Id == dayForReplacement.Id && x.Name == dayForReplacement.Name);
 
                         // Assert
-                        informationSet.Message.Should().Be(@$"День {dayForReplacement.Name.AddBoldAndQuotes()}, перенесён в цикл {destinationCycle.Name.AddBoldAndQuotes()}
+                        InformationSet.Message.Should().Be(@$"День {dayForReplacement.Name.AddBoldAndQuotes()}, перенесён в цикл {destinationCycle.Name.AddBoldAndQuotes()}
 ======================
 
 Выберите интересующий цикл
 ");
-                        informationSet.ButtonsSets.Should().Be((ButtonsSet.CycleList, ButtonsSet.SettingCycles));
+                        InformationSet.ButtonsSets.Should().Be((ButtonsSet.CycleList, ButtonsSet.SettingCycles));
                     }
                 }
                 else
                 {
-                    if (commandHandlerTools.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Id == targetDomainID)
+                    if (CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Id == targetDomainID)
                     {
                         // Act
-                        informationSet = await settingsCH.GetInformationSet();
+                        await settingsCH.Process(TestContext.Current.CancellationToken);
 
                         // Assert
-                        informationSet.Message.Should().Be(@$"Ошибка при переносе упражнения!
+                        InformationSet.Message.Should().Be(@$"Ошибка при переносе упражнения!
 ======================
 Нельзя перенести упражнение в тот же самый день
 ======================
 
-Выберите день, в который хотите перенести упражнение {commandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().Name.AddBoldAndQuotes()}
+Выберите день, в который хотите перенести упражнение {CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().Name.AddBoldAndQuotes()}
 ");
-                        informationSet.ButtonsSets.Should().Be((ButtonsSet.ReplaceToDay, ButtonsSet.SettingExercise));
+                        InformationSet.ButtonsSets.Should().Be((ButtonsSet.ReplaceToDay, ButtonsSet.SettingExercise));
                     }
                     else 
                     {
-                        DTOExercise exerciseForReplacement = commandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull();
+                        DTOExercise exerciseForReplacement = CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull();
 
-                        DTODay destinationDay = commandHandlerTools.CurrentUserContext.UserInformation.Cycles.SelectMany(x => x.Days).First(x => x.Id == targetDomainID);
+                        DTODay destinationDay = CurrentUserContext.UserInformation.Cycles.SelectMany(x => x.Days).First(x => x.Id == targetDomainID);
 
                         destinationDay.Exercises.Should().BeEmpty();
-                        commandHandlerTools.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Exercises.Should().Contain(x => x.Id == exerciseForReplacement.Id && x.Name == exerciseForReplacement.Name);
+                        CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Exercises.Should().Contain(x => x.Id == exerciseForReplacement.Id && x.Name == exerciseForReplacement.Name);
 
                         // Act
-                        informationSet = await settingsCH.GetInformationSet();
+                        await settingsCH.Process(TestContext.Current.CancellationToken);
 
                         destinationDay.Exercises.Should().Contain(exerciseForReplacement);
-                        commandHandlerTools.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Exercises.Should().NotContain(x => x.Id == exerciseForReplacement.Id && x.Name == exerciseForReplacement.Name);
+                        CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Exercises.Should().NotContain(x => x.Id == exerciseForReplacement.Id && x.Name == exerciseForReplacement.Name);
 
                         // Assert
-                        informationSet.Message.Should().Be(@$"Упражнение {exerciseForReplacement.Name.AddBoldAndQuotes()}, перенесёно в день {destinationDay.Name.AddBoldAndQuotes()}
+                        InformationSet.Message.Should().Be(@$"Упражнение {exerciseForReplacement.Name.AddBoldAndQuotes()}, перенесёно в день {destinationDay.Name.AddBoldAndQuotes()}
 ======================
 
 Выберите интересующий цикл
 ");
-                        informationSet.ButtonsSets.Should().Be((ButtonsSet.CycleList, ButtonsSet.SettingCycles));
+                        InformationSet.ButtonsSets.Should().Be((ButtonsSet.CycleList, ButtonsSet.SettingCycles));
                     }
                 }
 
-                commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-                commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+                CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+                CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
-                informationSet.ParseMode.Should().Be(ParseMode.Html);
-                informationSet.AdditionalParameters.Should().BeNull();
+                InformationSet.ParseMode.Should().Be(ParseMode.Html);
+                InformationSet.AdditionalParameters.Should().BeNull();
             }
         }
 
@@ -1277,7 +1301,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             if (domainType == "Other")
             {
                 // Act
-                Func<Task> func = async () => await settingsCH.GetInformationSet();
+                Func<Task> func = async () => await settingsCH.Process(TestContext.Current.CancellationToken);
 
                 // Assert
                 ExceptionAssertions<NotImplementedException> exceptionAssertions = await func.Should().ThrowAsync<NotImplementedException>();
@@ -1287,38 +1311,38 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             else
             {
                 // Act
-                IInformationSet informationSet = await settingsCH.GetInformationSet();
+                await settingsCH.Process(TestContext.Current.CancellationToken);
 
                 if (domainType == "Cycle")
                 {
                     // Assert
-                    informationSet.Message.Should().Be(@$"Введите новоё название для цикла {commandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}");
-                    informationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.SettingCycle));
+                    InformationSet.Message.Should().Be(@$"Введите новоё название для цикла {CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}");
+                    InformationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.SettingCycle));
 
-                    commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.ChangeNameCycle);
+                    CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.ChangeNameCycle);
                 }
                 else if (domainType == "Day")
                 {
                     // Assert
-                    informationSet.Message.Should().Be(@$"Введите новоё название для дня {commandHandlerTools.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()}");
-                    informationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.SettingDay));
+                    InformationSet.Message.Should().Be(@$"Введите новоё название для дня {CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()}");
+                    InformationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.SettingDay));
 
-                    commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.ChangeNameDay);
+                    CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.ChangeNameDay);
                 }
                 else
                 {
                     // Assert
-                    informationSet.Message.Should().Be(@$"Введите новоё название для упражнения {commandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().Name.AddBoldAndQuotes()}");
-                    informationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.SettingExercise));
+                    InformationSet.Message.Should().Be(@$"Введите новоё название для упражнения {CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().Name.AddBoldAndQuotes()}");
+                    InformationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.SettingExercise));
 
-                    commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.ChangeNameExercise);
+                    CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.ChangeNameExercise);
                 }
 
-                commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+                CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
                 
 
-                informationSet.ParseMode.Should().Be(ParseMode.Html);
-                informationSet.AdditionalParameters.Should().BeNull();
+                InformationSet.ParseMode.Should().Be(ParseMode.Html);
+                InformationSet.AdditionalParameters.Should().BeNull();
             }
         }
 
@@ -1337,7 +1361,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             if (domainType == "Other")
             {
                 // Act
-                Func<Task> func = async () => await settingsCH.GetInformationSet();
+                Func<Task> func = async () => await settingsCH.Process(TestContext.Current.CancellationToken);
 
                 // Assert
                 ExceptionAssertions<NotImplementedException> exceptionAssertions = await func.Should().ThrowAsync<NotImplementedException>();
@@ -1347,17 +1371,17 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             else
             {
                 // Act
-                IInformationSet informationSet = await settingsCH.GetInformationSet();
+                await settingsCH.Process(TestContext.Current.CancellationToken);
 
                 // Assert
-                informationSet.Message.Should().Be(@$"Выберите новый тип для упражнения {commandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().Name.AddBoldAndQuotes()}");
-                informationSet.ButtonsSets.Should().Be((ButtonsSet.ChangeType, ButtonsSet.SettingExercise));
+                InformationSet.Message.Should().Be(@$"Выберите новый тип для упражнения {CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().Name.AddBoldAndQuotes()}");
+                InformationSet.ButtonsSets.Should().Be((ButtonsSet.ChangeType, ButtonsSet.SettingExercise));
 
-                commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-                commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+                CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+                CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
-                informationSet.ParseMode.Should().Be(ParseMode.Html);
-                informationSet.AdditionalParameters.Should().BeNull();
+                InformationSet.ParseMode.Should().Be(ParseMode.Html);
+                InformationSet.AdditionalParameters.Should().BeNull();
             }
         }
 
@@ -1376,7 +1400,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             if (domainType == "Other")
             {
                 // Act
-                Func<Task> func = async () => await settingsCH.GetInformationSet();
+                Func<Task> func = async () => await settingsCH.Process(TestContext.Current.CancellationToken);
 
                 // Assert
                 ExceptionAssertions<NotImplementedException> exceptionAssertions = await func.Should().ThrowAsync<NotImplementedException>();
@@ -1385,27 +1409,27 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             }
             else
             {
-                DTOExercise currentExercise = commandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull();
+                DTOExercise currentExercise = CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull();
                 currentExercise.Mode.Should().Be(ExercisesMods.Timer);
 
                 // Act
-                IInformationSet informationSet = await settingsCH.GetInformationSet();
+                await settingsCH.Process(TestContext.Current.CancellationToken);
 
                 // Assert
                 currentExercise.Mode.Should().Be(newExercisesMods);
 
-                informationSet.Message.Should().Be(@$"Режим для упражнения {currentExercise.Name.AddBoldAndQuotes()} изменён на {newExercisesMods.ToString().AddBoldAndQuotes()}
+                InformationSet.Message.Should().Be(@$"Режим для упражнения {currentExercise.Name.AddBoldAndQuotes()} изменён на {newExercisesMods.ToString().AddBoldAndQuotes()}
 ======================
 
 Выберите интересующую настройку для упражнения {currentExercise.Name.AddBoldAndQuotes()}
 ");
-                informationSet.ButtonsSets.Should().Be((ButtonsSet.SettingExercise, ButtonsSet.ExercisesList));
+                InformationSet.ButtonsSets.Should().Be((ButtonsSet.SettingExercise, ButtonsSet.ExercisesList));
 
-                commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-                commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+                CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+                CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
-                informationSet.ParseMode.Should().Be(ParseMode.Html);
-                informationSet.AdditionalParameters.Should().BeNull();
+                InformationSet.ParseMode.Should().Be(ParseMode.Html);
+                InformationSet.AdditionalParameters.Should().BeNull();
             }
         }
 
@@ -1427,7 +1451,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             if (operation == "Other")
             {
                 // Act
-                Func<Task> func = async () => await settingsCH.GetInformationSet();
+                Func<Task> func = async () => await settingsCH.Process(TestContext.Current.CancellationToken);
 
                 // Assert
                 ExceptionAssertions<NotImplementedException> exceptionAssertions = await func.Should().ThrowAsync<NotImplementedException>();
@@ -1436,23 +1460,21 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             }
             else
             {
-                IInformationSet informationSet;
-
                 if (withResultSExercise)
                 {
                     builder.WithResultExercise();
 
                     // Act
-                    informationSet = await settingsCH.GetInformationSet();
+                    await settingsCH.Process(TestContext.Current.CancellationToken);
 
-                    informationSet.Message.Should().Be(@$"Тренировки успешно экспортированы!");
+                    InformationSet.Message.Should().Be(@$"Тренировки успешно экспортированы!");
                 }
                 else
                 {
                     // Act
-                    informationSet = await settingsCH.GetInformationSet();
+                    await settingsCH.Process(TestContext.Current.CancellationToken);
 
-                    informationSet.Message.Should().Be(@$"Отсутствуют результаты для экспорта
+                    InformationSet.Message.Should().Be(@$"Отсутствуют результаты для экспорта
 ======================
 
 Выберите интересующую настройку
@@ -1460,15 +1482,15 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                 }
 
                 // Assert
-                informationSet.ButtonsSets.Should().Be((ButtonsSet.Settings, ButtonsSet.Main));
+                InformationSet.ButtonsSets.Should().Be((ButtonsSet.Settings, ButtonsSet.Main));
 
-                commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
-                commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+                CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+                CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
-                informationSet.ParseMode.Should().Be(ParseMode.Html);
-                informationSet.AdditionalParameters.Should().BeNull();
+                InformationSet.ParseMode.Should().Be(ParseMode.Html);
+                InformationSet.AdditionalParameters.Should().BeNull();
 
-                if (informationSet is FileInformationSet fileInformationSet)
+                if (InformationSet is FileInformationSet fileInformationSet)
                 {
                     fileInformationSet.Stream.Length.Should().NotBe(0);
                     fileInformationSet.Stream.Position.Should().Be(0);
@@ -1494,7 +1516,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             if (domainType == "Other")
             {
                 // Act
-                Func<Task> func = async () => await settingsCH.GetInformationSet();
+                Func<Task> func = async () => await settingsCH.Process(TestContext.Current.CancellationToken);
 
                 // Assert
                 ExceptionAssertions<NotImplementedException> exceptionAssertions = await func.Should().ThrowAsync<NotImplementedException>();
@@ -1504,25 +1526,25 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             else
             {
                 // Act
-                IInformationSet informationSet = await settingsCH.GetInformationSet();
+                await settingsCH.Process(TestContext.Current.CancellationToken); ;
 
-                informationSet.AdditionalParameters.Should().HaveCount(2);
-                informationSet.AdditionalParameters.First().Key.Should().Be("DomainType");
-                informationSet.AdditionalParameters.First().Value.Should().Be($"{domainType}");
+                InformationSet.AdditionalParameters.Should().HaveCount(2);
+                InformationSet.AdditionalParameters.First().Key.Should().Be("DomainType");
+                InformationSet.AdditionalParameters.First().Value.Should().Be($"{domainType}");
 
-                KeyValuePair<string, string> secondParameter = informationSet.AdditionalParameters.Skip(1).First();
+                KeyValuePair<string, string> secondParameter = InformationSet.AdditionalParameters.Skip(1).First();
 
                 if (domainType == "Account")
                 {
                     // Assert
-                    informationSet.Message.Should().Be(@$"Вы уверены?
+                    InformationSet.Message.Should().Be(@$"Вы уверены?
 ======================
 
 {"Удаление аккаунта приведёт к полной и безвозвратной потере информации о ваших тренировках".AddBold()}
 ");
-                    informationSet.ButtonsSets.Should().Be((ButtonsSet.ConfirmDelete, ButtonsSet.Settings));
+                    InformationSet.ButtonsSets.Should().Be((ButtonsSet.ConfirmDelete, ButtonsSet.Settings));
 
-                    commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+                    CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
                     secondParameter.Key.Should().Be("Name");
                     secondParameter.Value.Should().Be("аккаунт");
@@ -1530,14 +1552,14 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                 else if (domainType == "Cycle")
                 {
                     // Assert
-                    informationSet.Message.Should().Be(@$"Вы уверены?
+                    InformationSet.Message.Should().Be(@$"Вы уверены?
 ======================
 
 {"Удаление цикла приведёт к полной и безвозвратной потере информации о ваших тренировках в этом цикле".AddBold()}
 ");
-                    informationSet.ButtonsSets.Should().Be((ButtonsSet.ConfirmDelete, ButtonsSet.SettingCycle));
+                    InformationSet.ButtonsSets.Should().Be((ButtonsSet.ConfirmDelete, ButtonsSet.SettingCycle));
 
-                    commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+                    CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
                     secondParameter.Key.Should().Be("Name");
                     secondParameter.Value.Should().Be("цикл");
@@ -1545,14 +1567,14 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                 else if (domainType == "Day")
                 {
                     // Assert
-                    informationSet.Message.Should().Be(@$"Вы уверены?
+                    InformationSet.Message.Should().Be(@$"Вы уверены?
 ======================
 
 {"Удаление дня приведёт к полной и безвозвратной потере информации о ваших тренировках в этом дне".AddBold()}
 ");
-                    informationSet.ButtonsSets.Should().Be((ButtonsSet.ConfirmDelete, ButtonsSet.SettingDay));
+                    InformationSet.ButtonsSets.Should().Be((ButtonsSet.ConfirmDelete, ButtonsSet.SettingDay));
 
-                    commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+                    CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
                     secondParameter.Key.Should().Be("Name");
                     secondParameter.Value.Should().Be("день");
@@ -1560,14 +1582,14 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                 else if (domainType == "Exercise")
                 {
                     // Assert
-                    informationSet.Message.Should().Be(@$"Вы уверены?
+                    InformationSet.Message.Should().Be(@$"Вы уверены?
 ======================
 
 {"Удаление упражнения приведёт к полной и безвозвратной потере информации о ваших тренировках с этим упражнением".AddBold()}
 ");
-                    informationSet.ButtonsSets.Should().Be((ButtonsSet.ConfirmDelete, ButtonsSet.SettingExercise));
+                    InformationSet.ButtonsSets.Should().Be((ButtonsSet.ConfirmDelete, ButtonsSet.SettingExercise));
 
-                    commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+                    CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
                     secondParameter.Key.Should().Be("Name");
                     secondParameter.Value.Should().Be("упражнение");
@@ -1575,22 +1597,22 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                 else
                 {
                     // Assert
-                    informationSet.Message.Should().Be(@$"Вы уверены?
+                    InformationSet.Message.Should().Be(@$"Вы уверены?
 ======================
 
 {"Удаление подходов приведёт к полной и безвозвратной потере информации".AddBold()}
 ");
-                    informationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.SettingExercise));
+                    InformationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.SettingExercise));
 
-                    commandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.DeleteResultsExercise);
+                    CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.DeleteResultsExercise);
 
                     secondParameter.Key.Should().Be("Name");
                     secondParameter.Value.Should().Be("упражнение");
                 }
 
-                commandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+                CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
 
-                informationSet.ParseMode.Should().Be(ParseMode.Html);
+                InformationSet.ParseMode.Should().Be(ParseMode.Html);
             }
         }
 
@@ -1622,7 +1644,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                 ContextKeeper = contextKeeperMock.Object,
                 BotResponseSender = botResponseSenderMock.Object,
                 LoggerFactory = customLoggerFactoryMock.Object,
-                AppCTS = cts,
             };
 
             DTOUserInformation localDTOCurrentUser = localEntityContext.UsersInformation.First().ToDTOUserInformation();
@@ -1635,10 +1656,19 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             DTOExercise DTOExercise = localBuilder.TestExercise.ToDTOExercise(DTODay);
             localUserContext.DataManager.SetCurrentDomain(DTOExercise);
 
+            Update update = new Update();
+
             CommandHandlerTools localCommandHandlerTools = new CommandHandlerTools()
             {
-                ParentHandler = new PrimaryUpdateHandler(localCoreTools, new RepositoriesStore(localEntityContext)),
-                CurrentUserContext = localUserContext,
+                CoreTools = localCoreTools,
+                HandlerResult = new AuthorizedHandlerResult()
+                {
+                    CurrentUserContext = localUserContext,
+                    HasAccess = true,
+                    Update = update,
+                    ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.CallbackQuery, true)
+                },
+                RepositoriesStore = new RepositoriesStore(localEntityContext),
             };
 
             string subDirection = "ConfirmDelete";
@@ -1650,7 +1680,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             if (domainType == "Other")
             {
                 // Act
-                Func<Task> func = async () => await settingsCH.GetInformationSet();
+                Func<Task> func = async () => await settingsCH.Process(TestContext.Current.CancellationToken);
 
                 // Assert
                 ExceptionAssertions<NotImplementedException> exceptionAssertions = await func.Should().ThrowAsync<NotImplementedException>();
@@ -1659,17 +1689,20 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             }
             else
             {
-                IInformationSet informationSet;
+                IInformationSet? informationSet;
 
                 if (domainType == "Account")
                 {
-                    localEntityContext.UsersInformation.Any(x => x.Id == localCommandHandlerTools.CurrentUserContext.UserInformation.Id).Should().BeTrue();
+                    localEntityContext.UsersInformation.Any(x => x.Id == localCommandHandlerTools.HandlerResult.CurrentUserContext.UserInformation.Id).Should().BeTrue();
 
                     // Act
-                    informationSet = await settingsCH.GetInformationSet();
+                    await settingsCH.Process(TestContext.Current.CancellationToken);
+
+                    informationSet = localCommandHandlerTools.HandlerResult.InformationSet;
+                    informationSet.Should().NotBeNull();
 
                     // Assert
-                    localEntityContext.UsersInformation.Any(x => x.Id == localCommandHandlerTools.CurrentUserContext.UserInformation.Id).Should().BeFalse();
+                    localEntityContext.UsersInformation.Any(x => x.Id == localCommandHandlerTools.HandlerResult.CurrentUserContext.UserInformation.Id).Should().BeFalse();
 
                     informationSet.Message.Should().Be("Аккаунт успешно удалён");
                     informationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.None));
@@ -1678,28 +1711,31 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                 }
                 else if (domainType == "Cycle")
                 {
-                    DTOCycle currentCycle = localCommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull();
+                    DTOCycle currentCycle = localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull();
 
-                    localCommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.IsActive = currentCycleIsActive;
+                    localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.CurrentCycle.IsActive = currentCycleIsActive;
 
                     localEntityContext.Cycles.Any(x => x.Id == currentCycle.Id).Should().BeTrue();
 
                     // Act
-                    informationSet = await settingsCH.GetInformationSet();
+                    await settingsCH.Process(TestContext.Current.CancellationToken);
+
+                    informationSet = localCommandHandlerTools.HandlerResult.InformationSet;
+                    informationSet.Should().NotBeNull();
 
                     if (currentCycleIsActive)
                     {
                         // Assert
                         localEntityContext.Cycles.Any(x => x.Id == currentCycle.Id).Should().BeTrue();
 
-                        localCommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Should().NotBeNull();
+                        localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.CurrentCycle.Should().NotBeNull();
 
                         informationSet.Message.Should().Be(@$"Ошибка при удалении!
 ======================
 Нельзя удалить активный цикл!
 ======================
 
-Выберите интересующую настройку для цикла {localCommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()}
+Выберите интересующую настройку для цикла {localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()}
 ");
                         informationSet.ButtonsSets.Should().Be((ButtonsSet.SettingCycle, ButtonsSet.CycleList));
                     }
@@ -1708,7 +1744,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                         // Assert
                         localEntityContext.Cycles.Any(x => x.Id == currentCycle.Id).Should().BeFalse();
 
-                        localCommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.Should().BeNull();
+                        localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.CurrentCycle.Should().BeNull();
 
                         informationSet.Message.Should().Be(@$"Цикл {currentCycle.Name.AddBoldAndQuotes()} удалён!
 ======================
@@ -1720,51 +1756,57 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                 }
                 else if (domainType == "Day")
                 {
-                    DTODay currentDay = localCommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull();
+                    DTODay currentDay = localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull();
 
                     localEntityContext.Days.Any(x => x.Id == currentDay.Id).Should().BeTrue();
 
                     // Act
-                    informationSet = await settingsCH.GetInformationSet();
+                    await settingsCH.Process(TestContext.Current.CancellationToken);
+
+                    informationSet = localCommandHandlerTools.HandlerResult.InformationSet;
+                    informationSet.Should().NotBeNull();
 
                     // Assert
                     localEntityContext.Days.Any(x => x.Id == currentDay.Id).Should().BeFalse();
 
-                    localCommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.Should().BeNull();
+                    localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.CurrentDay.Should().BeNull();
 
                     informationSet.Message.Should().Be(@$"День {currentDay.Name.AddBoldAndQuotes()} удалён!
 ======================
 
-Выберите интересующий день из цикла {localCommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}
+Выберите интересующий день из цикла {localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}
 ");
 
                     informationSet.ButtonsSets.Should().Be((ButtonsSet.DaysList, ButtonsSet.SettingDays));
                 }
                 else
                 {
-                    DTOExercise currentExercise = localCommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull();
+                    DTOExercise currentExercise = localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull();
 
                     localEntityContext.Exercises.Any(x => x.Id == currentExercise.Id).Should().BeTrue();
 
                     // Act
-                    informationSet = await settingsCH.GetInformationSet();
+                    await settingsCH.Process(TestContext.Current.CancellationToken);
+
+                    informationSet = localCommandHandlerTools.HandlerResult.InformationSet;
+                    informationSet.Should().NotBeNull();
 
                     // Assert
                     localEntityContext.Exercises.Any(x => x.Id == currentExercise.Id).Should().BeFalse();
 
-                    localCommandHandlerTools.CurrentUserContext.DataManager.CurrentExercise.Should().BeNull();
+                    localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.CurrentExercise.Should().BeNull();
 
                     informationSet.Message.Should().Be(@$"Упражнение {currentExercise.Name.AddBoldAndQuotes()} удалёно!
 ======================
 
-Выберите интересующее упражнение из дня {localCommandHandlerTools.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()} ({localCommandHandlerTools.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBold()})
+Выберите интересующее упражнение из дня {localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()} ({localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBold()})
 ");
 
                     informationSet.ButtonsSets.Should().Be((ButtonsSet.ExercisesList, ButtonsSet.SettingExercises));
                 }
 
-                localCommandHandlerTools.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
-                localCommandHandlerTools.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+                localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+                localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
 
                 informationSet.ParseMode.Should().Be(ParseMode.Html);
             }
@@ -1773,7 +1815,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
         public void Dispose()
         {
             builder.Dispose();
-            cts.Dispose();
         }
     }
 }

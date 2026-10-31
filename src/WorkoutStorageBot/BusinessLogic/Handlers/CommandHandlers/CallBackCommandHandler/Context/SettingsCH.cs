@@ -13,54 +13,55 @@ using WorkoutStorageBot.Core.Extensions;
 using WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic;
 using WorkoutStorageBot.Model.DTO.InformationSetForSend;
 using WorkoutStorageBot.BusinessLogic.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackCommandHandler.Context
 {
     internal class SettingsCH : CallBackCH
     {
-        private static IReadOnlyDictionary<string, Func<SettingsCH, Task<IInformationSet>>> commandMap
-           = new Dictionary<string, Func<SettingsCH, Task<IInformationSet>>>
+        private static IReadOnlyDictionary<string, Func<SettingsCH, CancellationToken, Task<IInformationSet>>> commandMap
+           = new Dictionary<string, Func<SettingsCH, CancellationToken, Task<IInformationSet>>>
            {
-               { "Settings", (x) => Task.FromResult(x.SettingsCommand()) },
-               { "ArchiveStore", (x) => Task.FromResult(x.ArchiveStoreCommand()) },
-               { "Archive", (x) => Task.FromResult(x.ArchiveCommand()) },
-               { "UnArchive", (x) => x.UnArchiveCommand() },
-               { "Export", (x) => Task.FromResult(x.ExportCommand()) },
-               { "ExportTo", (x) => Task.FromResult(x.ExportToCommand()) },
-               { "AboutBot", (x) => Task.FromResult(x.AboutBotCommand()) },
-               { "Setting", (x) => Task.FromResult(x.SettingCommand()) },
-               { "Add", (x) => Task.FromResult(x.AddCommand()) },
-               { "ResetTempDomains", (x) => Task.FromResult(x.ResetTempDomainsCommand()) },
-               { "SaveExercises", (x) => x.SaveExercisesCommand() },
-               { "SettingExisting", (x) => Task.FromResult(x.SettingExistingCommand()) },
-               { "Selected", (x) => Task.FromResult(x.SelectedCommand()) },
-               { "ChangeActive", (x) => x.ChangeActiveCommand() },
-               { "Archiving", (x) => x.ArchivingCommand() },
-               { "Replace", (x) => Task.FromResult(x.ReplaceCommand()) },
-               { "ReplaceTo", (x) => x.ReplaceToCommand() },
-               { "ChangeName", (x) => Task.FromResult(x.ChangeNameCommand()) },
-               { "ChangeMode", (x) => Task.FromResult(x.ChangeModeCommand()) },
-               { "ChangedMode", (x) => x.ChangedModeCommand() },
-               { "Period", (x) => x.PeriodCommand() },
-               { "Delete", (x) => Task.FromResult(x.DeleteCommand()) },
-               { "ConfirmDelete", (x) => x.ConfirmDeleteCommand() },
+               { "Settings", (x, y) => Task.FromResult(x.SettingsCommand()) },
+               { "ArchiveStore", (x, y) => Task.FromResult(x.ArchiveStoreCommand()) },
+               { "Archive", (x, y) => Task.FromResult(x.ArchiveCommand()) },
+               { "UnArchive", (x, y) => x.UnArchiveCommand(y) },
+               { "Export", (x, y) => Task.FromResult(x.ExportCommand()) },
+               { "ExportTo", (x, y) => Task.FromResult(x.ExportToCommand()) },
+               { "AboutBot", (x, y) => Task.FromResult(x.AboutBotCommand()) },
+               { "Setting", (x, y) => Task.FromResult(x.SettingCommand()) },
+               { "Add", (x, y) => Task.FromResult(x.AddCommand()) },
+               { "ResetTempDomains", (x, y) => Task.FromResult(x.ResetTempDomainsCommand()) },
+               { "SaveExercises", (x, y) => x.SaveExercisesCommand(y) },
+               { "SettingExisting", (x, y) => Task.FromResult(x.SettingExistingCommand()) },
+               { "Selected", (x, y) => Task.FromResult(x.SelectedCommand()) },
+               { "ChangeActive", (x, y) => x.ChangeActiveCommand(y) },
+               { "Archiving", (x, y) => x.ArchivingCommand(y) },
+               { "Replace", (x, y) => Task.FromResult(x.ReplaceCommand()) },
+               { "ReplaceTo", (x, y) => x.ReplaceToCommand(y) },
+               { "ChangeName", (x, y) => Task.FromResult(x.ChangeNameCommand()) },
+               { "ChangeMode", (x, y) => Task.FromResult(x.ChangeModeCommand()) },
+               { "ChangedMode", (x, y) => x.ChangedModeCommand(y) },
+               { "Period", (x, y) => x.PeriodCommand(y) },
+               { "Delete", (x, y) => Task.FromResult(x.DeleteCommand()) },
+               { "ConfirmDelete", (x, y) => x.ConfirmDeleteCommand(y) },
            };
 
         internal SettingsCH(CommandHandlerTools commandHandlerTools, CallbackQueryParser callbackQueryParser) : base(commandHandlerTools, callbackQueryParser)
         { }
 
-        internal override async Task<IInformationSet> GetInformationSet()
+        protected override async Task<IInformationSet> GetInformationSet(CancellationToken cancellationToken)
         {
-            Func<SettingsCH, Task<IInformationSet>> selectedCommand = GetSelectedCommand();
+            Func<SettingsCH, CancellationToken, Task<IInformationSet>> selectedCommand = GetSelectedCommand();
 
-            IInformationSet informationSet = await selectedCommand(this);
+            IInformationSet informationSet = await selectedCommand(this, cancellationToken);
 
             CheckInformationSet(informationSet);
 
             return informationSet;
         }
 
-        protected Func<SettingsCH, Task<IInformationSet>> GetSelectedCommand()
+        protected Func<SettingsCH, CancellationToken, Task<IInformationSet>> GetSelectedCommand()
             => commandMap.GetValueOrDefault(callbackQueryParser.SubDirection)
                 ?? throw new NotImplementedException($"Неожиданный callbackQueryParser.SubDirection: {callbackQueryParser.SubDirection}");
 
@@ -114,7 +115,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             return informationSet;
         }
 
-        private async Task <IInformationSet> UnArchiveCommand()
+        private async Task <IInformationSet> UnArchiveCommand(CancellationToken cancellationToken)
         {
             string domainIDStr = callbackQueryParser.AdditionalParameters.First();
             int domainID = int.Parse(domainIDStr);
@@ -143,7 +144,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                 throw new NotImplementedException($"Неожиданный callbackQueryParser.DomainType: {callbackQueryParser.DomainType}");
 
             DTODomain.IsArchive = false;
-            await this.Db.UpdateEntity(DTODomain);
+            await this.Db.UpdateEntity(DTODomain, cancellationToken);
 
             ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder($"{DTODomain.Name.AddBoldAndQuotes()} разархивирован!");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.ArchiveList, ButtonsSet.Settings);
@@ -333,14 +334,14 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             return informationSet;
         }
 
-        private async Task<IInformationSet> SaveExercisesCommand()
+        private async Task<IInformationSet> SaveExercisesCommand(CancellationToken cancellationToken)
         {
             foreach (DTOExercise tempExercise in this.CurrentUserContext.DataManager.TempExercises.ThrowIfNull())
             {
                 tempExercise.Day = this.CurrentUserContext.DataManager.CurrentDay;
                 this.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Exercises.Add(tempExercise);
             }
-            await this.Db.AddEntities(this.CurrentUserContext.DataManager.TempExercises);
+            await this.Db.AddEntities(this.CurrentUserContext.DataManager.TempExercises, cancellationToken);
 
             this.CurrentUserContext.DataManager.ResetTempExercises();
 
@@ -488,7 +489,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             return informationSet;
         }
 
-        private async Task<IInformationSet> ChangeActiveCommand()
+        private async Task<IInformationSet> ChangeActiveCommand(CancellationToken cancellationToken)
         {
             ResponseTextBuilder responseTextBuilder;
             (ButtonsSet, ButtonsSet) buttonsSets;
@@ -512,9 +513,9 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     }
 
                     this.CurrentUserContext.ActiveCycle.IsActive = false;
-                    await this.Db.UpdateEntity(this.CurrentUserContext.ActiveCycle, false);
+                    await this.Db.UpdateEntity(this.CurrentUserContext.ActiveCycle, cancellationToken, false);
                     this.CurrentUserContext.SetNewActiveCycleForce(this.CurrentUserContext.DataManager.CurrentCycle);
-                    await this.Db.UpdateEntity(this.CurrentUserContext.ActiveCycle);
+                    await this.Db.UpdateEntity(this.CurrentUserContext.ActiveCycle, cancellationToken);
 
                     responseTextBuilder = new ResponseTextBuilder($"Активный цикл изменён на {this.CurrentUserContext.ActiveCycle.Name.AddBoldAndQuotes()}",
                     $"Выберите интересующую настройку для цикла {this.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()}");
@@ -529,7 +530,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             return informationSet;
         }
 
-        private async Task<IInformationSet> ArchivingCommand()
+        private async Task<IInformationSet> ArchivingCommand(CancellationToken cancellationToken)
         {
             IDTODomain DTODomain = this.CurrentUserContext.DataManager.GetRequiredCurrentDomain(callbackQueryParser.DomainType);
 
@@ -569,7 +570,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             }
 
             DTODomain.IsArchive = true;
-            await this.Db.UpdateEntity(DTODomain);
+            await this.Db.UpdateEntity(DTODomain, cancellationToken);
 
             this.CurrentUserContext.DataManager.ResetCurrentDomain(DTODomain);
 
@@ -602,7 +603,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             return informationSet;
         }
 
-        private async Task<IInformationSet> ReplaceToCommand()
+        private async Task<IInformationSet> ReplaceToCommand(CancellationToken cancellationToken)
         {
             ResponseTextBuilder responseTextBuilder;
             (ButtonsSet, ButtonsSet) buttonsSets;
@@ -642,7 +643,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     currentDay.Cycle = targetCycle;
                     currentDay.CycleId = targetCycle.Id;
 
-                    await this.Db.UpdateEntity(currentDay);
+                    await this.Db.UpdateEntity(currentDay, cancellationToken);
 
                     responseTextBuilder = new ResponseTextBuilder($"День {currentDay.Name.AddBoldAndQuotes()}, перенесён в цикл {targetCycle.Name.AddBoldAndQuotes()}",
                         "Выберите интересующий цикл");
@@ -679,7 +680,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     currentExercise.Day = targetDay;
                     currentExercise.DayId = targetDay.Id;
 
-                    await this.Db.UpdateEntity(currentExercise);
+                    await this.Db.UpdateEntity(currentExercise, cancellationToken);
 
                     responseTextBuilder = new ResponseTextBuilder($"Упражнение {currentExercise.Name.AddBoldAndQuotes()}, перенесёно в день {targetDay.Name.AddBoldAndQuotes()}",
                         "Выберите интересующий цикл");
@@ -753,7 +754,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             return informationSet;
         }
 
-        private async Task<IInformationSet> ChangedModeCommand()
+        private async Task<IInformationSet> ChangedModeCommand(CancellationToken cancellationToken)
         {
             IDTODomain DTODomain = this.CurrentUserContext.DataManager.GetRequiredCurrentDomain(callbackQueryParser.DomainType);
 
@@ -772,7 +773,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     ExercisesMods newMode = (ExercisesMods)int.Parse(modeStr);
 
                     ((DTOExercise)DTODomain).Mode = newMode;
-                    await this.Db.UpdateEntity(DTODomain);
+                    await this.Db.UpdateEntity(DTODomain, cancellationToken);
 
                     responseTextBuilder = new ResponseTextBuilder($"Режим для упражнения {DTODomain.Name.AddBoldAndQuotes()} изменён на {newMode.ToString().AddBoldAndQuotes()}",
                         $"Выберите интересующую настройку для упражнения {DTODomain.Name.AddBoldAndQuotes()}");
@@ -787,7 +788,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             return informationSet;
         }
 
-        private async Task<IInformationSet> PeriodCommand()
+        private async Task<IInformationSet> PeriodCommand(CancellationToken cancellationToken)
         {
             IInformationSet informationSet;
 
@@ -798,12 +799,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             {
                 case "Export/Excel":
 
-                    informationSet = await TryGetExportFile(".xlsx", monthFilterPeriod);
+                    informationSet = await TryGetExportFile(".xlsx", monthFilterPeriod, cancellationToken);
                        
                     break;
                 case "Export/JSON":
 
-                    informationSet = await TryGetExportFile(".json", monthFilterPeriod);
+                    informationSet = await TryGetExportFile(".json", monthFilterPeriod, cancellationToken);
 
                     break;
                 default:
@@ -867,7 +868,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             return informationSet;
         }
 
-        private async Task<IInformationSet> ConfirmDeleteCommand()
+        private async Task<IInformationSet> ConfirmDeleteCommand(CancellationToken cancellationToken)
         {
             ResponseTextBuilder responseTextBuilder;
             (ButtonsSet, ButtonsSet) buttonsSets;
@@ -878,8 +879,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                 this.ContextKeeper.RemoveContext(this.CurrentUserContext.UserInformation.UserId);
 
                 AdminWrapper adminWrapper = this.RepositoriesHub.InitRepository(x => new AdminWrapper(x, this.GetConfigurationData(), this.CreateLogger<AdminWrapper>()));
-                UserInformation currentUser = await adminWrapper.GetRequiredUserInformation(this.CurrentUserContext.UserInformation.UserId);
-                await adminWrapper.DeleteAccount(currentUser);
+                UserInformation currentUser = await adminWrapper.GetRequiredUserInformation(this.CurrentUserContext.UserInformation.UserId, cancellationToken);
+                await adminWrapper.DeleteAccount(currentUser, cancellationToken);
                 
                 buttonsSets = (ButtonsSet.None, ButtonsSet.None);
                 responseTextBuilder = new ResponseTextBuilder("Аккаунт успешно удалён");
@@ -927,7 +928,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                         throw new NotImplementedException($"Неожиданный callbackQueryParser.DomainType: {callbackQueryParser.DomainType}");
                 }
 
-                await this.Db.RemoveEntity(DTODomain);
+                await this.Db.RemoveEntity(DTODomain, cancellationToken);
                 this.CurrentUserContext.DataManager.ResetCurrentDomain(DTODomain);
             }
 
@@ -936,7 +937,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             return informationSet;
         }
 
-        private async Task<IInformationSet> TryGetExportFile(string fileExtenstion, int monthFilterPeriod)
+        private async Task<IInformationSet> TryGetExportFile(string fileExtenstion, int monthFilterPeriod, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(fileExtenstion) || !fileExtenstion.StartsWith("."))
                 throw new InvalidOperationException($"Получено некорректное расширение файла");
@@ -958,7 +959,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             {
                 IQueryable<ResultExercise> resultsExercisesForExcel = SharedExercisesAndResultsLogicHelper.GetAllUserResultsExercises(this.Db, this.CurrentUserContext);
 
-                if (!resultsExercisesForExcel.Any())
+                if (!await resultsExercisesForExcel.AnyAsync(cancellationToken))
                 {
                     responseTextBuilder = new ResponseTextBuilder("Отсутствуют результаты для экспорта", 
                         "Выберите интересующую настройку");
@@ -974,10 +975,16 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                 switch (fileExtenstion)
                 {
                     case ".xlsx":
-                        recyclableMemoryStream = await ExcelExportHelper.GetExcelFile(this.CurrentUserContext.UserInformation.Cycles, resultsExercisesForExcel, monthFilterPeriod);
+                        recyclableMemoryStream = await ExcelExportHelper.GetExcelFile(this.CurrentUserContext.UserInformation.Cycles, 
+                                                                                      resultsExercisesForExcel,
+                                                                                      monthFilterPeriod, 
+                                                                                      cancellationToken);
                     break;
                     case ".json":
-                        recyclableMemoryStream = await JsonExportHelper.GetJSONFile(this.CurrentUserContext.UserInformation, resultsExercisesForExcel, monthFilterPeriod);
+                        recyclableMemoryStream = await JsonExportHelper.GetJSONFile(this.CurrentUserContext.UserInformation, 
+                                                                                    resultsExercisesForExcel, 
+                                                                                    monthFilterPeriod, 
+                                                                                    cancellationToken);
                     break;
                     default:
                         throw new NotSupportedException("Неподдерживаемый формат экспорта");
