@@ -58,7 +58,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
                 Update = authorizedHandlerResult.Update,
                 CurrentUserContext = authorizedHandlerResult.CurrentUserContext,
                 ShortUpdateInfo = authorizedHandlerResult.ShortUpdateInfo,
-                HasAccess = true,
+                HasAccess = authorizedHandlerResult.HasAccess,
             };
         }
 

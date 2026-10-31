@@ -4,7 +4,7 @@ using WorkoutStorageBot.Model.DTO.InformationSetForSend;
 
 namespace WorkoutStorageBot.Model.DTO.HandlerData.Results
 {
-    internal class AuthorizedHandlerResult : HandlerResult
+    internal abstract class AuthorizedHandlerResult : HandlerResult
     {
         internal required ShortUpdateInfo ShortUpdateInfo { get; init; }
 

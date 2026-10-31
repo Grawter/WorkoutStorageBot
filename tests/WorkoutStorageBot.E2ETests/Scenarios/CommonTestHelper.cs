@@ -111,7 +111,7 @@ namespace WorkoutStorageBot.E2ETests.Scenarios
                     handlerResults.Add(newHandlerResult);
                     handlerResult = newHandlerResult;
 
-                    if (handlerResult.StopBot)
+                    if (handlerResult.IsNeedStopBot)
                         true.Should().BeFalse("Нереализуему в тестах");
 
                     // Перепроверяем доступ, т.к. во время работы очередного обработчика доступ мог быть отозван

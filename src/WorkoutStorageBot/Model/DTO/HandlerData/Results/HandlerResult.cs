@@ -10,6 +10,6 @@ namespace WorkoutStorageBot.Model.DTO.HandlerData.Results
 
         internal bool IsNeedContinue { get; set; }
 
-        internal bool StopBot { get; set; }
+        internal bool IsNeedStopBot { get; set; }
     }
 }

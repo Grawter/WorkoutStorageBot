@@ -33,11 +33,11 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 
         private readonly EntityContext entityContext;
 
-        private Mock<IContextKeeper> contextKeeperMock;
+        private readonly Mock<IContextKeeper> contextKeeperMock;
 
         private readonly Mock<IBotResponseSender> botResponseSenderMock;
 
-        private Mock<ICustomLoggerFactory> customLoggerFactoryMock;
+        private readonly Mock<ICustomLoggerFactory> customLoggerFactoryMock;
 
         private readonly Mock<ILogger> loggerMock;
 
@@ -82,7 +82,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             commandHandlerTools = new CommandHandlerTools()
             {
                 CoreTools = coreTools,
-                HandlerResult = new AuthorizedHandlerResult()
+                HandlerResult = new UpdateHandlerResult()
                 {
                     CurrentUserContext = userContext,
                     HasAccess = true,

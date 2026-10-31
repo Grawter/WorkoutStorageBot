@@ -28,14 +28,18 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Converters
             this.target = target;
         }
 
-        internal ResponseTextBuilder(string title, string content, string target, string? separator = null) : this(content, target)
+        internal ResponseTextBuilder(string title, string content, string target) : this(content, target)
         {
             ArgumentNullException.ThrowIfNullOrWhiteSpace(title);
 
             this.title = title;
+        }
 
-            if (!string.IsNullOrWhiteSpace(separator))
-                this.separator = separator;
+        internal ResponseTextBuilder(string title, string content, string target, string separator) : this(title, content, target)
+        {
+            ArgumentNullException.ThrowIfNullOrWhiteSpace(separator);
+
+            this.separator = separator;
         }
 
         internal ResponseTextBuilder ResetTitle(string title)
@@ -72,7 +76,7 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.Converters
 
             if (string.IsNullOrWhiteSpace(separator))
                 this.separator = "======================";
-   
+
             StringBuilder sb = new StringBuilder();
 
             if (!string.IsNullOrWhiteSpace(title))

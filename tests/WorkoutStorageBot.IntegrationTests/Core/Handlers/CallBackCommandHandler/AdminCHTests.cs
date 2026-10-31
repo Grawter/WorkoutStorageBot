@@ -30,11 +30,11 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 
         private readonly EntityContext entityContext;
 
-        private Mock<IContextKeeper> contextKeeperMock;
+        private readonly Mock<IContextKeeper> contextKeeperMock;
 
         private readonly Mock<IBotResponseSender> botResponseSenderMock;
 
-        private Mock<ICustomLoggerFactory> customLoggerFactoryMock;
+        private readonly Mock<ICustomLoggerFactory> customLoggerFactoryMock;
 
         private readonly Mock<ILogger> loggerMock;
 
@@ -76,7 +76,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             commandHandlerTools = new CommandHandlerTools()
             {
                 CoreTools = coreTools,
-                HandlerResult = new AuthorizedHandlerResult()
+                HandlerResult = new UpdateHandlerResult()
                 {
                     CurrentUserContext = userContext,
                     HasAccess = true,
@@ -112,7 +112,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             CommandHandlerTools localCommandHandlerTools = new CommandHandlerTools()
             {
                 CoreTools = localCoreTools,
-                HandlerResult = new AuthorizedHandlerResult()
+                HandlerResult = new UpdateHandlerResult()
                 {
                     CurrentUserContext = localUserContext,
                     HasAccess = true,
@@ -626,7 +626,7 @@ TestLog2
 
             AdminCH adminCH = new AdminCH(commandHandlerTools, callbackQueryParser);
 
-            commandHandlerTools.HandlerResult.StopBot.Should().BeFalse();
+            commandHandlerTools.HandlerResult.IsNeedStopBot.Should().BeFalse();
 
             // Act
             await adminCH.Process(TestContext.Current.CancellationToken);
@@ -635,7 +635,7 @@ TestLog2
             CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
             CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
-            commandHandlerTools.HandlerResult.StopBot.Should().BeTrue();
+            commandHandlerTools.HandlerResult.IsNeedStopBot.Should().BeTrue();
 
             InformationSet.Message.Should().Be(@$"Бот отключён");
 

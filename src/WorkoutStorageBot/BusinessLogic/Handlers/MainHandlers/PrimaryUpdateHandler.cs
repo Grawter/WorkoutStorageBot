@@ -57,7 +57,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
                 if (userContext == null)
                     return handlerResult;
 
-                PrimaryHandlerResult primaryHandlerResult = CreatePrimaryHandlerResult(shortUpdateInfo, userContext, isNewContext);
+                PrimaryHandlerResult primaryHandlerResult = CreatePrimaryHandlerResult(shortUpdateInfo, userContext, handlerResult.HasAccess, isNewContext);
 
                 if (primaryHandlerResult.ShortUpdateInfo.IsExpectedType)
                     await ProcessExpectedUpdateType(primaryHandlerResult, cancellationToken);
@@ -121,14 +121,14 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
             return currentRoles;
         }
 
-        private PrimaryHandlerResult CreatePrimaryHandlerResult(ShortUpdateInfo shortUpdateInfo, UserContext userContext, bool isNewContext)
+        private PrimaryHandlerResult CreatePrimaryHandlerResult(ShortUpdateInfo shortUpdateInfo, UserContext userContext, bool hasAccess, bool isNewContext)
         {
             return new PrimaryHandlerResult()
             {
                 Update = shortUpdateInfo.Update,
                 ShortUpdateInfo = shortUpdateInfo,
                 CurrentUserContext = userContext,
-                HasAccess = true,
+                HasAccess = hasAccess,
                 IsNewContext = isNewContext
             };
         }

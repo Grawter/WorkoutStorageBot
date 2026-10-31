@@ -29,11 +29,11 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MainHandlers
 
         private EntityContext? entityContext;
 
-        private Mock<IContextKeeper> contextKeeperMock;
+        private readonly Mock<IContextKeeper> contextKeeperMock;
 
         private readonly Mock<IBotResponseSender> botResponseSenderMock;
 
-        private Mock<ICustomLoggerFactory> customLoggerFactoryMock;
+        private readonly Mock<ICustomLoggerFactory> customLoggerFactoryMock;
 
         private readonly Mock<ILogger> loggerMock;
 

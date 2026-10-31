@@ -290,7 +290,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
         {
             IInformationSet informationSet = new MessageInformationSet("Бот отключён");
 
-            this.HandlerResult.StopBot = true;
+            this.HandlerResult.IsNeedStopBot = true;
 
             return informationSet;
         }

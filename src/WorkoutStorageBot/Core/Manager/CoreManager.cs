@@ -74,7 +74,7 @@ namespace WorkoutStorageBot.Core.Manager
                 {
                     handlerResult = await handler.Process(handlerResult, cancellationToken);
 
-                    if (handlerResult.StopBot)
+                    if (handlerResult.IsNeedStopBot)
                         StopApp(TimeSpan.FromSeconds(2), stopAppMethod);
 
                     // Перепроверяем доступ, т.к. во время работы очередного обработчика доступ мог быть отозван
