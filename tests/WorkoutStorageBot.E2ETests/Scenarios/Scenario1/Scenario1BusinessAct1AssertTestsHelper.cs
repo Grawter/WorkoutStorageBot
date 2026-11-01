@@ -77,6 +77,7 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
             handlerResult.HasAccess.Should().BeTrue();
             handlerResult.IsNewContext.Should().BeTrue();
             handlerResult.IsNeedContinue.Should().BeFalse();
+            handlerResult.IsNeedSendResponse.Should().BeTrue();
         }
 
         internal async Task AssertAct2(List<HandlerResult> handlerResults)

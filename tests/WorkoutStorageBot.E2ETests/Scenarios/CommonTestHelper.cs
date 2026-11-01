@@ -98,31 +98,32 @@ namespace WorkoutStorageBot.E2ETests.Scenarios
             HandlerResult handlerResult = new HandlerResult()
             {
                 Update = update,
-                HasAccess = true, // Устанавливаем true, считая любое первоначальное обращение разрешённым (чтобы первый раз пройти условие на .HasAccess) 
+                HasAccess = true, // Считаем любое первоначальное обращение разрешённым
             };
 
             List<HandlerResult> handlerResults = new List<HandlerResult>();
 
             foreach (CoreHandler handler in handlers)
             {
-                if (handlerResult.HasAccess)
+                HandlerResult newHandlerResult = await handler.Process(handlerResult, cancellationToken);
+                handlerResults.Add(newHandlerResult);
+                handlerResult = newHandlerResult;
+
+                if (!handlerResult.HasAccess)
+                    return handlerResults;
+
+                if (handlerResult is AuthorizedHandlerResult authorizedHandlerResult && authorizedHandlerResult.IsNeedSendResponse)
                 {
-                    HandlerResult newHandlerResult = await handler.Process(handlerResult, cancellationToken);
-                    handlerResults.Add(newHandlerResult);
-                    handlerResult = newHandlerResult;
+                    authorizedHandlerResult.InformationSet.Should().NotBeNull();
 
-                    if (handlerResult.IsNeedStopBot)
-                        true.Should().BeFalse("Нереализуему в тестах");
-
-                    // Перепроверяем доступ, т.к. во время работы очередного обработчика доступ мог быть отозван
-                    if (handlerResult is AuthorizedHandlerResult authorizedHandlerResult && authorizedHandlerResult.InformationSet != null && handlerResult.HasAccess)
-                    {
-                        await botResponseSender.SendResponse(authorizedHandlerResult.ShortUpdateInfo.ChatId, authorizedHandlerResult.InformationSet, authorizedHandlerResult.CurrentUserContext, cancellationToken);
-
-                        if (!handlerResult.IsNeedContinue)
-                            return handlerResults;
-                    }
+                    await botResponseSender.SendResponse(authorizedHandlerResult.ShortUpdateInfo.ChatId, authorizedHandlerResult.InformationSet, authorizedHandlerResult.CurrentUserContext, cancellationToken);
                 }
+
+                if (handlerResult.IsNeedStopBot)
+                    true.Should().BeFalse("Нереализуемо в тестах");
+
+                if (!handlerResult.IsNeedContinue)
+                    return handlerResults;
             }
 
             return handlerResults;

@@ -10,6 +10,8 @@ namespace WorkoutStorageBot.Model.DTO.HandlerData.Results
 
         internal required UserContext CurrentUserContext { get; init; }
 
+        internal bool IsNeedSendResponse { get; set; }
+
         internal IInformationSet? InformationSet { get; set; }
     }
 }

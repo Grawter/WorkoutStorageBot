@@ -163,6 +163,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
             EventId eventId = EventIDHelper.GetNextEventIdThreadSafe(CommonConsts.EventNames.NotSupportedUpdateType);
 
             primaryHandledData.InformationSet = new MessageInformationSet($"{message} | EventId: {eventId.Id}");
+            primaryHandledData.IsNeedSendResponse = true;
             primaryHandledData.IsNeedContinue = false;
 
             Logger.Log(LogLevel.Information,
@@ -226,6 +227,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
             }
 
             primaryHandledData.InformationSet = new MessageInformationSet(message, (buttonsSet, ButtonsSet.None));
+            primaryHandledData.IsNeedSendResponse = true;
             primaryHandledData.IsNeedContinue = false;
         }
     }

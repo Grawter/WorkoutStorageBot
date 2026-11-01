@@ -407,10 +407,12 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MainHandlers
 
             handlerResult.IsNeedContinue.Should().BeFalse();
 
+
             handlerResult.Should().BeOfType<PrimaryHandlerResult>();
 
             PrimaryHandlerResult primaryHandlerResult = (PrimaryHandlerResult)handlerResult;
             primaryHandlerResult.IsNewContext.Should().BeTrue();
+            primaryHandlerResult.IsNeedSendResponse.Should().BeTrue();
 
             primaryHandlerResult.CurrentUserContext.Should().NotBeNull();
             primaryHandlerResult.CurrentUserContext.UserInformation.Id = builder.TestUserInformation.Id;
@@ -471,6 +473,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MainHandlers
 
             PrimaryHandlerResult primaryHandlerResult = (PrimaryHandlerResult)handlerResult;
             primaryHandlerResult.IsNewContext.Should().BeTrue();
+            primaryHandlerResult.IsNeedSendResponse.Should().BeTrue();
 
             primaryHandlerResult.CurrentUserContext.Should().NotBeNull();
 
@@ -507,6 +510,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MainHandlers
 
             PrimaryHandlerResult primaryHandlerResult = (PrimaryHandlerResult)handlerResult;
             primaryHandlerResult.IsNewContext.Should().BeTrue();
+            primaryHandlerResult.IsNeedSendResponse.Should().BeTrue();
 
             primaryHandlerResult.CurrentUserContext.Should().NotBeNull();
             primaryHandlerResult.CurrentUserContext.UserInformation.Id.Should().Be(builder.TestUserInformation.Id);
@@ -545,6 +549,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MainHandlers
             PrimaryHandlerResult primaryHandlerResult = (PrimaryHandlerResult)handlerResult;
             primaryHandlerResult.IsNewContext.Should().BeFalse();
             handlerResult.IsNeedContinue.Should().BeTrue();
+            primaryHandlerResult.IsNeedSendResponse.Should().BeFalse();
 
             primaryHandlerResult.CurrentUserContext.Should().NotBeNull();
             primaryHandlerResult.CurrentUserContext.UserInformation.Id.Should().Be(builder.TestUserInformation.Id);

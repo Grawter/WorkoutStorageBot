@@ -132,6 +132,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
                 handlerResult.CurrentUserContext.Navigation.ResetNavigation();
             }
 
+            handlerResult.IsNeedSendResponse = true;
             handlerResult.InformationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
 
             handlerResult.CurrentUserContext.DataManager.ResetAll();

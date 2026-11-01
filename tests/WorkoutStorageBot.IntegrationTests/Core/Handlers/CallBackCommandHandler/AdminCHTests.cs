@@ -139,6 +139,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
             localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
+            localCommandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
+
             informationSet.Message.Should().Be("Отказано в действии");
             informationSet.ButtonsSets.Should().Be((ButtonsSet.Main, ButtonsSet.None));
             informationSet.ParseMode.Should().Be(ParseMode.Html);
@@ -162,6 +164,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
             CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
+            commandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
+
             InformationSet.Message.Should().Be("Выберите интересующее действие с админкой");
             InformationSet.ButtonsSets.Should().Be((ButtonsSet.Admin, ButtonsSet.Main));
             InformationSet.ParseMode.Should().Be(ParseMode.Html);
@@ -184,6 +188,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             // Assert
             CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
             CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+
+            commandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
 
             InformationSet.Message.Should().Be("Выберите интересующее действие с логами");
             InformationSet.ButtonsSets.Should().Be((ButtonsSet.AdminLogs, ButtonsSet.Admin));
@@ -220,6 +226,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             // Assert
             CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
             CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+
+            commandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
 
             if (withLogs)
                 InformationSet.Message.Should().Be(@"Последний лог:
@@ -278,6 +286,8 @@ TestLog
             CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
             CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
+            commandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
+
             if (withLogs)
                 InformationSet.Message.Should().Be(@"Последние ошибочные логи:
 ======================
@@ -322,7 +332,9 @@ TestLog2
             // Assert
             CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
             CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.FindLogByID);
-            
+
+            commandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
+
             InformationSet.Message.Should().Be(@"Введите Id интересующего лога:");
             InformationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.AdminLogs));
             InformationSet.ParseMode.Should().Be(ParseMode.Html);
@@ -346,6 +358,8 @@ TestLog2
             CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
             CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.FindLogByEventID);
 
+            commandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
+
             InformationSet.Message.Should().Be(@"Введите eventId интересующего лога:");
             InformationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.AdminLogs));
             InformationSet.ParseMode.Should().Be(ParseMode.Html);
@@ -368,6 +382,8 @@ TestLog2
             // Assert
             CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
             CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+
+            commandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
 
             InformationSet.Message.Should().Be("Выберите интересующее действие с пользователями");
             InformationSet.ButtonsSets.Should().Be((ButtonsSet.AdminUsers, ButtonsSet.Admin));
@@ -395,6 +411,8 @@ TestLog2
             CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
             CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
+            commandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
+
             InformationSet.Message.Should().Contain($"<b>{countActiveSessions}</b>").And.Contain("Выберите интересующее действие с пользователями");
             InformationSet.ButtonsSets.Should().Be((ButtonsSet.AdminUsers, ButtonsSet.Admin));
             InformationSet.ParseMode.Should().Be(ParseMode.Html);
@@ -417,6 +435,8 @@ TestLog2
             // Assert
             CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
             CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.SendMessageToUser);
+
+            commandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
 
             InformationSet.Message.Should().Be(@"Введите [UserId/@userLogin]-[Сообщение] для отправки сообщения пользователю
 ======================
@@ -445,6 +465,8 @@ TestLog2
             CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
             CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.SendMessagesToActiveUsers);
 
+            commandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
+
             InformationSet.Message.Should().Be($"Введите сообщение для отправки его всем пользователям с активной сессией");
             InformationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.AdminUsers));
             InformationSet.ParseMode.Should().Be(ParseMode.Html);
@@ -468,6 +490,8 @@ TestLog2
             CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
             CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.SendMessagesToAllUsers);
 
+            commandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
+
             InformationSet.Message.Should().Be($"Введите сообщение для отправки его всем пользователям из БД");
             InformationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.AdminUsers));
             InformationSet.ParseMode.Should().Be(ParseMode.Html);
@@ -490,6 +514,8 @@ TestLog2
             // Assert
             CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
             CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.ChangeUserState);
+
+            commandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
 
             InformationSet.Message.Should().Be(@$"Изменение black/white list у пользователя:
 ======================
@@ -517,6 +543,8 @@ TestLog2
             // Assert
             CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
             CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.DeleteUser);
+
+            commandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
 
             InformationSet.Message.Should().Be(@$"Удаление пользователя:
 ======================
@@ -546,6 +574,8 @@ TestLog2
             // Assert
             CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
             CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+
+            commandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
 
             InformationSet.Message.Should().Be(@"Текущая настройка:
 {
@@ -604,6 +634,8 @@ TestLog2
             CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
             CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
+            commandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
+
             InformationSet.Message.Should().Be(@$"Режим использования лимитов переключён в: <b>False</b>
 ======================
 
@@ -634,6 +666,8 @@ TestLog2
             // Assert
             CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
             CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+
+            commandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
 
             commandHandlerTools.HandlerResult.IsNeedStopBot.Should().BeTrue();
 

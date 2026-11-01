@@ -68,6 +68,7 @@ namespace WorkoutStorageBot.E2ETests.Scenarios
         protected void AssertBaseUpdateHandlerResult(UpdateHandlerResult updateHandlerResult)
         {
             updateHandlerResult.HasAccess.Should().BeTrue();
+            updateHandlerResult.IsNeedSendResponse.Should().BeTrue();
             updateHandlerResult.IsNeedContinue.Should().BeFalse();
         }
     }

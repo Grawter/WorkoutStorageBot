@@ -112,6 +112,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
             CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
+            commandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
+
             InformationSet.Message.Should().Be("Выберите тренировочный день из цикла \"<b>TestCycle</b>\"");
             InformationSet.ButtonsSets.Should().Be((ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main));
             InformationSet.ParseMode.Should().Be(ParseMode.Html);
@@ -161,6 +163,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 
                 CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
                 CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+
+                commandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
 
                 switch (domainType)
                 {
@@ -257,6 +261,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 
                 CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
 
+                commandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
+
                 InformationSet.Message.Should().Be(@$"Введите дату искомой тренировки
 ======================
 
@@ -310,6 +316,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             CurrentUserContext.DataManager.CurrentCycle.Should().NotBeNull();
             CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
             CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+
+            commandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
 
             bool isNeedFindByCurrentDay = callbackQueryParser.DomainType == CommonConsts.DomainsAndEntities.Exercise;
 
@@ -389,6 +397,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
             CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
+            commandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
+
             InformationSet.Message.Should().Be("Таймер запущен");
             InformationSet.ButtonsSets.Should().Be((ButtonsSet.FixExerciseTimer, ButtonsSet.None));
             InformationSet.ParseMode.Should().Be(ParseMode.Html);
@@ -419,6 +429,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
             CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.AddCommentForExerciseTimer);
 
+            commandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
+
             // \A и \z гарантируют, что совпадение будет строгим от начала до конца строки
             string pattern = @"\AРезультат: <b>\d{2}:\d{2}:\d{2}</b>\r?\n======================\r?\n\r?\nЕсли требуется, введите комментарий к результату или выберите интересующее действие\r?\n?\z";
             InformationSet.Message.Should().MatchRegex(pattern);
@@ -448,6 +460,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 
             CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
             CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+
+            commandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
 
             // \A и \z гарантируют, что совпадение будет строгим от начала до конца строки
             string pattern = @"\AС момента запуска таймера прошло: <b>\d{2}:\d{2}:\d{2}</b>\r?\n======================\r?\n\r?\nВыберите интересующее действие\r?\n?\z";
@@ -480,6 +494,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 
             CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
             CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+
+            commandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
 
             InformationSet.Message.Should().Be($@"Результат упражнения '""<b>{builder.TestExercise.Name}</b>""' был сброшен
 ======================
@@ -521,6 +537,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 
             CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
             CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
+
+            commandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
 
             InformationSet.Message.Should().Be($@"Введённые данные сохранены!
 ======================

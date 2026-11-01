@@ -146,6 +146,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
 
                 localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
+                localCommandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
+
                 informationSet.ParseMode.Should().Be(ParseMode.Html);
                 informationSet.AdditionalParameters.Should().BeNull();
             }
@@ -241,6 +243,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                     localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
                     localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
 
+                    localCommandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
+
                     informationSet.ParseMode.Should().Be(ParseMode.Html);
                     informationSet.AdditionalParameters.Should().BeNull();
                 }
@@ -297,6 +301,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                         localCommandHandlerTools.HandlerResult.CurrentUserContext.ActiveCycle.Should().NotBeNull();
 
                     localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
+
+                    localCommandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
 
                     informationSet.ParseMode.Should().Be(ParseMode.Html);
                     informationSet.AdditionalParameters.Should().BeNull();
@@ -385,6 +391,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                     localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
                     localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
 
+                    localCommandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
+
                     informationSet.ParseMode.Should().Be(ParseMode.Html);
                     informationSet.AdditionalParameters.Should().BeNull();
                 }
@@ -438,6 +446,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                         informationSet.Message.Should().Be(@$"День {data.AddBoldAndQuotes()} сохранён в цикле {builder.TestCycle.Name}!");
                         informationSet.ButtonsSets.Should().Be((ButtonsSet.AddExercises, ButtonsSet.SettingDays));
                     }
+
+                    localCommandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
 
                     entityContext.Days.FirstOrDefault(x => x.Name == data && x.CycleId == builder.TestCycle.Id).Should().NotBeNull();
 
@@ -647,6 +657,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                 localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
                 localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
 
+                localCommandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
+
                 informationSet.ParseMode.Should().Be(ParseMode.Html);
             }
         }
@@ -828,6 +840,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                 localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
                 localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
 
+                localCommandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
+
                 informationSet.ParseMode.Should().Be(ParseMode.Html);
             }
         }
@@ -931,6 +945,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
             localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
             localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
 
+            localCommandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
+
             informationSet.ParseMode.Should().Be(ParseMode.Html);
             informationSet.AdditionalParameters.Should().BeNull();
         }
@@ -1007,6 +1023,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
             informationSet.ButtonsSets.Should().Be((ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout));
 
             localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
+
+            localCommandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
 
             informationSet.ParseMode.Should().Be(ParseMode.Html);
             informationSet.AdditionalParameters.Should().BeNull();
@@ -1230,6 +1248,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
 
                 localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
 
+                localCommandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
+
                 informationSet.ParseMode.Should().Be(ParseMode.Html);
                 informationSet.AdditionalParameters.Should().BeNull();
             }
@@ -1357,7 +1377,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
             }
 
             localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
-            
+
+            localCommandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
 
             informationSet.ParseMode.Should().Be(ParseMode.Html);
             informationSet.AdditionalParameters.Should().BeNull();
@@ -1477,6 +1498,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
             localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
             localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
 
+            localCommandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
+
             informationSet.ButtonsSets.Should().Be((ButtonsSet.AdminLogs, ButtonsSet.Admin));
 
             informationSet.AdditionalParameters.Should().BeNull();
@@ -1570,7 +1593,9 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
 
             localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
             localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
-            
+
+            localCommandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
+
             informationSet.ParseMode.Should().Be(ParseMode.Html);
             informationSet.AdditionalParameters.Should().BeNull();
         }
@@ -1641,6 +1666,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
 
             localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
             localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
+
+            localCommandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
 
             informationSet.ParseMode.Should().Be(ParseMode.Html);
             informationSet.AdditionalParameters.Should().BeNull();
@@ -1775,6 +1802,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
             localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
             localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
 
+            localCommandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
+
             informationSet.ParseMode.Should().Be(ParseMode.Html);
             informationSet.AdditionalParameters.Should().BeNull();
         }
@@ -1870,6 +1899,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
 
             localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(messageNavigationTarget);
             localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
+
+            localCommandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
 
             informationSet.ParseMode.Should().Be(ParseMode.Html);
             informationSet.AdditionalParameters.Should().BeNull();
@@ -1987,6 +2018,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
             }
                 
             localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(queryFrom);
+
+            localCommandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
 
             informationSet.ParseMode.Should().Be(ParseMode.Html);
             informationSet.AdditionalParameters.Should().BeNull();

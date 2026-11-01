@@ -106,6 +106,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MainHandlers
 
                 UpdateHandlerResult updateHandlerResult = (UpdateHandlerResult)handlerResult;
 
+                updateHandlerResult.IsNeedSendResponse.Should().BeTrue();
+
                 updateHandlerResult.CurrentUserContext.Should().NotBeNull();
                 updateHandlerResult.CurrentUserContext.UserInformation.Id = builder.TestUserInformation.Id;
                 updateHandlerResult.CurrentUserContext.UserInformation.UserId = builder.TestUserInformation.UserId;

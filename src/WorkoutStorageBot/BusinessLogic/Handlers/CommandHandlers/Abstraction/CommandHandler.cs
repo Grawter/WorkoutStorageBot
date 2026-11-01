@@ -46,6 +46,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.Abstraction
 
         internal virtual async Task Process(CancellationToken cancellationToken)
         {
+            this.HandlerResult.IsNeedSendResponse = true;
             this.HandlerResult.InformationSet = await GetInformationSet(cancellationToken);
         }
 

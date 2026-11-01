@@ -65,27 +65,29 @@ namespace WorkoutStorageBot.Core.Manager
             HandlerResult handlerResult = new HandlerResult()
             {
                 Update = update,
-                HasAccess = true, // Устанавливаем true, считая любое первоначальное обращение разрешённым (чтобы первый раз пройти условие на .HasAccess) 
+                HasAccess = true, // Считаем любое первоначальное обращение разрешённым
             };
 
             foreach (CoreHandler handler in handlers)
             {
-                if (handlerResult.HasAccess)
+                handlerResult = await handler.Process(handlerResult, cancellationToken);
+
+                if (!handlerResult.HasAccess)
+                    return;
+
+                if (handlerResult is AuthorizedHandlerResult authorizedHandlerResult && authorizedHandlerResult.IsNeedSendResponse)
                 {
-                    handlerResult = await handler.Process(handlerResult, cancellationToken);
+                    if (authorizedHandlerResult.InformationSet == null)
+                        throw new InvalidOperationException($"{nameof(authorizedHandlerResult.IsNeedSendResponse)} is {authorizedHandlerResult.IsNeedSendResponse}, but {nameof(authorizedHandlerResult.InformationSet)} is null");
 
-                    if (handlerResult.IsNeedStopBot)
-                        StopApp(TimeSpan.FromSeconds(2), stopAppMethod);
-
-                    // Перепроверяем доступ, т.к. во время работы очередного обработчика доступ мог быть отозван
-                    if (handlerResult is AuthorizedHandlerResult authorizedHandlerResult && authorizedHandlerResult.InformationSet != null && handlerResult.HasAccess)
-                    {
-                        await BotResponseSender.SendResponse(authorizedHandlerResult.ShortUpdateInfo.ChatId, authorizedHandlerResult.InformationSet, authorizedHandlerResult.CurrentUserContext, cancellationToken);
-
-                        if (!handlerResult.IsNeedContinue)
-                            return;
-                    }
+                    await BotResponseSender.SendResponse(authorizedHandlerResult.ShortUpdateInfo.ChatId, authorizedHandlerResult.InformationSet, authorizedHandlerResult.CurrentUserContext, cancellationToken);
                 }
+
+                if (handlerResult.IsNeedStopBot)
+                    StopApp(TimeSpan.FromSeconds(2), stopAppMethod);
+
+                if (!handlerResult.IsNeedContinue)
+                    return;
             }
         }
 
@@ -137,11 +139,11 @@ namespace WorkoutStorageBot.Core.Manager
             if (exMessage.Length > CoreConsts.Log.ShowLimit)
                 exMessage = $"{exMessage.Substring(0, CoreConsts.Log.ShowLimit)}...";
 
-            await this.BotResponseSender.SendSimpleMassiveNotification(this.coreTools.ConfigurationData.Bot.OwnersChatIDs, 
+            await this.BotResponseSender.SendSimpleMassiveNotification(this.coreTools.ConfigurationData.Bot.OwnersChatIDs,
                                                                        @$"Ошибка во время исполнения. EventID: {eventId.Id}
 ======================
 {exMessage}",
-                                                                       cancellationToken);    
+                                                                       cancellationToken);
         }
 
         private void StopApp(TimeSpan timeSpan, Action<TimeSpan> stopAppMethod)
