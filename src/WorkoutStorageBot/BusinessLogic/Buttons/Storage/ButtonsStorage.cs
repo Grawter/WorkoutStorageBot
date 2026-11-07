@@ -36,7 +36,7 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.Storage
 
                {  ButtonsSet.Settings, (x) => new SettingsBF(x) },
                {  ButtonsSet.SettingCycles, (x) => new SettingCyclesBF(x) },
-               {  ButtonsSet.CycleList, (x) => new CycleListBF(x) },
+               {  ButtonsSet.CyclesList, (x) => new CyclesListBF(x) },
                {  ButtonsSet.SettingCycle, (x) => new SettingCycleBF(x) },
                {  ButtonsSet.SettingDays, (x) => new SettingDaysBF(x) },
                {  ButtonsSet.DaysList, (x) => new DaysListBF(x) },

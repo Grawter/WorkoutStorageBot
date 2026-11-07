@@ -5,7 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Text.Unicode;
-using WorkoutStorageBot.BusinessLogic.Extenions;
+using WorkoutStorageBot.BusinessLogic.Extensions;
 using WorkoutStorageBot.BusinessLogic.Helpers.Stream;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageModels.Entities.BusinessLogic;

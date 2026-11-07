@@ -55,7 +55,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
 
         private IInformationSet BackCommand()
         {
-            string buttonsSetStr = callbackQueryParser.AdditionalParameters.First();
+            string buttonsSetStr = callbackQueryParser.GetRequiredAdditionalParameter(0);
 
             if (!buttonsSetStr.TryParseToEnum(out ButtonsSet previousButtonsSet))
                 throw new InvalidOperationException($"Не удалось получить информацию о шаге по buttonsSetStr = '{buttonsSetStr}'");

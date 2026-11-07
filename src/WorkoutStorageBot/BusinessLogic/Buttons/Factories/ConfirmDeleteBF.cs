@@ -12,10 +12,9 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.Factories
 
         protected override void AddBusinessButtons(Dictionary<string, string>? additionalParameters = null)
         {
-            string domainName = (additionalParameters?["Name"]).ThrowIfNullOrWhiteSpace();
             string domainType = (additionalParameters?["DomainType"]).ThrowIfNullOrWhiteSpace();
 
-            AddInlineButton($"Да, удалить {domainName}", $"2|ConfirmDelete|{domainType}");
+            AddInlineButton($"Да, удалить", $"2|ConfirmDelete|{domainType}");
         }
     }
 }

@@ -44,7 +44,7 @@ namespace WorkoutStorageBot.Core.Manager
 
         private IBotResponseSender BotResponseSender => coreTools.BotResponseSender;
 
-        internal async Task ProcessUpdate(Update update, Action<TimeSpan> stopAppMethod, CancellationToken cancellationToken)
+        internal async Task ProcessUpdate(Update update, Action stopAppMethod, CancellationToken cancellationToken)
         {
             try
             {
@@ -60,20 +60,16 @@ namespace WorkoutStorageBot.Core.Manager
             }
         }
 
-        private async Task StartProcess(Update update, Action<TimeSpan> stopAppMethod, CancellationToken cancellationToken)
+        private async Task StartProcess(Update update, Action stopAppMethod, CancellationToken cancellationToken)
         {
             HandlerResult handlerResult = new HandlerResult()
             {
                 Update = update,
-                HasAccess = true, // Считаем любое первоначальное обращение разрешённым
             };
 
             foreach (CoreHandler handler in handlers)
             {
                 handlerResult = await handler.Process(handlerResult, cancellationToken);
-
-                if (!handlerResult.HasAccess)
-                    return;
 
                 if (handlerResult is AuthorizedHandlerResult authorizedHandlerResult && authorizedHandlerResult.IsNeedSendResponse)
                 {
@@ -84,9 +80,9 @@ namespace WorkoutStorageBot.Core.Manager
                 }
 
                 if (handlerResult.IsNeedStopBot)
-                    StopApp(TimeSpan.FromSeconds(2), stopAppMethod);
+                    await StopApp(TimeSpan.FromSeconds(2), stopAppMethod, cancellationToken);
 
-                if (!handlerResult.IsNeedContinue)
+                if (handlerResult.IsNeedStopFurtherProcessing)
                     return;
             }
         }
@@ -146,14 +142,16 @@ namespace WorkoutStorageBot.Core.Manager
                                                                        cancellationToken);
         }
 
-        private void StopApp(TimeSpan timeSpan, Action<TimeSpan> stopAppMethod)
+        private async Task StopApp(TimeSpan timeSpan, Action stopAppMethod, CancellationToken cancellationToken)
         {
             if (timeSpan.TotalSeconds < 2)
                 timeSpan = TimeSpan.FromSeconds(2);
 
             logger.LogWarning("Инициировано отключение бота");
 
-            stopAppMethod.Invoke(timeSpan);
+            await Task.Delay(timeSpan, cancellationToken);
+
+            stopAppMethod.Invoke();
         }
     }
 }

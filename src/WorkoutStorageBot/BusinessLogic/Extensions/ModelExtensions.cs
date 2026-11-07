@@ -1,7 +1,7 @@
 ﻿using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageModels.Entities.BusinessLogic;
 
-namespace WorkoutStorageBot.BusinessLogic.Extenions
+namespace WorkoutStorageBot.BusinessLogic.Extensions
 {
     internal static class ModelExtensions
     {

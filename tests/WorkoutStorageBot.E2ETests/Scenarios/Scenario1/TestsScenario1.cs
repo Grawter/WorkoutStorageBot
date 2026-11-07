@@ -470,7 +470,7 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
             // Нажатие на кнопку "2"
             await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(1, scenario1BusinessAct4AssertTestsHelper.AssertAct4);
 
-            // Нажатие на кнопку "Сделать активным"
+            // Нажатие на кнопку "Сделать цикл активным"
             await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(0, scenario1BusinessAct4AssertTestsHelper.AssertAct5);
 
             // Нажатие на кнопку "Вернуться к главному меню"
@@ -608,19 +608,19 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
             // Нажатие на кнопку "222"
             await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(1, scenario1BusinessAct5AssertTestsHelper.AssertAct10);
 
-            // Нажатие на кнопку "Сменить название"
+            // Нажатие на кнопку "Сменить название упражнения"
             await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(0, scenario1BusinessAct5AssertTestsHelper.AssertAct11);
 
             // Ввод нового названия для упражения "222"
             await CreateMessageUpdateThenStartProcessThenAssertResult("222ToDelete", scenario1BusinessAct5AssertTestsHelper.AssertAct12);
 
-            // Нажатие на кнопку "Сменить тип"
+            // Нажатие на кнопку "Сменить тип упражнения"
             await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(1, scenario1BusinessAct5AssertTestsHelper.AssertAct13);
 
             // Нажатие на кнопку "Режим: таймер"
             await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(2, scenario1BusinessAct5AssertTestsHelper.AssertAct14);
 
-            // Нажатие на кнопку "Добавить в архив"
+            // Нажатие на кнопку "Добавить упражнение в архив"
             await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(3, scenario1BusinessAct5AssertTestsHelper.AssertAct15);
 
             // Нажатие на кнопку "Назад"
@@ -677,10 +677,10 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
             // Ввод кол-ва последних результатов упражения "222ToDelete" для удаления 
             await CreateMessageUpdateThenStartProcessThenAssertResult("1", scenario1BusinessAct5AssertTestsHelper.AssertAct23);
 
-            // Нажатие на кнопку "Удалить"
+            // Нажатие на кнопку "Удалить упражнение"
             await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(4, scenario1BusinessAct5AssertTestsHelper.AssertAct24);
 
-            // Нажатие на кнопку "Да, удалить упражнение"
+            // Нажатие на кнопку "Да, удалить"
             await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(0, scenario1BusinessAct5AssertTestsHelper.AssertAct25);
 
             // Нажатие на кнопку "221"
@@ -689,14 +689,11 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
             // Нажатие на кнопку "Перенести упражнение"
             await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(2, scenario1BusinessAct5AssertTestsHelper.AssertAct27);
 
-            // Нажатие на кнопку "21[Id:3]"
+            // Нажатие на кнопку "21[Id:3, CycleId:2]"
             await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(2, scenario1BusinessAct5AssertTestsHelper.AssertAct28);
 
-            // Нажатие на кнопку "Назад"
-            await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(-1, scenario1BusinessAct5AssertTestsHelper.AssertAct29);
-
             // Нажатие на кнопку "Вернуться к главному меню"
-            await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(2, scenario1BusinessAct5AssertTestsHelper.AssertAct30);
+            await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(5, scenario1BusinessAct5AssertTestsHelper.AssertAct29);
         }
 
         /// <summary>
@@ -738,13 +735,13 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
             // Нажатие на кнопку "22"
             await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(1, scenario1BusinessAct6AssertTestsHelper.AssertAct7);
 
-            // Нажатие на кнопку "Сменить название"
+            // Нажатие на кнопку "Сменить название дня"
             await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(0, scenario1BusinessAct6AssertTestsHelper.AssertAct8);
 
             // Ввод нового названия для дня "22"
             await CreateMessageUpdateThenStartProcessThenAssertResult("22ToDelete", scenario1BusinessAct6AssertTestsHelper.AssertAct9);
 
-            // Нажатие на кнопку "Добавить в архив"
+            // Нажатие на кнопку "Добавить день в архив"
             await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(2, scenario1BusinessAct6AssertTestsHelper.AssertAct10);
 
             // Нажатие на кнопку "Назад"
@@ -786,10 +783,10 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
             // Нажатие на кнопку "22ToDelete"
             await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(1, scenario1BusinessAct6AssertTestsHelper.AssertAct16);
 
-            // Нажатие на кнопку "Удалить"
+            // Нажатие на кнопку "Удалить день"
             await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(3, scenario1BusinessAct6AssertTestsHelper.AssertAct17);
 
-            // Нажатие на кнопку "Да, удалить день"
+            // Нажатие на кнопку "Да, удалить"
             await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(0, scenario1BusinessAct6AssertTestsHelper.AssertAct18);
 
             // Нажатие на кнопку "21"
@@ -801,11 +798,8 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
             // Нажатие на кнопку "1[Id:1]"
             await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(0, scenario1BusinessAct6AssertTestsHelper.AssertAct21);
 
-            // Нажатие на кнопку "Назад"
-            await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(-1, scenario1BusinessAct6AssertTestsHelper.AssertAct22);
-
             // Нажатие на кнопку "Вернуться к главному меню"
-            await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(2, scenario1BusinessAct6AssertTestsHelper.AssertAct23);
+            await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(5, scenario1BusinessAct6AssertTestsHelper.AssertAct23);
         }
 
         /// <summary>
@@ -835,7 +829,7 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
             // Нажатие на кнопку "1"
             await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(0, scenario1BusinessAct7AssertTestsHelper.AssertAct4);
 
-            // Нажатие на кнопку "Сделать активным"
+            // Нажатие на кнопку "Сделать цикл активным"
             await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(0, scenario1BusinessAct7AssertTestsHelper.AssertAct5);
 
             // Нажатие на кнопку "Назад"
@@ -847,13 +841,13 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
             // Нажатие на кнопку "2"
             await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(1, scenario1BusinessAct7AssertTestsHelper.AssertAct7);
 
-            // Нажатие на кнопку "Сменить название"
+            // Нажатие на кнопку "Сменить название цикла"
             await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(1, scenario1BusinessAct7AssertTestsHelper.AssertAct8);
 
             // Ввод нового названия для цикла "2"
             await CreateMessageUpdateThenStartProcessThenAssertResult("2ToDelete", scenario1BusinessAct7AssertTestsHelper.AssertAct9);
 
-            // Нажатие на кнопку "Добавить в архив"
+            // Нажатие на кнопку "Добавить цикл в архив"
             await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(2, scenario1BusinessAct7AssertTestsHelper.AssertAct10);
 
             // Нажатие на кнопку "Назад"
@@ -883,10 +877,10 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
             // Нажатие на кнопку "2ToDelete"
             await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(1, scenario1BusinessAct7AssertTestsHelper.AssertAct15);
 
-            // Нажатие на кнопку "Удалить"
+            // Нажатие на кнопку "Удалить цикл"
             await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(3, scenario1BusinessAct7AssertTestsHelper.AssertAct16);
 
-            // Нажатие на кнопку "Да, удалить цикл"
+            // Нажатие на кнопку "Да, удалить"
             await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(0, scenario1BusinessAct7AssertTestsHelper.AssertAct17);
 
             // Нажатие на кнопку "Назад"
@@ -980,7 +974,7 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
             // Нажатие на кнопку "thirdCycle"
             await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(1, scenario1BusinessAct8AssertTestsHelper.AssertAct7);
 
-            // Нажатие на кнопку "Сделать активным"
+            // Нажатие на кнопку "Сделать цикл активным"
             await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(0, scenario1BusinessAct8AssertTestsHelper.AssertAct19);
 
             // Нажатие на кнопку "Вернуться к главному меню"
@@ -1027,7 +1021,7 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
             // Нажатие на кнопку "Удалить свой аккаунт"
             await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(3, scenario1BusinessAct9AssertTestsHelper.AssertAct2);
 
-            // Нажатие на кнопку "Да, удалить аккаунт"
+            // Нажатие на кнопку "Да, удалить"
             await CreateCallBackUpdateBySpecifiedButtonIndexThenStartProcessThenAssertResults(0, scenario1BusinessAct9AssertTestsHelper.AssertAct3, false);
 
             // Любое обращение к боту после удаления аккаунта считается первым для юзера

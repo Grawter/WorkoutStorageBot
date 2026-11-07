@@ -9,7 +9,7 @@ using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Context.Global;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Enums;
-using WorkoutStorageBot.BusinessLogic.Extenions;
+using WorkoutStorageBot.BusinessLogic.Extensions;
 using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackCommandHandler.Context;
 using WorkoutStorageBot.BusinessLogic.Helpers.CallbackQueryParser;
 using WorkoutStorageBot.Core.Extensions;
@@ -85,7 +85,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                 HandlerResult = new UpdateHandlerResult()
                 {
                     CurrentUserContext = userContext,
-                    HasAccess = true,
                     Update = update,
                     ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.CallbackQuery, true)
                 },
@@ -114,7 +113,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 
             commandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
 
-            InformationSet.Message.Should().Be("Выберите тренировочный день из цикла \"<b>TestCycle</b>\"");
+            InformationSet.Message.Should().Be("Выберите тренировочный день или посмотрите предыдущие результаты из цикла \"<b>TestCycle</b>\"");
             InformationSet.ButtonsSets.Should().Be((ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main));
             InformationSet.ParseMode.Should().Be(ParseMode.Html);
             InformationSet.AdditionalParameters.Should().BeNull();
@@ -178,7 +177,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 Повторения: ({addedResultExercise?.Count})
 ======================
 
-Выберите тренировочный день из цикла ""<b>{addedResultExercise?.Exercise?.Day?.Cycle?.Name}</b>""
+Выберите тренировочный день или посмотрите предыдущие результаты из цикла ""<b>{addedResultExercise?.Exercise?.Day?.Cycle?.Name}</b>""
 ");
                         }
                         else
@@ -188,7 +187,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 Не удалось получить результаты последней тренировки
 ======================
 
-Выберите тренировочный день из цикла ""<b>{builder.TestCycle.Name}</b>""
+Выберите тренировочный день или посмотрите предыдущие результаты из цикла ""<b>{builder.TestCycle.Name}</b>""
 ");
                         }
 
@@ -205,7 +204,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 Повторения: ({addedResultExercise?.Count})
 ======================
 
-Выберите упражнение из дня <b>{addedResultExercise?.Exercise?.Day?.Name}</b> (<b>{addedResultExercise?.Exercise?.Day?.Cycle?.Name}</b>)
+Выберите упражнение или посмотрите предыдущие результаты дня <b>{addedResultExercise?.Exercise?.Day?.Name}</b> (<b>{addedResultExercise?.Exercise?.Day?.Cycle?.Name}</b>)
 ");
                         }
                         else
@@ -215,7 +214,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 Нет информации для данного дня
 ======================
 
-Выберите упражнение из дня <b>{builder.TestDay.Name}</b> (<b>{builder.TestCycle.Name}</b>)
+Выберите упражнение или посмотрите предыдущие результаты дня <b>{builder.TestDay.Name}</b> (<b>{builder.TestCycle.Name}</b>)
 ");
                         }
 
@@ -328,7 +327,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                     InformationSet.Message.Should().Be($@"Не удалось найти данные, т.к. не удалось распарсить дату '{date}'
 ======================
 
-Выберите упражнение из дня  ""<b>{builder.TestDay.Name}</b>"" (<b>{builder.TestCycle.Name}</b>)
+Выберите упражнение или посмотрите предыдущие результаты дня ""<b>{builder.TestDay.Name}</b>"" (<b>{builder.TestCycle.Name}</b>)
 ");
                     InformationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.ExercisesListWithLastWorkoutForDay));
                 }
@@ -337,7 +336,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                     InformationSet.Message.Should().Be($@"Не удалось найти данные, т.к. не удалось распарсить дату '{date}'
 ======================
 
-Выберите тренировочный день из цикла ""<b>{builder.TestCycle.Name}</b>""
+Выберите тренировочный день или посмотрите предыдущие результаты из цикла ""<b>{builder.TestCycle.Name}</b>""
 ");
                     InformationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.DaysListWithLastWorkout));
                 }
@@ -353,7 +352,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 Повторения: ({addedResultExercise?.Count})
 ======================
 
-Выберите упражнение из дня ""<b>{addedResultExercise?.Exercise?.Day?.Name}</b>"" (<b>{addedResultExercise?.Exercise?.Day?.Cycle?.Name}</b>)
+Выберите упражнение или посмотрите предыдущие результаты дня ""<b>{addedResultExercise?.Exercise?.Day?.Name}</b>"" (<b>{addedResultExercise?.Exercise?.Day?.Cycle?.Name}</b>)
 ");
                     InformationSet.ButtonsSets.Should().Be((ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout));
                 }
@@ -366,7 +365,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 Повторения: ({addedResultExercise?.Count})
 ======================
 
-Выберите тренировочный день из цикла ""<b>{addedResultExercise?.Exercise?.Day?.Cycle?.Name}</b>""
+Выберите тренировочный день или посмотрите предыдущие результаты из цикла ""<b>{addedResultExercise?.Exercise?.Day?.Cycle?.Name}</b>""
 ");
                     InformationSet.ButtonsSets.Should().Be((ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main));
                 }
@@ -500,7 +499,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
             InformationSet.Message.Should().Be($@"Результат упражнения '""<b>{builder.TestExercise.Name}</b>""' был сброшен
 ======================
 
-Выберите упражнение из дня <b>{builder.TestDay.Name}</b> (<b>{builder.TestCycle.Name}</b>)
+Выберите упражнение или посмотрите предыдущие результаты дня <b>{builder.TestDay.Name}</b> (<b>{builder.TestCycle.Name}</b>)
 ");
 
             InformationSet.ButtonsSets.Should().Be((ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout));
@@ -518,8 +517,8 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 
             WorkoutCH commonCH = new WorkoutCH(commandHandlerTools, callbackQueryParser);
 
+            CurrentUserContext.DataManager.SetCurrentDomain(builder.TestDay.ToDTODay());
             CurrentUserContext.DataManager.SetCurrentDomain(builder.TestExercise.ToDTOExercise());
-
             CurrentUserContext.DataManager.AddTempResultsExercise([new DTOResultExercise() { Count = 1, DateTime = DateTime.Now, ExerciseId = builder.TestExercise.Id }]);
 
             // Act
@@ -540,10 +539,10 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 
             commandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
 
-            InformationSet.Message.Should().Be($@"Введённые данные сохранены!
+            InformationSet.Message.Should().Be($@"Введённые данные сохранены
 ======================
 
-Выберите упражнение
+Выберите упражнение или посмотрите предыдущие результаты дня {commandHandlerTools.HandlerResult.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()}
 ");
 
             InformationSet.ButtonsSets.Should().Be((ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout));

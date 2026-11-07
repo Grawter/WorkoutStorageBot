@@ -1,6 +1,5 @@
 ﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using WorkoutStorageBot.BusinessLogic.Extenions;
 using WorkoutStorageBot.BusinessLogic.Extensions;
 using WorkoutStorageBot.Model.AppContext;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;

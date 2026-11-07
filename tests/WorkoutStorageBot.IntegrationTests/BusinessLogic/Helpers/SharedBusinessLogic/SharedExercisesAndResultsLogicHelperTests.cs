@@ -1,7 +1,7 @@
 ﻿using FluentAssertions;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Enums;
-using WorkoutStorageBot.BusinessLogic.Extenions;
+using WorkoutStorageBot.BusinessLogic.Extensions;
 using WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic;
 using WorkoutStorageBot.Model.AppContext;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
@@ -73,7 +73,7 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Helpers.SharedBusines
 => 123
 ======================
 
-Выберите упражнение из дня ""<b>TestDay</b>"" (<b>TestCycle</b>)
+Выберите упражнение или посмотрите предыдущие результаты дня ""<b>TestDay</b>"" (<b>TestCycle</b>)
 ";
 
             // Act
@@ -268,7 +268,7 @@ namespace WorkoutStorageBot.IntegrationTests.BusinessLogic.Helpers.SharedBusines
 => 123
 ======================
 
-Выберите тренировочный день из цикла ""<b>TestCycle</b>""
+Выберите тренировочный день или посмотрите предыдущие результаты из цикла ""<b>TestCycle</b>""
 ";
 
             // Act

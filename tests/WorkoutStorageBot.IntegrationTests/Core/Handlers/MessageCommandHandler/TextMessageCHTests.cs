@@ -10,10 +10,8 @@ using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Context.Global;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Enums;
-using WorkoutStorageBot.BusinessLogic.Extenions;
 using WorkoutStorageBot.BusinessLogic.Extensions;
 using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageCommandHandler.Context;
-using WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers;
 using WorkoutStorageBot.BusinessLogic.Helpers.Converters;
 using WorkoutStorageBot.Core.Extensions;
 using WorkoutStorageBot.Core.Logging;
@@ -96,7 +94,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                 HandlerResult = new UpdateHandlerResult()
                 {
                     CurrentUserContext = localUserContext,
-                    HasAccess = true,
                     Update = update,
                     ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.Message, true)
                 },
@@ -190,7 +187,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                 HandlerResult = new UpdateHandlerResult()
                 {
                     CurrentUserContext = localUserContext,
-                    HasAccess = true,
                     Update = update,
                     ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.Message, true)
                 },
@@ -276,7 +272,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                     {
                         localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.AddDays);
 
-                        informationSet.Message.Should().Be(@$"Цикл {data.AddBoldAndQuotes()} сохранён!
+                        informationSet.Message.Should().Be(@$"Цикл {data.AddBoldAndQuotes()} сохранён
 ======================
 
 Введите название тренирочного дня для цикла {data.AddBoldAndQuotes()}
@@ -287,7 +283,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                     {
                         localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
-                        informationSet.Message.Should().Be(@$"Цикл {data.AddBoldAndQuotes()} сохранён!
+                        informationSet.Message.Should().Be(@$"Цикл {data.AddBoldAndQuotes()} сохранён
 ======================
 
 Выберите дальнейшие действия
@@ -340,7 +336,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                 HandlerResult = new UpdateHandlerResult()
                 {
                     CurrentUserContext = localUserContext,
-                    HasAccess = true,
                     Update = update,
                     ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.Message, true)
                 },
@@ -421,7 +416,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                     {
                         localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.AddExercises);
 
-                        informationSet.Message.Should().Be(@$"День {data.AddBoldAndQuotes()} сохранён в цикле {builder.TestCycle.Name}!
+                        informationSet.Message.Should().Be(@$"День {data.AddBoldAndQuotes()} сохранён в цикле {builder.TestCycle.Name.AddBold()}
 ======================
 Введите название упражения для этого дня.
 Доступные типы упражений:
@@ -443,7 +438,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                     {
                         localCommandHandlerTools.HandlerResult.CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
 
-                        informationSet.Message.Should().Be(@$"День {data.AddBoldAndQuotes()} сохранён в цикле {builder.TestCycle.Name}!");
+                        informationSet.Message.Should().Be(@$"День {data.AddBoldAndQuotes()} сохранён в цикле {builder.TestCycle.Name.AddBold()}");
                         informationSet.ButtonsSets.Should().Be((ButtonsSet.AddExercises, ButtonsSet.SettingDays));
                     }
 
@@ -489,7 +484,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                 HandlerResult = new UpdateHandlerResult()
                 {
                     CurrentUserContext = localUserContext,
-                    HasAccess = true,
                     Update = update,
                     ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.Message, true)
                 },
@@ -700,7 +694,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                 HandlerResult = new UpdateHandlerResult()
                 {
                     CurrentUserContext = localUserContext,
-                    HasAccess = true,
                     Update = update,
                     ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.Message, true)
                 },
@@ -827,7 +820,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                 }
                 else
                 {
-                    informationSet.Message.Should().Be(@$"Упражнение(я) зафиксировано(ы)!
+                    informationSet.Message.Should().Be(@$"Упражнение(я) зафиксировано(ы)
 ======================
 
 Введите след. упражнение(я) для дня {builder.TestDay.Name.AddBoldAndQuotes()} либо нажмите ""Сохранить"" для сохранения зафиксированных упражнений
@@ -875,7 +868,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                 HandlerResult = new UpdateHandlerResult()
                 {
                     CurrentUserContext = localUserContext,
-                    HasAccess = true,
                     Update = update,
                     ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.Message, true)
                 },
@@ -975,7 +967,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                 HandlerResult = new UpdateHandlerResult()
                 {
                     CurrentUserContext = localUserContext,
-                    HasAccess = true,
                     Update = update,
                     ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.Message, true)
                 },
@@ -1014,10 +1005,10 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
 
             informationSet.Message.Should().Be(@$"<b>{freeResult} / {data}</b>
 ======================
-Введённые данные сохранены!
+Введённые данные сохранены
 ======================
 
-Выберите упражнение
+Выберите упражнение или посмотрите предыдущие результаты дня {localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()}
 ");
 
             informationSet.ButtonsSets.Should().Be((ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout));
@@ -1103,7 +1094,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                 HandlerResult = new UpdateHandlerResult()
                 {
                     CurrentUserContext = localUserContext,
-                    HasAccess = true,
                     Update = update,
                     ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.Message, true)
                 },
@@ -1216,7 +1206,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
 
                         informationSet.Message.Should().Be(@$"Название цикла сохранено!");
 
-                        informationSet.ButtonsSets.Should().Be((ButtonsSet.SettingCycle, ButtonsSet.CycleList));
+                        informationSet.ButtonsSets.Should().Be((ButtonsSet.SettingCycle, ButtonsSet.CyclesList));
                     }
                     else if (messageNavigationTarget == MessageNavigationTarget.ChangeNameDay)
                     {
@@ -1295,7 +1285,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                 HandlerResult = new UpdateHandlerResult()
                 {
                     CurrentUserContext = localUserContext,
-                    HasAccess = true,
                     Update = update,
                     ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.Message, true)
                 },
@@ -1353,7 +1342,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
 Повторения: (10)
 ======================
 
-Выберите упражнение из дня {builder.TestDay.Name.AddBoldAndQuotes()} ({builder.TestCycle.Name.AddBold()})
+Выберите упражнение или посмотрите предыдущие результаты дня {builder.TestDay.Name.AddBoldAndQuotes()} ({builder.TestCycle.Name.AddBold()})
 ");
 
                     informationSet.ButtonsSets.Should().Be((ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout));
@@ -1367,7 +1356,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
 Повторения: (10)
 ======================
 
-Выберите тренировочный день из цикла {builder.TestCycle.Name.AddBoldAndQuotes()}
+Выберите тренировочный день или посмотрите предыдущие результаты из цикла {builder.TestCycle.Name.AddBoldAndQuotes()}
 ");
 
                     informationSet.ButtonsSets.Should().Be((ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main));
@@ -1418,7 +1407,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                 HandlerResult = new UpdateHandlerResult()
                 {
                     CurrentUserContext = localUserContext,
-                    HasAccess = true,
                     Update = update,
                     ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.Message, true)
                 },
@@ -1530,7 +1518,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                 HandlerResult = new UpdateHandlerResult()
                 {
                     CurrentUserContext = localUserContext,
-                    HasAccess = true,
                     Update = update,
                     ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.Message, true)
                 },
@@ -1628,7 +1615,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                 HandlerResult = new UpdateHandlerResult()
                 {
                     CurrentUserContext = localUserContext,
-                    HasAccess = true,
                     Update = update,
                     ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.Message, true)
                 },
@@ -1702,7 +1688,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                 HandlerResult = new UpdateHandlerResult()
                 {
                     CurrentUserContext = localUserContext,
-                    HasAccess = true,
                     Update = update,
                     ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.Message, true)
                 },
@@ -1828,7 +1813,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                 HandlerResult = new UpdateHandlerResult()
                 {
                     CurrentUserContext = localUserContext,
-                    HasAccess = true,
                     Update = update,
                     ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.Message, true)
                 },
@@ -1931,7 +1915,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
                 HandlerResult = new UpdateHandlerResult()
                 {
                     CurrentUserContext = localUserContext,
-                    HasAccess = true,
                     Update = update,
                     ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.Message, true)
                 },
@@ -2003,7 +1986,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MessageCommandHandler
 
                 int resultExercisesCountToDelete = allResultsCount - remainingResultExercisesCount;
 
-                informationSet.Message.Should().Be(@$"Было удалено {resultExercisesCountToDelete} строк
+                informationSet.Message.Should().Be(@$"Записей удалено: {resultExercisesCountToDelete}
 ======================
 
 Выберите интересуюущую настройку для упражения {localUserContext.DataManager.CurrentExercise.ThrowIfNull().Name.AddBoldAndQuotes()}

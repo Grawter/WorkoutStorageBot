@@ -98,7 +98,6 @@ namespace WorkoutStorageBot.E2ETests.Scenarios
             HandlerResult handlerResult = new HandlerResult()
             {
                 Update = update,
-                HasAccess = true, // Считаем любое первоначальное обращение разрешённым
             };
 
             List<HandlerResult> handlerResults = new List<HandlerResult>();
@@ -108,9 +107,6 @@ namespace WorkoutStorageBot.E2ETests.Scenarios
                 HandlerResult newHandlerResult = await handler.Process(handlerResult, cancellationToken);
                 handlerResults.Add(newHandlerResult);
                 handlerResult = newHandlerResult;
-
-                if (!handlerResult.HasAccess)
-                    return handlerResults;
 
                 if (handlerResult is AuthorizedHandlerResult authorizedHandlerResult && authorizedHandlerResult.IsNeedSendResponse)
                 {
@@ -122,7 +118,7 @@ namespace WorkoutStorageBot.E2ETests.Scenarios
                 if (handlerResult.IsNeedStopBot)
                     true.Should().BeFalse("Нереализуемо в тестах");
 
-                if (!handlerResult.IsNeedContinue)
+                if (handlerResult.IsNeedStopFurtherProcessing)
                     return handlerResults;
             }
 

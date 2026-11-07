@@ -69,7 +69,7 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
             UpdateHandlerResult updateHandlerResult = (UpdateHandlerResult)handlerResults[1];
 
             updateHandlerResult.InformationSet.Should().NotBeNull();
-            updateHandlerResult.InformationSet.Message.Should().Be($"Выберите тренировочный день из цикла {firstCycleName.AddBoldAndQuotes()}");
+            updateHandlerResult.InformationSet.Message.Should().Be($"Выберите тренировочный день или посмотрите предыдущие результаты из цикла {firstCycleName.AddBoldAndQuotes()}");
             updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main));
             updateHandlerResult.InformationSet.ParseMode.Should().Be(ParseMode.Html);
             updateHandlerResult.InformationSet.AdditionalParameters.Should().BeNull();
@@ -90,7 +90,7 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
             UpdateHandlerResult updateHandlerResult = (UpdateHandlerResult)handlerResults[1];
 
             updateHandlerResult.InformationSet.Should().NotBeNull();
-            updateHandlerResult.InformationSet.Message.Should().Be($"Выберите упражнение из дня {firstDayNameInFirstCycle.AddBoldAndQuotes()} ({firstCycleName.AddBold()})");
+            updateHandlerResult.InformationSet.Message.Should().Be($"Выберите упражнение или посмотрите предыдущие результаты дня {firstDayNameInFirstCycle.AddBoldAndQuotes()} ({firstCycleName.AddBold()})");
             updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout));
             updateHandlerResult.InformationSet.ParseMode.Should().Be(ParseMode.Html);
             updateHandlerResult.InformationSet.AdditionalParameters.Should().BeNull();
@@ -173,10 +173,10 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
             UpdateHandlerResult updateHandlerResult = (UpdateHandlerResult)handlerResults[1];
 
             updateHandlerResult.InformationSet.Should().NotBeNull();
-            updateHandlerResult.InformationSet.Message.Should().Be(@$"Введённые данные сохранены!
+            updateHandlerResult.InformationSet.Message.Should().Be(@$"Введённые данные сохранены
 ======================
 
-Выберите упражнение
+Выберите упражнение или посмотрите предыдущие результаты дня {firstDayNameInFirstCycle.AddBoldAndQuotes()}
 ");
             updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout));
             updateHandlerResult.InformationSet.ParseMode.Should().Be(ParseMode.Html);
@@ -205,7 +205,7 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
 Повторения: (10)
 ======================
 
-Выберите упражнение из дня {firstDayNameInFirstCycle.AddBold()} ({firstCycleName.AddBold()})
+Выберите упражнение или посмотрите предыдущие результаты дня {firstDayNameInFirstCycle.AddBold()} ({firstCycleName.AddBold()})
 ");
             updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout));
             updateHandlerResult.InformationSet.ParseMode.Should().Be(ParseMode.Html);
@@ -291,10 +291,10 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
             UpdateHandlerResult updateHandlerResult = (UpdateHandlerResult)handlerResults[1];
 
             updateHandlerResult.InformationSet.Should().NotBeNull();
-            updateHandlerResult.InformationSet.Message.Should().Be(@$"Введённые данные сохранены!
+            updateHandlerResult.InformationSet.Message.Should().Be(@$"Введённые данные сохранены
 ======================
 
-Выберите упражнение
+Выберите упражнение или посмотрите предыдущие результаты дня {firstDayNameInFirstCycle.AddBoldAndQuotes()}
 ");
             updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout));
             updateHandlerResult.InformationSet.ParseMode.Should().Be(ParseMode.Html);
@@ -350,7 +350,7 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
 Повторения: (20) => Вес: (10)
 ======================
 
-Выберите упражнение из дня {firstDayNameInFirstCycle.AddBoldAndQuotes()} ({firstCycleName.AddBold()})
+Выберите упражнение или посмотрите предыдущие результаты дня {firstDayNameInFirstCycle.AddBoldAndQuotes()} ({firstCycleName.AddBold()})
 ");
             updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout));
             updateHandlerResult.InformationSet.ParseMode.Should().Be(ParseMode.Html);
@@ -372,7 +372,7 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
             UpdateHandlerResult updateHandlerResult = (UpdateHandlerResult)handlerResults[1];
 
             updateHandlerResult.InformationSet.Should().NotBeNull();
-            updateHandlerResult.InformationSet.Message.Should().Be(@$"Выберите тренировочный день из цикла {firstCycleName.AddBoldAndQuotes()}");
+            updateHandlerResult.InformationSet.Message.Should().Be(@$"Выберите тренировочный день или посмотрите предыдущие результаты из цикла {firstCycleName.AddBoldAndQuotes()}");
             updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main));
             updateHandlerResult.InformationSet.ParseMode.Should().Be(ParseMode.Html);
             updateHandlerResult.InformationSet.AdditionalParameters.Should().BeNull();
@@ -393,7 +393,7 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
             UpdateHandlerResult updateHandlerResult = (UpdateHandlerResult)handlerResults[1];
 
             updateHandlerResult.InformationSet.Should().NotBeNull();
-            updateHandlerResult.InformationSet.Message.Should().Be(@$"Выберите упражнение из дня {secondDayNameInFirstCycle.AddBoldAndQuotes()} ({firstCycleName.AddBold()})");
+            updateHandlerResult.InformationSet.Message.Should().Be(@$"Выберите упражнение или посмотрите предыдущие результаты дня {secondDayNameInFirstCycle.AddBoldAndQuotes()} ({firstCycleName.AddBold()})");
             updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout));
             updateHandlerResult.InformationSet.ParseMode.Should().Be(ParseMode.Html);
             updateHandlerResult.InformationSet.AdditionalParameters.Should().BeNull();
@@ -476,10 +476,10 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
             UpdateHandlerResult updateHandlerResult = (UpdateHandlerResult)handlerResults[1];
 
             updateHandlerResult.InformationSet.Should().NotBeNull();
-            updateHandlerResult.InformationSet.Message.Should().Be(@$"Введённые данные сохранены!
+            updateHandlerResult.InformationSet.Message.Should().Be(@$"Введённые данные сохранены
 ======================
 
-Выберите упражнение
+Выберите упражнение или посмотрите предыдущие результаты дня {secondDayNameInFirstCycle.AddBoldAndQuotes()}
 ");
             updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout));
             updateHandlerResult.InformationSet.ParseMode.Should().Be(ParseMode.Html);
@@ -508,7 +508,7 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
 => TestValue121
 ======================
 
-Выберите упражнение из дня {secondDayNameInFirstCycle.AddBold()} ({firstCycleName.AddBold()})
+Выберите упражнение или посмотрите предыдущие результаты дня {secondDayNameInFirstCycle.AddBold()} ({firstCycleName.AddBold()})
 ");
             updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout));
             updateHandlerResult.InformationSet.ParseMode.Should().Be(ParseMode.Html);
@@ -592,10 +592,10 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
             UpdateHandlerResult updateHandlerResult = (UpdateHandlerResult)handlerResults[1];
 
             updateHandlerResult.InformationSet.Should().NotBeNull();
-            updateHandlerResult.InformationSet.Message.Should().Be(@$"Введённые данные сохранены!
+            updateHandlerResult.InformationSet.Message.Should().Be(@$"Введённые данные сохранены
 ======================
 
-Выберите упражнение
+Выберите упражнение или посмотрите предыдущие результаты дня {secondDayNameInFirstCycle.AddBoldAndQuotes()}
 ");
             updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout));
             updateHandlerResult.InformationSet.ParseMode.Should().Be(ParseMode.Html);
@@ -651,7 +651,7 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
 => TestValue122
 ======================
 
-Выберите упражнение из дня {secondDayNameInFirstCycle.AddBoldAndQuotes()} ({firstCycleName.AddBold()})
+Выберите упражнение или посмотрите предыдущие результаты дня {secondDayNameInFirstCycle.AddBoldAndQuotes()} ({firstCycleName.AddBold()})
 ");
             updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout));
             updateHandlerResult.InformationSet.ParseMode.Should().Be(ParseMode.Html);
@@ -673,7 +673,7 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
             UpdateHandlerResult updateHandlerResult = (UpdateHandlerResult)handlerResults[1];
 
             updateHandlerResult.InformationSet.Should().NotBeNull();
-            updateHandlerResult.InformationSet.Message.Should().Be(@$"Выберите тренировочный день из цикла {firstCycleName.AddBoldAndQuotes()}");
+            updateHandlerResult.InformationSet.Message.Should().Be(@$"Выберите тренировочный день или посмотрите предыдущие результаты из цикла {firstCycleName.AddBoldAndQuotes()}");
             updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main));
             updateHandlerResult.InformationSet.ParseMode.Should().Be(ParseMode.Html);
             updateHandlerResult.InformationSet.AdditionalParameters.Should().BeNull();
@@ -707,7 +707,7 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
 => TestValue122
 ======================
 
-Выберите тренировочный день из цикла {firstCycleName.AddBoldAndQuotes()}
+Выберите тренировочный день или посмотрите предыдущие результаты из цикла {firstCycleName.AddBoldAndQuotes()}
 ");
             updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main));
             updateHandlerResult.InformationSet.ParseMode.Should().Be(ParseMode.Html);
@@ -767,7 +767,7 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
 => TestValue122
 ======================
 
-Выберите тренировочный день из цикла {firstCycleName.AddBoldAndQuotes()}
+Выберите тренировочный день или посмотрите предыдущие результаты из цикла {firstCycleName.AddBoldAndQuotes()}
 ");
             updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main));
             updateHandlerResult.InformationSet.ParseMode.Should().Be(ParseMode.Html);

@@ -7,7 +7,7 @@ using WorkoutStorageBot.Application.Configuration;
 using WorkoutStorageBot.BusinessLogic.Context.Global;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Enums;
-using WorkoutStorageBot.BusinessLogic.Extenions;
+using WorkoutStorageBot.BusinessLogic.Extensions;
 using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackCommandHandler.Context;
 using WorkoutStorageBot.BusinessLogic.Helpers.CallbackQueryParser;
 using WorkoutStorageBot.Core.Extensions;
@@ -79,7 +79,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                 HandlerResult = new UpdateHandlerResult()
                 {
                     CurrentUserContext = userContext,
-                    HasAccess = true,
                     Update = update,
                     ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.CallbackQuery, true)
                 },
@@ -131,7 +130,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 
             commandHandlerTools.HandlerResult.IsNeedSendResponse.Should().BeTrue();
 
-            InformationSet.Message.Should().Be("Выберите тренировочный день из цикла \"<b>testCycle</b>\"");
+            InformationSet.Message.Should().Be("Выберите тренировочный день или посмотрите предыдущие результаты из цикла \"<b>testCycle</b>\"");
             InformationSet.ButtonsSets.Should().Be((ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main));
             InformationSet.ParseMode.Should().Be(ParseMode.Html);
             InformationSet.AdditionalParameters.Should().BeNull();

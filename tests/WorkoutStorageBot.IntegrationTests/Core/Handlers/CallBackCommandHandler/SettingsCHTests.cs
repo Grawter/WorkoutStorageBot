@@ -8,7 +8,6 @@ using WorkoutStorageBot.Application.Configuration;
 using WorkoutStorageBot.BusinessLogic.Context.Global;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Enums;
-using WorkoutStorageBot.BusinessLogic.Extenions;
 using WorkoutStorageBot.BusinessLogic.Extensions;
 using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackCommandHandler.Context;
 using WorkoutStorageBot.BusinessLogic.Helpers.CallbackQueryParser;
@@ -95,7 +94,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                 HandlerResult = new UpdateHandlerResult()
                 {
                     CurrentUserContext = userContext,
-                    HasAccess = true,
                     Update = update,
                     ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.CallbackQuery, true)
                 },
@@ -399,7 +397,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                     HandlerResult = new UpdateHandlerResult()
                     {
                         CurrentUserContext = localUserContext,
-                        HasAccess = true,
                         Update = update,
                         ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.CallbackQuery, true)
                     },
@@ -723,7 +720,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 
                     CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.Start);
 
-                    InformationSet.Message.Should().Be(@"Упражнения сохранены!
+                    InformationSet.Message.Should().Be(@"Упражнения сохранены
 ======================
 
 Выберите дальнейшее действие
@@ -738,7 +735,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 
                     CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.Settings);
 
-                    InformationSet.Message.Should().Be($@"Упражнения сохранены!
+                    InformationSet.Message.Should().Be($@"Упражнения сохранены
 ======================
 
 Выберите интересующие настройки для упражнений из дня ""<b>{CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name}</b>"" (<b>{CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name}</b>)
@@ -787,7 +784,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                 {
                     // Assert
                     InformationSet.Message.Should().Be("Выберите интересующий цикл");
-                    InformationSet.ButtonsSets.Should().Be((ButtonsSet.CycleList, ButtonsSet.SettingCycles));
+                    InformationSet.ButtonsSets.Should().Be((ButtonsSet.CyclesList, ButtonsSet.SettingCycles));
 
                 }
                 else if (domainType == "Days")
@@ -860,7 +857,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                     CurrentUserContext.DataManager.CurrentCycle.Id.Should().Be(domainID);
 
                     InformationSet.Message.Should().Be($"Выберите интересующую настройку для цикла {CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}");
-                    InformationSet.ButtonsSets.Should().Be((ButtonsSet.SettingCycle, ButtonsSet.CycleList));
+                    InformationSet.ButtonsSets.Should().Be((ButtonsSet.SettingCycle, ButtonsSet.CyclesList));
                 }
                 else if (domainType == "Day")
                 {
@@ -871,7 +868,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                     {
                         case QueryFrom.NoMatter:
 
-                            InformationSet.Message.Should().Be($"Выберите упражнение из дня {CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()} ({CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBold()})");
+                            InformationSet.Message.Should().Be($"Выберите упражнение или посмотрите предыдущие результаты дня {CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()} ({CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBold()})");
                             InformationSet.ButtonsSets.Should().Be((ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout));
 
                             CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
@@ -1081,7 +1078,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 
 Выберите интересующую настройку для цикла {currentActiveCycle.Name.AddBoldAndQuotes()}
 ");
-                        InformationSet.ButtonsSets.Should().Be((ButtonsSet.SettingCycle, ButtonsSet.CycleList));
+                        InformationSet.ButtonsSets.Should().Be((ButtonsSet.SettingCycle, ButtonsSet.CyclesList));
                     }
                     else
                     {
@@ -1104,7 +1101,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 Выберите интересующий цикл
 ");
 
-                        InformationSet.ButtonsSets.Should().Be((ButtonsSet.CycleList, ButtonsSet.SettingCycles));
+                        InformationSet.ButtonsSets.Should().Be((ButtonsSet.CyclesList, ButtonsSet.SettingCycles));
                     }
                 }
                 else if (domainType == "Day")
@@ -1263,12 +1260,12 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                         CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Days.Should().NotContain(x => x.Id == dayForReplacement.Id && x.Name == dayForReplacement.Name);
 
                         // Assert
-                        InformationSet.Message.Should().Be(@$"День {dayForReplacement.Name.AddBoldAndQuotes()}, перенесён в цикл {destinationCycle.Name.AddBoldAndQuotes()}
+                        InformationSet.Message.Should().Be(@$"День {dayForReplacement.Name.AddBoldAndQuotes()} перенесён в цикл {destinationCycle.Name.AddBoldAndQuotes()}
 ======================
 
-Выберите интересующий цикл
+Выберите интересующую настройку для цикла {CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}
 ");
-                        InformationSet.ButtonsSets.Should().Be((ButtonsSet.CycleList, ButtonsSet.SettingCycles));
+                        InformationSet.ButtonsSets.Should().Be((ButtonsSet.SettingCycle, ButtonsSet.CyclesList));
                     }
                 }
                 else
@@ -1304,12 +1301,12 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                         CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Exercises.Should().NotContain(x => x.Id == exerciseForReplacement.Id && x.Name == exerciseForReplacement.Name);
 
                         // Assert
-                        InformationSet.Message.Should().Be(@$"Упражнение {exerciseForReplacement.Name.AddBoldAndQuotes()}, перенесёно в день {destinationDay.Name.AddBoldAndQuotes()}
+                        InformationSet.Message.Should().Be(@$"Упражнение {exerciseForReplacement.Name.AddBoldAndQuotes()} перенесено в день {destinationDay.Name.AddBoldAndQuotes()}
 ======================
 
-Выберите интересующий цикл
+Выберите интересующую настройку для дня {CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()} ({CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBold()})
 ");
-                        InformationSet.ButtonsSets.Should().Be((ButtonsSet.CycleList, ButtonsSet.SettingCycles));
+                        InformationSet.ButtonsSets.Should().Be((ButtonsSet.SettingDay, ButtonsSet.DaysList));
                     }
                 }
 
@@ -1355,7 +1352,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                 if (domainType == "Cycle")
                 {
                     // Assert
-                    InformationSet.Message.Should().Be(@$"Введите новоё название для цикла {CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}");
+                    InformationSet.Message.Should().Be(@$"Введите новое название для цикла {CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}");
                     InformationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.SettingCycle));
 
                     CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.ChangeNameCycle);
@@ -1363,7 +1360,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                 else if (domainType == "Day")
                 {
                     // Assert
-                    InformationSet.Message.Should().Be(@$"Введите новоё название для дня {CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()}");
+                    InformationSet.Message.Should().Be(@$"Введите новое название для дня {CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()}");
                     InformationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.SettingDay));
 
                     CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.ChangeNameDay);
@@ -1371,7 +1368,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                 else
                 {
                     // Assert
-                    InformationSet.Message.Should().Be(@$"Введите новоё название для упражнения {CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().Name.AddBoldAndQuotes()}");
+                    InformationSet.Message.Should().Be(@$"Введите новое название для упражнения {CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().Name.AddBoldAndQuotes()}");
                     InformationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.SettingExercise));
 
                     CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.ChangeNameExercise);
@@ -1574,11 +1571,9 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                 // Act
                 await settingsCH.Process(TestContext.Current.CancellationToken); ;
 
-                InformationSet.AdditionalParameters.Should().HaveCount(2);
+                InformationSet.AdditionalParameters.Should().HaveCount(1);
                 InformationSet.AdditionalParameters.First().Key.Should().Be("DomainType");
                 InformationSet.AdditionalParameters.First().Value.Should().Be($"{domainType}");
-
-                KeyValuePair<string, string> secondParameter = InformationSet.AdditionalParameters.Skip(1).First();
 
                 if (domainType == "Account")
                 {
@@ -1591,9 +1586,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                     InformationSet.ButtonsSets.Should().Be((ButtonsSet.ConfirmDelete, ButtonsSet.Settings));
 
                     CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
-
-                    secondParameter.Key.Should().Be("Name");
-                    secondParameter.Value.Should().Be("аккаунт");
                 }
                 else if (domainType == "Cycle")
                 {
@@ -1606,9 +1598,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                     InformationSet.ButtonsSets.Should().Be((ButtonsSet.ConfirmDelete, ButtonsSet.SettingCycle));
 
                     CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
-
-                    secondParameter.Key.Should().Be("Name");
-                    secondParameter.Value.Should().Be("цикл");
                 }
                 else if (domainType == "Day")
                 {
@@ -1621,9 +1610,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                     InformationSet.ButtonsSets.Should().Be((ButtonsSet.ConfirmDelete, ButtonsSet.SettingDay));
 
                     CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
-
-                    secondParameter.Key.Should().Be("Name");
-                    secondParameter.Value.Should().Be("день");
                 }
                 else if (domainType == "Exercise")
                 {
@@ -1636,9 +1622,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                     InformationSet.ButtonsSets.Should().Be((ButtonsSet.ConfirmDelete, ButtonsSet.SettingExercise));
 
                     CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.Default);
-
-                    secondParameter.Key.Should().Be("Name");
-                    secondParameter.Value.Should().Be("упражнение");
                 }
                 else
                 {
@@ -1651,9 +1634,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                     InformationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.SettingExercise));
 
                     CurrentUserContext.Navigation.MessageNavigationTarget.Should().Be(MessageNavigationTarget.DeleteResultsExercise);
-
-                    secondParameter.Key.Should().Be("Name");
-                    secondParameter.Value.Should().Be("упражнение");
                 }
 
                 CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
@@ -1712,7 +1692,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                 HandlerResult = new UpdateHandlerResult()
                 {
                     CurrentUserContext = localUserContext,
-                    HasAccess = true,
                     Update = update,
                     ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.CallbackQuery, true)
                 },
@@ -1785,7 +1764,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 
 Выберите интересующую настройку для цикла {localCommandHandlerTools.HandlerResult.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()}
 ");
-                        informationSet.ButtonsSets.Should().Be((ButtonsSet.SettingCycle, ButtonsSet.CycleList));
+                        informationSet.ButtonsSets.Should().Be((ButtonsSet.SettingCycle, ButtonsSet.CyclesList));
                     }
                     else
                     {
@@ -1799,7 +1778,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
 
 Выберите интересующий цикл
 ");
-                        informationSet.ButtonsSets.Should().Be((ButtonsSet.CycleList, ButtonsSet.SettingCycles));
+                        informationSet.ButtonsSets.Should().Be((ButtonsSet.CyclesList, ButtonsSet.SettingCycles));
                     }
                 }
                 else if (domainType == "Day")

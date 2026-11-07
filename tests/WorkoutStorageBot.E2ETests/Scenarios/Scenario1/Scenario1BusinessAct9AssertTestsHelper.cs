@@ -76,15 +76,11 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
             updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.ConfirmDelete, ButtonsSet.Settings));
             updateHandlerResult.InformationSet.ParseMode.Should().Be(ParseMode.Html);
 
-            updateHandlerResult.InformationSet.AdditionalParameters.Should().HaveCount(2);
+            updateHandlerResult.InformationSet.AdditionalParameters.Should().HaveCount(1);
 
             KeyValuePair<string, string> firstParam = updateHandlerResult.InformationSet.AdditionalParameters.First();
             firstParam.Key.Should().Be("DomainType");
             firstParam.Value.Should().Be("Account");
-
-            KeyValuePair<string, string> secondParam = updateHandlerResult.InformationSet.AdditionalParameters.Skip(1).First();
-            secondParam.Key.Should().Be("Name");
-            secondParam.Value.Should().Be("аккаунт");
 
             AssertBaseUpdateHandlerResult(updateHandlerResult);
         }
@@ -138,9 +134,8 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
             handlerResult.InformationSet.ParseMode.Should().Be(ParseMode.Html);
             handlerResult.InformationSet.AdditionalParameters.Should().BeNull();
 
-            handlerResult.HasAccess.Should().BeTrue();
             handlerResult.IsNewContext.Should().BeTrue();
-            handlerResult.IsNeedContinue.Should().BeFalse();
+            handlerResult.IsNeedStopFurtherProcessing.Should().BeTrue();
         }
     }
 }

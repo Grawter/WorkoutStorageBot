@@ -90,7 +90,7 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
 
             updateHandlerResult.InformationSet.Should().NotBeNull();
             updateHandlerResult.InformationSet.Message.Should().Be($"Выберите интересующий цикл");
-            updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.CycleList, ButtonsSet.SettingCycles));
+            updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.CyclesList, ButtonsSet.SettingCycles));
             updateHandlerResult.InformationSet.ParseMode.Should().Be(ParseMode.Html);
             updateHandlerResult.InformationSet.AdditionalParameters.Should().BeNull();
 
@@ -114,7 +114,7 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
 
             updateHandlerResult.InformationSet.Should().NotBeNull();
             updateHandlerResult.InformationSet.Message.Should().Be($"Выберите интересующую настройку для цикла {firstCycleName.AddBoldAndQuotes()}");
-            updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.SettingCycle, ButtonsSet.CycleList));
+            updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.SettingCycle, ButtonsSet.CyclesList));
             updateHandlerResult.InformationSet.ParseMode.Should().Be(ParseMode.Html);
             updateHandlerResult.InformationSet.AdditionalParameters.Should().BeNull();
 
@@ -184,7 +184,7 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
 
             updateHandlerResult.InformationSet.Should().NotBeNull();
             updateHandlerResult.InformationSet.Message.Should().Be($"Выберите интересующую настройку для цикла {secondCycleName.AddBoldAndQuotes()}");
-            updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.SettingCycle, ButtonsSet.CycleList));
+            updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.SettingCycle, ButtonsSet.CyclesList));
             updateHandlerResult.InformationSet.ParseMode.Should().Be(ParseMode.Html);
             updateHandlerResult.InformationSet.AdditionalParameters.Should().BeNull();
 
@@ -207,7 +207,7 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
             UpdateHandlerResult updateHandlerResult = (UpdateHandlerResult)handlerResults[1];
 
             updateHandlerResult.InformationSet.Should().NotBeNull();
-            updateHandlerResult.InformationSet.Message.Should().Be($"Введите новоё название для цикла {secondCycleName.AddBoldAndQuotes()}");
+            updateHandlerResult.InformationSet.Message.Should().Be($"Введите новое название для цикла {secondCycleName.AddBoldAndQuotes()}");
             updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.None, ButtonsSet.SettingCycle));
             updateHandlerResult.InformationSet.ParseMode.Should().Be(ParseMode.Html);
             updateHandlerResult.InformationSet.AdditionalParameters.Should().BeNull();
@@ -232,7 +232,7 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
 
             updateHandlerResult.InformationSet.Should().NotBeNull();
             updateHandlerResult.InformationSet.Message.Should().Be(@$"Название цикла сохранено!");
-            updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.SettingCycle, ButtonsSet.CycleList));
+            updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.SettingCycle, ButtonsSet.CyclesList));
             updateHandlerResult.InformationSet.ParseMode.Should().Be(ParseMode.Html);
             updateHandlerResult.InformationSet.AdditionalParameters.Should().BeNull();
 
@@ -259,7 +259,7 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
 
 Выберите интересующий цикл
 ");
-            updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.CycleList, ButtonsSet.SettingCycles));
+            updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.CyclesList, ButtonsSet.SettingCycles));
             updateHandlerResult.InformationSet.ParseMode.Should().Be(ParseMode.Html);
             updateHandlerResult.InformationSet.AdditionalParameters.Should().BeNull();
 
@@ -368,7 +368,7 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
 
             updateHandlerResult.InformationSet.Should().NotBeNull();
             updateHandlerResult.InformationSet.Message.Should().Be($"Выберите интересующую настройку для цикла {"2ToDelete".AddBoldAndQuotes()}");
-            updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.SettingCycle, ButtonsSet.CycleList));
+            updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.SettingCycle, ButtonsSet.CyclesList));
             updateHandlerResult.InformationSet.ParseMode.Should().Be(ParseMode.Html);
             updateHandlerResult.InformationSet.AdditionalParameters.Should().BeNull();
 
@@ -398,15 +398,11 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
 ");
             updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.ConfirmDelete, ButtonsSet.SettingCycle));
             updateHandlerResult.InformationSet.ParseMode.Should().Be(ParseMode.Html);
-            updateHandlerResult.InformationSet.AdditionalParameters.Should().HaveCount(2);
+            updateHandlerResult.InformationSet.AdditionalParameters.Should().HaveCount(1);
 
             KeyValuePair<string, string> firstParam = updateHandlerResult.InformationSet.AdditionalParameters.First();
             firstParam.Key.Should().Be("DomainType");
             firstParam.Value.Should().Be("Cycle");
-
-            KeyValuePair<string, string> secondParam = updateHandlerResult.InformationSet.AdditionalParameters.Skip(1).First();
-            secondParam.Key.Should().Be("Name");
-            secondParam.Value.Should().Be("цикл");
 
             AssertBaseUpdateHandlerResult(updateHandlerResult);
         }
@@ -432,7 +428,7 @@ namespace WorkoutStorageBot.E2ETests.Scenarios.Scenario1
 
 Выберите интересующий цикл
 ");
-            updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.CycleList, ButtonsSet.SettingCycles));
+            updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.CyclesList, ButtonsSet.SettingCycles));
             updateHandlerResult.InformationSet.ParseMode.Should().Be(ParseMode.Html);
             updateHandlerResult.InformationSet.AdditionalParameters.Should().BeNull();
 

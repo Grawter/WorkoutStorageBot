@@ -85,14 +85,6 @@ namespace WorkoutStorageBot.Core.BotTools.Listener
             }
         }
 
-        internal void StopListenAfter(TimeSpan timeSpan)
-        {
-            if (!cancellationTokenSource.IsCancellationRequested)
-            {
-                cancellationTokenSource.CancelAfter(timeSpan);
-            }
-        }
-
         private async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
             using IServiceScope scope = scopeFactory.CreateScope();
@@ -111,7 +103,7 @@ namespace WorkoutStorageBot.Core.BotTools.Listener
 
             CoreManager coreManager = new CoreManager(coreTools);
 
-            await coreManager.ProcessUpdate(update, StopListenAfter, cancellationToken);
+            await coreManager.ProcessUpdate(update, StopListen, cancellationToken);
         }
 
         private async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)

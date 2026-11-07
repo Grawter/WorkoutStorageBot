@@ -60,16 +60,14 @@ namespace WorkoutStorageBot.E2ETests.Scenarios
 
             PrimaryHandlerResult primaryHandlerResult = (PrimaryHandlerResult)handlerResults[0];
             primaryHandlerResult.InformationSet.Should().BeNull();
-            primaryHandlerResult.HasAccess.Should().BeTrue();
             primaryHandlerResult.IsNewContext.Should().BeFalse();
-            primaryHandlerResult.IsNeedContinue.Should().BeTrue();
+            primaryHandlerResult.IsNeedStopFurtherProcessing.Should().BeFalse();
         }
 
         protected void AssertBaseUpdateHandlerResult(UpdateHandlerResult updateHandlerResult)
         {
-            updateHandlerResult.HasAccess.Should().BeTrue();
             updateHandlerResult.IsNeedSendResponse.Should().BeTrue();
-            updateHandlerResult.IsNeedContinue.Should().BeFalse();
+            updateHandlerResult.IsNeedStopFurtherProcessing.Should().BeFalse();
         }
     }
 }

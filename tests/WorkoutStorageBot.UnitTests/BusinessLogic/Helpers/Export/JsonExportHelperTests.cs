@@ -4,7 +4,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Unicode;
-using WorkoutStorageBot.BusinessLogic.Extenions;
+using WorkoutStorageBot.BusinessLogic.Extensions;
 using WorkoutStorageBot.BusinessLogic.Helpers.Export;
 using WorkoutStorageBot.Model.AppContext;
 using WorkoutStorageBot.UnitTests.Builders;

@@ -134,7 +134,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 case QueryFrom.Start:
                     this.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.AddDays);
 
-                    responseTextBuilder = new ResponseTextBuilder($"Цикл {this.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()} сохранён!",
+                    responseTextBuilder = new ResponseTextBuilder($"Цикл {this.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()} сохранён",
                         $"Введите название тренирочного дня для цикла {this.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()}");
                     buttonsSets = (ButtonsSet.None, ButtonsSet.None);
                     break;
@@ -142,7 +142,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 case QueryFrom.Settings:
                     this.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
-                    responseTextBuilder = new ResponseTextBuilder($"Цикл {this.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()} сохранён!",
+                    responseTextBuilder = new ResponseTextBuilder($"Цикл {this.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()} сохранён",
                         "Выберите дальнейшие действия");
                     buttonsSets = (ButtonsSet.AddDays, ButtonsSet.SettingCycles);
 
@@ -191,7 +191,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 case QueryFrom.Start:
                     this.CurrentUserContext.Navigation.SetMessageNavigationTarget(MessageNavigationTarget.AddExercises);
 
-                    responseTextBuilder = new ResponseTextBuilder($"День {currentDay.Name.AddBoldAndQuotes()} сохранён в цикле {this.CurrentUserContext.DataManager.CurrentCycle.Name}!",
+                    responseTextBuilder = new ResponseTextBuilder($"День {currentDay.Name.AddBoldAndQuotes()} сохранён в цикле {this.CurrentUserContext.DataManager.CurrentCycle.Name.AddBold()}",
                         $"Введите название упражения для этого дня.{Environment.NewLine}{CommonConsts.Exercise.ExamplesTypesExercise}", 
                         CommonConsts.Exercise.InputFormatExercise);
                     buttonsSets = (ButtonsSet.None, ButtonsSet.None);
@@ -200,7 +200,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                 case QueryFrom.Settings:
                     this.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
-                    responseTextBuilder = new ResponseTextBuilder($"День {currentDay.Name.AddBoldAndQuotes()} сохранён в цикле {this.CurrentUserContext.DataManager.CurrentCycle.Name}!");
+                    responseTextBuilder = new ResponseTextBuilder($"День {currentDay.Name.AddBoldAndQuotes()} сохранён в цикле {this.CurrentUserContext.DataManager.CurrentCycle.Name.AddBold()}");
                     buttonsSets = (ButtonsSet.AddExercises, ButtonsSet.SettingDays);
 
                     break;
@@ -243,7 +243,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             if (string.IsNullOrWhiteSpace(error) && this.CurrentUserContext.DataManager.TryAddTempExercises(resultGettingExerciseFromText.Exercises, out error))
             {
-                responseTextBuilder = new ResponseTextBuilder("Упражнение(я) зафиксировано(ы)!",
+                responseTextBuilder = new ResponseTextBuilder("Упражнение(я) зафиксировано(ы)",
                     $"Введите след. упражнение(я) для дня {this.CurrentUserContext.DataManager.CurrentDay.Name.AddBoldAndQuotes()} либо нажмите {"Сохранить".AddQuotes()} для сохранения зафиксированных упражнений");
                 buttonsSets = (ButtonsSet.SaveExercises, ButtonsSet.None);
             }
@@ -343,7 +343,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             this.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
-            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder(resultExercise.FreeResult.AddBold(), "Введённые данные сохранены!", "Выберите упражнение");
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder(resultExercise.FreeResult.AddBold(), "Введённые данные сохранены", 
+                $"Выберите упражнение или посмотрите предыдущие результаты дня {this.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()}");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout);
 
             IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
@@ -376,7 +377,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
                     }
 
                     responseTextBuilder = new ResponseTextBuilder("Название цикла сохранено!");
-                    buttonsSets = (ButtonsSet.SettingCycle, ButtonsSet.CycleList);
+                    buttonsSets = (ButtonsSet.SettingCycle, ButtonsSet.CyclesList);
                     break;
 
                 case DomainType.Day:
@@ -788,50 +789,34 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.MessageComman
 
             DTOExercise currentExercise = this.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull();
 
-            string dbProvider = this.Db.GetDBProvider();
+            List<int> idsToDelete = await this.Db.ResultsExercises.Where(x => x.ExerciseId == currentExercise.Id)
+                                                                  .OrderByDescending(x => x.DateTime)
+                                                                  .ThenByDescending(x => x.Id)
+                                                                  .Take(countToDelete)
+                                                                  .Select(x => x.Id)
+                                                                  .ToListAsync(cancellationToken);
 
-            if (dbProvider == "Microsoft.EntityFrameworkCore.Sqlite")
+            int numberOfRowsAffected = 0;
+
+            if (idsToDelete.Count > 0)
             {
-                string selectSql = $@"
-SELECT Id 
-FROM [ResultsExercises]
-WHERE ExerciseId = {currentExercise.Id}
-ORDER BY DateTime DESC, ID DESC
-LIMIT {countToDelete}";
+                numberOfRowsAffected = await this.Db.ResultsExercises.Where(x => idsToDelete.Contains(x.Id))
+                                                                     .ExecuteDeleteAsync(cancellationToken);
 
-                HashSet<int> idsToDelete = await this.Db.ResultsExercises.FromSqlRaw(selectSql)
-                                                                         .Select(r => r.Id)
-                                                                         .ToHashSetAsync(cancellationToken);
+                var tracked = this.Db.ChangeTracker.Entries<ResultExercise>()
+                                                   .Where(e => idsToDelete.Contains(e.Entity.Id))
+                                                   .ToList();
 
-                int numberOfRowsAffected = 0;
+                foreach (var entry in tracked)
+                    entry.State = EntityState.Detached;
 
-                if (idsToDelete.Count > 0)
-                {
-                    string ids = string.Join(",", idsToDelete);
-
-                    string deleteSql = $@"
-DELETE FROM [ResultsExercises]
-WHERE Id IN ({ids})";
-
-                    numberOfRowsAffected = await this.Db.ExecuteSQL(deleteSql, cancellationToken);
-
-                    var tracked = this.Db.ChangeTracker.Entries<ResultExercise>()
-                        .Where(e => idsToDelete.Contains(e.Entity.Id))
-                        .ToList();
-
-                    foreach (var entry in tracked)
-                        entry.State = EntityState.Detached;
-
-                    this.CurrentUserContext.DataManager.CurrentExercise.ResultsExercise.RemoveAll(x => idsToDelete.Contains(x.Id));
-                }
-
-                responseTextBuilder = new ResponseTextBuilder($"Было удалено {numberOfRowsAffected} строк",
-                    $"Выберите интересуюущую настройку для упражения {currentExercise.Name.AddBoldAndQuotes()}");
-
-                buttonsSets = (ButtonsSet.SettingExercise, ButtonsSet.ExercisesList);
+                this.CurrentUserContext.DataManager.CurrentExercise.ResultsExercise.RemoveAll(x => idsToDelete.Contains(x.Id));
             }
-            else
-                throw new NotImplementedException($"Операция не поддерживается для DBProvider {dbProvider}");
+
+            responseTextBuilder = new ResponseTextBuilder($"Записей удалено: {numberOfRowsAffected}",
+                $"Выберите интересуюущую настройку для упражения {currentExercise.Name.AddBoldAndQuotes()}");
+
+            buttonsSets = (ButtonsSet.SettingExercise, ButtonsSet.ExercisesList);
 
             this.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 

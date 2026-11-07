@@ -1,5 +1,5 @@
 ﻿using FluentAssertions;
-using WorkoutStorageBot.BusinessLogic.Extenions;
+using WorkoutStorageBot.BusinessLogic.Extensions;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.UnitTests.Builders;
 using WorkoutStorageModels.Entities.BusinessLogic;

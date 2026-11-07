@@ -3,7 +3,7 @@ using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using System.Drawing;
 using WorkoutStorageBot.BusinessLogic.Consts;
-using WorkoutStorageBot.BusinessLogic.Extenions;
+using WorkoutStorageBot.BusinessLogic.Extensions;
 using WorkoutStorageBot.BusinessLogic.Helpers.Stream;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageModels.Entities.BusinessLogic;

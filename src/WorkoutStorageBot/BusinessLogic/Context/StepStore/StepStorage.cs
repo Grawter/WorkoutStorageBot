@@ -9,8 +9,8 @@ namespace WorkoutStorageBot.BusinessLogic.Context.StepStore
             #region workout area
 
             { ButtonsSet.Main, new StepInformation(QueryFrom.NoMatter, "Выберите интересующий раздел", ButtonsSet.Main, ButtonsSet.None) },
-            { ButtonsSet.DaysListWithLastWorkout, new StepInformation(QueryFrom.NoMatter, "Выберите тренировочный день из цикла", ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main) },
-            { ButtonsSet.ExercisesListWithLastWorkoutForDay, new StepInformation(QueryFrom.NoMatter, "Выберите упражнение из дня", ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout) },
+            { ButtonsSet.DaysListWithLastWorkout, new StepInformation(QueryFrom.NoMatter, "Выберите тренировочный день или посмотрите предыдущие результаты из цикла", ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main) },
+            { ButtonsSet.ExercisesListWithLastWorkoutForDay, new StepInformation(QueryFrom.NoMatter, "Выберите упражнение или посмотрите предыдущие результаты дня", ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout) },
 
             #endregion
 
@@ -23,8 +23,8 @@ namespace WorkoutStorageBot.BusinessLogic.Context.StepStore
 
 
             { ButtonsSet.SettingCycles, new StepInformation(QueryFrom.Settings, "Выберите интересующие настройки для циклов", ButtonsSet.SettingCycles, ButtonsSet.Settings) },
-            { ButtonsSet.CycleList, new StepInformation(QueryFrom.Settings, "Выберите интересующий цикл", ButtonsSet.CycleList, ButtonsSet.SettingCycles) },
-            { ButtonsSet.SettingCycle, new StepInformation(QueryFrom.Settings, "Выберите интересующую настройку для цикла", ButtonsSet.SettingCycle, ButtonsSet.CycleList) },
+            { ButtonsSet.CyclesList, new StepInformation(QueryFrom.Settings, "Выберите интересующий цикл", ButtonsSet.CyclesList, ButtonsSet.SettingCycles) },
+            { ButtonsSet.SettingCycle, new StepInformation(QueryFrom.Settings, "Выберите интересующую настройку для цикла", ButtonsSet.SettingCycle, ButtonsSet.CyclesList) },
 
             { ButtonsSet.SettingDays, new StepInformation(QueryFrom.Settings, "Выберите интересующие настройки для дней из цикла", ButtonsSet.SettingDays, ButtonsSet.SettingCycle) },
             { ButtonsSet.DaysList, new StepInformation(QueryFrom.Settings, "Выберите интересующий день из цикла", ButtonsSet.DaysList, ButtonsSet.SettingDays) },

@@ -1,14 +1,14 @@
 # :robot: WorkoutStorageBot
 
-Простой Telegram-бот для записей, хранения и просмотра результатов тренировок
+Простой Telegram-бот для записи, хранения и просмотра результатов тренировок
 
 ## :pushpin: Описание
 
 **WorkoutStorageBot** — умеет:
 
 - Хранить результаты тренировок, разбивая их на циклы и дни
-- Показывать последние данные тренировок, а так же фильтровать результаты по дням
-- Экспортировать данные тренировок в .xlsx и .json файлы
+- Показывать последние данные тренировок, а также фильтровать результаты по дням
+- Экспортировать данные тренировок в файлы .xlsx и .json
 - Динамически настраивать циклы, дни, упражнения
 
 ---
@@ -30,7 +30,7 @@ cd ./WorkoutStorageBot/src/WorkoutStorageBot/Application/StartConfiguration
 nano appsettings.json
 ```
 
-Укажите токен своего телеграм бота в Bot->Token
+Укажите токен своего Telegram-бота в Bot->Token
 
 ```
 {
@@ -45,7 +45,7 @@ nano appsettings.json
   "Bot": {
     "Token": "<Your telegram bot token>",
     "WhiteListIsEnable": "False",
-    "OwnersChatIDs": [ "0" ],
+    "OwnersChatIDs": [ "000000000" ],
     "IsNeedCacheContext": "False",
     "IsNeedLimits": "False"
   },
@@ -86,16 +86,16 @@ docker-compose up -d
 
   /*
   Настройки подключения к БД.
-  По-умолчанию, используется SQLite, в случае необходимости можно поменять DBProvider: Program -> CreateHostAndSetDI.
+  По умолчанию используется SQLite, в случае необходимости можно поменять DBProvider: Program -> CreateHostAndSetDI.
   В случае необходимости можно написать свою реализацию строки подключения: ConfigurationData -> DbSettings -> ConnectionString.
 
-  EnsureCreated - Требуется ли первичная инициализация БД при старте приложения (Database.EnsureCreated()) [Необязательно] [По-умолчанию - False]
+  EnsureCreated - Требуется ли первичная инициализация БД при старте приложения (Database.EnsureCreated()) [Необязательно] [По умолчанию - False]
   Server - Сервер DB [Необязательно]
-  Database - Название DB. data обязательно, т.к. в этой папке будет volume [Обязательно]
+  Database - Название DB. Путь должен находиться в папке data, т.к. она монтируется как volume [Обязательно]
   UserName - УЗ для подключения к DB [Необязательно]
-  Password - для от УЗ для подключения к DB [Необязательно]
+  Password - УЗ для подключения к DB [Необязательно]
   
-  После инициализации всех зависимостей значения UserName и Password будут затёрты из переменных. Подробнее: ConfigurationManager -> SetCensorToDBSettings.
+  После инициализации всех зависимостей значения UserName и Password будут заменены на маскированные значения в модели конфигурации. Подробнее: ConfigurationManager -> SetCensorToDBSettings.
   */
   "DB": {
     "EnsureCreated": "False",
@@ -110,11 +110,11 @@ docker-compose up -d
 
   Token - Токен для управления ботом [Обязательно]
   WhiteListIsEnable - Нужно ли включать режим белого списка [Обязательно]
-  OwnersChatIDs - Телеграм ID админов бота (для доступка к админке) [Обязательно]
-  IsNeedCacheContext - Нужно ли включать кэш для глобального контекста [Обязательно]
-  При включённом режиме, по-умолчанию, он держится 6 часов, если к определённому контексту не было запросов.
-  IsNeedLimits - Нужно ли включать режим лимитов. [Необязательно] [По-умолчанию - False]
-  IsSupportOnlyKnownTypes - Поддерживать только известные типы обновлений (UpdateType.Message, UpdateType.CallbackQuery). [Необязательно] [По-умолчанию - True]
+  OwnersChatIDs - Telegram ID админов бота (для доступа к админке) [Обязательно]
+  IsNeedCacheContext - Нужно ли включать кэш для глобального контекста (ContextKeeper) [Обязательно]
+  При включённом режиме кэш хранится 6 часов, если к контексту не было обращений.
+  IsNeedLimits - Нужно ли включать режим лимитов. [Необязательно] [По умолчанию - False]
+  IsSupportOnlyKnownTypes - Поддерживать только известные типы обновлений (UpdateType.Message, UpdateType.CallbackQuery). [Необязательно] [По умолчанию - True]
   */
   "Bot": {
     "Token": "<Your telegram bot token>",
@@ -128,8 +128,8 @@ docker-compose up -d
   /*
   Настройки уведомлений об операциях.
 
-  NotifyOwnersAboutCriticalErrors - Отсылать уведомления админам об критических ошибках в боте [Обязательно]
-  NotifyOwnersAboutRuntimeErrors - Отсылать уведомления админам об некритических ошибках в боте [Обязательно]
+  NotifyOwnersAboutCriticalErrors - Отсылать уведомления админам о критических ошибках в боте [Обязательно]
+  NotifyOwnersAboutRuntimeErrors - Отсылать уведомления админам о некритических ошибках в боте [Обязательно]
   */
   "Notifications": {
     "NotifyOwnersAboutCriticalErrors": "True",
@@ -141,11 +141,11 @@ docker-compose up -d
 
   Доступные уровни логгирования: Trace, Debug, Information, Warning, Error, Critical, None, All.
 
-  MainRuleLog - Основное правило логгирование. По-умолчанию, для логгирования из всех классов.
+  MainRuleLog - Основное правило логгирования. По умолчанию применяется ко всем классам.
   DBLogLevels - Логи с этим уровнем будут записаны в БД [Необязательно]
   ConsoleLogLevels - Логи с этим уровнем будут выведены в консоли [Необязательно]
   
-  CustomRulesLog - Кастомное правило логгирования, строго для какого-то класса [Необязательно]
+  CustomRulesLog - Кастомное правило логгирования для конкретного класса [Необязательно]
   FullClassName - Полное название класса [Обязательно, если указывается кастомное правило]
   */
   "LogInfo": {
@@ -234,9 +234,10 @@ Enums in Tables:
 
 ## :toolbox: Дополнительная информация
 
-- Хранение данных: Используется SQLite + EF
-- **WorkoutStorageBot** - Cам бот и его бизнес-логика
-- **WorkoutStorageImport** - Утилита для экспорта тренировок из JSON
-- **WorkoutStorageModels** - Модели EF
-- **WorkoutStorageBot.UnitTests** - Unit тесты бота
-- **WorkoutStorageBot.IntegrationTests** - Интеграционные тесты БД/логика
+Хранение данных: SQLite + EF
+- **WorkoutStorageBot** - Обработка логики бота
+- **WorkoutStorageImport** - Утилита для импорта данных тренировок из JSON
+- **WorkoutStorageModels** - Модели
+- **WorkoutStorageBot.UnitTests** - Unit тесты
+- **WorkoutStorageBot.IntegrationTests** - Интеграционные тесты
+- **WorkoutStorageBot.E2ETests** - E2E тесты

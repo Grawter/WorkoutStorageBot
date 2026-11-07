@@ -16,7 +16,7 @@
         Settings,
             SettingCycles,
                 AddCycle,
-                CycleList, 
+                CyclesList, 
                     SettingCycle,
                         ArchiveCyclesList,
                         SettingDays,

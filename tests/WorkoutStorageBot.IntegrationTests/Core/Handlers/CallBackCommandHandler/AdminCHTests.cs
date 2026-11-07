@@ -7,7 +7,7 @@ using WorkoutStorageBot.Application.Configuration;
 using WorkoutStorageBot.BusinessLogic.Context.Global;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Enums;
-using WorkoutStorageBot.BusinessLogic.Extenions;
+using WorkoutStorageBot.BusinessLogic.Extensions;
 using WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackCommandHandler.Context;
 using WorkoutStorageBot.BusinessLogic.Helpers.CallbackQueryParser;
 using WorkoutStorageBot.Core.Extensions;
@@ -79,7 +79,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                 HandlerResult = new UpdateHandlerResult()
                 {
                     CurrentUserContext = userContext,
-                    HasAccess = true,
                     Update = update,
                     ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.CallbackQuery, true)
                 },
@@ -115,7 +114,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.CallBackCommandHandle
                 HandlerResult = new UpdateHandlerResult()
                 {
                     CurrentUserContext = localUserContext,
-                    HasAccess = true,
                     Update = update,
                     ShortUpdateInfo = new ShortUpdateInfo(update, new User(), 1, "...", UpdateType.CallbackQuery, true)
                 },

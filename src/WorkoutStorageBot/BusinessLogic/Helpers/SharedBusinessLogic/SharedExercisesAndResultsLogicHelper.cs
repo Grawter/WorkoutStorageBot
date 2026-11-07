@@ -197,8 +197,8 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic
             string information = GetInformationAboutLastExercises(finderDate, resultsLastTraining);
 
             string target = isNeedFindByCurrentDay
-                ? $"Выберите упражнение из дня {userContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()} ({userContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBold()})"
-                : $"Выберите тренировочный день из цикла {userContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}";
+                ? $"Выберите упражнение или посмотрите предыдущие результаты дня {userContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()} ({userContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBold()})"
+                : $"Выберите тренировочный день или посмотрите предыдущие результаты из цикла {userContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}";
 
             ResponseTextBuilder responseConverter = new ResponseTextBuilder($"Найденная тренировка:", information, target);
 

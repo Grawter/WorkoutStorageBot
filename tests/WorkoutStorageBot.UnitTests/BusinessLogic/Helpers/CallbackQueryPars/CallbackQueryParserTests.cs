@@ -38,13 +38,32 @@ namespace WorkoutStorageBot.UnitTests.BusinessLogic.Helpers.CallbackQueryPars
             callbackQueryParser.Direction.Should().Be(1);
             callbackQueryParser.SubDirection.Should().Be("Abc");
             callbackQueryParser.DomainType.Should().Be("Def");
+
             callbackQueryParser.AdditionalParameters.First().Should().Be("AD1");
+
             callbackQueryParser.TryGetAdditionalParameter(1, out string? additionalValue1).Should().BeTrue();
             additionalValue1.Should().Be("AD2");
+
             callbackQueryParser.TryGetAdditionalParameter(2, out string? additionalValue2).Should().BeTrue();
             additionalValue2.Should().Be(string.Empty);
+
             callbackQueryParser.TryGetAdditionalParameter(3, out string? additionalValue3).Should().BeFalse();
             additionalValue3.Should().BeNull();
+        }
+
+        [Fact]
+        public void GetRequiredAdditionalParameter_ShouldReturnsExpectedValues()
+        {
+            // Arrange && Act
+            CallbackQueryParser callbackQueryParser = new CallbackQueryParser("1|Abc|Def|AD1|AD2|CallBackID");
+
+            // Assert
+            callbackQueryParser.GetRequiredAdditionalParameter(0).Should().Be("AD1");
+            callbackQueryParser.GetRequiredAdditionalParameter(1).Should().Be("AD2");
+
+            // Act
+            Action act = () => callbackQueryParser.GetRequiredAdditionalParameter(2);
+            act.Should().Throw<InvalidOperationException>().WithMessage($"Additional parameter with index 2 not found");
         }
     }
 }

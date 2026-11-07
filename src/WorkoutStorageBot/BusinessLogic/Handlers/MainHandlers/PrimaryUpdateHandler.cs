@@ -6,7 +6,7 @@ using WorkoutStorageBot.BusinessLogic.Context.Global;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Context.StepStore;
 using WorkoutStorageBot.BusinessLogic.Enums;
-using WorkoutStorageBot.BusinessLogic.Extenions;
+using WorkoutStorageBot.BusinessLogic.Extensions;
 using WorkoutStorageBot.BusinessLogic.Helpers.Converters;
 using WorkoutStorageBot.BusinessLogic.Helpers.Updates;
 using WorkoutStorageBot.BusinessLogic.Repositories;
@@ -47,7 +47,8 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
 
             if (updateInfo is UnknownUpdateInfo unknownUpdateInfo)
             {
-                ProcessUnknownUpdateType(unknownUpdateInfo);
+                ProcessUnknownUpdateType(handlerResult, unknownUpdateInfo);
+
                 return handlerResult;
             }
             else if (updateInfo is ShortUpdateInfo shortUpdateInfo)
@@ -55,14 +56,13 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
                 (UserContext? userContext, bool isNewContext) = await TryGetOrCreateContext(shortUpdateInfo.User, cancellationToken);
 
                 if (userContext == null)
+                {
+                    handlerResult.IsNeedStopFurtherProcessing = true;
                     return handlerResult;
+                }
 
-                PrimaryHandlerResult primaryHandlerResult = CreatePrimaryHandlerResult(shortUpdateInfo, userContext, handlerResult.HasAccess, isNewContext);
-
-                if (primaryHandlerResult.ShortUpdateInfo.IsExpectedType)
-                    await ProcessExpectedUpdateType(primaryHandlerResult, cancellationToken);
-                else
-                    ProcessUnexpectedUpdateType(primaryHandlerResult);
+                PrimaryHandlerResult primaryHandlerResult = CreatePrimaryHandlerResult(shortUpdateInfo, userContext, isNewContext);
+                await EnrichPrimaryHandlerResult(primaryHandlerResult, cancellationToken);
 
                 return primaryHandlerResult;
             }
@@ -70,8 +70,12 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
                 throw new InvalidOperationException($"Неожиданный тип IUpdateInfo: {updateInfo.GetType().Name}");
         }
 
-        private void ProcessUnknownUpdateType(UnknownUpdateInfo unknownUpdateInfo)
-            => Logger.LogWarning($"Получен неизвестный update c типом {unknownUpdateInfo.UpdateType.ToString()}");
+        private void ProcessUnknownUpdateType(HandlerResult handlerResult, UnknownUpdateInfo unknownUpdateInfo)
+        {
+            handlerResult.IsNeedStopFurtherProcessing = true;
+
+            Logger.LogWarning($"Получен неизвестный update c типом {unknownUpdateInfo.UpdateType.ToString()}");
+        }
 
         private async Task<(UserContext? userContext, bool isNewContext)> TryGetOrCreateContext(User user, CancellationToken cancellationToken)
         {
@@ -121,16 +125,23 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
             return currentRoles;
         }
 
-        private PrimaryHandlerResult CreatePrimaryHandlerResult(ShortUpdateInfo shortUpdateInfo, UserContext userContext, bool hasAccess, bool isNewContext)
+        private PrimaryHandlerResult CreatePrimaryHandlerResult(ShortUpdateInfo shortUpdateInfo, UserContext userContext, bool isNewContext)
         {
             return new PrimaryHandlerResult()
             {
                 Update = shortUpdateInfo.Update,
                 ShortUpdateInfo = shortUpdateInfo,
                 CurrentUserContext = userContext,
-                HasAccess = hasAccess,
-                IsNewContext = isNewContext
+                IsNewContext = isNewContext,
             };
+        }
+
+        private async Task EnrichPrimaryHandlerResult(PrimaryHandlerResult primaryHandlerResult, CancellationToken cancellationToken)
+        {
+            if (primaryHandlerResult.ShortUpdateInfo.IsExpectedType)
+                await ProcessExpectedUpdateType(primaryHandlerResult, cancellationToken);
+            else
+                ProcessUnexpectedUpdateType(primaryHandlerResult);
         }
 
         private async Task ProcessExpectedUpdateType(PrimaryHandlerResult primaryHandledData, CancellationToken cancellationToken)
@@ -143,8 +154,6 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
 
             if (primaryHandledData.IsNewContext)
                 SetInformationSetForNewContext(primaryHandledData);
-            else 
-                primaryHandledData.IsNeedContinue = true;
         }
 
         private void ProcessUnexpectedUpdateType(PrimaryHandlerResult primaryHandledData)
@@ -164,7 +173,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
 
             primaryHandledData.InformationSet = new MessageInformationSet($"{message} | EventId: {eventId.Id}");
             primaryHandledData.IsNeedSendResponse = true;
-            primaryHandledData.IsNeedContinue = false;
+            primaryHandledData.IsNeedStopFurtherProcessing = true;
 
             Logger.Log(LogLevel.Information,
                        eventId,
@@ -228,7 +237,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers
 
             primaryHandledData.InformationSet = new MessageInformationSet(message, (buttonsSet, ButtonsSet.None));
             primaryHandledData.IsNeedSendResponse = true;
-            primaryHandledData.IsNeedContinue = false;
+            primaryHandledData.IsNeedStopFurtherProcessing = true;
         }
     }
 }

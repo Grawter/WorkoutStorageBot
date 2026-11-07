@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
 using WorkoutStorageBot.Application.Configuration;
-using WorkoutStorageBot.BusinessLogic.Extenions;
+using WorkoutStorageBot.BusinessLogic.Extensions;
 using WorkoutStorageBot.BusinessLogic.Repositories;
 using WorkoutStorageBot.Core.Logging;
 using WorkoutStorageBot.Model.AppContext;

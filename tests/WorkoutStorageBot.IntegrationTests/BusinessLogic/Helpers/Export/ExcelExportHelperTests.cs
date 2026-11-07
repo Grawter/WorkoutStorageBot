@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IO;
 using OfficeOpenXml;
-using WorkoutStorageBot.BusinessLogic.Extenions;
+using WorkoutStorageBot.BusinessLogic.Extensions;
 using WorkoutStorageBot.BusinessLogic.Helpers.Export;
 using WorkoutStorageBot.Model.AppContext;
 using WorkoutStorageBot.UnitTests.Helpers;

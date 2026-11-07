@@ -7,7 +7,7 @@ using WorkoutStorageBot.Application.Configuration;
 using WorkoutStorageBot.BusinessLogic.Context.Global;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Enums;
-using WorkoutStorageBot.BusinessLogic.Extenions;
+using WorkoutStorageBot.BusinessLogic.Extensions;
 using WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers;
 using WorkoutStorageBot.Core.Extensions;
 using WorkoutStorageBot.Core.Helpers;
@@ -79,7 +79,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MainHandlers
             HandlerResult startHandlerResult = new HandlerResult()
             {
                 Update = update,
-                HasAccess = true,
             };
 
             // Act
@@ -140,7 +139,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MainHandlers
             HandlerResult startHandlerResult = new HandlerResult()
             {
                 Update = update,
-                HasAccess = true,
             };
 
             // Act
@@ -194,7 +192,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MainHandlers
             HandlerResult startHandlerResult = new HandlerResult()
             {
                 Update = update,
-                HasAccess = true,
             };
 
             // Act
@@ -252,7 +249,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MainHandlers
             HandlerResult startHandlerResult = new HandlerResult()
             {
                 Update = update,
-                HasAccess = true,
             };
 
             // Act
@@ -376,14 +372,14 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MainHandlers
                                 ),
                                 Times.Once);
 
-            handlerResult.IsNeedContinue.Should().BeFalse();
+            handlerResult.IsNeedStopFurtherProcessing.Should().BeTrue();
 
             handlerResult.Should().NotBeOfType<PrimaryHandlerResult>();
         }
 
         private void AssertUserContextIsNullSubScenario(HandlerResult handlerResult, string? checkingLogMessage = null)
         {
-            handlerResult.IsNeedContinue.Should().BeFalse();
+            handlerResult.IsNeedStopFurtherProcessing.Should().BeTrue();
 
             if (!string.IsNullOrWhiteSpace(checkingLogMessage))
             {
@@ -405,7 +401,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MainHandlers
         {
             builder.Should().NotBeNull();
 
-            handlerResult.IsNeedContinue.Should().BeFalse();
+            handlerResult.IsNeedStopFurtherProcessing.Should().BeTrue();
 
 
             handlerResult.Should().BeOfType<PrimaryHandlerResult>();
@@ -469,7 +465,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MainHandlers
                             ),
                             Times.Once);
 
-            handlerResult.IsNeedContinue.Should().BeFalse();
+            handlerResult.IsNeedStopFurtherProcessing.Should().BeTrue();
 
             PrimaryHandlerResult primaryHandlerResult = (PrimaryHandlerResult)handlerResult;
             primaryHandlerResult.IsNewContext.Should().BeTrue();
@@ -506,7 +502,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MainHandlers
                             ),
                             Times.Once);
 
-            handlerResult.IsNeedContinue.Should().BeFalse();
+            handlerResult.IsNeedStopFurtherProcessing.Should().BeTrue();
 
             PrimaryHandlerResult primaryHandlerResult = (PrimaryHandlerResult)handlerResult;
             primaryHandlerResult.IsNewContext.Should().BeTrue();
@@ -548,7 +544,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MainHandlers
 
             PrimaryHandlerResult primaryHandlerResult = (PrimaryHandlerResult)handlerResult;
             primaryHandlerResult.IsNewContext.Should().BeFalse();
-            handlerResult.IsNeedContinue.Should().BeTrue();
+            handlerResult.IsNeedStopFurtherProcessing.Should().BeFalse();
             primaryHandlerResult.IsNeedSendResponse.Should().BeFalse();
 
             primaryHandlerResult.CurrentUserContext.Should().NotBeNull();

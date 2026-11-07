@@ -3,9 +3,9 @@ using WorkoutStorageBot.BusinessLogic.Context.Session;
 
 namespace WorkoutStorageBot.BusinessLogic.Buttons.Factories
 {
-    internal class CycleListBF : ButtonsFactory
+    internal class CyclesListBF : ButtonsFactory
     {
-        internal CycleListBF(UserContext userContext) : base(userContext)
+        internal CyclesListBF(UserContext userContext) : base(userContext)
         {
         }
 

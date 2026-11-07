@@ -1,5 +1,4 @@
 ﻿using WorkoutStorageBot.BusinessLogic.Enums;
-using WorkoutStorageBot.BusinessLogic.Extenions;
 using WorkoutStorageBot.Model.AppContext;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.Model.Interfaces;

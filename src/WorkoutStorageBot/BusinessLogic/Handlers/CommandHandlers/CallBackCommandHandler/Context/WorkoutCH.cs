@@ -1,15 +1,15 @@
-﻿using WorkoutStorageBot.BusinessLogic.Consts;
+﻿using Microsoft.EntityFrameworkCore;
+using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Enums;
-using WorkoutStorageBot.Model.DTO.HandlerData;
-using WorkoutStorageBot.Model.DTO.BusinessLogic;
-using Microsoft.EntityFrameworkCore;
-using WorkoutStorageBot.Core.Extensions;
+using WorkoutStorageBot.BusinessLogic.Extensions;
 using WorkoutStorageBot.BusinessLogic.Helpers.CallbackQueryParser;
 using WorkoutStorageBot.BusinessLogic.Helpers.Converters;
-using WorkoutStorageBot.BusinessLogic.Extensions;
-using WorkoutStorageModels.Entities.BusinessLogic;
 using WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic;
+using WorkoutStorageBot.Core.Extensions;
+using WorkoutStorageBot.Model.DTO.BusinessLogic;
+using WorkoutStorageBot.Model.DTO.HandlerData;
 using WorkoutStorageBot.Model.DTO.InformationSetForSend;
+using WorkoutStorageModels.Entities.BusinessLogic;
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackCommandHandler.Context
 {
@@ -54,7 +54,7 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
             // immediately first set the active cycle as current
             this.CurrentUserContext.DataManager.SetCurrentDomain(this.CurrentUserContext.ActiveCycle.ThrowIfNull());
 
-            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder($"Выберите тренировочный день из цикла {this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}");
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder($"Выберите тренировочный день или посмотрите предыдущие результаты из цикла {this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main);
 
             IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
@@ -74,67 +74,60 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     IEnumerable<int> activeDayIDs = this.CurrentUserContext.ActiveCycle.ThrowIfNull().Days.Where(d => !d.IsArchive)
                                                                                                           .Select(d => d.Id);
 
-                    IQueryable<int> activeExercisesIDsInActiveDays = this.Db.Exercises.Where(e => !e.IsArchive && activeDayIDs.Contains(e.DayId))
-                                                                                      .Select(e => e.Id);
+                    List<int> activeExercisesIDsInActiveDays = await this.Db.Exercises.Where(e => !e.IsArchive && activeDayIDs.Contains(e.DayId))
+                                                                                      .Select(e => e.Id)
+                                                                                      .ToListAsync(cancellationToken);
 
-                    var resultLastTraining = await this.Db.ResultsExercises
-                                                                .AsNoTracking()
-                                                                .Where(re => activeExercisesIDsInActiveDays.Contains(re.ExerciseId))
-                                                                .Include(e => e.Exercise)
-                                                                .GroupBy(re => re.DateTime.Date)
-                                                                .Select(g => new
-                                                                {
-                                                                    Date = g.Key,
-                                                                    Data = g.Select(x => x),
-                                                                })
-                                                                .OrderByDescending(x => x.Date)
-                                                                .FirstOrDefaultAsync(cancellationToken);
-
-
-                    if (resultLastTraining == null)
+                    // DateTime? потому что MaxAsync возвращает null, если у пользователя еще нет результатов по активным упражнения.
+                    // Это именно прикол LINQ to Entities. В SQL функция MAX(column) над пустым множеством возвращает NULL.
+                    DateTime? lastDate = await this.Db.ResultsExercises.Where(re => activeExercisesIDsInActiveDays.Contains(re.ExerciseId))
+                                                                       .MaxAsync(re => (DateTime?)re.DateTime.Date, cancellationToken);
+                    if (lastDate == null)
                         information = "Не удалось получить результаты последней тренировки";
                     else
-                        information = SharedExercisesAndResultsLogicHelper.GetInformationAboutLastExercises(resultLastTraining.Date, resultLastTraining.Data);
+                    {
+                        List<ResultExercise> lastTrainingResults = await this.Db.ResultsExercises.AsNoTracking()
+                                                                                             .Where(re => activeExercisesIDsInActiveDays.Contains(re.ExerciseId) &&
+                                                                                                    re.DateTime.Date == lastDate
+                                                                                              )
+                                                                                             .Include(e => e.Exercise)
+                                                                                             .ToListAsync(cancellationToken);
+
+                        information = SharedExercisesAndResultsLogicHelper.GetInformationAboutLastExercises(lastDate.Value, lastTrainingResults);
+                    }                   
 
                     responseTextBuilder = new ResponseTextBuilder("Последняя тренировка:", 
                                                                   information, 
-                                                                  $"Выберите тренировочный день из цикла {this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}");
+                                                                  $"Выберите тренировочный день или посмотрите предыдущие результаты из цикла {this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}");
                     buttonsSets = (ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main);
                     break;
 
                 case CommonConsts.DomainsAndEntities.Day:
-                    IEnumerable<int> exercisesIDs = this.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Exercises.Where(e => !e.IsArchive)
-                                                                                                                          .Select(d => d.Id);
+                    List<int> exercisesIDs = this.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Exercises.Where(e => !e.IsArchive)
+                                                                                                                   .Select(d => d.Id)
+                                                                                                                   .ToList();
+                    IEnumerable<ResultExercise> lastResultsExercisesInCurrentDay;
 
-                    string dbProvider = this.Db.GetDBProvider();
-
-                    string query;
-
-                    if (dbProvider == "Microsoft.EntityFrameworkCore.Sqlite")
+                    if (exercisesIDs.Count > 0)
                     {
-                        query = $@"
-SELECT re.*
-FROM [ResultsExercises] AS re
-JOIN (
-    SELECT ExerciseId, date(MAX(DateTime)) AS MaxDate
-    FROM [ResultsExercises]
-    WHERE ExerciseId IN ({string.Join(',', exercisesIDs)})
-    GROUP BY ExerciseId
-) last
-ON last.ExerciseId = re.ExerciseId
-AND date(re.DateTime) = last.MaxDate";
+                        lastResultsExercisesInCurrentDay = await this.Db.ResultsExercises.AsNoTracking()
+                                                                                         .Where(re => exercisesIDs.Contains(re.ExerciseId))
+                                                                                         .Where(re =>
+                                                                                             // Берем только те записи, дата которых совпадает с максимальной датой для этого упражнения
+                                                                                             this.Db.ResultsExercises
+                                                                                                 .Where(x => x.ExerciseId == re.ExerciseId)
+                                                                                                 .Max(x => x.DateTime).Date == re.DateTime.Date
+                                                                                         )
+                                                                                         .Include(r => r.Exercise)
+                                                                                         .ToListAsync(cancellationToken);
                     }
                     else
-                        throw new NotImplementedException($"Операция не поддерживается для DBProvider {dbProvider}");
-
-                    IEnumerable<ResultExercise> lastResultsExercisesInCurrentDay = await this.Db.ResultsExercises.FromSqlRaw(query)
-                                                                                                                 .Include(r => r.Exercise)
-                                                                                                                 .ToListAsync(cancellationToken);
+                        lastResultsExercisesInCurrentDay = new List<ResultExercise>();
 
                     information = SharedExercisesAndResultsLogicHelper.GetInformationAboutLastDay(lastResultsExercisesInCurrentDay);
                     responseTextBuilder = new ResponseTextBuilder("Последние результаты упражнений из этого дня:", 
                                                                   information, 
-                                                                  $"Выберите упражнение из дня {this.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBold()} ({this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBold()})");
+                                                                  $"Выберите упражнение или посмотрите предыдущие результаты дня {this.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBold()} ({this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBold()})");
                     buttonsSets = (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout);
                     break;
                 default:
@@ -180,13 +173,13 @@ AND date(re.DateTime) = last.MaxDate";
 
         private async Task<IInformationSet> FindResultsByDateCommand(CancellationToken cancellationToken)
         {
-            string finderDate = callbackQueryParser.AdditionalParameters.First();
+            string finderDate = callbackQueryParser.GetRequiredAdditionalParameter(0);
 
             bool isNeedFindByCurrentDay = callbackQueryParser.DomainType == CommonConsts.DomainsAndEntities.Exercise;
 
             string target = isNeedFindByCurrentDay
-                    ? $"Выберите упражнение из дня  {this.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()} ({this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBold()})"
-                    : $"Выберите тренировочный день из цикла {this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}";
+                    ? $"Выберите упражнение или посмотрите предыдущие результаты дня {this.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()} ({this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBold()})"
+                    : $"Выберите тренировочный день или посмотрите предыдущие результаты из цикла {this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBoldAndQuotes()}";
          
             IInformationSet informationSet;
 
@@ -265,7 +258,7 @@ AND date(re.DateTime) = last.MaxDate";
             this.CurrentUserContext.DataManager.ResetTempResultsExercise();
 
             ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder($"Результат упражнения '{this.CurrentUserContext.DataManager.CurrentExercise.ThrowIfNull().Name.AddBoldAndQuotes()}' был сброшен",
-                $"Выберите упражнение из дня {this.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBold()} ({this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBold()})");
+                $"Выберите упражнение или посмотрите предыдущие результаты дня {this.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBold()} ({this.CurrentUserContext.DataManager.CurrentCycle.ThrowIfNull().Name.AddBold()})");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout);
 
             IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);
@@ -286,7 +279,8 @@ AND date(re.DateTime) = last.MaxDate";
 
             this.CurrentUserContext.Navigation.ResetMessageNavigationTarget();
 
-            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder("Введённые данные сохранены!", "Выберите упражнение");
+            ResponseTextBuilder responseTextBuilder = new ResponseTextBuilder("Введённые данные сохранены", 
+                $"Выберите упражнение или посмотрите предыдущие результаты дня {this.CurrentUserContext.DataManager.CurrentDay.ThrowIfNull().Name.AddBoldAndQuotes()}");
             (ButtonsSet, ButtonsSet) buttonsSets = (ButtonsSet.ExercisesListWithLastWorkoutForDay, ButtonsSet.DaysListWithLastWorkout);
 
             IInformationSet informationSet = new MessageInformationSet(responseTextBuilder.Build(), buttonsSets);

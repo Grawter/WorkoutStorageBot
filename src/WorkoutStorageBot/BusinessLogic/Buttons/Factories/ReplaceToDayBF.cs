@@ -14,7 +14,10 @@ namespace WorkoutStorageBot.BusinessLogic.Buttons.Factories
         {
             foreach (DTOCycle cycle in CurrentUserContext.UserInformation.Cycles.Where(c => !c.IsArchive))
             {
-                GetDomainsInButtons(cycle.Days.Where(c => !c.IsArchive), "ReplaceTo", true);
+                foreach (DTODay day in cycle.Days.Where(c => !c.IsArchive))
+                {
+                    AddInlineButton($"{day.Name}[Id:{day.Id}, CycleId:{cycle.Id}]", $"2|ReplaceTo|Day|{day.Id}");
+                }
             }
         }
     }

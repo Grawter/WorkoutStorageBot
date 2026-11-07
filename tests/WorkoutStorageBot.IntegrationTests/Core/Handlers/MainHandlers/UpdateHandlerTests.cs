@@ -8,7 +8,6 @@ using WorkoutStorageBot.Application.Configuration;
 using WorkoutStorageBot.BusinessLogic.Context.Global;
 using WorkoutStorageBot.BusinessLogic.Context.Session;
 using WorkoutStorageBot.BusinessLogic.Enums;
-using WorkoutStorageBot.BusinessLogic.Extenions;
 using WorkoutStorageBot.BusinessLogic.Extensions;
 using WorkoutStorageBot.BusinessLogic.Handlers.MainHandlers;
 using WorkoutStorageBot.BusinessLogic.Helpers.Updates;
@@ -81,7 +80,6 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MainHandlers
                 Update = update,
                 CurrentUserContext = localUserContext,
                 ShortUpdateInfo = updateInfo,
-                HasAccess = true,
             };
 
             if (updateType == "EditedMessageQuery")
@@ -100,7 +98,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MainHandlers
                 // Assert
                 builder.Should().NotBeNull();
 
-                handlerResult.IsNeedContinue.Should().BeFalse();
+                handlerResult.IsNeedStopFurtherProcessing.Should().BeFalse();
 
                 handlerResult.Should().BeOfType<UpdateHandlerResult>();
 
@@ -122,7 +120,7 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MainHandlers
 
                 if (checkingComplianceCallBackId.HasValue && !checkingComplianceCallBackId.Value)
                 {
-                    updateHandlerResult.InformationSet.Message.Should().Contain(@$"Действие не может быть выполнено, т.к. информация устарела
+                    updateHandlerResult.InformationSet.Message.Should().Be(@$"Действие не может быть выполнено, т.к. информация устарела
 ======================
 
 Для продолжения работы используйте действия, предложенные ниже
@@ -133,35 +131,35 @@ namespace WorkoutStorageBot.IntegrationTests.Core.Handlers.MainHandlers
                 }
                 else if (updateType == "MessageQuery")
                 {
-                    updateHandlerResult.InformationSet.Message.Should().Contain($"Выберите интересующий раздел");
+                    updateHandlerResult.InformationSet.Message.Should().Be($"Выберите интересующий раздел");
                     updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.Main, ButtonsSet.None));
                 }
                 else
                 {
                     if (subUpdateType == "None")
                     {
-                        updateHandlerResult.InformationSet.Message.Should().Contain($"Выберите интересующий раздел");
+                        updateHandlerResult.InformationSet.Message.Should().Be($"Выберите интересующий раздел");
                         updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.Main, ButtonsSet.None));
 
                         updateHandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
                     }
                     else if (subUpdateType == "Workout")
                     {
-                        updateHandlerResult.InformationSet.Message.Should().Contain(@$"Выберите тренировочный день из цикла {builder.TestCycle.Name.AddBoldAndQuotes()}");
+                        updateHandlerResult.InformationSet.Message.Should().Be(@$"Выберите тренировочный день или посмотрите предыдущие результаты из цикла {builder.TestCycle.Name.AddBoldAndQuotes()}");
                         updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.DaysListWithLastWorkout, ButtonsSet.Main));
 
                         updateHandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
                     }
                     else if (subUpdateType == "Settings")
                     {
-                        updateHandlerResult.InformationSet.Message.Should().Contain($"Выберите интересующие настройки");
+                        updateHandlerResult.InformationSet.Message.Should().Be($"Выберите интересующие настройки");
                         updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.Settings, ButtonsSet.Main));
 
                         updateHandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.Settings);
                     }
                     else if (subUpdateType == "Admin")
                     {
-                        updateHandlerResult.InformationSet.Message.Should().Contain($"Выберите интересующее действие с админкой");
+                        updateHandlerResult.InformationSet.Message.Should().Be($"Выберите интересующее действие с админкой");
                         updateHandlerResult.InformationSet.ButtonsSets.Should().Be((ButtonsSet.Admin, ButtonsSet.Main));
 
                         updateHandlerResult.CurrentUserContext.Navigation.QueryFrom.Should().Be(QueryFrom.NoMatter);
