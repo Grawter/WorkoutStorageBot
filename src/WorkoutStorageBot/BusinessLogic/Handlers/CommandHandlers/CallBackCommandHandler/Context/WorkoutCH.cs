@@ -87,11 +87,11 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                     else
                     {
                         List<ResultExercise> lastTrainingResults = await this.Db.ResultsExercises.AsNoTracking()
-                                                                                             .Where(re => activeExercisesIDsInActiveDays.Contains(re.ExerciseId) &&
+                                                                                                 .Where(re => activeExercisesIDsInActiveDays.Contains(re.ExerciseId) &&
                                                                                                     re.DateTime.Date == lastDate
-                                                                                              )
-                                                                                             .Include(e => e.Exercise)
-                                                                                             .ToListAsync(cancellationToken);
+                                                                                                  )
+                                                                                                 .Include(e => e.Exercise)
+                                                                                                 .ToListAsync(cancellationToken);
 
                         information = SharedExercisesAndResultsLogicHelper.GetInformationAboutLastExercises(lastDate.Value, lastTrainingResults);
                     }                   

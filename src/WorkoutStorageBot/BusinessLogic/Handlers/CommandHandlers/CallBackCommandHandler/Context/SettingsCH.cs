@@ -1,19 +1,19 @@
-﻿using Microsoft.IO;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.IO;
 using WorkoutStorageBot.BusinessLogic.Consts;
 using WorkoutStorageBot.BusinessLogic.Enums;
 using WorkoutStorageBot.BusinessLogic.Extensions;
 using WorkoutStorageBot.BusinessLogic.Helpers.CallbackQueryParser;
 using WorkoutStorageBot.BusinessLogic.Helpers.Converters;
 using WorkoutStorageBot.BusinessLogic.Helpers.Export;
+using WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic;
+using WorkoutStorageBot.BusinessLogic.Repositories;
+using WorkoutStorageBot.Core.Extensions;
 using WorkoutStorageBot.Model.DTO.BusinessLogic;
 using WorkoutStorageBot.Model.DTO.HandlerData;
-using WorkoutStorageModels.Entities.BusinessLogic;
-using WorkoutStorageBot.Model.Interfaces;
-using WorkoutStorageBot.Core.Extensions;
-using WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic;
 using WorkoutStorageBot.Model.DTO.InformationSetForSend;
-using WorkoutStorageBot.BusinessLogic.Repositories;
-using Microsoft.EntityFrameworkCore;
+using WorkoutStorageBot.Model.Interfaces;
+using WorkoutStorageModels.Entities.BusinessLogic;
 
 namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackCommandHandler.Context
 {
@@ -512,10 +512,24 @@ namespace WorkoutStorageBot.BusinessLogic.Handlers.CommandHandlers.CallBackComma
                         return informationSet;
                     }
 
-                    this.CurrentUserContext.ActiveCycle.IsActive = false;
-                    await this.Db.UpdateEntity(this.CurrentUserContext.ActiveCycle, cancellationToken, false);
-                    this.CurrentUserContext.SetNewActiveCycleForce(this.CurrentUserContext.DataManager.CurrentCycle);
-                    await this.Db.UpdateEntity(this.CurrentUserContext.ActiveCycle, cancellationToken);
+                    // Начинаем транзакцию
+                    using (var transaction = await this.Db.Database.BeginTransactionAsync(cancellationToken))
+                    {
+                        try
+                        {
+                            this.CurrentUserContext.ActiveCycle.IsActive = false;
+                            await this.Db.UpdateEntity(this.CurrentUserContext.ActiveCycle, cancellationToken, false);
+                            this.CurrentUserContext.SetNewActiveCycleForce(this.CurrentUserContext.DataManager.CurrentCycle);
+                            await this.Db.UpdateEntity(this.CurrentUserContext.ActiveCycle, cancellationToken);
+
+                            await transaction.CommitAsync();
+                        }
+                        catch
+                        {
+                            await transaction.RollbackAsync();
+                            throw;
+                        }
+                    }  
 
                     responseTextBuilder = new ResponseTextBuilder($"Активный цикл изменён на {this.CurrentUserContext.ActiveCycle.Name.AddBoldAndQuotes()}",
                     $"Выберите интересующую настройку для цикла {this.CurrentUserContext.DataManager.CurrentCycle.Name.AddBoldAndQuotes()}");

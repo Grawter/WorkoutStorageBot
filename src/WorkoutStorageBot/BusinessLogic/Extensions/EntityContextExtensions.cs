@@ -38,58 +38,80 @@ namespace WorkoutStorageBot.BusinessLogic.Extensions
             if (DTOCycles.Count + DTODays.Count + DTOExercises.Count != DTODomains.Count())
                 throw new InvalidOperationException("Для добавления в БД был указан неожиданный тип данных");
 
-            if (DTOCycles.Count > 0)
+            // Открываем транзакцию, только если мы собираемся сохранять изменения
+            using var transaction = isNeedSaveChanges
+                ? await db.Database.BeginTransactionAsync(cancellationToken)
+                : null;
+
+            try
             {
+                if (DTOCycles.Count > 0)
+                {
                 var pairs = DTOCycles.Select(x => new { DTO = x, Entity = x.ToCycle() })
                                      .ToList();
 
-                await db.Cycles.AddRangeAsync(pairs.Select(p => p.Entity), cancellationToken);
+                    await db.Cycles.AddRangeAsync(pairs.Select(p => p.Entity), cancellationToken);
 
-                if (isNeedSaveChanges)
-                {
-                    await db.SaveChangesAsync(cancellationToken);
-
-                    foreach (var pair in pairs)
+                    if (isNeedSaveChanges)
                     {
-                        pair.DTO.Id = pair.Entity.Id;
+                        await db.SaveChangesAsync(cancellationToken);
+
+                        foreach (var pair in pairs)
+                    {
+                            pair.DTO.Id = pair.Entity.Id;
                     }
                 }
             }
 
-            if (DTODays.Count > 0)
-            {
+                if (DTODays.Count > 0)
+                {
                 var pairs = DTODays.Select(x => new { DTO = x, Entity = x.ToDay() })
                                    .ToList();
 
-                await db.Days.AddRangeAsync(pairs.Select(p => p.Entity), cancellationToken);
+                    await db.Days.AddRangeAsync(pairs.Select(p => p.Entity), cancellationToken);
 
-                if (isNeedSaveChanges)
-                {
-                    await db.SaveChangesAsync(cancellationToken);
-
-                    foreach (var pair in pairs)
+                    if (isNeedSaveChanges)
                     {
-                        pair.DTO.Id = pair.Entity.Id;
+                        await db.SaveChangesAsync(cancellationToken);
+
+                        foreach (var pair in pairs)
+                    {
+                            pair.DTO.Id = pair.Entity.Id;
                     }
                 }
             }
 
-            if (DTOExercises.Count > 0)
-            {
+                if (DTOExercises.Count > 0)
+                {
                 var pairs = DTOExercises.Select(x => new { DTO = x, Entity = x.ToExercise() })
                                         .ToList();
 
-                await db.Exercises.AddRangeAsync(pairs.Select(p => p.Entity), cancellationToken);
+                    await db.Exercises.AddRangeAsync(pairs.Select(p => p.Entity), cancellationToken);
 
-                if (isNeedSaveChanges)
-                {
-                    await db.SaveChangesAsync(cancellationToken);
-
-                    foreach (var pair in pairs)
+                    if (isNeedSaveChanges)
                     {
-                        pair.DTO.Id = pair.Entity.Id;
+                        await db.SaveChangesAsync(cancellationToken);
+
+                        foreach (var pair in pairs)
+                        {
+                            pair.DTO.Id = pair.Entity.Id;
+                        }    
                     }
                 }
+
+                if (transaction != null)
+                {
+                    await transaction.CommitAsync(cancellationToken);
+                }
+            }
+            catch
+            {
+                if (transaction != null)
+                {
+                    await transaction.RollbackAsync(cancellationToken);
+                }
+
+                throw;
             }
         }
 

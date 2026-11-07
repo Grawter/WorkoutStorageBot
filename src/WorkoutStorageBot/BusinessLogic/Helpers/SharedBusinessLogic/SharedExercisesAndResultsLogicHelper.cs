@@ -230,8 +230,8 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic
             IEnumerable<ResultExercise> resultsLastTraining = await db.ResultsExercises.AsNoTracking()
                                                                                        .Where(re => exercisesIDs.Contains(re.ExerciseId)
                                                                                                 && re.DateTime.Date == finderDate)
-                                                                                        .Include(e => e.Exercise)
-                                                                                        .ToListAsync(cancellationToken);
+                                                                                       .Include(e => e.Exercise)
+                                                                                       .ToListAsync(cancellationToken);
 
             return resultsLastTraining;
         }
@@ -243,20 +243,20 @@ namespace WorkoutStorageBot.BusinessLogic.Helpers.SharedBusinessLogic
                                                                                                CancellationToken cancellationToken)
         {
             ResultExercise? resultLessThanFinderDate = await db.ResultsExercises.AsNoTracking()
-                                                                                    .Where(re =>
-                                                                                            exercisesIDs.Contains(re.ExerciseId)
-                                                                                            && re.DateTime.Date < finderDate)
-                                                                                    .OrderByDescending(re => re.DateTime)
-                                                                                    .FirstOrDefaultAsync(cancellationToken);
+                                                                                .Where(re =>
+                                                                                        exercisesIDs.Contains(re.ExerciseId)
+                                                                                        && re.DateTime.Date < finderDate)
+                                                                                .OrderByDescending(re => re.DateTime)
+                                                                                .FirstOrDefaultAsync(cancellationToken);
 
             DateTime trainingDateLessThanFinderDate = resultLessThanFinderDate?.DateTime ?? DateTime.MinValue;
 
             ResultExercise? resultDateGreaterThanFinderDate = await db.ResultsExercises.AsNoTracking()
-                                                                                        .Where(re =>
-                                                                                                exercisesIDs.Contains(re.ExerciseId)
-                                                                                                && re.DateTime.Date > finderDate)
-                                                                                        .OrderBy(re => re.DateTime)
-                                                                                        .FirstOrDefaultAsync(cancellationToken);
+                                                                                       .Where(re =>
+                                                                                               exercisesIDs.Contains(re.ExerciseId) &&
+                                                                                               re.DateTime.Date > finderDate)
+                                                                                       .OrderBy(re => re.DateTime)
+                                                                                       .FirstOrDefaultAsync(cancellationToken);
 
             DateTime trainingDateGreaterThanFinderDate = resultDateGreaterThanFinderDate?.DateTime ?? DateTime.MinValue;
 
